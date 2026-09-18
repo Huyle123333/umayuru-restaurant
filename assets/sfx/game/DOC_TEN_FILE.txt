@@ -1,0 +1,104 @@
+╔══════════════════════════════════════════════════════════════════════════╗
+║  ÂM THANH — UMAYURU RESTAURANT — ĐÃ CẮM ĐỦ (10/9/2026)                   ║
+╚══════════════════════════════════════════════════════════════════════════╝
+
+Toàn bộ 15 tiếng ngắn + 2 tiếng phụ + 7 bài nhạc đã có file và đã nối vào
+code. Không còn chỗ nào im lặng.
+
+  Tiếng ngắn  →  res://assets/sfx/game/     (thư mục này)
+  Nhạc nền    →  res://assets/bgm/
+
+Code gọi âm thanh theo TÊN SỰ KIỆN (lúc nào nó kêu), còn file trên đĩa đặt
+theo TÊN TIẾNG (nó là tiếng gì). Bảng nối hai cách gọi đó nằm ở
+`TEN_FILE` trong scripts/giao_dien/am_thanh.gd.
+
+ĐỔI MỘT TIẾNG: chép file mới vào đây, rồi sửa đúng MỘT dòng trong TEN_FILE
+trỏ sang tên file mới. Không phải đổi tên file cũ, không phải sửa code gọi.
+
+
+──────────────────────────────────────────────────────────────────────────
+ A. TIẾNG NGẮN — bus SFX
+──────────────────────────────────────────────────────────────────────────
+ TÊN SỰ KIỆN    FILE                  DÀI    KÊU KHI NÀO
+ cam_len        pick_up.mp3          0,73s   nhấc một vật lên
+ dat_xuong      drop_out.mp3         0,71s   đặt vật lên bàn / trạm
+ vut_rac        bin_or_pet.mp3       1,44s   vứt đồ vào thùng rác bocchi
+ rap_xong       craft_success.mp3    0,97s   bàn chế tạo ráp thành món (F)
+ rap_hut        nope_click.mp3       0,89s   bấm F mà không ra món nào
+ giao_mon       serve_dish.mp3       1,05s   giao đúng món cho khách
+ nau_xong       cooking_done.mp3     1,15s   bếp / lò / thớt xong một mẻ
+ nau_hong       wrong_recipe.mp3     1,25s   ra đồ hỏng vì sai công thức
+ chay           sizzle_burn.mp3      2,04s   để trên bếp quá lâu  ← ĐÃ CẮT
+ khach_vao      door_chime.mp3       0,44s   một khách bước vào quán
+ khach_bo_di    fail_soft.mp3        2,48s   khách hết kiên nhẫn
+ hoan_hao       perfect_bonus.mp3    1,42s   giao khi kiên nhẫn còn trên nửa
+ tien           coin_collect.mp3     0,94s   tiền vào ví
+ sap_het_gio    warning_beep.mp3     2,53s   còn 30 giây
+ het_gio        time_up_buzzer.mp3   1,96s   hết giờ
+ tong_ket       results_screen.mp3   2,85s   bảng kết quả hiện ra
+ go_chu         text_sound.mp3       0,86s   gõ chữ trong hội thoại/prologue
+
+ GHI CHÚ
+ · sizzle_burn gốc dài 12,02 giây, đã cắt còn 2,04 giây kèm fade 0,4 giây.
+   BẢN GỐC vẫn nằm nguyên ở D:\Game do an\assets\sound effect\ — không mất.
+ · cam_len và dat_xuong phát với cao độ lệch ngẫu nhiên 0,94–1,06 nên nghe
+   mấy trăm lần không thấy máy móc.
+ · hoan_hao kêu CHỒNG LÊN giao_mon chứ không thay thế.
+ · go_chu kêu ĐÚNG MỘT LẦN cho mỗi dòng thoại, ngay lúc dòng bắt đầu hiện —
+   KHÔNG lặp trong lúc chữ chạy. Lặp thì prologue mấy chục dòng nghe nhức
+   đầu và át mất việc đọc. Nó có kênh RIÊNG, không qua bể 8 kênh, để dòng
+   sau cắt tiếng của dòng trước khi người chơi bấm nhanh.
+
+
+──────────────────────────────────────────────────────────────────────────
+ B. NHẠC NỀN — bus Music — res://assets/bgm/
+──────────────────────────────────────────────────────────────────────────
+ KHO CHUNG 6 BÀI (nhóm "menu" và "man"):
+   bgm1_beachtraining.mp3   2:58
+   bgm2_ura.mp3             6:25
+   bgm3_unity.mp3           8:07
+   bgm4_mant.mp3            5:19
+   bgm5_mant2.mp3           4:28
+   bgm6_gl.mp3              4:52
+
+ RIÊNG:
+   hashire_umamusume.mp3    3:32  — nhóm "cao_diem"
+
+ CÁCH PHÁT
+   Menu chính / Chọn màn / Chọn nhân vật
+     Bốc ngẫu nhiên MỘT lần rồi GIỮ LIỀN MẠCH. Bấm qua lại giữa ba màn hình
+     không làm nhạc giật về đầu — bài đang chạy cứ chạy tiếp.
+   Video intro
+     Tắt nhạc menu (video có tiếng riêng, cũng qua bus Music).
+   Prologue
+     Nhóm "prologue" = bgm2_ura, cố định.
+   Màn chơi (kể cả Tutorial)
+     Bốc ngẫu nhiên trong 6 bài, LUÔN phát lại từ đầu. Bốc tránh trúng đúng
+     bài vừa nghe.
+   Còn 3 phút 32 giây của màn chơi
+     Đổi sang hashire_umamusume, KHÔNG lặp, chạy đúng một lần tới hết giờ.
+   Bảng kết quả
+     Tắt hẳn nhạc rồi phát results_screen trên nền im lặng.
+
+ VÌ SAO hashire KHÔNG nằm trong kho 6 bài chung: nếu nó có thể bốc trúng
+ ngay từ đầu màn thì lúc còn 3 phút rưỡi nó phải tự cắt chính mình để nhường
+ chỗ cho chính nó, và cái khoảnh khắc "đổi nhạc = sắp hết giờ" mất ý nghĩa.
+
+ ĐỔI BÀI CAO ĐIỂM KHÁC ĐỘ DÀI: sửa "moc_nhac": 212.0 trong LUAT_D1
+ (autoload/game_data.gd) thành số giây của bài mới.
+
+
+──────────────────────────────────────────────────────────────────────────
+ C. CHƯA CÓ
+──────────────────────────────────────────────────────────────────────────
+ · Tiếng bước chân của nhân vật.
+ · Tiếng "pet" (vuốt bocchi bin) — bin_or_pet đang dùng cho việc vứt rác.
+
+
+──────────────────────────────────────────────────────────────────────────
+ D. CHO PHẦN CREDITS CỦA ĐỒ ÁN
+──────────────────────────────────────────────────────────────────────────
+ Cần ghi lại NGUỒN và GIẤY PHÉP của 24 file âm thanh (17 tiếng ngắn + 7 bài
+ nhạc). Nhạc Umamusume là nhạc CÓ BẢN QUYỀN của Cygames — dùng trong đồ án
+ học thuật thì phải ghi rõ nguồn trong Credits và nói rõ là phi thương mại.
+ Chuẩn bị sẵn câu trả lời này trước buổi bảo vệ.

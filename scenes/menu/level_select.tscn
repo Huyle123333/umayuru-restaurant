@@ -1,0 +1,282 @@
+[gd_scene load_steps=5 format=3]
+
+[ext_resource type="Script" path="res://scenes/menu/level_select.gd" id="1_ls"]
+[ext_resource type="Texture2D" path="res://assets/ui/backgrounds/menu_bg.png" id="2_bg"]
+[ext_resource type="Theme" path="res://ui/theme/menu_theme.tres" id="3_theme"]
+[ext_resource type="PackedScene" path="res://scenes/menu/leaderboard_panel.tscn" id="4_lb"]
+
+[node name="LevelSelect" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme = ExtResource("3_theme")
+script = ExtResource("1_ls")
+
+[node name="BG" type="ColorRect" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0.168627, 0.129412, 0.109804, 1)
+
+[node name="BackgroundArt" type="TextureRect" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+texture = ExtResource("2_bg")
+expand_mode = 1
+stretch_mode = 6
+
+[node name="Overlay" type="ColorRect" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+color = Color(0, 0, 0, 0.62)
+
+[node name="Content" type="MarginContainer" parent="."]
+texture_filter = 1
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+theme_override_constants/margin_left = 60
+theme_override_constants/margin_top = 40
+theme_override_constants/margin_right = 60
+theme_override_constants/margin_bottom = 40
+
+[node name="VBox" type="VBoxContainer" parent="Content"]
+layout_mode = 2
+mouse_filter = 2
+theme_override_constants/separation = 24
+
+[node name="Title" type="Label" parent="Content/VBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.831373, 0.44, 1)
+theme_override_colors/font_shadow_color = Color(0, 0, 0, 0.6)
+theme_override_constants/shadow_offset_y = 4
+theme_override_font_sizes/font_size = 44
+text = "MAN_TIEU_DE"
+horizontal_alignment = 1
+
+[node name="Scroll" type="ScrollContainer" parent="Content/VBox"]
+layout_mode = 2
+size_flags_vertical = 3
+horizontal_scroll_mode = 1
+vertical_scroll_mode = 0
+
+[node name="Columns" type="HBoxContainer" parent="Content/VBox/Scroll"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 4
+theme_override_constants/separation = 8
+alignment = 1
+
+[node name="ColIntro" type="VBoxContainer" parent="Content/VBox/Scroll/Columns"]
+custom_minimum_size = Vector2(250, 0)
+layout_mode = 2
+size_flags_vertical = 4
+theme_override_constants/separation = 12
+
+[node name="Header" type="Label" parent="Content/VBox/Scroll/Columns/ColIntro"]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.941176, 0.85098, 1)
+theme_override_colors/font_shadow_color = Color(0, 0, 0, 0.7)
+theme_override_constants/shadow_offset_y = 3
+theme_override_font_sizes/font_size = 30
+text = "MAN_NHOM_MO_DAU"
+horizontal_alignment = 1
+
+[node name="BtnPrologue" type="Button" parent="Content/VBox/Scroll/Columns/ColIntro"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "MAN_PROLOGUE"
+
+[node name="BtnTutorial" type="Button" parent="Content/VBox/Scroll/Columns/ColIntro"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "MAN_TUTORIAL"
+
+[node name="Arrow1" type="Label" parent="Content/VBox/Scroll/Columns"]
+layout_mode = 2
+size_flags_vertical = 4
+theme_override_colors/font_color = Color(0.933333, 0.792157, 0.482353, 0.75)
+theme_override_font_sizes/font_size = 40
+text = "→"
+
+[node name="ColDay1" type="VBoxContainer" parent="Content/VBox/Scroll/Columns"]
+custom_minimum_size = Vector2(250, 0)
+layout_mode = 2
+size_flags_vertical = 4
+theme_override_constants/separation = 12
+
+[node name="Header" type="Label" parent="Content/VBox/Scroll/Columns/ColDay1"]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.941176, 0.85098, 1)
+theme_override_colors/font_shadow_color = Color(0, 0, 0, 0.7)
+theme_override_constants/shadow_offset_y = 3
+theme_override_font_sizes/font_size = 30
+text = "MAN_NGAY_1"
+horizontal_alignment = 1
+
+[node name="BtnD1Sang" type="Button" parent="Content/VBox/Scroll/Columns/ColDay1"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "CHUNG_SANG"
+
+[node name="BtnD1Toi" type="Button" parent="Content/VBox/Scroll/Columns/ColDay1"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "CHUNG_TOI"
+
+[node name="Arrow2" type="Label" parent="Content/VBox/Scroll/Columns"]
+layout_mode = 2
+size_flags_vertical = 4
+theme_override_colors/font_color = Color(0.933333, 0.792157, 0.482353, 0.75)
+theme_override_font_sizes/font_size = 40
+text = "→"
+
+[node name="ColDay2" type="VBoxContainer" parent="Content/VBox/Scroll/Columns"]
+custom_minimum_size = Vector2(250, 0)
+layout_mode = 2
+size_flags_vertical = 4
+theme_override_constants/separation = 12
+
+[node name="Header" type="Label" parent="Content/VBox/Scroll/Columns/ColDay2"]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.941176, 0.85098, 1)
+theme_override_colors/font_shadow_color = Color(0, 0, 0, 0.7)
+theme_override_constants/shadow_offset_y = 3
+theme_override_font_sizes/font_size = 30
+text = "MAN_NGAY_2"
+horizontal_alignment = 1
+
+[node name="BtnD2Sang" type="Button" parent="Content/VBox/Scroll/Columns/ColDay2"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "CHUNG_SANG"
+
+[node name="BtnD2Toi" type="Button" parent="Content/VBox/Scroll/Columns/ColDay2"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "CHUNG_TOI"
+
+[node name="Arrow3" type="Label" parent="Content/VBox/Scroll/Columns"]
+layout_mode = 2
+size_flags_vertical = 4
+theme_override_colors/font_color = Color(0.933333, 0.792157, 0.482353, 0.75)
+theme_override_font_sizes/font_size = 40
+text = "→"
+
+[node name="ColDay3" type="VBoxContainer" parent="Content/VBox/Scroll/Columns"]
+custom_minimum_size = Vector2(250, 0)
+layout_mode = 2
+size_flags_vertical = 4
+theme_override_constants/separation = 12
+
+[node name="Header" type="Label" parent="Content/VBox/Scroll/Columns/ColDay3"]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.941176, 0.85098, 1)
+theme_override_colors/font_shadow_color = Color(0, 0, 0, 0.7)
+theme_override_constants/shadow_offset_y = 3
+theme_override_font_sizes/font_size = 30
+text = "MAN_NGAY_3"
+horizontal_alignment = 1
+
+[node name="BtnD3Sang" type="Button" parent="Content/VBox/Scroll/Columns/ColDay3"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "CHUNG_SANG"
+
+[node name="BtnD3Toi" type="Button" parent="Content/VBox/Scroll/Columns/ColDay3"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "CHUNG_TOI"
+
+[node name="Arrow4" type="Label" parent="Content/VBox/Scroll/Columns"]
+layout_mode = 2
+size_flags_vertical = 4
+theme_override_colors/font_color = Color(0.933333, 0.792157, 0.482353, 0.75)
+theme_override_font_sizes/font_size = 40
+text = "→"
+
+[node name="ColEndless" type="VBoxContainer" parent="Content/VBox/Scroll/Columns"]
+custom_minimum_size = Vector2(250, 0)
+layout_mode = 2
+size_flags_vertical = 4
+theme_override_constants/separation = 12
+
+[node name="Header" type="Label" parent="Content/VBox/Scroll/Columns/ColEndless"]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.941176, 0.85098, 1)
+theme_override_colors/font_shadow_color = Color(0, 0, 0, 0.7)
+theme_override_constants/shadow_offset_y = 3
+theme_override_font_sizes/font_size = 30
+text = "MAN_NHOM_ENDLESS"
+horizontal_alignment = 1
+
+[node name="BtnEndless" type="Button" parent="Content/VBox/Scroll/Columns/ColEndless"]
+unique_name_in_owner = true
+layout_mode = 2
+disabled = true
+text = "MAN_ENDLESS"
+
+[node name="Bottom" type="HBoxContainer" parent="Content/VBox"]
+texture_filter = 1
+layout_mode = 2
+
+[node name="BtnBack" type="Button" parent="Content/VBox/Bottom"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "CHUNG_TRO_LAI"
+
+[node name="Spacer" type="Control" parent="Content/VBox/Bottom"]
+layout_mode = 2
+size_flags_horizontal = 3
+mouse_filter = 2
+
+[node name="BtnBoard" type="Button" parent="Content/VBox/Bottom"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "MENU_XEP_HANG"
+
+[node name="Spacer2" type="Control" parent="Content/VBox/Bottom"]
+custom_minimum_size = Vector2(16, 0)
+layout_mode = 2
+mouse_filter = 2
+
+[node name="BtnWipe" type="Button" parent="Content/VBox/Bottom"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "MAN_XOA_DU_LIEU"
+
+[node name="ConfirmWipe" type="ConfirmationDialog" parent="."]
+unique_name_in_owner = true
+title = "Xóa toàn bộ dữ liệu?"
+initial_position = 2
+size = Vector2i(520, 200)
+visible = false
+ok_button_text = "Xóa"
+dialog_text = "Toàn bộ tiến trình đã lưu sẽ bị xóa và không lấy lại được.
+Game sẽ quay về trạng thái mới bắt đầu."
+cancel_button_text = "Huỷ"
+dialog_autowrap = true
+
+[node name="LeaderboardPanel" parent="." instance=ExtResource("4_lb")]
+unique_name_in_owner = true
+layout_mode = 1

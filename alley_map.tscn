@@ -1,0 +1,119 @@
+[gd_scene load_steps=6 format=3 uid="uid://baga6204uenir"]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_ground"]
+size = Vector2(2350, 20)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_platformA"]
+size = Vector2(220, 20)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_step"]
+size = Vector2(140, 20)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_platformD"]
+size = Vector2(260, 20)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_platformE"]
+size = Vector2(220, 20)
+
+[node name="AlleyMap" type="Node2D"]
+
+[node name="Background" type="Node2D" parent="."]
+
+[node name="Midground" type="Node2D" parent="."]
+
+[node name="Foreground" type="Node2D" parent="."]
+
+[node name="Zones" type="Node2D" parent="."]
+
+[node name="ZoneA_NgoCut" type="Marker2D" parent="Zones"]
+position = Vector2(-1000, -40)
+
+[node name="ZoneB_CauThang" type="Marker2D" parent="Zones"]
+position = Vector2(-500, -220)
+
+[node name="ZoneC_SanSauNhaHang" type="Marker2D" parent="Zones"]
+
+[node name="ZoneD_DongDoNat" type="Marker2D" parent="Zones"]
+position = Vector2(550, -60)
+
+[node name="ZoneE_LoiRaMoHo" type="Marker2D" parent="Zones"]
+position = Vector2(1050, -100)
+
+[node name="NPCSpots" type="Node2D" parent="."]
+
+[node name="NPC1_NgoCut" type="Marker2D" parent="NPCSpots"]
+position = Vector2(-1000, -60)
+
+[node name="NPC2_GiuaCauThang" type="Marker2D" parent="NPCSpots"]
+position = Vector2(-500, -260)
+
+[node name="NPC3_RiaVungSang" type="Marker2D" parent="NPCSpots"]
+position = Vector2(280, -10)
+
+[node name="NPC4_DongDoNat" type="Marker2D" parent="NPCSpots"]
+position = Vector2(550, -80)
+
+[node name="NPC5_LoiRaMoHo" type="Marker2D" parent="NPCSpots"]
+position = Vector2(1050, -120)
+
+[node name="Collision" type="Node2D" parent="."]
+
+[node name="Ground" type="StaticBody2D" parent="Collision"]
+position = Vector2(25, 10)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Collision/Ground"]
+shape = SubResource("RectangleShape2D_ground")
+
+[node name="PlatformA" type="StaticBody2D" parent="Collision"]
+position = Vector2(-1000, -40)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Collision/PlatformA"]
+shape = SubResource("RectangleShape2D_platformA")
+
+[node name="Stairs" type="Node2D" parent="Collision"]
+
+[node name="Step1" type="StaticBody2D" parent="Collision/Stairs"]
+position = Vector2(-800, -40)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Collision/Stairs/Step1"]
+shape = SubResource("RectangleShape2D_step")
+
+[node name="Step2" type="StaticBody2D" parent="Collision/Stairs"]
+position = Vector2(-725, -85)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Collision/Stairs/Step2"]
+shape = SubResource("RectangleShape2D_step")
+
+[node name="Step3" type="StaticBody2D" parent="Collision/Stairs"]
+position = Vector2(-650, -130)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Collision/Stairs/Step3"]
+shape = SubResource("RectangleShape2D_step")
+
+[node name="Step4" type="StaticBody2D" parent="Collision/Stairs"]
+position = Vector2(-575, -175)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Collision/Stairs/Step4"]
+shape = SubResource("RectangleShape2D_step")
+
+[node name="Step5_ZoneBLanding" type="StaticBody2D" parent="Collision/Stairs"]
+position = Vector2(-500, -220)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Collision/Stairs/Step5_ZoneBLanding"]
+shape = SubResource("RectangleShape2D_step")
+
+[node name="PlatformD" type="StaticBody2D" parent="Collision"]
+position = Vector2(550, -60)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Collision/PlatformD"]
+shape = SubResource("RectangleShape2D_platformD")
+
+[node name="PlatformE" type="StaticBody2D" parent="Collision"]
+position = Vector2(1050, -100)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Collision/PlatformE"]
+shape = SubResource("RectangleShape2D_platformE")
+
+[node name="Camera2D" type="Camera2D" parent="."]
+
+[node name="PlayerStart" type="Marker2D" parent="."]

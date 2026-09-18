@@ -1,0 +1,165 @@
+[gd_scene load_steps=13 format=3 uid="uid://b1nj46fu08e3u"]
+
+[ext_resource type="Texture2D" uid="uid://bcm6xddpbudfg" path="res://assets/ui/backgrounds/menu_bg.png" id="1_bg"]
+[ext_resource type="Script" uid="uid://blo5v3sbmlaie" path="res://scenes/menu/main_menu.gd" id="2_kiqgm"]
+[ext_resource type="Texture2D" uid="uid://u1k00d0v0bnp" path="res://assets/ui/title_umayuru.png" id="2_title"]
+[ext_resource type="Theme" uid="uid://cj80dajsf8jm6" path="res://ui/theme/menu_theme.tres" id="3_theme"]
+[ext_resource type="PackedScene" path="res://spiki/chibi_anim.tscn" id="4_vovv2"]
+[ext_resource type="Texture2D" uid="uid://dad6odj7xdqlr" path="res://spiki/chibi_sheet.png" id="5_1k4da"]
+[ext_resource type="PackedScene" uid="uid://djhydx1c7rb20" path="res://scenes/menu/credits_panel.tscn" id="5_credits"]
+[ext_resource type="Texture2D" uid="uid://dtim6g6ceviuu" path="res://assets/ui/code_no7.png" id="6_code"]
+[ext_resource type="PackedScene" path="res://scenes/menu/cheat_panel.tscn" id="7_cheat"]
+[ext_resource type="PackedScene" path="res://scenes/menu/settings_panel.tscn" id="8_settings"]
+[ext_resource type="PackedScene" path="res://scenes/menu/options_panel.tscn" id="9_op"]
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_bbqo6"]
+resource_local_to_scene = true
+atlas = ExtResource("5_1k4da")
+region = Rect2(0, 0, 248, 254)
+
+[node name="MainMenu" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme = ExtResource("3_theme")
+script = ExtResource("2_kiqgm")
+
+[node name="BG" type="ColorRect" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0.168627, 0.129412, 0.109804, 1)
+
+[node name="BackgroundArt" type="TextureRect" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+texture = ExtResource("1_bg")
+expand_mode = 1
+stretch_mode = 6
+
+[node name="Overlay" type="ColorRect" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+color = Color(0, 0, 0, 0.34901962)
+
+[node name="ChibiAnim" parent="." instance=ExtResource("4_vovv2")]
+layout_mode = 1
+anchors_preset = 3
+anchor_left = 1.0
+anchor_right = 1.0
+offset_left = -1079.755
+offset_top = -281.31
+offset_right = -682.7545
+offset_bottom = 124.68921
+grow_horizontal = 0
+scale = Vector2(0.665, 0.665)
+texture = SubResource("AtlasTexture_bbqo6")
+
+[node name="Content" type="MarginContainer" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+theme_override_constants/margin_left = 100
+theme_override_constants/margin_top = 40
+theme_override_constants/margin_right = 80
+theme_override_constants/margin_bottom = 60
+
+[node name="VBox" type="VBoxContainer" parent="Content"]
+layout_mode = 2
+mouse_filter = 2
+theme_override_constants/separation = 0
+
+[node name="Title" type="TextureRect" parent="Content/VBox"]
+layout_mode = 2
+size_flags_horizontal = 0
+mouse_filter = 2
+texture = ExtResource("2_title")
+
+[node name="Spacer" type="Control" parent="Content/VBox"]
+custom_minimum_size = Vector2(0, 400)
+layout_mode = 2
+mouse_filter = 2
+
+[node name="Menu" type="VBoxContainer" parent="Content/VBox"]
+modulate = Color(1, 1, 1, 0.95)
+texture_filter = 1
+custom_minimum_size = Vector2(300, 0)
+layout_mode = 2
+size_flags_horizontal = 0
+theme_override_constants/separation = 10
+
+[node name="BtnNew" type="Button" parent="Content/VBox/Menu"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "MENU_CHOI_MOI"
+
+[node name="BtnLevels" type="Button" parent="Content/VBox/Menu"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "MENU_CHON_MAN"
+
+[node name="BtnOptions" type="Button" parent="Content/VBox/Menu"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "MENU_TUY_CHON"
+
+[node name="BtnQuit" type="Button" parent="Content/VBox/Menu"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "MENU_THOAT"
+
+[node name="CreditsPanel" parent="." instance=ExtResource("5_credits")]
+unique_name_in_owner = true
+layout_mode = 1
+
+[node name="BtnCode" type="TextureButton" parent="."]
+unique_name_in_owner = true
+modulate = Color(1, 1, 1, 0.55)
+layout_mode = 1
+anchors_preset = 3
+anchor_left = 1.0
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = -196.0
+offset_top = -106.0
+offset_right = -56.0
+offset_bottom = -46.0
+grow_horizontal = 0
+grow_vertical = 0
+tooltip_text = "CODE No.7"
+texture_normal = ExtResource("6_code")
+ignore_texture_size = true
+stretch_mode = 5
+
+[node name="CheatPanel" parent="." instance=ExtResource("7_cheat")]
+unique_name_in_owner = true
+layout_mode = 1
+
+[node name="SettingsPanel" parent="." instance=ExtResource("8_settings")]
+unique_name_in_owner = true
+layout_mode = 1
+
+[node name="OptionsPanel" parent="." instance=ExtResource("9_op")]
+unique_name_in_owner = true
+layout_mode = 1

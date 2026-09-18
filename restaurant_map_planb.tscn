@@ -1,0 +1,1039 @@
+[gd_scene load_steps=58 format=3 uid="uid://blwpaxidfss04"]
+
+[ext_resource type="Script" uid="uid://dwcowmm7pa1us" path="res://scenes/gameplay/level_base.gd" id="1_level"]
+[ext_resource type="Script" uid="uid://botg6a421ywtc" path="res://kitachibi_player.gd" id="2_en7o4"]
+[ext_resource type="Script" uid="uid://f00j7ccddn2m" path="res://scenes/gameplay/camera_top_down.gd" id="3_cam"]
+[ext_resource type="PackedScene" uid="uid://b68cl6kliyar4" path="res://kitachibi/kitachibi.glb" id="3_nu63k"]
+[ext_resource type="PackedScene" uid="uid://cylmdqw45usdt" path="res://assets/gltf/wall.gltf" id="5_wall"]
+[ext_resource type="PackedScene" uid="uid://m6edcu5f1yys" path="res://assets/gltf/wall_doorway.gltf" id="6_door"]
+[ext_resource type="PackedScene" uid="uid://ptdxwg7i155o" path="res://assets/gltf/wall_orderwindow.gltf" id="7_window"]
+[ext_resource type="PackedScene" uid="uid://dvrnmah84hoqu" path="res://assets/gltf/crate_buns.gltf" id="8_cypln"]
+[ext_resource type="PackedScene" uid="uid://c78vqgncag6sq" path="res://assets/gltf/crate_dough.gltf" id="9_yieiy"]
+[ext_resource type="PackedScene" uid="uid://vgfq0vlkil4e" path="res://assets/gltf/crate_lettuce.gltf" id="10_enn6r"]
+[ext_resource type="PackedScene" uid="uid://b5s4d4k2km08f" path="res://assets/gltf/crate_carrots.gltf" id="11_en7o4"]
+[ext_resource type="PackedScene" uid="uid://bd1a8vtk72qng" path="res://assets/gltf/crate_potatoes.gltf" id="12_nu63k"]
+[ext_resource type="PackedScene" uid="uid://dhdldptw55ftg" path="res://assets/gltf/crate_tomatoes.gltf" id="13_yqu5o"]
+[ext_resource type="PackedScene" uid="uid://bip8gdykd1gpk" path="res://bocchi bin/bocchi bin.glb" id="14_ek3jt"]
+[ext_resource type="PackedScene" uid="uid://cr81hnj0ptt7s" path="res://assets/gltf/crate_onions.gltf" id="14_em3yi"]
+[ext_resource type="PackedScene" uid="uid://blb8jfh0ks8ki" path="res://assets/gltf/crate_mushrooms.gltf" id="15_gktc8"]
+[ext_resource type="PackedScene" uid="uid://c2h0wsgkf1jv8" path="res://assets/gltf/fridge_A.gltf" id="16_leg4v"]
+[ext_resource type="PackedScene" uid="uid://oiw71arke51p" path="res://assets/gltf/stove_single.gltf" id="17_ddgsb"]
+[ext_resource type="PackedScene" uid="uid://bktq61i3rhkk0" path="res://assets/gltf/pizza_oven.gltf" id="18_va5r0"]
+[ext_resource type="PackedScene" uid="uid://ckn6o00yq2o6e" path="res://assets/gltf/kitchentable_A_large.gltf" id="19_17y88"]
+[ext_resource type="PackedScene" uid="uid://cq7xffrlv4q0n" path="res://assets/gltf/cuttingboard.gltf" id="20_tp8lg"]
+[ext_resource type="PackedScene" uid="uid://ceb5eisyspmxt" path="res://assets/gltf/rollingpin.gltf" id="21_56fib"]
+[ext_resource type="PackedScene" uid="uid://b6l6hn2jo6us1" path="res://assets/gltf/knife.gltf" id="22_lh7gy"]
+[ext_resource type="PackedScene" uid="uid://dh7rhvk3e8x8a" path="res://assets/gltf/kitchencounter_straight_A_decorated_styleB.gltf" id="23_sv34q"]
+[ext_resource type="PackedScene" uid="uid://basa7xkgf1kdg" path="res://assets/gltf/kitchencounter_outercorner.gltf" id="24_k37c3"]
+[ext_resource type="PackedScene" uid="uid://fc1nf10kpwic" path="res://assets/gltf/icecream_machine.gltf" id="25_afdm1"]
+[ext_resource type="PackedScene" uid="uid://b5ing1pj2wnao" path="res://assets/gltf/pot_A.gltf" id="27_enn6r"]
+[ext_resource type="PackedScene" uid="uid://dr06c6stvx8wi" path="res://assets/gltf/table_round_A.gltf" id="29_nu63k"]
+[ext_resource type="Script" uid="uid://b6tuyh33rtbwm" path="res://scripts/tuong_tac/tram_tuong_tac.gd" id="30_tram"]
+[ext_resource type="Script" path="res://scripts/nha_hang/ban_an.gd" id="31_ban"]
+
+[sub_resource type="CapsuleShape3D" id="Cap_player"]
+radius = 0.45
+height = 1.76
+
+[sub_resource type="PackedScene" id="PackedScene_yqu5o"]
+_bundled = {
+"conn_count": 0,
+"conns": PackedInt32Array(),
+"editable_instances": [],
+"names": PackedStringArray("PlayerKitachibi", "CharacterBody3D", "script", "Model", "transform", "CollisionShape3D", "CollisionShape3D", "transform", "shape", "CameraPivot", "Node3D", "transform", "SpringArm3D", "SpringArm3D", "transform", "spring_length", "Camera3D", "Camera3D", "current", "fov", "HUD", "CanvasLayer", "Label", "Label", "offset_left", "offset_top", "offset_right", "offset_bottom", "theme_override_colors/font_color", "theme_override_colors/font_outline_color", "theme_override_constants/outline_size", "text"),
+"node_count": 8,
+"node_paths": [NodePath("."), NodePath("."), NodePath("."), NodePath("./CameraPivot"), NodePath("./CameraPivot/SpringArm3D"), NodePath("."), NodePath("./HUD")],
+"nodes": PackedInt32Array(-1, -1, 1, 0, -1, 1, 2, 0, 0, 1073741824, 0, 2147483647, 3, 1, 1, 4, 2, 0, 1073741825, 0, 6, 5, -1, 2, 7, 3, 8, 4, 0, 1073741826, 0, 10, 9, -1, 1, 11, 5, 0, 1073741827, 0, 13, 12, -1, 2, 14, 6, 15, 7, 0, 1073741828, 0, 17, 16, -1, 2, 18, 8, 19, 9, 0, 1073741829, 0, 21, 20, -1, 0, 0, 1073741830, 0, 23, 22, -1, 8, 24, 10, 25, 11, 26, 12, 27, 13, 28, 14, 29, 15, 30, 16, 31, 17, 0),
+"variants": [ExtResource("2_en7o4"), ExtResource("3_nu63k"), Transform3D(1.6, 0, 0, 0, 1.6, 0, 0, 0, 1.6, 0, 0, 0), Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.9, 0), SubResource("Cap_player"), Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.36, 0), Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.65, 0, 0), 2.6, true, 60.0, 16.0, 12.0, 700.0, 110.0, Color(1, 1, 1, 1), Color(0, 0, 0, 1), 6, "Anim: -"],
+"version": 3
+}
+
+[sub_resource type="BoxMesh" id="Mesh_San"]
+size = Vector3(32, 0.5, 24)
+
+[sub_resource type="StandardMaterial3D" id="Mat_San"]
+albedo_color = Color(0.803922, 0.72549, 0.596078, 1)
+roughness = 0.95
+
+[sub_resource type="BoxShape3D" id="Shape_San"]
+size = Vector3(32, 0.5, 24)
+
+[sub_resource type="PlaneMesh" id="Mesh_SanBep"]
+size = Vector2(16, 12)
+
+[sub_resource type="Shader" id="Shader_CaRo"]
+code = "shader_type spatial;
+render_mode cull_back, diffuse_burley, specular_schlick_ggx;
+
+// San bep ca-ro den trang.
+//
+// Ve bang SHADER chu khong dan anh texture, vi hai ly do:
+//  1. O ca-ro duoc tinh tu TOA DO THE GIOI, nen duong ranh giua cac o luon
+//     roi dung x = 0, 2, 4, 6... -- trung khop voi luoi module 2 don vi cua
+//     KayKit. Nho vay san bep thanh mot cai THUOC DO: ke tu/bep vao dung mot
+//     o ca-ro la chac chan khop luoi, khong phai canh bang mat.
+//  2. Doi kich thuoc san hay keo dai khu bep khong lam texture bi keo gian,
+//     vi khong co UV nao ca -- o ca-ro van vuong nhu cu.
+
+uniform float o_vuong = 2.0;
+uniform vec3 mau_sang : source_color = vec3(0.90, 0.90, 0.88);
+uniform vec3 mau_toi : source_color = vec3(0.11, 0.12, 0.12);
+uniform float do_nham = 0.85;
+
+varying vec3 vi_tri_the_gioi;
+
+void vertex() {
+	vi_tri_the_gioi = (MODEL_MATRIX * vec4(VERTEX, 1.0)).xyz;
+}
+
+void fragment() {
+	vec2 o = floor(vi_tri_the_gioi.xz / o_vuong);
+	float chan_le = mod(o.x + o.y, 2.0);
+	ALBEDO = mix(mau_toi, mau_sang, chan_le);
+	ROUGHNESS = do_nham;
+	SPECULAR = 0.15;
+}
+"
+
+[sub_resource type="ShaderMaterial" id="Mat_SanBep"]
+render_priority = 0
+shader = SubResource("Shader_CaRo")
+shader_parameter/o_vuong = 2.0
+shader_parameter/mau_sang = Color(0.9, 0.9, 0.88, 1)
+shader_parameter/mau_toi = Color(0.11, 0.12, 0.12, 1)
+shader_parameter/do_nham = 0.85
+
+[sub_resource type="BoxShape3D" id="Shape_Tuong"]
+size = Vector3(4, 4, 0.5)
+
+[sub_resource type="BoxShape3D" id="Shape_Ben"]
+size = Vector3(1, 4, 0.5)
+
+[sub_resource type="BoxMesh" id="Mesh_TuongKinh"]
+size = Vector3(4, 4, 0.5)
+
+[sub_resource type="StandardMaterial3D" id="Mat_TuongKinh"]
+transparency = 1
+albedo_color = Color(0.6, 0.68, 0.72, 0.28)
+metallic_specular = 0.2
+roughness = 0.35
+
+[sub_resource type="BoxShape3D" id="Shape_CuaSo"]
+size = Vector3(4, 4, 0.9)
+
+[sub_resource type="ProceduralSkyMaterial" id="VatLieuTroi"]
+sky_top_color = Color(0.278431, 0.517647, 0.847059, 1)
+sky_horizon_color = Color(0.729412, 0.827451, 0.913725, 1)
+sky_curve = 0.13
+ground_bottom_color = Color(0.407843, 0.458824, 0.360784, 1)
+ground_horizon_color = Color(0.65098, 0.694118, 0.611765, 1)
+ground_curve = 0.08
+sun_angle_max = 12.0
+sun_curve = 0.12
+
+[sub_resource type="Sky" id="Troi_Quan"]
+sky_material = SubResource("VatLieuTroi")
+
+[sub_resource type="Environment" id="Env_Quan"]
+background_mode = 2
+sky = SubResource("Troi_Quan")
+ambient_light_source = 3
+ambient_light_color = Color(1, 0.945098, 0.878431, 1)
+ambient_light_sky_contribution = 0.5
+ambient_light_energy = 1.15
+reflected_light_source = 2
+tonemap_mode = 3
+tonemap_exposure = 1.15
+tonemap_white = 6.0
+ssao_enabled = true
+ssao_radius = 0.6
+ssao_intensity = 1.4
+ssao_power = 1.2
+
+[sub_resource type="CylinderShape3D" id="Shape_BanTron"]
+height = 1.0
+radius = 1.5
+
+[sub_resource type="BoxShape3D" id="Shape_ThungRac"]
+size = Vector3(1.03, 1.365, 1.19)
+
+[sub_resource type="BoxShape3D" id="Shape_Thung"]
+size = Vector3(2, 0.9, 2)
+
+[sub_resource type="BoxShape3D" id="Shape_TuLanh"]
+size = Vector3(2, 2.5, 2.24)
+
+[sub_resource type="BoxShape3D" id="Shape_Bep"]
+size = Vector3(2, 1.21, 2.29)
+
+[sub_resource type="BoxShape3D" id="Shape_LoPizza"]
+size = Vector3(3, 2.07, 2.35)
+
+[sub_resource type="BoxShape3D" id="Shape_BanLon"]
+size = Vector3(3, 1, 2)
+
+[sub_resource type="BoxShape3D" id="Shape_QuayTT"]
+size = Vector3(2.01, 2.1, 2.26)
+
+[sub_resource type="BoxShape3D" id="Shape_QuayGoc"]
+size = Vector3(2, 1, 2)
+
+[sub_resource type="BoxShape3D" id="Shape_MayKem"]
+size = Vector3(2, 2.4, 2.03)
+
+[sub_resource type="BoxShape3D" id="Shape_Noi"]
+size = Vector3(0.9, 0.55, 0.9)
+
+[node name="RestaurantMapPlanB" type="Node3D"]
+script = ExtResource("1_level")
+player_scene = SubResource("PackedScene_yqu5o")
+
+[node name="San" type="StaticBody3D" parent="."]
+
+[node name="MatSan" type="MeshInstance3D" parent="San"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 16, -0.25, 12)
+mesh = SubResource("Mesh_San")
+surface_material_override/0 = SubResource("Mat_San")
+
+[node name="VaCham" type="CollisionShape3D" parent="San"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 16, -0.25, 12)
+shape = SubResource("Shape_San")
+
+[node name="SanBep" type="MeshInstance3D" parent="San"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 8, 0.01, 6)
+mesh = SubResource("Mesh_SanBep")
+surface_material_override/0 = SubResource("Mat_SanBep")
+
+[node name="Tuong" type="Node3D" parent="."]
+
+[node name="Bac0" type="StaticBody3D" parent="Tuong"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2, 0, 0)
+
+[node name="Mesh" parent="Tuong/Bac0" instance=ExtResource("5_wall")]
+
+[node name="Col" type="CollisionShape3D" parent="Tuong/Bac0"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2, 0)
+shape = SubResource("Shape_Tuong")
+
+[node name="Bac1" type="StaticBody3D" parent="Tuong"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 6, 0, 0)
+
+[node name="Mesh" parent="Tuong/Bac1" instance=ExtResource("5_wall")]
+
+[node name="Col" type="CollisionShape3D" parent="Tuong/Bac1"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2, 0)
+shape = SubResource("Shape_Tuong")
+
+[node name="Bac2" type="StaticBody3D" parent="Tuong"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 10, 0, 0)
+
+[node name="Mesh" parent="Tuong/Bac2" instance=ExtResource("5_wall")]
+
+[node name="Col" type="CollisionShape3D" parent="Tuong/Bac2"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2, 0)
+shape = SubResource("Shape_Tuong")
+
+[node name="Bac3" type="StaticBody3D" parent="Tuong"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 14, 0, 0)
+
+[node name="Mesh" parent="Tuong/Bac3" instance=ExtResource("5_wall")]
+
+[node name="Col" type="CollisionShape3D" parent="Tuong/Bac3"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2, 0)
+shape = SubResource("Shape_Tuong")
+
+[node name="Bac4" type="StaticBody3D" parent="Tuong"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 18, 0, 0)
+
+[node name="Mesh" parent="Tuong/Bac4" instance=ExtResource("5_wall")]
+
+[node name="Col" type="CollisionShape3D" parent="Tuong/Bac4"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2, 0)
+shape = SubResource("Shape_Tuong")
+
+[node name="Bac5" type="StaticBody3D" parent="Tuong"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 22, 0, 0)
+
+[node name="Mesh" parent="Tuong/Bac5" instance=ExtResource("5_wall")]
+
+[node name="Col" type="CollisionShape3D" parent="Tuong/Bac5"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2, 0)
+shape = SubResource("Shape_Tuong")
+
+[node name="Bac6" type="StaticBody3D" parent="Tuong"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 26, 0, 0)
+
+[node name="Mesh" parent="Tuong/Bac6" instance=ExtResource("5_wall")]
+
+[node name="Col" type="CollisionShape3D" parent="Tuong/Bac6"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2, 0)
+shape = SubResource("Shape_Tuong")
+
+[node name="Bac7" type="StaticBody3D" parent="Tuong"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 30, 0, 0)
+
+[node name="Mesh" parent="Tuong/Bac7" instance=ExtResource("5_wall")]
+
+[node name="Col" type="CollisionShape3D" parent="Tuong/Bac7"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2, 0)
+shape = SubResource("Shape_Tuong")
+
+[node name="Tay0" type="StaticBody3D" parent="Tuong"]
+transform = Transform3D(0, 0, -1, 0, 1, 0, 1, 0, 0, 0, 0, 2)
+
+[node name="Mesh" parent="Tuong/Tay0" instance=ExtResource("5_wall")]
+
+[node name="Col" type="CollisionShape3D" parent="Tuong/Tay0"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2, 0)
+shape = SubResource("Shape_Tuong")
+
+[node name="Tay1" type="StaticBody3D" parent="Tuong"]
+transform = Transform3D(0, 0, -1, 0, 1, 0, 1, 0, 0, 0, 0, 6)
+
+[node name="Mesh" parent="Tuong/Tay1" instance=ExtResource("5_wall")]
+
+[node name="Col" type="CollisionShape3D" parent="Tuong/Tay1"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2, 0)
+shape = SubResource("Shape_Tuong")
+
+[node name="Tay2" type="StaticBody3D" parent="Tuong"]
+transform = Transform3D(0, 0, -1, 0, 1, 0, 1, 0, 0, 0, 0, 10)
+
+[node name="Mesh" parent="Tuong/Tay2" instance=ExtResource("5_wall")]
+
+[node name="Col" type="CollisionShape3D" parent="Tuong/Tay2"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2, 0)
+shape = SubResource("Shape_Tuong")
+
+[node name="Tay3" type="StaticBody3D" parent="Tuong"]
+transform = Transform3D(0, 0, -1, 0, 1, 0, 1, 0, 0, 0, 0, 14)
+
+[node name="Mesh" parent="Tuong/Tay3" instance=ExtResource("5_wall")]
+
+[node name="Col" type="CollisionShape3D" parent="Tuong/Tay3"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2, 0)
+shape = SubResource("Shape_Tuong")
+
+[node name="Tay4" type="StaticBody3D" parent="Tuong"]
+transform = Transform3D(0, 0, -1, 0, 1, 0, 1, 0, 0, 0, 0, 18)
+
+[node name="Mesh" parent="Tuong/Tay4" instance=ExtResource("5_wall")]
+
+[node name="Col" type="CollisionShape3D" parent="Tuong/Tay4"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2, 0)
+shape = SubResource("Shape_Tuong")
+
+[node name="Tay5" type="StaticBody3D" parent="Tuong"]
+transform = Transform3D(0, 0, -1, 0, 1, 0, 1, 0, 0, 0, 0, 22)
+
+[node name="Mesh" parent="Tuong/Tay5" instance=ExtResource("5_wall")]
+
+[node name="Col" type="CollisionShape3D" parent="Tuong/Tay5"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2, 0)
+shape = SubResource("Shape_Tuong")
+
+[node name="DongCuaVao" type="StaticBody3D" parent="Tuong"]
+transform = Transform3D(0, 0, -1, 0, 1, 0, 1, 0, 0, 32, 0, 2)
+
+[node name="Mesh" parent="Tuong/DongCuaVao" instance=ExtResource("6_door")]
+
+[node name="ColTrai" type="CollisionShape3D" parent="Tuong/DongCuaVao"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.5, 2, 0)
+shape = SubResource("Shape_Ben")
+
+[node name="ColPhai" type="CollisionShape3D" parent="Tuong/DongCuaVao"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.5, 2, 0)
+shape = SubResource("Shape_Ben")
+
+[node name="Dong1" type="StaticBody3D" parent="Tuong"]
+transform = Transform3D(0, 0, -1, 0, 1, 0, 1, 0, 0, 32, 0, 6)
+
+[node name="Mesh" parent="Tuong/Dong1" instance=ExtResource("5_wall")]
+
+[node name="Col" type="CollisionShape3D" parent="Tuong/Dong1"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2, 0)
+shape = SubResource("Shape_Tuong")
+
+[node name="Dong2" type="StaticBody3D" parent="Tuong"]
+transform = Transform3D(0, 0, -1, 0, 1, 0, 1, 0, 0, 32, 0, 10)
+
+[node name="Mesh" parent="Tuong/Dong2" instance=ExtResource("5_wall")]
+
+[node name="Col" type="CollisionShape3D" parent="Tuong/Dong2"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2, 0)
+shape = SubResource("Shape_Tuong")
+
+[node name="Dong3" type="StaticBody3D" parent="Tuong"]
+transform = Transform3D(0, 0, -1, 0, 1, 0, 1, 0, 0, 32, 0, 14)
+
+[node name="Mesh" parent="Tuong/Dong3" instance=ExtResource("5_wall")]
+
+[node name="Col" type="CollisionShape3D" parent="Tuong/Dong3"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2, 0)
+shape = SubResource("Shape_Tuong")
+
+[node name="Dong4" type="StaticBody3D" parent="Tuong"]
+transform = Transform3D(0, 0, -1, 0, 1, 0, 1, 0, 0, 32, 0, 18)
+
+[node name="Mesh" parent="Tuong/Dong4" instance=ExtResource("5_wall")]
+
+[node name="Col" type="CollisionShape3D" parent="Tuong/Dong4"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2, 0)
+shape = SubResource("Shape_Tuong")
+
+[node name="Dong5" type="StaticBody3D" parent="Tuong"]
+transform = Transform3D(0, 0, -1, 0, 1, 0, 1, 0, 0, 32, 0, 22)
+
+[node name="Mesh" parent="Tuong/Dong5" instance=ExtResource("5_wall")]
+
+[node name="Col" type="CollisionShape3D" parent="Tuong/Dong5"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2, 0)
+shape = SubResource("Shape_Tuong")
+
+[node name="NamKinh" type="StaticBody3D" parent="Tuong"]
+
+[node name="Col0" type="CollisionShape3D" parent="Tuong/NamKinh"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2, 2, 24)
+shape = SubResource("Shape_Tuong")
+
+[node name="Col1" type="CollisionShape3D" parent="Tuong/NamKinh"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 6, 2, 24)
+shape = SubResource("Shape_Tuong")
+
+[node name="Col2" type="CollisionShape3D" parent="Tuong/NamKinh"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 10, 2, 24)
+shape = SubResource("Shape_Tuong")
+
+[node name="Col3" type="CollisionShape3D" parent="Tuong/NamKinh"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 14, 2, 24)
+shape = SubResource("Shape_Tuong")
+
+[node name="Col4" type="CollisionShape3D" parent="Tuong/NamKinh"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 18, 2, 24)
+shape = SubResource("Shape_Tuong")
+
+[node name="Col5" type="CollisionShape3D" parent="Tuong/NamKinh"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 22, 2, 24)
+shape = SubResource("Shape_Tuong")
+
+[node name="Col6" type="CollisionShape3D" parent="Tuong/NamKinh"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 26, 2, 24)
+shape = SubResource("Shape_Tuong")
+
+[node name="Col7" type="CollisionShape3D" parent="Tuong/NamKinh"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 30, 2, 24)
+shape = SubResource("Shape_Tuong")
+
+[node name="Kinh0" type="MeshInstance3D" parent="Tuong/NamKinh"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2, 2, 24)
+cast_shadow = 0
+mesh = SubResource("Mesh_TuongKinh")
+surface_material_override/0 = SubResource("Mat_TuongKinh")
+
+[node name="Kinh1" type="MeshInstance3D" parent="Tuong/NamKinh"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 6, 2, 24)
+cast_shadow = 0
+mesh = SubResource("Mesh_TuongKinh")
+surface_material_override/0 = SubResource("Mat_TuongKinh")
+
+[node name="Kinh2" type="MeshInstance3D" parent="Tuong/NamKinh"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 10, 2, 24)
+cast_shadow = 0
+mesh = SubResource("Mesh_TuongKinh")
+surface_material_override/0 = SubResource("Mat_TuongKinh")
+
+[node name="Kinh3" type="MeshInstance3D" parent="Tuong/NamKinh"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 14, 2, 24)
+cast_shadow = 0
+mesh = SubResource("Mesh_TuongKinh")
+surface_material_override/0 = SubResource("Mat_TuongKinh")
+
+[node name="Kinh4" type="MeshInstance3D" parent="Tuong/NamKinh"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 18, 2, 24)
+cast_shadow = 0
+mesh = SubResource("Mesh_TuongKinh")
+surface_material_override/0 = SubResource("Mat_TuongKinh")
+
+[node name="Kinh5" type="MeshInstance3D" parent="Tuong/NamKinh"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 22, 2, 24)
+cast_shadow = 0
+mesh = SubResource("Mesh_TuongKinh")
+surface_material_override/0 = SubResource("Mat_TuongKinh")
+
+[node name="Kinh6" type="MeshInstance3D" parent="Tuong/NamKinh"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 26, 2, 24)
+cast_shadow = 0
+mesh = SubResource("Mesh_TuongKinh")
+surface_material_override/0 = SubResource("Mat_TuongKinh")
+
+[node name="Kinh7" type="MeshInstance3D" parent="Tuong/NamKinh"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 30, 2, 24)
+cast_shadow = 0
+mesh = SubResource("Mesh_TuongKinh")
+surface_material_override/0 = SubResource("Mat_TuongKinh")
+
+[node name="CuaSoGiaoDon" type="StaticBody3D" parent="Tuong"]
+transform = Transform3D(0, 0, -1, 0, 1, 0, 1, 0, 0, 16.45, 0, 2)
+
+[node name="Mesh" parent="Tuong/CuaSoGiaoDon" instance=ExtResource("7_window")]
+
+[node name="Col" type="CollisionShape3D" parent="Tuong/CuaSoGiaoDon"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2, 0)
+shape = SubResource("Shape_CuaSo")
+
+[node name="BepDong" type="StaticBody3D" parent="Tuong"]
+transform = Transform3D(0, 0, -1, 0, 1, 0, 1, 0, 0, 16.25, 0, 10)
+
+[node name="Mesh" parent="Tuong/BepDong" instance=ExtResource("5_wall")]
+
+[node name="Col" type="CollisionShape3D" parent="Tuong/BepDong"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2, 0)
+shape = SubResource("Shape_Tuong")
+
+[node name="NamBepKinh" type="StaticBody3D" parent="Tuong"]
+
+[node name="Col1" type="CollisionShape3D" parent="Tuong/NamBepKinh"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 6, 2, 12)
+shape = SubResource("Shape_Tuong")
+
+[node name="Col2" type="CollisionShape3D" parent="Tuong/NamBepKinh"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 10, 2, 12)
+shape = SubResource("Shape_Tuong")
+
+[node name="Col3" type="CollisionShape3D" parent="Tuong/NamBepKinh"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 14, 2, 12)
+shape = SubResource("Shape_Tuong")
+
+[node name="Kinh1" type="MeshInstance3D" parent="Tuong/NamBepKinh"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 6, 2, 12)
+cast_shadow = 0
+mesh = SubResource("Mesh_TuongKinh")
+surface_material_override/0 = SubResource("Mat_TuongKinh")
+
+[node name="Kinh2" type="MeshInstance3D" parent="Tuong/NamBepKinh"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 10, 2, 12)
+cast_shadow = 0
+mesh = SubResource("Mesh_TuongKinh")
+surface_material_override/0 = SubResource("Mat_TuongKinh")
+
+[node name="Kinh3" type="MeshInstance3D" parent="Tuong/NamBepKinh"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 14, 2, 12)
+cast_shadow = 0
+mesh = SubResource("Mesh_TuongKinh")
+surface_material_override/0 = SubResource("Mat_TuongKinh")
+
+[node name="Moc" type="Node3D" parent="."]
+
+[node name="DiemDatDon" type="Marker3D" parent="Moc"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 17.2, 0, 2)
+
+[node name="LoiNguoiChoi" type="Marker3D" parent="Moc"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 16, 0, 6)
+
+[node name="CuaVao" type="Marker3D" parent="Moc"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 31.5, 0, 2)
+
+[node name="HangDoi1" type="Marker3D" parent="Moc"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 18.6, 0, 2)
+
+[node name="HangDoi2" type="Marker3D" parent="Moc"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 21.2, 0, 2)
+
+[node name="HangDoi3" type="Marker3D" parent="Moc"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 23.8, 0, 2)
+
+[node name="HangDoi4" type="Marker3D" parent="Moc"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 26.4, 0, 2)
+
+[node name="HangDoi5" type="Marker3D" parent="Moc"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 29, 0, 2)
+
+[node name="PlayerSpawn" type="Marker3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 14.5, 0, 6)
+
+[node name="CameraTopDown" type="Camera3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 0.6626, 0.7491, 0, -0.7491, 0.6626, 16, 25.267, 34.35)
+projection = 1
+current = true
+size = 11.0
+far = 90.0
+script = ExtResource("3_cam")
+
+[node name="DirectionalLight3D" type="DirectionalLight3D" parent="."]
+transform = Transform3D(0.8829, 0, 0.4695, 0.4465, 0.309, -0.8397, -0.1451, 0.9511, 0.2728, 16, 18, 12)
+light_color = Color(1, 0.968627, 0.909804, 1)
+light_energy = 2.1
+light_angular_distance = 1.2
+shadow_enabled = true
+shadow_blur = 1.2
+directional_shadow_max_distance = 60.0
+
+[node name="DenBu" type="DirectionalLight3D" parent="."]
+transform = Transform3D(-0.866, 0, -0.5, -0.1873, 0.9272, 0.3244, 0.4636, 0.3746, -0.803, 16, 10, 12)
+light_color = Color(1, 0.960784, 0.92549, 1)
+light_energy = 0.55
+
+[node name="WorldEnvironment" type="WorldEnvironment" parent="."]
+environment = SubResource("Env_Quan")
+
+[node name="NoiThatBep" type="Node3D" parent="."]
+
+[node name="bocchi bin" type="StaticBody3D" parent="NoiThatBep" groups=["tram"]]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.8055229, 0.0073019266, 10.833491)
+script = ExtResource("30_tram")
+ten_hien_thi = "Mang bo do"
+loai = "mang_bo_do"
+
+[node name="Mesh" parent="NoiThatBep/bocchi bin" instance=ExtResource("14_ek3jt")]
+
+[node name="Col" type="CollisionShape3D" parent="NoiThatBep/bocchi bin"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.683, 0)
+shape = SubResource("Shape_ThungRac")
+
+[node name="crate_buns2" type="StaticBody3D" parent="NoiThatBep" groups=["tram"]]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.3, 0, 1.25)
+script = ExtResource("30_tram")
+ten_hien_thi = "Banh mi"
+loai = "ke_nguyen_lieu"
+vat_pham = "bun"
+
+[node name="Mesh" parent="NoiThatBep/crate_buns2" instance=ExtResource("8_cypln")]
+
+[node name="Col" type="CollisionShape3D" parent="NoiThatBep/crate_buns2"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.45, 0)
+shape = SubResource("Shape_Thung")
+
+[node name="crate_dough2" type="StaticBody3D" parent="NoiThatBep" groups=["tram"]]
+transform = Transform3D(1, 0, 0, 0, 0.81915206, -0.57357645, 0, 0.57357645, 0.81915206, 1.3, 2, 1.25)
+script = ExtResource("30_tram")
+ten_hien_thi = "Bot"
+loai = "ke_nguyen_lieu"
+vat_pham = "dough"
+
+[node name="Mesh" parent="NoiThatBep/crate_dough2" instance=ExtResource("9_yieiy")]
+
+[node name="Col" type="CollisionShape3D" parent="NoiThatBep/crate_dough2"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.45, 0)
+shape = SubResource("Shape_Thung")
+
+[node name="crate_lettuce2" type="StaticBody3D" parent="NoiThatBep" groups=["tram"]]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 5.3, 0, 1.25)
+script = ExtResource("30_tram")
+ten_hien_thi = "Xa lach"
+loai = "ke_nguyen_lieu"
+vat_pham = "lettuce"
+
+[node name="Mesh" parent="NoiThatBep/crate_lettuce2" instance=ExtResource("10_enn6r")]
+
+[node name="Col" type="CollisionShape3D" parent="NoiThatBep/crate_lettuce2"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.45, 0)
+shape = SubResource("Shape_Thung")
+
+[node name="crate_carrots2" type="StaticBody3D" parent="NoiThatBep" groups=["tram"]]
+transform = Transform3D(1, 0, 0, 0, 0.81915206, -0.57357645, 0, 0.57357645, 0.81915206, 5.3, 2, 1.25)
+script = ExtResource("30_tram")
+ten_hien_thi = "Ca rot"
+loai = "ke_nguyen_lieu"
+vat_pham = "carrot"
+
+[node name="Mesh" parent="NoiThatBep/crate_carrots2" instance=ExtResource("11_en7o4")]
+
+[node name="Col" type="CollisionShape3D" parent="NoiThatBep/crate_carrots2"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.45, 0)
+shape = SubResource("Shape_Thung")
+
+[node name="crate_potatoes2" type="StaticBody3D" parent="NoiThatBep" groups=["tram"]]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 9.3, 0, 1.25)
+script = ExtResource("30_tram")
+ten_hien_thi = "Khoai tay"
+loai = "ke_nguyen_lieu"
+vat_pham = "potato"
+
+[node name="Mesh" parent="NoiThatBep/crate_potatoes2" instance=ExtResource("12_nu63k")]
+
+[node name="Col" type="CollisionShape3D" parent="NoiThatBep/crate_potatoes2"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.45, 0)
+shape = SubResource("Shape_Thung")
+
+[node name="crate_tomatoes2" type="StaticBody3D" parent="NoiThatBep" groups=["tram"]]
+transform = Transform3D(1, 0, 0, 0, 0.81915206, -0.57357645, 0, 0.57357645, 0.81915206, 9.3, 2, 1.25)
+script = ExtResource("30_tram")
+ten_hien_thi = "Ca chua"
+loai = "ke_nguyen_lieu"
+vat_pham = "tomato"
+
+[node name="Mesh" parent="NoiThatBep/crate_tomatoes2" instance=ExtResource("13_yqu5o")]
+
+[node name="Col" type="CollisionShape3D" parent="NoiThatBep/crate_tomatoes2"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.45, 0)
+shape = SubResource("Shape_Thung")
+
+[node name="crate_onions2" type="StaticBody3D" parent="NoiThatBep" groups=["tram"]]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 13.3, 0, 1.25)
+script = ExtResource("30_tram")
+ten_hien_thi = "Hanh tay"
+loai = "ke_nguyen_lieu"
+vat_pham = "onion"
+
+[node name="Mesh" parent="NoiThatBep/crate_onions2" instance=ExtResource("14_em3yi")]
+
+[node name="Col" type="CollisionShape3D" parent="NoiThatBep/crate_onions2"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.45, 0)
+shape = SubResource("Shape_Thung")
+
+[node name="crate_mushrooms2" type="StaticBody3D" parent="NoiThatBep" groups=["tram"]]
+transform = Transform3D(1, 0, 0, 0, 0.81915206, -0.57357645, 0, 0.57357645, 0.81915206, 13.3, 2, 1.25)
+script = ExtResource("30_tram")
+ten_hien_thi = "Nam"
+loai = "ke_nguyen_lieu"
+vat_pham = "mushroom"
+
+[node name="Mesh" parent="NoiThatBep/crate_mushrooms2" instance=ExtResource("15_gktc8")]
+
+[node name="Col" type="CollisionShape3D" parent="NoiThatBep/crate_mushrooms2"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.45, 0)
+shape = SubResource("Shape_Thung")
+
+[node name="fridge_A2" type="StaticBody3D" parent="NoiThatBep" groups=["tram"]]
+transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, 1.2, 0.026, 5.246)
+script = ExtResource("30_tram")
+ten_hien_thi = "Tu lanh"
+loai = "tu_lanh"
+lua_chon = PackedStringArray("ham", "steak", "cheese", "peperoni", "cookiestick")
+dung_bang_chon = true
+
+[node name="Mesh" parent="NoiThatBep/fridge_A2" instance=ExtResource("16_leg4v")]
+
+[node name="Col" type="CollisionShape3D" parent="NoiThatBep/fridge_A2"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.25, 0.12)
+shape = SubResource("Shape_TuLanh")
+
+[node name="stove_single2" type="StaticBody3D" parent="NoiThatBep" groups=["tram"]]
+transform = Transform3D(-1, 0, -8.742278e-08, 0, 1, 0, 8.742278e-08, 0, -1, 8.277, 0, 10.6)
+script = ExtResource("30_tram")
+ten_hien_thi = "Bep 1"
+loai = "bep"
+
+[node name="Mesh" parent="NoiThatBep/stove_single2" instance=ExtResource("17_ddgsb")]
+
+[node name="Col" type="CollisionShape3D" parent="NoiThatBep/stove_single2"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.605, 0.11)
+shape = SubResource("Shape_Bep")
+
+[node name="stove_single3" type="StaticBody3D" parent="NoiThatBep" groups=["tram"]]
+transform = Transform3D(-1, 0, -8.742278e-08, 0, 1, 0, 8.742278e-08, 0, -1, 5.943, 0, 10.6)
+script = ExtResource("30_tram")
+ten_hien_thi = "Bep 2"
+loai = "bep"
+
+[node name="Mesh" parent="NoiThatBep/stove_single3" instance=ExtResource("17_ddgsb")]
+
+[node name="Col" type="CollisionShape3D" parent="NoiThatBep/stove_single3"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.605, 0.11)
+shape = SubResource("Shape_Bep")
+
+[node name="pizza_oven2" type="StaticBody3D" parent="NoiThatBep" groups=["tram"]]
+transform = Transform3D(-0.7, 0, -6.119594e-08, 0, 0.7, 0, 6.119594e-08, 0, -0.7, 10.484, 0, 10.9)
+script = ExtResource("30_tram")
+ten_hien_thi = "Lo nuong"
+loai = "lo_nuong"
+
+[node name="Mesh" parent="NoiThatBep/pizza_oven2" instance=ExtResource("18_va5r0")]
+
+[node name="Col" type="CollisionShape3D" parent="NoiThatBep/pizza_oven2"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.035, 0.14)
+shape = SubResource("Shape_LoPizza")
+
+[node name="kitchentable_A_large2" type="StaticBody3D" parent="NoiThatBep" groups=["tram"]]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 7.071475, 0.0037517548, 6.1255193)
+script = ExtResource("30_tram")
+ten_hien_thi = "Thot"
+loai = "thot"
+
+[node name="Mesh" parent="NoiThatBep/kitchentable_A_large2" instance=ExtResource("19_17y88")]
+
+[node name="Col" type="CollisionShape3D" parent="NoiThatBep/kitchentable_A_large2"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.5, 0)
+shape = SubResource("Shape_BanLon")
+
+[node name="cuttingboard2" parent="NoiThatBep/kitchentable_A_large2" instance=ExtResource("20_tp8lg")]
+transform = Transform3D(0.8, 0, 0, 0, 0.8, 0, 0, 0, 0.8, -0.65586376, 1.0267375, 0.33351278)
+
+[node name="rollingpin2" parent="NoiThatBep/kitchentable_A_large2/cuttingboard2" instance=ExtResource("21_56fib")]
+transform = Transform3D(1.25, 0, 0, 0, 1.25, 0, 0, 0, 1.25, 1.6114826, 0.24859273, -1.0705585)
+
+[node name="knife2" parent="NoiThatBep/kitchentable_A_large2/cuttingboard2" instance=ExtResource("22_lh7gy")]
+transform = Transform3D(0.75, 0, 0, 0, -3.2783543e-08, 0.75, 0, -0.75, -3.2783543e-08, 0.5988903, 0.3253882, 0.36463928)
+
+[node name="kitchencounter_straight_A_decorated_styleB2" type="StaticBody3D" parent="NoiThatBep" groups=["tram"]]
+transform = Transform3D(-1, 0, -8.742278e-08, 0, 1, 0, 8.742278e-08, 0, -1, 12.589, 0, 10.9)
+script = ExtResource("30_tram")
+ten_hien_thi = "Chong dia"
+loai = "chong_dia"
+
+[node name="Mesh" parent="NoiThatBep/kitchencounter_straight_A_decorated_styleB2" instance=ExtResource("23_sv34q")]
+
+[node name="Col" type="CollisionShape3D" parent="NoiThatBep/kitchencounter_straight_A_decorated_styleB2"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.05, 0.13)
+shape = SubResource("Shape_QuayTT")
+
+[node name="crafting_table" type="StaticBody3D" parent="NoiThatBep" groups=["tram"]]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 9.671643, 0, 6.101334)
+script = ExtResource("30_tram")
+ten_hien_thi = "Ban che tao"
+loai = "ban_che_tao"
+
+[node name="Mesh" parent="NoiThatBep/crafting_table" instance=ExtResource("24_k37c3")]
+
+[node name="Col" type="CollisionShape3D" parent="NoiThatBep/crafting_table"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.5, 0)
+shape = SubResource("Shape_QuayGoc")
+
+[node name="icecream_machine2" type="StaticBody3D" parent="NoiThatBep" groups=["tram"]]
+transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, 1.2, 0, 7.344)
+script = ExtResource("30_tram")
+ten_hien_thi = "May kem"
+loai = "may_kem"
+lua_chon = PackedStringArray("icecream_vani", "icecream_chocolate", "icecream_strawberry")
+dung_bang_chon = true
+
+[node name="Mesh" parent="NoiThatBep/icecream_machine2" instance=ExtResource("25_afdm1")]
+
+[node name="Col" type="CollisionShape3D" parent="NoiThatBep/icecream_machine2"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.2, -0.02)
+shape = SubResource("Shape_MayKem")
+
+[node name="Noi" type="StaticBody3D" parent="NoiThatBep" groups=["tram"]]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 14.748105, 0, 10.700212)
+collision_layer = 4
+collision_mask = 0
+script = ExtResource("30_tram")
+ten_hien_thi = "Chong noi"
+loai = "chong_noi"
+
+[node name="Mesh" parent="NoiThatBep/Noi" instance=ExtResource("27_enn6r")]
+
+[node name="Col" type="CollisionShape3D" parent="NoiThatBep/Noi"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.275, 0)
+shape = SubResource("Shape_Noi")
+
+[node name="DiemNham" type="Marker3D" parent="NoiThatBep/Noi"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.3, 0)
+
+[node name="BanAn" type="Node3D" parent="."]
+
+[node name="Ban1" type="StaticBody3D" parent="BanAn" groups=["tram", "ban_an"]]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 6, 0, 19)
+script = ExtResource("31_ban")
+ten_hien_thi = "Bàn 1"
+loai = "ban_khach"
+diem_nham = NodePath("DiemNham")
+cao_dat = 1.05
+so_ban = 1
+
+[node name="Mesh" parent="BanAn/Ban1" instance=ExtResource("29_nu63k")]
+
+[node name="Col" type="CollisionShape3D" parent="BanAn/Ban1"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.5, 0)
+shape = SubResource("Shape_BanTron")
+
+[node name="DiemNham" type="Marker3D" parent="BanAn/Ban1"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.1, 0)
+
+[node name="So" type="Label3D" parent="BanAn/Ban1"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.75, 0)
+modulate = Color(1, 0.92, 0.58, 1)
+outline_modulate = Color(0.08, 0.07, 0.05, 1)
+text = "1"
+font_size = 128
+outline_size = 32
+billboard = 1
+shaded = false
+no_depth_test = true
+pixel_size = 0.006
+
+[node name="ChoDung1" type="Marker3D" parent="BanAn/Ban1"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 2.15)
+
+[node name="ChoDung2" type="Marker3D" parent="BanAn/Ban1"]
+transform = Transform3D(-1, 0, 0, 0, 1, 0, 0, 0, -1, 0, 0, -2.15)
+
+[node name="Ban2" type="StaticBody3D" parent="BanAn" groups=["tram", "ban_an"]]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 12, 0, 19)
+script = ExtResource("31_ban")
+ten_hien_thi = "Bàn 2"
+loai = "ban_khach"
+diem_nham = NodePath("DiemNham")
+cao_dat = 1.05
+so_ban = 2
+
+[node name="Mesh" parent="BanAn/Ban2" instance=ExtResource("29_nu63k")]
+
+[node name="Col" type="CollisionShape3D" parent="BanAn/Ban2"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.5, 0)
+shape = SubResource("Shape_BanTron")
+
+[node name="DiemNham" type="Marker3D" parent="BanAn/Ban2"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.1, 0)
+
+[node name="So" type="Label3D" parent="BanAn/Ban2"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.75, 0)
+modulate = Color(1, 0.92, 0.58, 1)
+outline_modulate = Color(0.08, 0.07, 0.05, 1)
+text = "2"
+font_size = 128
+outline_size = 32
+billboard = 1
+shaded = false
+no_depth_test = true
+pixel_size = 0.006
+
+[node name="ChoDung1" type="Marker3D" parent="BanAn/Ban2"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 2.15)
+
+[node name="ChoDung2" type="Marker3D" parent="BanAn/Ban2"]
+transform = Transform3D(-1, 0, 0, 0, 1, 0, 0, 0, -1, 0, 0, -2.15)
+
+[node name="Ban3" type="StaticBody3D" parent="BanAn" groups=["tram", "ban_an"]]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 18, 0, 19)
+script = ExtResource("31_ban")
+ten_hien_thi = "Bàn 3"
+loai = "ban_khach"
+diem_nham = NodePath("DiemNham")
+cao_dat = 1.05
+so_ban = 3
+
+[node name="Mesh" parent="BanAn/Ban3" instance=ExtResource("29_nu63k")]
+
+[node name="Col" type="CollisionShape3D" parent="BanAn/Ban3"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.5, 0)
+shape = SubResource("Shape_BanTron")
+
+[node name="DiemNham" type="Marker3D" parent="BanAn/Ban3"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.1, 0)
+
+[node name="So" type="Label3D" parent="BanAn/Ban3"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.75, 0)
+modulate = Color(1, 0.92, 0.58, 1)
+outline_modulate = Color(0.08, 0.07, 0.05, 1)
+text = "3"
+font_size = 128
+outline_size = 32
+billboard = 1
+shaded = false
+no_depth_test = true
+pixel_size = 0.006
+
+[node name="ChoDung1" type="Marker3D" parent="BanAn/Ban3"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 2.15)
+
+[node name="ChoDung2" type="Marker3D" parent="BanAn/Ban3"]
+transform = Transform3D(-1, 0, 0, 0, 1, 0, 0, 0, -1, 0, 0, -2.15)
+
+[node name="Ban4" type="StaticBody3D" parent="BanAn" groups=["tram", "ban_an"]]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 24, 0, 19)
+script = ExtResource("31_ban")
+ten_hien_thi = "Bàn 4"
+loai = "ban_khach"
+diem_nham = NodePath("DiemNham")
+cao_dat = 1.05
+so_ban = 4
+
+[node name="Mesh" parent="BanAn/Ban4" instance=ExtResource("29_nu63k")]
+
+[node name="Col" type="CollisionShape3D" parent="BanAn/Ban4"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.5, 0)
+shape = SubResource("Shape_BanTron")
+
+[node name="DiemNham" type="Marker3D" parent="BanAn/Ban4"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.1, 0)
+
+[node name="So" type="Label3D" parent="BanAn/Ban4"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.75, 0)
+modulate = Color(1, 0.92, 0.58, 1)
+outline_modulate = Color(0.08, 0.07, 0.05, 1)
+text = "4"
+font_size = 128
+outline_size = 32
+billboard = 1
+shaded = false
+no_depth_test = true
+pixel_size = 0.006
+
+[node name="ChoDung1" type="Marker3D" parent="BanAn/Ban4"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 2.15)
+
+[node name="ChoDung2" type="Marker3D" parent="BanAn/Ban4"]
+transform = Transform3D(-1, 0, 0, 0, 1, 0, 0, 0, -1, 0, 0, -2.15)
+
+[node name="Ban5" type="StaticBody3D" parent="BanAn" groups=["tram", "ban_an"]]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 20, 0, 12)
+script = ExtResource("31_ban")
+ten_hien_thi = "Bàn 5"
+loai = "ban_khach"
+diem_nham = NodePath("DiemNham")
+cao_dat = 1.05
+so_ban = 5
+
+[node name="Mesh" parent="BanAn/Ban5" instance=ExtResource("29_nu63k")]
+
+[node name="Col" type="CollisionShape3D" parent="BanAn/Ban5"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.5, 0)
+shape = SubResource("Shape_BanTron")
+
+[node name="DiemNham" type="Marker3D" parent="BanAn/Ban5"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.1, 0)
+
+[node name="So" type="Label3D" parent="BanAn/Ban5"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.75, 0)
+modulate = Color(1, 0.92, 0.58, 1)
+outline_modulate = Color(0.08, 0.07, 0.05, 1)
+text = "5"
+font_size = 128
+outline_size = 32
+billboard = 1
+shaded = false
+no_depth_test = true
+pixel_size = 0.006
+
+[node name="ChoDung1" type="Marker3D" parent="BanAn/Ban5"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 2.15)
+
+[node name="ChoDung2" type="Marker3D" parent="BanAn/Ban5"]
+transform = Transform3D(-1, 0, 0, 0, 1, 0, 0, 0, -1, 0, 0, -2.15)
+
+[node name="Ban6" type="StaticBody3D" parent="BanAn" groups=["tram", "ban_an"]]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 28, 0, 12)
+script = ExtResource("31_ban")
+ten_hien_thi = "Bàn 6"
+loai = "ban_khach"
+diem_nham = NodePath("DiemNham")
+cao_dat = 1.05
+so_ban = 6
+
+[node name="Mesh" parent="BanAn/Ban6" instance=ExtResource("29_nu63k")]
+
+[node name="Col" type="CollisionShape3D" parent="BanAn/Ban6"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.5, 0)
+shape = SubResource("Shape_BanTron")
+
+[node name="DiemNham" type="Marker3D" parent="BanAn/Ban6"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.1, 0)
+
+[node name="So" type="Label3D" parent="BanAn/Ban6"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.75, 0)
+modulate = Color(1, 0.92, 0.58, 1)
+outline_modulate = Color(0.08, 0.07, 0.05, 1)
+text = "6"
+font_size = 128
+outline_size = 32
+billboard = 1
+shaded = false
+no_depth_test = true
+pixel_size = 0.006
+
+[node name="ChoDung1" type="Marker3D" parent="BanAn/Ban6"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 2.15)
+
+[node name="ChoDung2" type="Marker3D" parent="BanAn/Ban6"]
+transform = Transform3D(-1, 0, 0, 0, 1, 0, 0, 0, -1, 0, 0, -2.15)

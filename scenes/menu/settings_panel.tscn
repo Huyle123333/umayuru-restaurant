@@ -1,0 +1,286 @@
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scenes/menu/settings_panel.gd" id="1_set"]
+
+[node name="SettingsPanel" type="Control"]
+visible = false
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_set")
+
+[node name="Dim" type="ColorRect" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0, 0, 0, 0.7)
+
+[node name="Center" type="CenterContainer" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Panel" type="PanelContainer" parent="Center"]
+texture_filter = 1
+custom_minimum_size = Vector2(880, 0)
+layout_mode = 2
+
+[node name="VBox" type="VBoxContainer" parent="Center/Panel"]
+layout_mode = 2
+theme_override_constants/separation = 14
+
+[node name="Title" type="Label" parent="Center/Panel/VBox"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 38
+text = "CAIDAT_TIEU_DE"
+horizontal_alignment = 1
+
+[node name="Sep1" type="HSeparator" parent="Center/Panel/VBox"]
+layout_mode = 2
+
+[node name="Head1" type="Label" parent="Center/Panel/VBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.607843, 0.372549, 0.117647, 1)
+theme_override_font_sizes/font_size = 20
+text = "CAIDAT_NHOM_AM_THANH"
+
+[node name="Grid1" type="GridContainer" parent="Center/Panel/VBox"]
+layout_mode = 2
+theme_override_constants/h_separation = 24
+theme_override_constants/v_separation = 10
+columns = 3
+
+[node name="LSldMaster" type="Label" parent="Center/Panel/VBox/Grid1"]
+custom_minimum_size = Vector2(230, 0)
+layout_mode = 2
+size_flags_vertical = 4
+text = "CAIDAT_AM_LUONG_TONG"
+
+[node name="SldMaster" type="HSlider" parent="Center/Panel/VBox/Grid1"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(400, 0)
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 4
+min_value = 0.0
+max_value = 1.0
+step = 0.01
+value = 0.8
+
+[node name="LblMaster" type="Label" parent="Center/Panel/VBox/Grid1"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(90, 0)
+layout_mode = 2
+size_flags_vertical = 4
+text = "--"
+horizontal_alignment = 2
+
+[node name="LSldMusic" type="Label" parent="Center/Panel/VBox/Grid1"]
+custom_minimum_size = Vector2(230, 0)
+layout_mode = 2
+size_flags_vertical = 4
+text = "CAIDAT_NHAC_NEN"
+
+[node name="SldMusic" type="HSlider" parent="Center/Panel/VBox/Grid1"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(400, 0)
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 4
+min_value = 0.0
+max_value = 1.0
+step = 0.01
+value = 0.7
+
+[node name="LblMusic" type="Label" parent="Center/Panel/VBox/Grid1"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(90, 0)
+layout_mode = 2
+size_flags_vertical = 4
+text = "--"
+horizontal_alignment = 2
+
+[node name="LSldSfx" type="Label" parent="Center/Panel/VBox/Grid1"]
+custom_minimum_size = Vector2(230, 0)
+layout_mode = 2
+size_flags_vertical = 4
+text = "CAIDAT_HIEU_UNG"
+
+[node name="SldSfx" type="HSlider" parent="Center/Panel/VBox/Grid1"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(400, 0)
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 4
+min_value = 0.0
+max_value = 1.0
+step = 0.01
+value = 0.9
+
+[node name="LblSfx" type="Label" parent="Center/Panel/VBox/Grid1"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(90, 0)
+layout_mode = 2
+size_flags_vertical = 4
+text = "--"
+horizontal_alignment = 2
+
+[node name="Sep2" type="HSeparator" parent="Center/Panel/VBox"]
+layout_mode = 2
+
+[node name="Head2" type="Label" parent="Center/Panel/VBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.607843, 0.372549, 0.117647, 1)
+theme_override_font_sizes/font_size = 20
+text = "CAIDAT_NHOM_HINH_ANH"
+
+[node name="Grid2" type="GridContainer" parent="Center/Panel/VBox"]
+layout_mode = 2
+theme_override_constants/h_separation = 24
+theme_override_constants/v_separation = 10
+columns = 3
+
+[node name="LSldBrightness" type="Label" parent="Center/Panel/VBox/Grid2"]
+custom_minimum_size = Vector2(230, 0)
+layout_mode = 2
+size_flags_vertical = 4
+text = "CAIDAT_DO_SANG"
+
+[node name="SldBrightness" type="HSlider" parent="Center/Panel/VBox/Grid2"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(400, 0)
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 4
+min_value = 0.5
+max_value = 1.5
+step = 0.01
+value = 1.0
+
+[node name="LblBrightness" type="Label" parent="Center/Panel/VBox/Grid2"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(90, 0)
+layout_mode = 2
+size_flags_vertical = 4
+text = "--"
+horizontal_alignment = 2
+
+[node name="LFull" type="Label" parent="Center/Panel/VBox/Grid2"]
+custom_minimum_size = Vector2(230, 0)
+layout_mode = 2
+size_flags_vertical = 4
+text = "CAIDAT_TOAN_MAN_HINH"
+
+[node name="ChkFullscreen" type="CheckButton" parent="Center/Panel/VBox/Grid2"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 0
+
+[node name="SpacerFull" type="Control" parent="Center/Panel/VBox/Grid2"]
+layout_mode = 2
+mouse_filter = 2
+
+[node name="Sep3" type="HSeparator" parent="Center/Panel/VBox"]
+layout_mode = 2
+
+[node name="Head3" type="Label" parent="Center/Panel/VBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.607843, 0.372549, 0.117647, 1)
+theme_override_font_sizes/font_size = 20
+text = "CAIDAT_NHOM_DIEU_KHIEN"
+
+[node name="Grid3" type="GridContainer" parent="Center/Panel/VBox"]
+layout_mode = 2
+theme_override_constants/h_separation = 24
+theme_override_constants/v_separation = 10
+columns = 3
+
+[node name="LSldMouse" type="Label" parent="Center/Panel/VBox/Grid3"]
+custom_minimum_size = Vector2(230, 0)
+layout_mode = 2
+size_flags_vertical = 4
+text = "CAIDAT_TOC_DO_CHUOT"
+
+[node name="SldMouse" type="HSlider" parent="Center/Panel/VBox/Grid3"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(400, 0)
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 4
+min_value = 0.3
+max_value = 2.5
+step = 0.05
+value = 1.0
+
+[node name="LblMouse" type="Label" parent="Center/Panel/VBox/Grid3"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(90, 0)
+layout_mode = 2
+size_flags_vertical = 4
+text = "--"
+horizontal_alignment = 2
+
+[node name="Sep4" type="HSeparator" parent="Center/Panel/VBox"]
+layout_mode = 2
+
+[node name="Head4" type="Label" parent="Center/Panel/VBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.607843, 0.372549, 0.117647, 1)
+theme_override_font_sizes/font_size = 20
+text = "CAIDAT_NHOM_NGON_NGU"
+
+[node name="Grid4" type="GridContainer" parent="Center/Panel/VBox"]
+layout_mode = 2
+theme_override_constants/h_separation = 24
+theme_override_constants/v_separation = 10
+columns = 3
+
+[node name="LNgonNgu" type="Label" parent="Center/Panel/VBox/Grid4"]
+custom_minimum_size = Vector2(230, 0)
+layout_mode = 2
+size_flags_vertical = 4
+text = "CAIDAT_NGON_NGU"
+
+[node name="OptNgonNgu" type="OptionButton" parent="Center/Panel/VBox/Grid4"]
+unique_name_in_owner = true
+auto_translate_mode = 2
+custom_minimum_size = Vector2(260, 0)
+layout_mode = 2
+size_flags_horizontal = 0
+size_flags_vertical = 4
+
+[node name="SpacerNgonNgu" type="Control" parent="Center/Panel/VBox/Grid4"]
+layout_mode = 2
+mouse_filter = 2
+
+[node name="SepEnd" type="HSeparator" parent="Center/Panel/VBox"]
+layout_mode = 2
+
+[node name="Buttons" type="HBoxContainer" parent="Center/Panel/VBox"]
+texture_filter = 1
+layout_mode = 2
+theme_override_constants/separation = 16
+
+[node name="BtnDefault" type="Button" parent="Center/Panel/VBox/Buttons"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "CAIDAT_MAC_DINH"
+
+[node name="Spacer" type="Control" parent="Center/Panel/VBox/Buttons"]
+layout_mode = 2
+size_flags_horizontal = 3
+mouse_filter = 2
+
+[node name="BtnClose" type="Button" parent="Center/Panel/VBox/Buttons"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "CAIDAT_DONG_ESC"

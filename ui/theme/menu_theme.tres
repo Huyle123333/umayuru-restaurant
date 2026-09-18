@@ -1,0 +1,130 @@
+[gd_resource type="Theme" load_steps=18 format=3 uid="uid://cj80dajsf8jm6"]
+
+[ext_resource type="Texture2D" uid="uid://rtr3nie5xcbt" path="res://assets/ui/megacozy/x3/btn_wood_x3.png" id="1_btn"]
+[ext_resource type="Texture2D" uid="uid://cj0romn7ypywh" path="res://assets/ui/megacozy/x3/btn_wood_pressed_x3.png" id="2_btnp"]
+[ext_resource type="Texture2D" uid="uid://degk7dnqrhwcw" path="res://assets/ui/megacozy/x3/frame_panel_x3.png" id="3_panel"]
+[ext_resource type="Texture2D" uid="uid://cvhck0n0kcbt0" path="res://assets/ui/megacozy/x3/slider_track_x3.png" id="4_track"]
+[ext_resource type="Texture2D" uid="uid://qu1r7qvei2vh" path="res://assets/ui/megacozy/x3/slider_fill_x3.png" id="5_fill"]
+[ext_resource type="Texture2D" uid="uid://cc2v06ggg4jki" path="res://assets/ui/megacozy/x3/slider_grabber_x3.png" id="6_grab"]
+[ext_resource type="Texture2D" uid="uid://d35xitwe411nu" path="res://assets/ui/megacozy/x3/toggle_on_x3.png" id="7_on"]
+[ext_resource type="Texture2D" uid="uid://b4dov06k7cbqf" path="res://assets/ui/megacozy/x3/toggle_off_x3.png" id="8_off"]
+
+[sub_resource type="StyleBoxTexture" id="BtnDisabled"]
+content_margin_left = 28.0
+content_margin_top = 12.0
+content_margin_right = 28.0
+content_margin_bottom = 16.0
+texture = ExtResource("1_btn")
+texture_margin_left = 30.0
+texture_margin_top = 30.0
+texture_margin_right = 30.0
+texture_margin_bottom = 36.0
+modulate_color = Color(0.55, 0.5, 0.48, 0.7)
+
+[sub_resource type="StyleBoxEmpty" id="BtnFocus"]
+
+[sub_resource type="StyleBoxTexture" id="BtnHover"]
+content_margin_left = 28.0
+content_margin_top = 12.0
+content_margin_right = 28.0
+content_margin_bottom = 16.0
+texture = ExtResource("1_btn")
+texture_margin_left = 30.0
+texture_margin_top = 30.0
+texture_margin_right = 30.0
+texture_margin_bottom = 36.0
+modulate_color = Color(1.22, 1.12, 1.02, 1)
+
+[sub_resource type="StyleBoxTexture" id="BtnNormal"]
+content_margin_left = 28.0
+content_margin_top = 12.0
+content_margin_right = 28.0
+content_margin_bottom = 16.0
+texture = ExtResource("1_btn")
+texture_margin_left = 30.0
+texture_margin_top = 30.0
+texture_margin_right = 30.0
+texture_margin_bottom = 36.0
+
+[sub_resource type="StyleBoxTexture" id="BtnPressed"]
+content_margin_left = 28.0
+content_margin_top = 16.0
+content_margin_right = 28.0
+content_margin_bottom = 12.0
+texture = ExtResource("2_btnp")
+texture_margin_left = 30.0
+texture_margin_top = 30.0
+texture_margin_right = 30.0
+texture_margin_bottom = 27.0
+
+[sub_resource type="StyleBoxEmpty" id="CheckEmpty"]
+content_margin_left = 0.0
+content_margin_top = 6.0
+content_margin_right = 0.0
+content_margin_bottom = 6.0
+
+[sub_resource type="StyleBoxTexture" id="SliderFill"]
+texture = ExtResource("5_fill")
+texture_margin_left = 18.0
+texture_margin_top = 18.0
+texture_margin_right = 18.0
+texture_margin_bottom = 18.0
+
+[sub_resource type="StyleBoxTexture" id="SliderTrack"]
+texture = ExtResource("4_track")
+texture_margin_left = 18.0
+texture_margin_top = 18.0
+texture_margin_right = 18.0
+texture_margin_bottom = 18.0
+
+[sub_resource type="StyleBoxTexture" id="PanelStyle"]
+content_margin_left = 44.0
+content_margin_top = 40.0
+content_margin_right = 44.0
+content_margin_bottom = 40.0
+texture = ExtResource("3_panel")
+texture_margin_left = 36.0
+texture_margin_top = 30.0
+texture_margin_right = 36.0
+texture_margin_bottom = 30.0
+
+[resource]
+Button/colors/font_color = Color(1, 0.960784, 0.894118, 1)
+Button/colors/font_disabled_color = Color(0.827451, 0.803922, 0.780392, 0.6)
+Button/colors/font_focus_color = Color(1, 1, 1, 1)
+Button/colors/font_hover_color = Color(1, 1, 1, 1)
+Button/colors/font_outline_color = Color(0.278431, 0.145098, 0.0784314, 1)
+Button/colors/font_pressed_color = Color(1, 0.898039, 0.717647, 1)
+Button/constants/outline_size = 8
+Button/font_sizes/font_size = 28
+Button/styles/disabled = SubResource("BtnDisabled")
+Button/styles/focus = SubResource("BtnFocus")
+Button/styles/hover = SubResource("BtnHover")
+Button/styles/normal = SubResource("BtnNormal")
+Button/styles/pressed = SubResource("BtnPressed")
+CheckButton/colors/font_color = Color(0.290196, 0.152941, 0.0705882, 1)
+CheckButton/colors/font_hover_color = Color(0.529412, 0.278431, 0.0862745, 1)
+CheckButton/colors/font_pressed_color = Color(0.290196, 0.152941, 0.0705882, 1)
+CheckButton/constants/h_separation = 14
+CheckButton/constants/outline_size = 0
+CheckButton/font_sizes/font_size = 22
+CheckButton/icons/checked = ExtResource("7_on")
+CheckButton/icons/checked_disabled = ExtResource("7_on")
+CheckButton/icons/unchecked = ExtResource("8_off")
+CheckButton/icons/unchecked_disabled = ExtResource("8_off")
+CheckButton/styles/disabled = SubResource("CheckEmpty")
+CheckButton/styles/focus = SubResource("CheckEmpty")
+CheckButton/styles/hover = SubResource("CheckEmpty")
+CheckButton/styles/hover_pressed = SubResource("CheckEmpty")
+CheckButton/styles/normal = SubResource("CheckEmpty")
+CheckButton/styles/pressed = SubResource("CheckEmpty")
+HSlider/constants/center_grabber = 1
+HSlider/icons/grabber = ExtResource("6_grab")
+HSlider/icons/grabber_disabled = ExtResource("6_grab")
+HSlider/icons/grabber_highlight = ExtResource("6_grab")
+HSlider/styles/grabber_area = SubResource("SliderFill")
+HSlider/styles/grabber_area_highlight = SubResource("SliderFill")
+HSlider/styles/slider = SubResource("SliderTrack")
+Label/colors/font_color = Color(0.290196, 0.152941, 0.0705882, 1)
+Label/font_sizes/font_size = 22
+PanelContainer/styles/panel = SubResource("PanelStyle")

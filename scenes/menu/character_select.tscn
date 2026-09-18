@@ -1,0 +1,884 @@
+[gd_scene load_steps=11 format=3]
+
+[ext_resource type="Script" path="res://scenes/menu/character_select.gd" id="1_cs"]
+[ext_resource type="Texture2D" path="res://assets/ui/backgrounds/menu_bg.png" id="2_bg"]
+[ext_resource type="Theme" path="res://ui/theme/menu_theme.tres" id="3_theme"]
+[ext_resource type="Texture2D" path="res://assets/ui/characters/kitamoi.png" id="4_card"]
+[ext_resource type="Texture2D" path="res://assets/ui/megacozy/x3/round_btn_x3.png" id="5_round"]
+[ext_resource type="Texture2D" path="res://assets/ui/megacozy/x3/round_btn_pressed_x3.png" id="6_roundp"]
+[ext_resource type="Texture2D" path="res://assets/ui/megacozy/x3/arrow_left_x3.png" id="7_aleft"]
+[ext_resource type="Texture2D" path="res://assets/ui/megacozy/x3/arrow_right_x3.png" id="8_aright"]
+
+[sub_resource type="StyleBoxFlat" id="SelBorder"]
+bg_color = Color(0, 0, 0, 0)
+border_width_left = 5
+border_width_top = 5
+border_width_right = 5
+border_width_bottom = 5
+border_color = Color(1, 0.784314, 0.313726, 1)
+corner_radius_top_left = 8
+corner_radius_top_right = 8
+corner_radius_bottom_right = 8
+corner_radius_bottom_left = 8
+shadow_color = Color(1, 0.784314, 0.313726, 0.45)
+shadow_size = 16
+
+[sub_resource type="StyleBoxFlat" id="InfoBox"]
+content_margin_left = 30.0
+content_margin_top = 12.0
+content_margin_right = 30.0
+content_margin_bottom = 12.0
+bg_color = Color(0.0705882, 0.0470588, 0.0392157, 0.95)
+border_width_left = 3
+border_width_top = 3
+border_width_right = 3
+border_width_bottom = 3
+border_color = Color(0.898039, 0.678431, 0.352941, 0.65)
+corner_radius_top_left = 14
+corner_radius_top_right = 14
+corner_radius_bottom_right = 14
+corner_radius_bottom_left = 14
+
+[sub_resource type="StyleBoxFlat" id="SlotNormal"]
+content_margin_left = 12.0
+content_margin_top = 8.0
+content_margin_right = 12.0
+content_margin_bottom = 8.0
+bg_color = Color(1, 1, 1, 0.0784314)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.858824, 0.678431, 0.443137, 0.45)
+corner_radius_top_left = 8
+corner_radius_top_right = 8
+corner_radius_bottom_right = 8
+corner_radius_bottom_left = 8
+
+[sub_resource type="StyleBoxFlat" id="SlotActive"]
+content_margin_left = 12.0
+content_margin_top = 8.0
+content_margin_right = 12.0
+content_margin_bottom = 8.0
+bg_color = Color(0.929412, 0.615686, 0.113725, 0.18)
+border_width_left = 4
+border_width_top = 4
+border_width_right = 4
+border_width_bottom = 4
+border_color = Color(1, 0.752941, 0.247059, 1)
+corner_radius_top_left = 8
+corner_radius_top_right = 8
+corner_radius_bottom_right = 8
+corner_radius_bottom_left = 8
+shadow_color = Color(1, 0.752941, 0.247059, 0.3)
+shadow_size = 10
+
+[sub_resource type="StyleBoxFlat" id="IconBox"]
+bg_color = Color(1, 1, 1, 0.117647)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.858824, 0.678431, 0.443137, 0.55)
+corner_radius_top_left = 6
+corner_radius_top_right = 6
+corner_radius_bottom_right = 6
+corner_radius_bottom_left = 6
+
+[sub_resource type="StyleBoxFlat" id="Censor"]
+bg_color = Color(0.0235294, 0.0196078, 0.0196078, 1)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.858824, 0.678431, 0.443137, 0.55)
+corner_radius_top_left = 4
+corner_radius_top_right = 4
+corner_radius_bottom_right = 4
+corner_radius_bottom_left = 4
+
+[sub_resource type="StyleBoxFlat" id="BioBox"]
+content_margin_left = 16.0
+content_margin_top = 10.0
+content_margin_right = 16.0
+content_margin_bottom = 10.0
+bg_color = Color(1, 1, 1, 0.0470588)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.858824, 0.678431, 0.443137, 0.35)
+corner_radius_top_left = 8
+corner_radius_top_right = 8
+corner_radius_bottom_right = 8
+corner_radius_bottom_left = 8
+
+[node name="CharacterSelect" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme = ExtResource("3_theme")
+script = ExtResource("1_cs")
+
+[node name="BG" type="ColorRect" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0.117647, 0.0901961, 0.0784314, 1)
+
+[node name="BackgroundArt" type="TextureRect" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+texture = ExtResource("2_bg")
+expand_mode = 1
+stretch_mode = 6
+
+[node name="Overlay" type="ColorRect" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+color = Color(0, 0, 0, 0.7)
+
+[node name="ClickCatcher" type="Control" parent="."]
+unique_name_in_owner = true
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Content" type="MarginContainer" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+theme_override_constants/margin_left = 150
+theme_override_constants/margin_top = 20
+theme_override_constants/margin_right = 150
+theme_override_constants/margin_bottom = 20
+
+[node name="VBox" type="VBoxContainer" parent="Content"]
+layout_mode = 2
+mouse_filter = 2
+theme_override_constants/separation = 8
+
+[node name="Title" type="Label" parent="Content/VBox"]
+layout_mode = 2
+mouse_filter = 2
+theme_override_colors/font_color = Color(1, 0.831373, 0.44, 1)
+theme_override_colors/font_shadow_color = Color(0, 0, 0, 0.6)
+theme_override_constants/shadow_offset_y = 4
+theme_override_font_sizes/font_size = 36
+text = "CHỌN NHÂN VẬT"
+horizontal_alignment = 1
+
+[node name="HandWrap" type="CenterContainer" parent="Content/VBox"]
+layout_mode = 2
+mouse_filter = 2
+
+[node name="Hand" type="Control" parent="Content/VBox/HandWrap"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(1400, 318)
+layout_mode = 2
+mouse_filter = 2
+
+[node name="Card0" type="Control" parent="Content/VBox/HandWrap/Hand"]
+layout_mode = 0
+offset_right = 200.0
+offset_bottom = 267.0
+mouse_filter = 2
+
+[node name="Selection" type="Panel" parent="Content/VBox/HandWrap/Hand/Card0"]
+visible = false
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = -7.0
+offset_top = -7.0
+offset_right = 7.0
+offset_bottom = 7.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+theme_override_styles/panel = SubResource("SelBorder")
+
+[node name="Btn" type="TextureButton" parent="Content/VBox/HandWrap/Hand/Card0"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+texture_normal = ExtResource("4_card")
+ignore_texture_size = true
+stretch_mode = 5
+
+[node name="Card1" type="Control" parent="Content/VBox/HandWrap/Hand"]
+layout_mode = 0
+offset_right = 200.0
+offset_bottom = 267.0
+mouse_filter = 2
+
+[node name="Selection" type="Panel" parent="Content/VBox/HandWrap/Hand/Card1"]
+visible = false
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = -7.0
+offset_top = -7.0
+offset_right = 7.0
+offset_bottom = 7.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+theme_override_styles/panel = SubResource("SelBorder")
+
+[node name="Btn" type="TextureButton" parent="Content/VBox/HandWrap/Hand/Card1"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+texture_normal = ExtResource("4_card")
+ignore_texture_size = true
+stretch_mode = 5
+
+[node name="Card2" type="Control" parent="Content/VBox/HandWrap/Hand"]
+layout_mode = 0
+offset_right = 200.0
+offset_bottom = 267.0
+mouse_filter = 2
+
+[node name="Selection" type="Panel" parent="Content/VBox/HandWrap/Hand/Card2"]
+visible = false
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = -7.0
+offset_top = -7.0
+offset_right = 7.0
+offset_bottom = 7.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+theme_override_styles/panel = SubResource("SelBorder")
+
+[node name="Btn" type="TextureButton" parent="Content/VBox/HandWrap/Hand/Card2"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+texture_normal = ExtResource("4_card")
+ignore_texture_size = true
+stretch_mode = 5
+
+[node name="Card3" type="Control" parent="Content/VBox/HandWrap/Hand"]
+layout_mode = 0
+offset_right = 200.0
+offset_bottom = 267.0
+mouse_filter = 2
+
+[node name="Selection" type="Panel" parent="Content/VBox/HandWrap/Hand/Card3"]
+visible = false
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = -7.0
+offset_top = -7.0
+offset_right = 7.0
+offset_bottom = 7.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+theme_override_styles/panel = SubResource("SelBorder")
+
+[node name="Btn" type="TextureButton" parent="Content/VBox/HandWrap/Hand/Card3"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+texture_normal = ExtResource("4_card")
+ignore_texture_size = true
+stretch_mode = 5
+
+[node name="Card4" type="Control" parent="Content/VBox/HandWrap/Hand"]
+layout_mode = 0
+offset_right = 200.0
+offset_bottom = 267.0
+mouse_filter = 2
+
+[node name="Selection" type="Panel" parent="Content/VBox/HandWrap/Hand/Card4"]
+visible = false
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = -7.0
+offset_top = -7.0
+offset_right = 7.0
+offset_bottom = 7.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+theme_override_styles/panel = SubResource("SelBorder")
+
+[node name="Btn" type="TextureButton" parent="Content/VBox/HandWrap/Hand/Card4"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+texture_normal = ExtResource("4_card")
+ignore_texture_size = true
+stretch_mode = 5
+
+[node name="Card5" type="Control" parent="Content/VBox/HandWrap/Hand"]
+layout_mode = 0
+offset_right = 200.0
+offset_bottom = 267.0
+mouse_filter = 2
+
+[node name="Selection" type="Panel" parent="Content/VBox/HandWrap/Hand/Card5"]
+visible = false
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = -7.0
+offset_top = -7.0
+offset_right = 7.0
+offset_bottom = 7.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+theme_override_styles/panel = SubResource("SelBorder")
+
+[node name="Btn" type="TextureButton" parent="Content/VBox/HandWrap/Hand/Card5"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+texture_normal = ExtResource("4_card")
+ignore_texture_size = true
+stretch_mode = 5
+
+[node name="Card6" type="Control" parent="Content/VBox/HandWrap/Hand"]
+layout_mode = 0
+offset_right = 200.0
+offset_bottom = 267.0
+mouse_filter = 2
+
+[node name="Selection" type="Panel" parent="Content/VBox/HandWrap/Hand/Card6"]
+visible = false
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = -7.0
+offset_top = -7.0
+offset_right = 7.0
+offset_bottom = 7.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+theme_override_styles/panel = SubResource("SelBorder")
+
+[node name="Btn" type="TextureButton" parent="Content/VBox/HandWrap/Hand/Card6"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+texture_normal = ExtResource("4_card")
+ignore_texture_size = true
+stretch_mode = 5
+
+[node name="PanelWrap" type="Control" parent="Content/VBox"]
+custom_minimum_size = Vector2(0, 340)
+layout_mode = 2
+size_flags_vertical = 3
+mouse_filter = 2
+
+[node name="InfoPanel" type="PanelContainer" parent="Content/VBox/PanelWrap"]
+unique_name_in_owner = true
+z_index = 300
+visible = false
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_styles/panel = SubResource("InfoBox")
+
+[node name="Box" type="VBoxContainer" parent="Content/VBox/PanelWrap/InfoPanel"]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="Head" type="VBoxContainer" parent="Content/VBox/PanelWrap/InfoPanel/Box"]
+layout_mode = 2
+theme_override_constants/separation = 2
+
+[node name="LblName" type="Label" parent="Content/VBox/PanelWrap/InfoPanel/Box/Head"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.878431, 0.611765, 1)
+theme_override_font_sizes/font_size = 32
+text = "--"
+
+[node name="LblTagline" type="Label" parent="Content/VBox/PanelWrap/InfoPanel/Box/Head"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(800, 0)
+layout_mode = 2
+theme_override_colors/font_color = Color(0.92549, 0.752941, 0.545098, 1)
+theme_override_font_sizes/font_size = 18
+text = ""
+autowrap_mode = 3
+
+[node name="Top" type="HBoxContainer" parent="Content/VBox/PanelWrap/InfoPanel/Box"]
+layout_mode = 2
+size_flags_vertical = 3
+theme_override_constants/separation = 24
+
+[node name="Left" type="VBoxContainer" parent="Content/VBox/PanelWrap/InfoPanel/Box/Top"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 6
+
+[node name="IntroWrap" type="PanelContainer" parent="Content/VBox/PanelWrap/InfoPanel/Box/Top/Left"]
+layout_mode = 2
+theme_override_styles/panel = SubResource("BioBox")
+
+[node name="V" type="VBoxContainer" parent="Content/VBox/PanelWrap/InfoPanel/Box/Top/Left/IntroWrap"]
+layout_mode = 2
+theme_override_constants/separation = 5
+
+[node name="Cap" type="Label" parent="Content/VBox/PanelWrap/InfoPanel/Box/Top/Left/IntroWrap/V"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.827451, 0.639216, 0.407843, 1)
+theme_override_font_sizes/font_size = 15
+text = "LỜI GIỚI THIỆU"
+
+[node name="LblIntro" type="Label" parent="Content/VBox/PanelWrap/InfoPanel/Box/Top/Left/IntroWrap/V"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(560, 0)
+layout_mode = 2
+theme_override_colors/font_color = Color(0.968628, 0.929412, 0.870588, 1)
+theme_override_font_sizes/font_size = 17
+text = ""
+autowrap_mode = 3
+
+[node name="Cols" type="HBoxContainer" parent="Content/VBox/PanelWrap/InfoPanel/Box/Top/Left"]
+layout_mode = 2
+size_flags_vertical = 3
+theme_override_constants/separation = 12
+
+[node name="MeasWrap" type="PanelContainer" parent="Content/VBox/PanelWrap/InfoPanel/Box/Top/Left/Cols"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_styles/panel = SubResource("BioBox")
+
+[node name="V" type="VBoxContainer" parent="Content/VBox/PanelWrap/InfoPanel/Box/Top/Left/Cols/MeasWrap"]
+layout_mode = 2
+theme_override_constants/separation = 5
+
+[node name="Cap" type="Label" parent="Content/VBox/PanelWrap/InfoPanel/Box/Top/Left/Cols/MeasWrap/V"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.827451, 0.639216, 0.407843, 1)
+theme_override_font_sizes/font_size = 15
+text = "MEASUREMENTS"
+
+[node name="GridMeasure" type="GridContainer" parent="Content/VBox/PanelWrap/InfoPanel/Box/Top/Left/Cols/MeasWrap/V"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_constants/h_separation = 10
+theme_override_constants/v_separation = 4
+columns = 2
+
+[node name="RowSize" type="HBoxContainer" parent="Content/VBox/PanelWrap/InfoPanel/Box/Top/Left/Cols/MeasWrap/V"]
+layout_mode = 2
+theme_override_constants/separation = 10
+
+[node name="Cap" type="Label" parent="Content/VBox/PanelWrap/InfoPanel/Box/Top/Left/Cols/MeasWrap/V/RowSize"]
+custom_minimum_size = Vector2(104, 0)
+layout_mode = 2
+theme_override_colors/font_color = Color(0.827451, 0.639216, 0.407843, 1)
+theme_override_font_sizes/font_size = 15
+text = "Three sizes"
+
+[node name="BtnSize1" type="Button" parent="Content/VBox/PanelWrap/InfoPanel/Box/Top/Left/Cols/MeasWrap/V/RowSize"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(66, 30)
+layout_mode = 2
+size_flags_vertical = 4
+toggle_mode = true
+theme_override_colors/font_color = Color(1, 0.898039, 0.65098, 1)
+theme_override_colors/font_hover_color = Color(1, 0.898039, 0.65098, 1)
+theme_override_colors/font_pressed_color = Color(1, 0.898039, 0.65098, 1)
+theme_override_constants/outline_size = 0
+theme_override_font_sizes/font_size = 15
+theme_override_styles/normal = SubResource("Censor")
+theme_override_styles/hover = SubResource("Censor")
+theme_override_styles/pressed = SubResource("Censor")
+theme_override_styles/focus = SubResource("Censor")
+text = ""
+
+[node name="BtnSize2" type="Button" parent="Content/VBox/PanelWrap/InfoPanel/Box/Top/Left/Cols/MeasWrap/V/RowSize"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(66, 30)
+layout_mode = 2
+size_flags_vertical = 4
+toggle_mode = true
+theme_override_colors/font_color = Color(1, 0.898039, 0.65098, 1)
+theme_override_colors/font_hover_color = Color(1, 0.898039, 0.65098, 1)
+theme_override_colors/font_pressed_color = Color(1, 0.898039, 0.65098, 1)
+theme_override_constants/outline_size = 0
+theme_override_font_sizes/font_size = 15
+theme_override_styles/normal = SubResource("Censor")
+theme_override_styles/hover = SubResource("Censor")
+theme_override_styles/pressed = SubResource("Censor")
+theme_override_styles/focus = SubResource("Censor")
+text = ""
+
+[node name="BtnSize3" type="Button" parent="Content/VBox/PanelWrap/InfoPanel/Box/Top/Left/Cols/MeasWrap/V/RowSize"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(66, 30)
+layout_mode = 2
+size_flags_vertical = 4
+toggle_mode = true
+theme_override_colors/font_color = Color(1, 0.898039, 0.65098, 1)
+theme_override_colors/font_hover_color = Color(1, 0.898039, 0.65098, 1)
+theme_override_colors/font_pressed_color = Color(1, 0.898039, 0.65098, 1)
+theme_override_constants/outline_size = 0
+theme_override_font_sizes/font_size = 15
+theme_override_styles/normal = SubResource("Censor")
+theme_override_styles/hover = SubResource("Censor")
+theme_override_styles/pressed = SubResource("Censor")
+theme_override_styles/focus = SubResource("Censor")
+text = ""
+
+[node name="ProfWrap" type="PanelContainer" parent="Content/VBox/PanelWrap/InfoPanel/Box/Top/Left/Cols"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_styles/panel = SubResource("BioBox")
+
+[node name="V" type="VBoxContainer" parent="Content/VBox/PanelWrap/InfoPanel/Box/Top/Left/Cols/ProfWrap"]
+layout_mode = 2
+theme_override_constants/separation = 5
+
+[node name="Cap" type="Label" parent="Content/VBox/PanelWrap/InfoPanel/Box/Top/Left/Cols/ProfWrap/V"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.827451, 0.639216, 0.407843, 1)
+theme_override_font_sizes/font_size = 15
+text = "PROFILE"
+
+[node name="GridProfile" type="GridContainer" parent="Content/VBox/PanelWrap/InfoPanel/Box/Top/Left/Cols/ProfWrap/V"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_constants/h_separation = 10
+theme_override_constants/v_separation = 4
+columns = 2
+
+[node name="LblHint" type="Label" parent="Content/VBox/PanelWrap/InfoPanel/Box/Top/Left"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(500, 0)
+visible = false
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.827451, 0.415686, 1)
+theme_override_font_sizes/font_size = 16
+text = ""
+autowrap_mode = 3
+
+[node name="Right" type="VBoxContainer" parent="Content/VBox/PanelWrap/InfoPanel/Box/Top"]
+custom_minimum_size = Vector2(520, 0)
+layout_mode = 2
+theme_override_constants/separation = 10
+
+[node name="Slot1" type="PanelContainer" parent="Content/VBox/PanelWrap/InfoPanel/Box/Top/Right"]
+custom_minimum_size = Vector2(0, 84)
+layout_mode = 2
+theme_override_styles/panel = SubResource("SlotActive")
+
+[node name="HBox" type="HBoxContainer" parent="Content/VBox/PanelWrap/InfoPanel/Box/Top/Right/Slot1"]
+layout_mode = 2
+theme_override_constants/separation = 14
+
+[node name="Icon" type="PanelContainer" parent="Content/VBox/PanelWrap/InfoPanel/Box/Top/Right/Slot1/HBox"]
+custom_minimum_size = Vector2(60, 60)
+layout_mode = 2
+size_flags_vertical = 4
+theme_override_styles/panel = SubResource("IconBox")
+
+[node name="Img1" type="TextureRect" parent="Content/VBox/PanelWrap/InfoPanel/Box/Top/Right/Slot1/HBox/Icon"]
+unique_name_in_owner = true
+texture_filter = 1
+layout_mode = 2
+expand_mode = 1
+stretch_mode = 5
+
+[node name="Info" type="VBoxContainer" parent="Content/VBox/PanelWrap/InfoPanel/Box/Top/Right/Slot1/HBox"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 4
+theme_override_constants/separation = 3
+
+[node name="LblSkill1" type="Label" parent="Content/VBox/PanelWrap/InfoPanel/Box/Top/Right/Slot1/HBox/Info"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.784314, 0.313726, 1)
+theme_override_colors/font_outline_color = Color(0.117647, 0.0588235, 0.0313726, 1)
+theme_override_constants/outline_size = 6
+theme_override_font_sizes/font_size = 20
+text = ""
+text_overrun_behavior = 3
+
+[node name="LblSkillDesc1" type="Label" parent="Content/VBox/PanelWrap/InfoPanel/Box/Top/Right/Slot1/HBox/Info"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(360, 0)
+layout_mode = 2
+theme_override_colors/font_color = Color(0.788235, 0.72549, 0.647059, 1)
+theme_override_font_sizes/font_size = 15
+text = ""
+autowrap_mode = 2
+
+[node name="Slot2" type="PanelContainer" parent="Content/VBox/PanelWrap/InfoPanel/Box/Top/Right"]
+custom_minimum_size = Vector2(0, 74)
+layout_mode = 2
+theme_override_styles/panel = SubResource("SlotNormal")
+
+[node name="HBox" type="HBoxContainer" parent="Content/VBox/PanelWrap/InfoPanel/Box/Top/Right/Slot2"]
+layout_mode = 2
+theme_override_constants/separation = 14
+
+[node name="Icon" type="PanelContainer" parent="Content/VBox/PanelWrap/InfoPanel/Box/Top/Right/Slot2/HBox"]
+custom_minimum_size = Vector2(52, 52)
+layout_mode = 2
+size_flags_vertical = 4
+theme_override_styles/panel = SubResource("IconBox")
+
+[node name="Img2" type="TextureRect" parent="Content/VBox/PanelWrap/InfoPanel/Box/Top/Right/Slot2/HBox/Icon"]
+unique_name_in_owner = true
+texture_filter = 1
+layout_mode = 2
+expand_mode = 1
+stretch_mode = 5
+
+[node name="Info" type="VBoxContainer" parent="Content/VBox/PanelWrap/InfoPanel/Box/Top/Right/Slot2/HBox"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 4
+theme_override_constants/separation = 3
+
+[node name="LblSkill2" type="Label" parent="Content/VBox/PanelWrap/InfoPanel/Box/Top/Right/Slot2/HBox/Info"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_colors/font_color = Color(0.941176, 0.898039, 0.827451, 1)
+theme_override_font_sizes/font_size = 17
+text = ""
+text_overrun_behavior = 3
+
+[node name="LblSkillDesc2" type="Label" parent="Content/VBox/PanelWrap/InfoPanel/Box/Top/Right/Slot2/HBox/Info"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(360, 0)
+layout_mode = 2
+theme_override_colors/font_color = Color(0.788235, 0.72549, 0.647059, 1)
+theme_override_font_sizes/font_size = 15
+text = ""
+autowrap_mode = 2
+
+[node name="Slot3" type="PanelContainer" parent="Content/VBox/PanelWrap/InfoPanel/Box/Top/Right"]
+custom_minimum_size = Vector2(0, 74)
+layout_mode = 2
+theme_override_styles/panel = SubResource("SlotNormal")
+
+[node name="HBox" type="HBoxContainer" parent="Content/VBox/PanelWrap/InfoPanel/Box/Top/Right/Slot3"]
+layout_mode = 2
+theme_override_constants/separation = 14
+
+[node name="Icon" type="PanelContainer" parent="Content/VBox/PanelWrap/InfoPanel/Box/Top/Right/Slot3/HBox"]
+custom_minimum_size = Vector2(52, 52)
+layout_mode = 2
+size_flags_vertical = 4
+theme_override_styles/panel = SubResource("IconBox")
+
+[node name="Img3" type="TextureRect" parent="Content/VBox/PanelWrap/InfoPanel/Box/Top/Right/Slot3/HBox/Icon"]
+unique_name_in_owner = true
+texture_filter = 1
+layout_mode = 2
+expand_mode = 1
+stretch_mode = 5
+
+[node name="Info" type="VBoxContainer" parent="Content/VBox/PanelWrap/InfoPanel/Box/Top/Right/Slot3/HBox"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 4
+theme_override_constants/separation = 3
+
+[node name="LblSkill3" type="Label" parent="Content/VBox/PanelWrap/InfoPanel/Box/Top/Right/Slot3/HBox/Info"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_colors/font_color = Color(0.941176, 0.898039, 0.827451, 1)
+theme_override_font_sizes/font_size = 17
+text = ""
+text_overrun_behavior = 3
+
+[node name="LblSkillDesc3" type="Label" parent="Content/VBox/PanelWrap/InfoPanel/Box/Top/Right/Slot3/HBox/Info"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(360, 0)
+layout_mode = 2
+theme_override_colors/font_color = Color(0.788235, 0.72549, 0.647059, 1)
+theme_override_font_sizes/font_size = 15
+text = ""
+autowrap_mode = 2
+[node name="SecretWrap" type="PanelContainer" parent="Content/VBox/PanelWrap/InfoPanel/Box/Top/Right"]
+layout_mode = 2
+theme_override_styles/panel = SubResource("BioBox")
+
+[node name="V" type="VBoxContainer" parent="Content/VBox/PanelWrap/InfoPanel/Box/Top/Right/SecretWrap"]
+layout_mode = 2
+theme_override_constants/separation = 5
+
+[node name="Cap" type="Label" parent="Content/VBox/PanelWrap/InfoPanel/Box/Top/Right/SecretWrap/V"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.827451, 0.639216, 0.407843, 1)
+theme_override_font_sizes/font_size = 15
+text = "SECRETS"
+
+[node name="LblSecrets" type="Label" parent="Content/VBox/PanelWrap/InfoPanel/Box/Top/Right/SecretWrap/V"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(460, 0)
+layout_mode = 2
+theme_override_colors/font_color = Color(0.968628, 0.929412, 0.870588, 1)
+theme_override_font_sizes/font_size = 16
+text = ""
+autowrap_mode = 3
+
+[node name="Bottom" type="HBoxContainer" parent="Content/VBox"]
+texture_filter = 1
+layout_mode = 2
+
+[node name="BtnBack" type="Button" parent="Content/VBox/Bottom"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Trở lại"
+
+[node name="Spacer" type="Control" parent="Content/VBox/Bottom"]
+layout_mode = 2
+size_flags_horizontal = 3
+mouse_filter = 2
+
+[node name="BtnPlay" type="Button" parent="Content/VBox/Bottom"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(220, 0)
+layout_mode = 2
+disabled = true
+text = "Chơi"
+
+[node name="BtnPrev" type="TextureButton" parent="."]
+unique_name_in_owner = true
+texture_filter = 1
+layout_mode = 1
+anchors_preset = 4
+anchor_top = 0.5
+anchor_bottom = 0.5
+offset_left = 28.0
+offset_top = -46.0
+offset_right = 120.0
+offset_bottom = 46.0
+grow_vertical = 2
+texture_normal = ExtResource("5_round")
+texture_pressed = ExtResource("6_roundp")
+ignore_texture_size = true
+stretch_mode = 5
+
+[node name="Ico" type="TextureRect" parent="BtnPrev"]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -24.0
+offset_top = -24.0
+offset_right = 24.0
+offset_bottom = 24.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+texture = ExtResource("7_aleft")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="BtnNext" type="TextureButton" parent="."]
+unique_name_in_owner = true
+texture_filter = 1
+layout_mode = 1
+anchors_preset = 6
+anchor_left = 1.0
+anchor_top = 0.5
+anchor_right = 1.0
+anchor_bottom = 0.5
+offset_left = -120.0
+offset_top = -46.0
+offset_right = -28.0
+offset_bottom = 46.0
+grow_horizontal = 0
+grow_vertical = 2
+texture_normal = ExtResource("5_round")
+texture_pressed = ExtResource("6_roundp")
+ignore_texture_size = true
+stretch_mode = 5
+
+[node name="Ico" type="TextureRect" parent="BtnNext"]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -24.0
+offset_top = -24.0
+offset_right = 24.0
+offset_bottom = 24.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+texture = ExtResource("8_aright")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="Sfx" type="AudioStreamPlayer" parent="."]
+unique_name_in_owner = true
+bus = &"SFX"

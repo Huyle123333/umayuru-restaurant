@@ -1,0 +1,89 @@
+[gd_scene load_steps=4 format=3 uid="uid://ca2apuovag3vr"]
+
+[ext_resource type="Script" uid="uid://bw1jwq8xdwjqn" path="res://scenes/menu/pause_menu.gd" id="1_pause"]
+[ext_resource type="Theme" uid="uid://cj80dajsf8jm6" path="res://ui/theme/menu_theme.tres" id="2_theme"]
+[ext_resource type="PackedScene" path="res://scenes/menu/settings_panel.tscn" id="3_settings"]
+
+[node name="PauseMenu" type="CanvasLayer"]
+layer = 100
+script = ExtResource("1_pause")
+
+[node name="Root" type="Control" parent="."]
+unique_name_in_owner = true
+visible = false
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme = ExtResource("2_theme")
+
+[node name="Dim" type="ColorRect" parent="Root"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0, 0, 0, 0.7)
+
+[node name="Center" type="CenterContainer" parent="Root"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Panel" type="PanelContainer" parent="Root/Center"]
+texture_filter = 1
+custom_minimum_size = Vector2(520, 0)
+layout_mode = 2
+
+[node name="VBox" type="VBoxContainer" parent="Root/Center/Panel"]
+layout_mode = 2
+theme_override_constants/separation = 14
+
+[node name="Title" type="Label" parent="Root/Center/Panel/VBox"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 38
+text = "TAMDUNG_TIEU_DE"
+horizontal_alignment = 1
+
+[node name="LblLevel" type="Label" parent="Root/Center/Panel/VBox"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_colors/font_color = Color(0.607843, 0.372549, 0.117647, 1)
+theme_override_font_sizes/font_size = 18
+horizontal_alignment = 1
+
+[node name="Sep1" type="HSeparator" parent="Root/Center/Panel/VBox"]
+layout_mode = 2
+
+[node name="BtnResume" type="Button" parent="Root/Center/Panel/VBox"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "TAMDUNG_TIEP_TUC"
+
+[node name="BtnSettings" type="Button" parent="Root/Center/Panel/VBox"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "MENU_CAI_DAT"
+
+[node name="BtnMenu" type="Button" parent="Root/Center/Panel/VBox"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "TAMDUNG_VE_MENU"
+
+[node name="SettingsPanel" parent="Root" instance=ExtResource("3_settings")]
+unique_name_in_owner = true
+layout_mode = 1
+
+[node name="ConfirmQuit" type="ConfirmationDialog" parent="Root"]
+unique_name_in_owner = true
+title = "Rời màn chơi"
+size = Vector2i(420, 130)
+ok_button_text = "Rời đi"
+dialog_text = "Tiến trình màn đang chơi sẽ mất. Vẫn rời đi?"
+cancel_button_text = "Ở lại"

@@ -1,0 +1,39 @@
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scenes/intro/intro_video.gd" id="1_intro"]
+
+[node name="IntroPrologue" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_intro")
+duong_dan_video = "res://assets/video/intro_prologue.ogv"
+scene_tiep_theo = "res://scenes/cot_truyen/prologue.tscn"
+
+[node name="Nen" type="ColorRect" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0, 0, 0, 1)
+
+[node name="Khung" type="AspectRatioContainer" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+ratio = 1.7777778
+stretch_mode = 2
+
+[node name="Video" type="VideoStreamPlayer" parent="Khung"]
+unique_name_in_owner = true
+layout_mode = 2
+expand = true
+bus = &"Video"

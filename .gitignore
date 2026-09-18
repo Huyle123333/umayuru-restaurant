@@ -1,0 +1,35 @@
+# Godot 4
+.godot/
+/android/
+export_presets.cfg
+
+# Bản build
+/build/
+/export/
+*.exe
+*.pck
+
+# File thử tạm ở gốc project (quy ước: _thu_*, _dbg_*)
+_thu_*.gd
+_thu_*.tscn
+_thu_*.txt
+_thu_*.uid
+_dbg_*.gd
+_dbg_*.uid
+*.tmp
+
+# ─────────────────────────────────────────── FILE NHỊ PHÂN LỚN
+#
+# Git lưu TOÀN BỘ mọi phiên bản của mọi file mãi mãi. Với file nhị phân lớn,
+# mỗi lần sửa là thêm một bản đầy đủ nữa vào kho — không nén chênh lệch được
+# như file văn bản. Sửa kitamoi.blend mười lần là kho phình thêm một gigabyte.
+#
+# Và GitHub CHẶN CỨNG file trên 100 MB. intro_prologue.ogv (145 MB) cùng
+# kitamoi.blend (105 MB) đều vượt, nên chỉ cần chúng nằm trong lịch sử là
+# không bao giờ push lên GitHub được nữa, dù sau đó có xoá đi.
+#
+# ⚠ ĐỔI LẠI: kho git KHÔNG còn là bản sao lưu đầy đủ của đồ án. Phải tự chép
+#   thư mục assets/ và các file .blend sang ổ khác hoặc lên cloud.
+*.blend
+*.blend1
+*.ogv
