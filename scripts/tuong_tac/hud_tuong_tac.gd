@@ -252,9 +252,9 @@ void fragment() {
 
 
 ## Nối với node quản lý kĩ năng. level_base gọi sau khi tạo cả hai.
-func nghe_ki_nang(ql: Node) -> void:
-	ql.san_sang_doi.connect(_doi_trang_thai_ki_nang)
-	ql.tien_do_doi.connect(_doi_tien_do_ki_nang)
+func listen_to_skills(skills: Node) -> void:
+	skills.ready_changed.connect(_doi_trang_thai_ki_nang)
+	skills.progress_changed.connect(_doi_tien_do_ki_nang)
 
 
 ## Vẽ lại thanh theo dõi điều kiện.

@@ -176,13 +176,13 @@ func _gan_he_tuong_tac() -> void:
 	# với bộ chọn mục tiêu: bảy nhân vật thì bảy chỗ phải sửa.
 	_lo_vat_cam_trong_map()
 
-	var lop_ki_nang := load("res://scripts/ki_nang/quan_ly_ki_nang.gd") as GDScript
+	var lop_ki_nang := load("res://scripts/skills/skill_manager.gd") as GDScript
 	if lop_ki_nang != null:
 		var ki_nang: Node = lop_ki_nang.new()
-		ki_nang.name = "QuanLyKiNang"
+		ki_nang.name = "SkillManager"
 		add_child(ki_nang)
-		ki_nang.theo_doi_nhan_vat(player)
-		hud.nghe_ki_nang(ki_nang)
+		ki_nang.track_character(player)
+		hud.listen_to_skills(ki_nang)
 	else:
 		push_warning("Không nạp được hệ kĩ năng — màn chơi vẫn chạy, chỉ thiếu cut-in.")
 
@@ -295,17 +295,17 @@ func _gan_hud_don_hang() -> void:
 	_gan_doro()
 
 	# Hệ kĩ năng phải chờ tới ĐÂY mới gắn được: nó vặn núm của hệ khách hàng,
-	# hệ bếp và đồng hồ màn, nên cả ba phải tồn tại trước. Node QuanLyKiNang
+	# hệ bếp và đồng hồ màn, nên cả ba phải tồn tại trước. Node SkillManager
 	# được dựng sớm hơn (trong _gan_he_tuong_tac) vì HUD cần nối tín hiệu của
-	# nó ngay, còn phần vặn núm tách ra chuan_bi() gọi sau — hai việc, hai
+	# nó ngay, còn phần vặn núm tách ra setup() gọi sau — hai việc, hai
 	# thời điểm, thay vì phải sắp lại thứ tự dựng node.
 	#
 	# Đặt TRƯỚC _ap_dung_luat_man: luật màn đặt thời lượng và nhịp khách của
 	# riêng màn đó, và nếu sau này có kĩ năng đụng tới hai thứ ấy thì kĩ năng
 	# phải là lớp đè lên luật màn, không phải ngược lại.
-	var kn := get_node_or_null("QuanLyKiNang")
+	var kn := get_node_or_null("SkillManager")
 	if kn != null:
-		kn.chuan_bi(quan_ly_khach, get_node_or_null("HeBep"), bang_gio)
+		kn.setup(quan_ly_khach, get_node_or_null("HeBep"), bang_gio)
 
 	_ap_dung_luat_man(bang_gio)
 	_gan_mo_man(bang_gio)

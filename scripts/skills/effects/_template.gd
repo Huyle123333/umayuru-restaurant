@@ -4,7 +4,7 @@ extends RefCounted
 ## ╚══════════════════════════════════════════════════════════════════════╝
 ##
 ## File này KHÔNG chạy trong game. Nó là bản mẫu để chép, và là chỗ ghi lại
-## giao ước giữa quan_ly_ki_nang.gd với một hiệu ứng viết riêng.
+## giao ước giữa skill_manager.gd với một hiệu ứng viết riêng.
 ##
 ## Tên bắt đầu bằng gạch dưới để nó luôn nằm đầu danh sách thư mục và để nhìn
 ## là biết ngay "không phải kĩ năng thật".
@@ -13,7 +13,7 @@ extends RefCounted
 ##
 ## KHÔNG cần, nếu kĩ năng chỉ đổi MỘT con số hoặc bật MỘT cờ của hệ khác. Cả
 ## ba kĩ năng của Kita thuộc loại này — chúng dùng hiệu ứng có sẵn (HU_* trong
-## bang_ki_nang.gd) và quan_ly_ki_nang thi hành thẳng.
+## skill_registry.gd) và quan_ly_ki_nang thi hành thẳng.
 ##
 ## CẦN, khi kĩ năng là một CƠ CHẾ có trạng thái riêng, có thời gian sống, hoặc
 ## phải nghe tín hiệu. Bốn kĩ năng đã biết chắc sẽ cần:
@@ -39,32 +39,32 @@ extends RefCounted
 ## ─────────────────────────────────────────────────────── CÁCH DÙNG
 ##
 ##   1. Chép file này thành hieu_ung/<ten_ki_nang>.gd
-##   2. Viết phần thân của bat() (và tat() nếu kĩ năng bật/tắt được)
-##   3. Trong file nhân vật (nhan_vat/<ten>.gd), ở khối CHU_DONG, thay khoá
-##      "hieu_ung" bằng:
+##   2. Viết phần thân của enable() (và disable() nếu kĩ năng bật/tắt được)
+##   3. Trong file nhân vật (nhan_vat/<ten>.gd), ở khối ACTIVE, thay khoá
+##      "effect" bằng:
 ##
-##          "script": "res://scripts/ki_nang/hieu_ung/<ten_ki_nang>.gd",
+##          "script": "res://scripts/skills/effects/<ten_ki_nang>.gd",
 ##
 ##      Khai cả hai khoá thì "script" thắng — hiệu ứng viết riêng luôn được
 ##      ưu tiên hơn hiệu ứng có sẵn.
 ##
-## Không phải sửa quan_ly_ki_nang.gd, không phải thêm dòng nào vào bảng nào.
+## Không phải sửa skill_manager.gd, không phải thêm dòng nào vào bảng nào.
 
 
 ## Bật hiệu ứng. Gọi NGAY LÚC người chơi bấm Space, không đợi cut-in chiếu
-## xong — nếu buộc đợi hết phim thì người bỏ qua đoạn phim sẽ được lợi (hoặc
+## finished — nếu buộc đợi hết phim thì người bỏ qua đoạn phim sẽ được lợi (hoặc
 ## thiệt) hơn người ngồi xem, tức cùng một kĩ năng cho hai kết quả khác nhau
 ## tuỳ thói quen bấm phím.
 ##
 ## `ctx` là mọi thứ hiệu ứng có thể cần, gói trong một Dictionary:
 ##
-##   ctx["ql"]       Node   — quan_ly_khach: khách, đơn, tiền, thanh kiên nhẫn
-##   ctx["bep"]      Node   — he_bep: bếp, lò, thớt, mốc cháy
-##   ctx["gio"]      Node   — bang_thoi_gian: đồng hồ màn và ví tiền (có thể null)
-##   ctx["man"]      Node   — node gốc của màn chơi, để kết thúc màn hoặc
+##   ctx["customers"]       Node   — quan_ly_khach: khách, đơn, tiền, thanh kiên nhẫn
+##   ctx["cooking"]      Node   — cooking: bếp, lò, thớt, mốc cháy
+##   ctx["clock"]      Node   — bang_thoi_gian: đồng hồ màn và ví tiền (có thể null)
+##   ctx["level"]      Node   — node gốc của màn chơi, để kết thúc màn hoặc
 ##                            thêm node con
-##   ctx["nhan_vat"] Node   — nhân vật người chơi
-##   ctx["so"]       Dict   — chính khối CHU_DONG của kĩ năng, để đọc các con
+##   ctx["character"] Node   — nhân vật người chơi
+##   ctx["data"]       Dict   — chính khối ACTIVE của kĩ năng, để đọc các con
 ##                            số riêng (ví dụ "ngan_sach": 30.0)
 ##
 ## Vì sao gói vào một Dictionary thay vì sáu tham số: thêm một thứ vào ctx sau
@@ -72,17 +72,17 @@ extends RefCounted
 ## sai tên khoá không bị báo lỗi lúc biên dịch — nên danh sách khoá ghi ngay
 ## trên đây, và mỗi hiệu ứng nên đọc ra biến cục bộ ở dòng đầu tiên.
 ##
-## KHÔNG có gì gọi tat() tự động khi hết màn. Hầu hết kĩ năng hiệu lực TỚI HẾT
+## KHÔNG có gì gọi disable() tự động khi hết màn. Hầu hết kĩ năng hiệu lực TỚI HẾT
 ## MÀN nên không cần dọn: cả màn chơi bị xoá khi đổi scene. Hiệu ứng nào đụng
 ## vào autoload (AmThanh, GameData) thì phải tự dọn lấy.
-func bat(ctx: Dictionary) -> void:
-	var ql: Node = ctx.get("ql")
-	if ql == null:
+func enable(ctx: Dictionary) -> void:
+	var customers: Node = ctx.get("customers")
+	if customers == null:
 		return
-	# Ví dụ — đây đúng là thứ mà hiệu ứng có sẵn HU_EP_HOAN_HAO đang làm,
+	# Ví dụ — đây đúng là thứ mà hiệu ứng có sẵn FX_FORCE_PERFECT đang làm,
 	# viết ra để thấy một hiệu ứng thật trông như thế nào:
 	#
-	#     ql.ep_hoan_hao = true
+	#     customers.ep_hoan_hao = true
 	pass
 
 
@@ -91,5 +91,5 @@ func bat(ctx: Dictionary) -> void:
 ##
 ## quan_ly_ki_nang chỉ gọi hàm này nếu file có khai nó (kiểm bằng has_method),
 ## nên kĩ năng một chiều thì xoá hẳn hàm này đi cho gọn.
-func tat(_ctx: Dictionary) -> void:
+func disable(_ctx: Dictionary) -> void:
 	pass

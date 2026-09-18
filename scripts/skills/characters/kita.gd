@@ -16,7 +16,7 @@ extends RefCounted
 ##
 ##   • "Kiên nhẫn +30% mạnh quá"      → he_so_kien_nhan: 1.30 → 1.15
 ##   • "Thưởng hoàn hảo yếu quá"      → cong_thuong_hoan_hao: 0.20 → 0.30
-##   • "5 đơn hoàn hảo khó quá"       → moc: 5 → 4
+##   • "5 đơn hoàn hảo khó quá"       → threshold: 5 → 4
 ##
 ## NHỚ SỬA KÈM câu mô tả trong GameData.CHARACTERS["kitamoi"]["skills"] — đó
 ## là chữ người chơi đọc ở bảng thông tin nhân vật, và không có gì tự đồng bộ
@@ -25,14 +25,14 @@ extends RefCounted
 ## ─────────────────────────────────────── KĨ NĂNG CHỈ ĂN VỚI ĐÚNG CHỦ
 ##
 ## Mọi số trong file này chỉ có tác dụng KHI NGƯỜI CHƠI ĐANG DÙNG Kita. Chọn
-## nhân vật khác thì màn chơi chạy bằng số GỐC của game — xem bang_ki_nang.gd.
+## nhân vật khác thì màn chơi chạy bằng số GỐC của game — xem skill_registry.gd.
 
-# KHÔNG preload bang_ki_nang.gd ở đây, dù các hằng DK_* / HU_* nằm bên đó.
+# KHÔNG preload skill_registry.gd ở đây, dù các hằng DK_* / HU_* nằm bên đó.
 # Lý do: sổ đăng kí bên đó đã preload NGƯỢC file này, và hai file preload lẫn
 # nhau là tham chiếu vòng — Godot báo lỗi ngay lúc phân tích cú pháp.
 #
-# Nên hai khoá "dieu_kien" và "hieu_ung" dưới đây viết thẳng chuỗi. Danh sách
-# đầy đủ các chuỗi hợp lệ nằm ở bang_ki_nang.gd (phần DK_* và HU_*); gõ sai
+# Nên hai khoá "condition" và "effect" dưới đây viết thẳng labelỗi. Danh sách
+# đầy đủ các labelỗi hợp lệ nằm ở skill_registry.gd (phần DK_* và HU_*); gõ sai
 # một chữ thì kĩ năng im lặng không bao giờ đủ điều kiện, nên chép từ đó sang
 # chứ đừng gõ tay.
 
@@ -50,13 +50,13 @@ extends RefCounted
 #
 # Đo được: 5 đơn hoàn hảo rơi vào quanh giây 136 của màn 420 giây, tức còn 68%
 # màn được hưởng; chơi giỏi hơn 30 giây thì được thêm 7% màn.
-const CHU_DONG := {
-	"ten": "Victory Cheer!",
+const ACTIVE := {
+	"name": "Victory Cheer!",
 
-	## Loại điều kiện. Danh sách các loại có sẵn ở bang_ki_nang.gd (DK_*).
-	"dieu_kien": "don_hoan_hao",   # Bang.DK_DON_HOAN_HAO
+	## Loại điều kiện. Danh sách các loại có sẵn ở skill_registry.gd (DK_*).
+	"condition": "perfect_orders",   # Registry.COND_PERFECT_ORDERS
 	## Cần bao nhiêu. Đây là con số dễ chỉnh nhất của cả kĩ năng.
-	"moc": 5,
+	"threshold": 5,
 
 	## Hiệu ứng khi bấm Space.
 	##
@@ -64,18 +64,18 @@ const CHU_DONG := {
 	## dùng hiệu ứng có sẵn (HU_*) chứ không cần file riêng. Những kĩ năng cần
 	## cơ chế thật (Triumphant Pulse dừng thời gian, Ambition reset màn) thì
 	## khai khoá "script" trỏ tới một file trong thư mục hieu_ung/ — xem
-	## hieu_ung/_mau.gd.
-	"hieu_ung": "ep_hoan_hao",     # Bang.HU_EP_HOAN_HAO
+	## effects/_template.gd.
+	"effect": "force_perfect",     # Registry.FX_FORCE_PERFECT
 
 	## Mỗi màn dùng được mấy lần. Bỏ trống = 1.
-	"so_lan": 1,
+	"uses": 1,
 }
 
 
 # ═══════════════════════════════════════════════════════════ BỊ ĐỘNG
 #
 # Luôn có hiệu lực từ lúc vào màn, không cần bấm gì.
-const BI_DONG := {
+const PASSIVE := {
 
 	# "Kiên nhẫn là một đức tính — Thời gian kiên nhẫn của khách hàng +30%."
 	#
@@ -85,7 +85,7 @@ const BI_DONG := {
 	# Vì sao cả hai: đúng chữ "thời gian kiên nhẫn của khách hàng" trong tài
 	# liệu. Chỉ áp một giai đoạn thì thành một ngoại lệ người chơi phải học
 	# thuộc mà không nhìn thấy được ở đâu cả.
-	"he_so_kien_nhan": 1.30,
+	"patience_factor": 1.30,
 
 	# "Dòng tiền mờ ám — Tiền thưởng từ đơn hoàn hảo +20%."
 	#
@@ -97,19 +97,19 @@ const BI_DONG := {
 	# ra" — mà cách nhân còn yếu hơn thế, chỉ thêm 7 đồng mỗi món trong khi kĩ
 	# năng này CÒN KÈM một điểm trừ. Một kĩ năng có đánh đổi mà phần lợi không
 	# cảm nhận được thì phần đánh đổi thành phạt thuần.
-	"cong_thuong_hoan_hao": 0.20,
+	"perfect_bonus_add": 0.20,
 
 	# "Đổi lại: món ăn hỏng sớm hơn 2 giây."
 	#
-	# Trừ vào MỐC CHÁY, không trừ vào thời gian nấu. Bếp nấu xong ở giây 8,
+	# Trừ vào MỐC CHÁY, không trừ vào thời gian nấu. Bếp nấu finished ở giây 8,
 	# cháy ở giây 16 (he_so_chay = 2,0); kĩ năng này kéo mốc cháy về giây 14,
 	# tức quãng ân hạn sau khi chín rút từ 8 xuống 6 giây.
 	#
 	# Vì sao không trừ vào thời gian nấu: trừ ở đó là LÀM LỢI cho người chơi
-	# (món xong sớm hơn), ngược hẳn với chữ "đổi lại".
+	# (món finished sớm hơn), ngược hẳn với chữ "đổi lại".
 	#
 	# Thực tế chỉ ham và steak chịu ảnh hưởng — hai món duy nhất khai khoá
 	# `hong` trong DanhMuc. Vẫn viết chung chứ không viết riêng cho hai món,
 	# để thêm một món cháy được sau này không phải sửa lại kĩ năng.
-	"bot_giay_chay": 2.0,
+	"burn_time_cut": 2.0,
 }
