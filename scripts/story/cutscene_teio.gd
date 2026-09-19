@@ -22,54 +22,54 @@ extends RefCounted
 ## nói nhanh, và đã tự quyết trước khi ai kịp trả lời. Khác Gold Ship ở chỗ
 ## Teio thật lòng muốn giúp; Gold Ship thì chỉ muốn vui.
 
-const NEN_QUAN := "res://assets/ui/backgrounds/quan_an.png"
+const BG_RESTAURANT := "res://assets/ui/backgrounds/quan_an.png"
 
-const MAN: Array[Dictionary] = [
+const SCENES: Array[Dictionary] = [
 	{
-		"nen": NEN_QUAN,
-		"loi": "Bốn giờ chiều. Quán vừa dọn xong bàn cuối, chưa kịp ngồi.",
+		"background": BG_RESTAURANT,
+		"line": "Bốn giờ chiều. Quán vừa dọn xong bàn cuối, chưa kịp ngồi.",
 	},
 	{
-		"loi": "Chuông cửa reo. Rồi reo thêm bốn lần nữa, rất nhanh.",
+		"line": "Chuông cửa reo. Rồi reo thêm bốn lần nữa, rất nhanh.",
 	},
 	{
-		"anh": "hachimi",
-		"ai": "Tokai Teio",
-		"loi": "HÍ Ngọ! Nghe nói mọi người làm thêm ở đây đúng không? Mình cũng muốn giúp!",
+		"portrait": "hachimi",
+		"speaker": "Tokai Teio",
+		"line": "HÍ Ngọ! Nghe nói mọi người làm thêm ở đây đúng không? Mình cũng muốn giúp!",
 	},
 	{
-		"anh": "kitamoi",
-		"ai": "Kitasan Black",
-		"loi": "Teio-san... chị đến giúp bọn em sao *cảm động rớt nước nắt*?",
+		"portrait": "kitamoi",
+		"speaker": "Kitasan Black",
+		"line": "Teio-san... chị đến giúp bọn em sao *cảm động rớt nước nắt*?",
 	},
 	{
-		"anh": "hachimi",
-		"ai": "Tokai Teio",
-		"loi": "Biết chứ! Nên chị mới tới sớm! Thiếu người phải không? Chắc chắn thiếu người mà!",
+		"portrait": "hachimi",
+		"speaker": "Tokai Teio",
+		"line": "Biết chứ! Nên chị mới tới sớm! Thiếu người phải không? Chắc chắn thiếu người mà!",
 	},
 	{
-		"anh": "trainer",
-		"ai": "0rca's Trainer",
-		"loi": "Em... định xin việc à?",
+		"portrait": "trainer",
+		"speaker": "0rca's Trainer",
+		"line": "Em... định xin việc à?",
 	},
 	{
-		"anh": "hachimi",
-		"ai": "Tokai Teio",
-		"loi": "Xin gì mà xin! Đây là thông báo không phải đè nghị! À mà bếp ở đâu? Tạp dề đâu? Chị buộc tóc trước nhé!",
+		"portrait": "hachimi",
+		"speaker": "Tokai Teio",
+		"line": "Xin gì mà xin! Đây là thông báo không phải đè nghị! À mà bếp ở đâu? Tạp dề đâu? Chị buộc tóc trước nhé!",
 	},
 	{
-		"anh": "oui",
-		"ai": "Oguri Cap",
-		"loi": "...Cậu ấy chạy nhanh thật.",
+		"portrait": "oui",
+		"speaker": "Oguri Cap",
+		"line": "...Cậu ấy chạy nhanh thật.",
 	},
 	{
-		"anh": "hachimi",
-		"ai": "Tokai Teio",
-		"loi": "Yên tâm đi! Tokai Teio này chưa thua ai bao giờ đâu — kể cả giờ cao điểm!",
+		"portrait": "hachimi",
+		"speaker": "Tokai Teio",
+		"line": "Yên tâm đi! Tokai Teio này chưa thua ai bao giờ đâu — kể cả giờ cao điểm!",
 	},
 	{
-		"anh": "",
-		"ai": "",
-		"loi": "Không ai nỡ nói với cô ấy rằng giờ cao điểm sẽ đánh cổ như tê liệt đánh fan.",
+		"portrait": "",
+		"speaker": "",
+		"line": "Không ai nỡ nói với cô ấy rằng giờ cao điểm sẽ đánh cổ như tê liệt đánh fan.",
 	},
 ]

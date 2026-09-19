@@ -82,7 +82,7 @@ func hien(tien: int, xong: int, hoan_hao: int, bo_di: int,
 
 	get_tree().paused = true
 	Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
-	AmThanh.dung_nhac()
+	AmThanh.stop_music()
 	AmThanh.phat("tong_ket")
 
 	# Tâm phóng to phải là TÂM BẢNG, không phải góc trên-trái (mặc định).

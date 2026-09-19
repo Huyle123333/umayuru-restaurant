@@ -33,13 +33,13 @@ const MAP_QUAN := "res://restaurant_map_planb.tscn"
 ## bỏ qua — xem scene_tiep_theo trong intro_prologue.tscn.
 ##
 ## Nối chuỗi theo kiểu này chứ KHÔNG nhét VideoStreamPlayer vào prologue.tscn:
-## hoi_thoai.gd đang là một bộ máy sạch, chỉ biết chạy chữ và đổi nền. Thêm
+## dialogue_player.gd đang là một bộ máy sạch, chỉ biết chạy chữ và đổi nền. Thêm
 ## video vào đó là thêm một trạng thái "đang chiếu, chưa cho bấm" vào giữa
 ## vòng đời của nó, và mọi đoạn kể sau này đều phải gánh cái trạng thái đó dù
 ## không dùng. Còn intro_video.gd thì vốn đã tổng quát sẵn: đường dẫn video và
 ## scene kế tiếp đều là @export, nên đoạn mở đầu này KHÔNG cần thêm một dòng
 ## code nào — chỉ là một scene mới dùng lại đúng script cũ.
-const SCENE_PROLOGUE := "res://scenes/cot_truyen/intro_prologue.tscn"
+const SCENE_PROLOGUE := "res://scenes/story/intro_prologue.tscn"
 
 ## ĐOẠN RA MẮT của từng nhân vật ẩn: id nhân vật -> file scene.
 ##
@@ -54,9 +54,9 @@ const SCENE_PROLOGUE := "res://scenes/cot_truyen/intro_prologue.tscn"
 ## Ba đoạn ĐỘC LẬP với nhau — không đoạn nào nhắc tới hai đoạn kia, vì người
 ## chơi mở khoá theo thứ tự bất kỳ và có thể chỉ mở đúng một người.
 const SCENE_GIOI_THIEU := {
-	"hachimi": "res://scenes/cot_truyen/teio_xuat_hien.tscn",
-	"chiyo": "res://scenes/cot_truyen/chiyono_xuat_hien.tscn",
-	"golshi": "res://scenes/cot_truyen/golshi_xuat_hien.tscn",
+	"hachimi": "res://scenes/story/teio_intro.tscn",
+	"chiyo": "res://scenes/story/chiyono_intro.tscn",
+	"golshi": "res://scenes/story/golshi_intro.tscn",
 }
 
 ## Giai đoạn BUỔI TỐI đã có chỗ trong dữ liệu nhưng chưa có nội dung.

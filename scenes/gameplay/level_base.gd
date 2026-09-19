@@ -389,7 +389,7 @@ func _gan_tutorial(bang_gio: Node) -> void:
 	if String(GameData.current_level) != "tutorial":
 		return
 
-	var lop := load("res://scripts/cot_truyen/dan_dat_tutorial.gd") as GDScript
+	var lop := load("res://scripts/story/tutorial_director.gd") as GDScript
 	if lop == null:
 		push_warning("Không nạp được bộ dẫn dắt hướng dẫn — màn vẫn chơi được như màn thường.")
 		return
@@ -397,10 +397,10 @@ func _gan_tutorial(bang_gio: Node) -> void:
 	var tay := player.get_node_or_null("TayCam")
 	var he_bep := get_node_or_null("HeBep")
 	var dd: Node = lop.new()
-	dd.name = "DanDatTutorial"
+	dd.name = "TutorialDirector"
 	add_child(dd)
-	dd.xong_tutorial.connect(_khi_xong_tutorial)
-	dd.chuan_bi(player, tay, he_bep, quan_ly_khach, bang_gio)
+	dd.tutorial_finished.connect(_khi_xong_tutorial)
+	dd.setup(player, tay, he_bep, quan_ly_khach, bang_gio)
 
 
 ## Hướng dẫn kết thúc.

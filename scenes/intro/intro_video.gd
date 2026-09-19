@@ -11,7 +11,7 @@ extends Control
 ##
 ## ---------------------------------------------------------- BA NGUYÊN TẮC
 ## 1. LUÔN CÓ ĐƯỜNG THOÁT. Bấm phím hay chuột bất kỳ là bỏ qua — cùng quy
-##    ước với hộp thoại ở hoi_thoai.gd, để cả game chỉ có MỘT thói quen cho
+##    ước với hộp thoại ở dialogue_player.gd, để cả game chỉ có MỘT thói quen cho
 ##    người chơi học. Lúc demo trước hội đồng cũng đỡ phải ngồi chờ hết
 ##    video mới vào được menu.
 ## 2. HỎNG VIDEO KHÔNG ĐƯỢC TREO GAME. Thiếu file, sai định dạng, hay chưa
@@ -45,17 +45,23 @@ func _ready() -> void:
 	# chứ không đứng hình vĩnh viễn.
 	process_mode = Node.PROCESS_MODE_ALWAYS
 
-	# Tắt nhạc menu. Video có tiếng của riêng nó (phát qua bus "Music"), để
-	# nhạc menu chạy tiếp thì hai thứ chồng lên nhau — mà nhạc menu là autoload
-	# nên nó KHÔNG tự tắt khi đổi scene; đúng cái tính chất giúp nhạc liền mạch
-	# giữa các màn hình menu lại thành phiền ở đây.
-	AmThanh.dung_nhac()
-
 	var stream := load(duong_dan_video) as VideoStream
 	if stream == null:
 		push_error("Không nạp được video intro: %s — vào thẳng menu." % duong_dan_video)
 		_di_tiep()
 		return
+
+	# TẮT NHẠC NỀN trước khi chiếu.
+	#
+	# Scene này dùng cho HAI chỗ: intro lúc mở game (chưa có nhạc nào chạy —
+	# gọi vào đây là vô hại) và đoạn video dẫn vào Prologue (lúc đó nhạc menu
+	# ĐANG chạy). Không tắt thì nhạc menu đè lên tiếng của chính đoạn phim,
+	# và người xem nghe hai bản nhạc cùng lúc.
+	#
+	# Tắt ở ĐÂY chứ không ở scene gọi tới: bất kỳ ai chiếu video sau này cũng
+	# được xử lý đúng mà không phải nhớ thêm một bước.
+	if get_node_or_null("/root/AmThanh") != null:
+		AmThanh.stop_music()
 
 	_video.stream = stream
 	_video.finished.connect(_di_tiep)

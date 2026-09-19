@@ -7,45 +7,45 @@ extends CanvasLayer
 ## nào để editor ghi đè mất.
 ##
 ## BỎ QUA KHÔNG HUỶ KĨ NĂNG. Lượt kĩ năng đã bị trừ từ lúc bấm Space, và
-## hiệu ứng (khi cài finished) cũng áp dụng ngay lúc đó — đoạn phim chỉ là phần
+## hiệu ứng (khi cài xong) cũng áp dụng ngay lúc đó — đoạn phim chỉ là phần
 ## trình diễn chạy song song. Bấm bỏ qua nghĩa là "tôi không cần xem", không
 ## phải "tôi đổi ý". Làm ngược lại thì mỗi lần lỡ tay là mất luôn lượt kĩ năng
 ## duy nhất của cả màn, một hình phạt quá nặng cho một cú bấm nhầm.
 ##
-## Node này TỰ HUỶ khi chiếu finished. Người gọi chỉ cần `play(character_id)` rồi
-## quên nó đi; muốn biết lúc nào finished thì nghe tín hiệu `finished`.
+## Node này TỰ HUỶ khi chiếu xong. Người gọi chỉ cần `play(character_id)` rồi
+## quên nó đi; muốn biết lúc nào xong thì nghe tín hiệu `finished`.
 
 ## Phát khi đoạn phim kết thúc hoặc bị bỏ qua. Người gọi dùng nó để trả quyền
 ## điều khiển lại cho người chơi.
 signal finished
 
-## Tỉ lệ frame hình (rộng ÷ cao) của các file cut-in.
+## Tỉ lệ khung hình (rộng ÷ cao) của các file cut-in.
 ##
-## Các đoạn này quay từ game điện thoại nên frame hình DỌC: 520 × 1080, tức
+## Các đoạn này quay từ game điện thoại nên khung hình DỌC: 520 × 1080, tức
 ## khoảng 0.48 — cao hơn cả 9:16 (0.5625) vì màn hình điện thoại đời mới rất
 ## dài.
 ##
 ## Cảnh báo cho lần sau: file .mp4 gốc bị ffprobe báo là 2320 × 1116 (nằm
-## ngang) vì frame hình được lưu ngang kèm metadata `rotation = -90`; trình
+## ngang) vì khung hình được lưu ngang kèm metadata `rotation = -90`; trình
 ## phát mới là nơi xoay lại. Đọc con số thô rồi kết luận "video nằm ngang" là
 ## sai — phải xem cả trường rotation.
 
 const VIDEO_ASPECT := 520.0 / 1080.0
 
-## Tỉ lệ frame hình của viewport thiết kế (1920 × 1080).
+## Tỉ lệ khung hình của viewport thiết kế (1920 × 1080).
 ##
 ## Hằng số chứ không đo lúc chạy: game bật stretch/mode = "canvas_items" với
 ## viewport thiết kế cố định 1920×1080, nên dù người chơi kéo cửa sổ cỡ nào
-## thì toạ độ giao diện vẫn nằm trong frame 16:9 đó.
+## thì toạ độ giao diện vẫn nằm trong khung 16:9 đó.
 const SCREEN_ASPECT := 16.0 / 9.0
 
 ## Khung phim chiếm bao nhiêu phần CHIỀU CAO màn hình.
 ##
-## Đo theo chiều cao vì đoạn phim là frame dọc: trên màn hình 16:9 thì chiều
+## Đo theo chiều cao vì đoạn phim là khung dọc: trên màn hình 16:9 thì chiều
 ## cao mới là cạnh chật, còn chiều rộng thừa rất nhiều.
 ##
 ## 0.86 chứ không phải 1.0: chừa một viền nền mờ quanh đoạn phim thì mắt hiểu
-## ngay đây là một frame hình được LỒNG lên trên trò chơi, không phải game
+## ngay đây là một khung hình được LỒNG lên trên trò chơi, không phải game
 ## vừa chuyển sang cảnh khác. Đây cũng là lý do phải làm nền mờ chứ không phủ
 ## đen — thấy căn bếp nhoè phía sau thì người chơi biết mình vẫn đang ở trong
 ## màn.
@@ -53,13 +53,13 @@ const HEIGHT_RATIO := 0.86
 
 ## Trần an toàn cho chiều rộng.
 ##
-## Với tỉ lệ dọc hiện tại thì không bao giờ chạm tới (frame chỉ rộng ~23% màn
-## hình). Nó tồn tại để nếu sau này có đoạn cut-in NẰM NGANG, frame không tràn
+## Với tỉ lệ dọc hiện tại thì không bao giờ chạm tới (khung chỉ rộng ~23% màn
+## hình). Nó tồn tại để nếu sau này có đoạn cut-in NẰM NGANG, khung không tràn
 ## ra khỏi mép màn hình — lúc đó chiều rộng thành cạnh chật và công thức tự
 ## đảo lại.
 const MAX_WIDTH_RATIO := 0.8
 
-## Bán kính bo góc và độ dày viền của frame phim.
+## Bán kính bo góc và độ dày viền của khung phim.
 const CORNER_RADIUS := 14
 const BORDER_WIDTH := 3
 
@@ -82,7 +82,7 @@ const MUSIC_FONT_SIZE := 24
 ## đoạn phim biến từ phần thưởng thành hình phạt.
 ##
 ## Để thành @export vì đây là quyết định CÂN BẰNG chứ không phải kĩ thuật:
-## khi hệ đơn hàng finished, nếu thấy dừng game 11 giây là quá dài thì tắt cờ này
+## khi hệ đơn hàng xong, nếu thấy dừng game 11 giây là quá dài thì tắt cờ này
 ## đi (hoặc cắt ngắn video) mà không phải sửa một dòng logic nào.
 @export var pause_game := true
 
@@ -96,7 +96,7 @@ func _ready() -> void:
 	# Trên mọi HUD khác (hud_tuong_tac layer 10, bang_chon layer 20).
 	layer = 60
 	# Phải chạy được KỂ CẢ khi cây scene đang bị dừng — nếu không thì bật
-	# pause_game finished chính node này cũng đứng im và đoạn phim không bao giờ
+	# pause_game xong chính node này cũng đứng im và đoạn phim không bao giờ
 	# kết thúc.
 	process_mode = Node.PROCESS_MODE_ALWAYS
 	_build_ui()
@@ -111,9 +111,9 @@ func _build_ui() -> void:
 	# ở mọi cỡ cửa sổ.
 	#
 	# Cách tính: lấy chiều cao trước (HEIGHT_RATIO), rồi suy ra chiều rộng sao cho
-	# frame có ĐÚNG tỉ lệ đoạn phim:
+	# khung có ĐÚNG tỉ lệ đoạn phim:
 	#     rộng/W = (cao/H) × (H/W) × VIDEO_ASPECT = HEIGHT_RATIO ÷ SCREEN_ASPECT × VIDEO_ASPECT
-	# Nhờ vậy frame tự nó đã đúng tỉ lệ, AspectRatioContainer bên trong không
+	# Nhờ vậy khung tự nó đã đúng tỉ lệ, AspectRatioContainer bên trong không
 	# còn gì để cắt — không có dải đen thừa ở hai bên.
 	#
 	# Nhánh kiểm tra bên dưới đảo lại phép tính khi chiều rộng mới là cạnh
@@ -128,8 +128,8 @@ func _build_ui() -> void:
 	var margin_h := (1.0 - w_ratio) * 0.5
 	var margin_v := (1.0 - h_ratio) * 0.5
 
-	# Viền bo góc vẽ SAU LƯNG frame phim, hơi to hơn một chút, nên nhìn như
-	# cái frame ảnh ôm lấy đoạn phim.
+	# Viền bo góc vẽ SAU LƯNG khung phim, hơi to hơn một chút, nên nhìn như
+	# cái khung ảnh ôm lấy đoạn phim.
 	var border := Panel.new()
 	_anchor_ratio(border, margin_h, margin_v)
 	border.offset_left = -float(BORDER_WIDTH)
@@ -165,7 +165,7 @@ func _build_ui() -> void:
 	_video.finished.connect(_finish)
 	frame.add_child(_video)
 
-	# Dòng nhắc "bỏ qua", đặt ngay dưới frame phim.
+	# Dòng nhắc "bỏ qua", đặt ngay dưới khung phim.
 	#
 	# Có nhắc thì mới công bằng: không nói ra thì người chơi hoặc ngồi chịu
 	# trận hết 11 giây, hoặc bấm loạn xạ để thử — mà bấm loạn xạ chính là
@@ -208,9 +208,9 @@ func _anchor_ratio(c: Control, margin_h: float, margin_v: float) -> void:
 ## khi đoạn phim kết thúc. Nền mờ giữ nguyên bố cục và màu sắc quen thuộc,
 ## chỉ hạ nó xuống nền sau — đúng cách các trò chơi làm mờ nền khi mở menu.
 ##
-## Kỹ thuật: shader lấy mẫu ảnh màn hình đã dựng finished (hint_screen_texture)
+## Kỹ thuật: shader lấy mẫu ảnh màn hình đã dựng xong (hint_screen_texture)
 ## bằng textureLod ở mức mipmap cao. Dùng mipmap thay vì tự lấy mẫu nhiều điểm
-## rồi cộng lại: GPU đã dựng sẵn labelỗi mipmap, đọc một lần là finished, gần như
+## rồi cộng lại: GPU đã dựng sẵn chuỗi mipmap, đọc một lần là xong, gần như
 ## không tốn gì; còn làm mờ kiểu Gauss thủ công tốn hàng chục lần lấy mẫu mỗi
 ## điểm ảnh.
 func _build_dim() -> void:
@@ -274,7 +274,7 @@ func _process(delta: float) -> void:
 			_lbl_music.show()
 
 
-## Trong lúc chiếu, lớp này NUỐT toàn bộ bàn phím và labelột.
+## Trong lúc chiếu, lớp này NUỐT toàn bộ bàn phím và chuột.
 ##
 ## Vì sao phải nuốt hết chứ không chỉ bắt phím bỏ qua: cut-in dừng cây scene
 ## nên nhân vật không nhận input, NHƯNG các node đặt PROCESS_MODE_ALWAYS thì
@@ -295,7 +295,7 @@ func _input(event: InputEvent) -> void:
 	if _finished:
 		return
 	# Chỉ quan tâm tới thao tác thật sự của người chơi. Bỏ qua chuyển động
-	# labelột và các sự kiện lặp do giữ phím.
+	# chuột và các sự kiện lặp do giữ phím.
 	if event is InputEventMouseMotion:
 		return
 	if event is InputEventKey and event.echo:
@@ -309,8 +309,8 @@ func _input(event: InputEvent) -> void:
 
 
 func _finish() -> void:
-	# Cờ chặn vào hai lần: tín hiệu finished và cú bấm bỏ qua có thể tới trong
-	# cùng một frame, mà queue_free() hai lần thì Godot báo lỗi.
+	# Cờ chặn vào hai lần: tín hiệu `finished` và cú bấm bỏ qua có thể tới trong
+	# cùng một khung, mà queue_free() hai lần thì Godot báo lỗi.
 	if _finished:
 		return
 	_finished = true

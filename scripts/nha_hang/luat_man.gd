@@ -19,7 +19,7 @@ extends Node
 ## đọc dữ liệu đó rồi vặn các núm của quan_ly_khach theo đồng hồ. Thêm Ngày 4
 ## chỉ là thêm một Dictionary — không sửa một dòng code nào ở đây.
 ##
-## Đây cũng đúng khuôn mẫu đã dùng cho màn hướng dẫn (dan_dat_tutorial.gd):
+## Đây cũng đúng khuôn mẫu đã dùng cho màn hướng dẫn (tutorial_director.gd):
 ## một node "đạo diễn" sống bên cạnh các hệ thống và điều khiển chúng, chứ
 ## không phải các hệ thống tự biết mình đang ở màn nào.
 ##
@@ -36,16 +36,8 @@ extends Node
 ##   moc_nhac    float   — còn bao nhiêu giây thì đổi sang nhạc cao điểm
 ##   moc         Dict    — bốn mốc doanh thu S/A/B/C (GameData tự đọc)
 
-## Nhóm nhạc cao điểm trong AmThanh.NHOM_NHAC (hiện có đúng một bài,
-## hashire_umamusume, dài 212 giây, nằm ở res://assets/bgm/).
-##
-## LỖI ĐÃ SỬA (11/9/2026): dòng này từng là `const NHAC_CAO_DIEM :=
-## "nhac_cao_diem"` — một TÊN FILE không tồn tại, có từ hồi âm thanh mới chỉ
-## là cái khung rỗng. Khi kho nhạc thật về, chỗ gọi đổi sang nhóm nhưng bản
-## sửa đó bị một lần chép file đè mất, nên tới mốc 3:32 hệ âm thanh đi tìm
-## "nhac_cao_diem.*", không thấy, rồi IM LẶNG BỎ QUA đúng như thiết kế — bài
-## hát không bao giờ chạy mà console cũng chỉ in một dòng nhắc.
-const NHOM_CAO_DIEM := "cao_diem"
+## Tên file nhạc cao điểm, thả vào assets/sfx/game/.
+const NHAC_CAO_DIEM := "nhac_cao_diem"
 
 var _ql: Node
 var _gio: Node
@@ -130,10 +122,7 @@ func _process(_delta: float) -> void:
 	if not _da_doi_nhac and _luat.has("moc_nhac"):
 		if float(_gio.con_lai) <= float(_luat["moc_nhac"]):
 			_da_doi_nhac = true
-			# lap = false: bài này chạy ĐÚNG MỘT LẦN rồi hết màn. Bật lặp thì
-			# đồng hồ dư vài giây là nó vào lại từ đầu, và người chơi nghe
-			# khúc mở đầu ngay trước tiếng chuông kết thúc.
-			AmThanh.nhac_ngau_nhien(NHOM_CAO_DIEM, false, false)
+			AmThanh.nhac(NHAC_CAO_DIEM)
 
 	for i in _chang.size():
 		var c: Dictionary = _chang[i]

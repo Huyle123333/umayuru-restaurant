@@ -24,52 +24,52 @@ extends RefCounted
 ## nhưng đã chuẩn bị kỹ hơn cả hai người cộng lại — và chi tiết đó (cái hộp
 ## bánh) làm việc thay cho một đoạn thoại dài.
 
-const NEN_QUAN := "res://assets/ui/backgrounds/quan_an.png"
+const BG_RESTAURANT := "res://assets/ui/backgrounds/quan_an.png"
 
-const MAN: Array[Dictionary] = [
+const SCENES: Array[Dictionary] = [
 	{
-		"nen": NEN_QUAN,
-		"loi": "Bảy giờ sáng. Quán chưa sáng đèn.",
+		"background": BG_RESTAURANT,
+		"line": "Bảy giờ sáng. Quán chưa sáng đèn.",
 	},
 	{
-		"loi": "Có một cô bé đứng ngoài cửa. Đã đứng đó một lúc, ngập ngừng định vào nhưng lại thôi.",
+		"line": "Có một cô bé đứng ngoài cửa. Đã đứng đó một lúc, ngập ngừng định vào nhưng lại thôi.",
 	},
 	{
-		"anh": "kitamoi",
-		"ai": "Kitasan Black",
-		"loi": "Ơ Chiyo-san? Tại sao chị chỉ đứng nhìn!",
+		"portrait": "kitamoi",
+		"speaker": "Kitasan Black",
+		"line": "Ơ Chiyo-san? Tại sao chị chỉ đứng nhìn!",
 	},
 	{
-		"anh": "chiyo",
-		"ai": "Sakura Chiyono O",
-		"loi": "A... x-xin lỗi! Trong đó đang bận nên chị nghĩ mình nên đợi.",
+		"portrait": "chiyo",
+		"speaker": "Sakura Chiyono O",
+		"line": "A... x-xin lỗi! Trong đó đang bận nên chị nghĩ mình nên đợi.",
 	},
 	{
-		"anh": "trainer",
-		"ai": "0rca's Trainer",
-		"loi": "Có việc gì không em?",
+		"portrait": "trainer",
+		"speaker": "0rca's Trainer",
+		"line": "Có việc gì không em?",
 	},
 	{
-		"anh": "chiyo",
-		"ai": "Sakura Chiyono O",
-		"loi": "Em... nghe nói quán đang tìm người. Em cũng biết một chút nấu nướng. Không giỏi lắm, nhưng làm được.",
+		"portrait": "chiyo",
+		"speaker": "Sakura Chiyono O",
+		"line": "Em... nghe nói quán đang tìm người. Em cũng biết một chút nấu nướng. Không giỏi lắm, nhưng làm được.",
 	},
 	{
-		"loi": "Cô đưa ra một cái hộp giấy buộc dây cẩn thận. Bên trong là bánh — vừa mới ra lò sáng nay.",
+		"line": "Cô đưa ra một cái hộp giấy buộc dây cẩn thận. Bên trong là bánh — vừa mới ra lò sáng nay.",
 	},
 	{
-		"anh": "tuandb",
-		"ai": "Special Week",
-		"loi": "...Ngon quá! Cái này ngon thật này!",
+		"portrait": "tuandb",
+		"speaker": "Special Week",
+		"line": "...Ngon quá! Cái này ngon thật này!",
 	},
 	{
-		"anh": "chiyo",
-		"ai": "Sakura Chiyono O",
-		"loi": "T-thật ạ? Vậy... vậy em làm thêm được không? Em hứa sẽ cố hết sức!",
+		"portrait": "chiyo",
+		"speaker": "Sakura Chiyono O",
+		"line": "T-thật ạ? Vậy... vậy em làm thêm được không? Em hứa sẽ cố hết sức!",
 	},
 	{
-		"anh": "",
-		"ai": "",
-		"loi": "Không ai kịp nói rằng cô đã được nhận từ miếng bánh thứ nhất.",
+		"portrait": "",
+		"speaker": "",
+		"line": "Không ai kịp nói rằng cô đã được nhận từ miếng bánh thứ nhất.",
 	},
 ]

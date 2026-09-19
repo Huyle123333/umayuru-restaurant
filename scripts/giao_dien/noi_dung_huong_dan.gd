@@ -1,7 +1,7 @@
 extends RefCounted
 ## Nội dung của menu hướng dẫn (F1) — DỮ LIỆU thuần, không có logic vẽ.
 ##
-## Cùng lối viết với kich_ban_prologue.gd và kich_ban_tutorial.gd: sửa nội dung
+## Cùng lối viết với cutscene_prologue.gd và cutscene_tutorial.gd: sửa nội dung
 ## là sửa bảng này, không đụng tới file dựng giao diện. Ba file kịch bản của
 ## game giờ đọc giống nhau, nên người sửa chữ chỉ phải học MỘT quy ước.
 ##

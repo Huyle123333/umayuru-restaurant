@@ -11,7 +11,7 @@ grow_horizontal = 2
 grow_vertical = 2
 script = ExtResource("1_intro")
 duong_dan_video = "res://assets/video/intro_prologue.ogv"
-scene_tiep_theo = "res://scenes/cot_truyen/prologue.tscn"
+scene_tiep_theo = "res://scenes/story/prologue.tscn"
 
 [node name="Nen" type="ColorRect" parent="."]
 layout_mode = 1

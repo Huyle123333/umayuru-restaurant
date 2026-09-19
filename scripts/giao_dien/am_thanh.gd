@@ -269,7 +269,12 @@ func nhac_ngau_nhien(nhom: String, giu_lien_mach: bool = false,
 	nhac(chon, lap, true)
 
 
-func dung_nhac() -> void:
+## Tắt hẳn nhạc nền.
+##
+## (Đổi tên 18/9/2026) Trước là `dung_nhac`. Đổi sớm hơn lượt của am_thanh.gd
+## vì hàm này vừa có thêm nơi gọi mới (intro_video.gd) — để nguyên thì mỗi
+## dòng code viết thêm lại đẻ ra một chỗ phải sửa ở lô sau.
+func stop_music() -> void:
 	_nhac.stop()
 	_bai_dang = ""
 

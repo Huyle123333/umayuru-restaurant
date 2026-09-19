@@ -84,7 +84,7 @@ func _ready() -> void:
 	# không đợi tới lần bấm phím tiếp theo.
 	GameData.progress_changed.connect(_emit_state)
 	# Đợi một frame rồi mới báo trạng thái đầu tiên: HUD được tạo cùng lúc với
-	# node này nên lúc _ready chạy, tín hiệu chưa chắc đã nối finished.
+	# node này nên lúc _ready chạy, tín hiệu chưa chắc đã nối xong.
 	call_deferred("_emit_state")
 
 
@@ -102,7 +102,7 @@ func can_use() -> bool:
 		return false
 	# Cheat vẫn phải tôn trọng "nhân vật này chưa có kĩ năng": cho bấm được
 	# thì cut-in chiếu ra một kĩ năng không tồn tại, và người thử sẽ tưởng nó
-	# đã cài finished.
+	# đã cài xong.
 	if _active.is_empty() and not ignore_condition:
 		return false
 	if GameData.ki_nang_vo_han:
@@ -241,7 +241,7 @@ func _on_order_finished(_order: Variant, _reason: String) -> void:
 
 ## Bật hiệu ứng của kĩ năng chủ động.
 ##
-## Gọi NGAY LÚC BẤM, không đợi cut-in chiếu finished — nếu buộc đợi hết phim thì
+## Gọi NGAY LÚC BẤM, không đợi cut-in chiếu xong — nếu buộc đợi hết phim thì
 ## người bỏ qua đoạn phim sẽ được lợi (hoặc thiệt) hơn người ngồi xem, tức
 ## cùng một kĩ năng cho hai kết quả khác nhau tuỳ thói quen bấm phím.
 func _apply_effect() -> void:

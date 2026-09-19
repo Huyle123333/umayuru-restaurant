@@ -52,7 +52,7 @@ extends RefCounted
 
 
 ## Bật hiệu ứng. Gọi NGAY LÚC người chơi bấm Space, không đợi cut-in chiếu
-## finished — nếu buộc đợi hết phim thì người bỏ qua đoạn phim sẽ được lợi (hoặc
+## xong — nếu buộc đợi hết phim thì người bỏ qua đoạn phim sẽ được lợi (hoặc
 ## thiệt) hơn người ngồi xem, tức cùng một kĩ năng cho hai kết quả khác nhau
 ## tuỳ thói quen bấm phím.
 ##

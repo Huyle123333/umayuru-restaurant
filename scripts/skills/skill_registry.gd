@@ -45,7 +45,7 @@ extends RefCounted
 const COND_PERFECT_ORDERS := "perfect_orders"
 ## Đếm số đơn đã hoàn thành, hoàn hảo hay không. (Chiyono O — chưa cài)
 const COND_ORDERS_DONE := "orders_done"
-## Đếm số MÓN đã nấu finished thuộc một nhóm. (Special Week, Mambo — chưa cài)
+## Đếm số MÓN đã nấu xong thuộc một nhóm. (Special Week, Mambo — chưa cài)
 const COND_DISHES_COOKED := "dishes_cooked"
 ## Đếm giây đã trôi của màn chơi. (Oguri — chưa cài)
 const COND_TIME_ELAPSED := "time_elapsed"
@@ -63,14 +63,14 @@ const COND_MENU_COVERED := "menu_covered"
 # Cần gì phức tạp hơn thì viết một file trong hieu_ung/ và khai khoá "script"
 # thay cho "effect" — xem effects/_template.gd.
 
-## Mọi đơn giao out tính là hoàn hảo bất kể thanh kiên nhẫn. (Kita)
+## Mọi đơn giao ra tính là hoàn hảo bất kể thanh kiên nhẫn. (Kita)
 const FX_FORCE_PERFECT := "force_perfect"
 
 
 # ══════════════════════════════════════════════════ SỐ GỐC (KHÔNG KĨ NĂNG)
 #
 # Ba con số này là ĐƠN VỊ: nhân với 1,0 và cộng với 0,0 thì không có gì đổi.
-# Viết out thành một bảng thật thay vì rải `if` kiểm tra null ở ba nơi dùng —
+# Viết ra thành một bảng thật thay vì rải `if` kiểm tra null ở ba nơi dùng —
 # nơi dùng chỉ việc đọc bảng rồi nhân, không cần biết nhân vật có kĩ năng hay
 # không.
 const DEFAULTS := {
@@ -89,8 +89,8 @@ const DEFAULTS := {
 # ở đây. Không phải sửa gì khác.
 #
 # Sáu nhân vật còn lại (Special Week, Oguri Cap, Mambo, Gold Ship, Tokai Teio,
-# Chiyono O) cố ý KHÔNG có dòng nào: thiếu dòng đọc out là "chưa làm tới", còn
-# một dòng trỏ tới file rỗng đọc out là "nhân vật này không có kĩ năng". Hai
+# Chiyono O) cố ý KHÔNG có dòng nào: thiếu dòng đọc ra là "chưa làm tới", còn
+# một dòng trỏ tới file rỗng đọc ra là "nhân vật này không có kĩ năng". Hai
 # câu khác nhau.
 #
 # Dùng preload chứ không load(): preload chạy lúc BIÊN DỊCH nên gõ sai đường

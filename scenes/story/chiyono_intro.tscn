@@ -1,8 +1,8 @@
 [gd_scene load_steps=6 format=3]
 
-[ext_resource type="Script" path="res://scenes/cot_truyen/hoi_thoai.gd" id="1_hoithoai"]
-[ext_resource type="Theme" path="res://ui/theme/menu_theme.tres" id="2_theme"]
-[ext_resource type="Texture2D" path="res://assets/ui/backgrounds/quan_an.png" id="3_nen"]
+[ext_resource type="Script" uid="uid://dgf2v57b8ayrl" path="res://scenes/story/dialogue_player.gd" id="1_hoithoai"]
+[ext_resource type="Theme" uid="uid://cj80dajsf8jm6" path="res://ui/theme/menu_theme.tres" id="2_theme"]
+[ext_resource type="Texture2D" uid="uid://drqyjk88edqva" path="res://assets/ui/backgrounds/quan_an.png" id="3_nen"]
 
 [sub_resource type="StyleBoxFlat" id="Hop_Style"]
 content_margin_left = 34.0
@@ -42,9 +42,9 @@ grow_horizontal = 2
 grow_vertical = 2
 theme = ExtResource("2_theme")
 script = ExtResource("1_hoithoai")
-duong_dan_kich_ban = "res://scripts/cot_truyen/kich_ban_chiyono.gd"
-man_tiep_theo = ""
-danh_dau_hoan_thanh = ""
+cutscene_path = "res://scripts/story/cutscene_chiyono.gd"
+next_level = ""
+mark_completed = ""
 
 [node name="Nen" type="TextureRect" parent="."]
 unique_name_in_owner = true

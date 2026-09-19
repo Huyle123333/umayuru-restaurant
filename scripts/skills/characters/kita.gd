@@ -31,8 +31,8 @@ extends RefCounted
 # Lý do: sổ đăng kí bên đó đã preload NGƯỢC file này, và hai file preload lẫn
 # nhau là tham chiếu vòng — Godot báo lỗi ngay lúc phân tích cú pháp.
 #
-# Nên hai khoá "condition" và "effect" dưới đây viết thẳng labelỗi. Danh sách
-# đầy đủ các labelỗi hợp lệ nằm ở skill_registry.gd (phần DK_* và HU_*); gõ sai
+# Nên hai khoá "condition" và "effect" dưới đây viết thẳng chuỗi. Danh sách
+# đầy đủ các chuỗi hợp lệ nằm ở skill_registry.gd (phần DK_* và HU_*); gõ sai
 # một chữ thì kĩ năng im lặng không bao giờ đủ điều kiện, nên chép từ đó sang
 # chứ đừng gõ tay.
 
@@ -101,12 +101,12 @@ const PASSIVE := {
 
 	# "Đổi lại: món ăn hỏng sớm hơn 2 giây."
 	#
-	# Trừ vào MỐC CHÁY, không trừ vào thời gian nấu. Bếp nấu finished ở giây 8,
+	# Trừ vào MỐC CHÁY, không trừ vào thời gian nấu. Bếp nấu xong ở giây 8,
 	# cháy ở giây 16 (he_so_chay = 2,0); kĩ năng này kéo mốc cháy về giây 14,
 	# tức quãng ân hạn sau khi chín rút từ 8 xuống 6 giây.
 	#
 	# Vì sao không trừ vào thời gian nấu: trừ ở đó là LÀM LỢI cho người chơi
-	# (món finished sớm hơn), ngược hẳn với chữ "đổi lại".
+	# (món xong sớm hơn), ngược hẳn với chữ "đổi lại".
 	#
 	# Thực tế chỉ ham và steak chịu ảnh hưởng — hai món duy nhất khai khoá
 	# `hong` trong DanhMuc. Vẫn viết chung chứ không viết riêng cho hai món,

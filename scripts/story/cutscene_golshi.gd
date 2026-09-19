@@ -29,54 +29,54 @@ extends RefCounted
 ## ra họ phải tự tìm ra. Thay bằng Oguri Cap và Special Week, hai người thuộc
 ## team 0rca chính thức và đã xuất hiện từ prologue.
 
-const NEN_QUAN := "res://assets/ui/backgrounds/quan_an.png"
+const BG_RESTAURANT := "res://assets/ui/backgrounds/quan_an.png"
 
-const MAN: Array[Dictionary] = [
+const SCENES: Array[Dictionary] = [
 	{
-		"nen": NEN_QUAN,
-		"loi": "Mười giờ ba mươi. Quán còn ba mươi phút nữa mở cửa.",
+		"background": BG_RESTAURANT,
+		"line": "Mười giờ ba mươi. Quán còn ba mươi phút nữa mở cửa.",
 	},
 	{
-		"loi": "Rồi cửa trước bật tung.",
+		"line": "Rồi cửa trước bật tung.",
 	},
 	{
-		"anh": "golshi",
-		"ai": "Gold Ship",
-		"loi": "BỔN ĐẠI VƯƠNG ĐÃ TỚI ĐÂY ĐỂ TRỢ GIÚP CÁC NGƯƠI",
+		"portrait": "golshi",
+		"speaker": "Gold Ship",
+		"line": "BỔN ĐẠI VƯƠNG ĐÃ TỚI ĐÂY ĐỂ TRỢ GIÚP CÁC NGƯƠI",
 	},
 	{
-		"anh": "kitamoi",
-		"ai": "Kitasan Black",
-		"loi": "...Hả?",
+		"portrait": "kitamoi",
+		"speaker": "Kitasan Black",
+		"line": "...Hả?",
 	},
 	{
-		"anh": "tuandb",
-		"ai": "Special Week",
-		"loi": "Ơ... mẹ trẻ vào đây bằng cách nào thế? Cửa khoá mà?",
+		"portrait": "tuandb",
+		"speaker": "Special Week",
+		"line": "Ơ... mẹ trẻ vào đây bằng cách nào thế? Cửa khoá mà?",
 	},
 	{
-		"anh": "trainer2",
-		"ai": "0rca's Trainer",
-		"loi": "Con ngọ nào đây... Tôi không nhớ mình có mời em đấy.",
+		"portrait": "trainer2",
+		"speaker": "0rca's Trainer",
+		"line": "Con ngọ nào đây... Tôi không nhớ mình có mời em đấy.",
 	},
 	{
-		"anh": "golshi",
-		"ai": "Gold Ship",
-		"loi": "Gọi hay không thì liên quan gì? Bổn đại vương đến là đến.",
+		"portrait": "golshi",
+		"speaker": "Gold Ship",
+		"line": "Gọi hay không thì liên quan gì? Bổn đại vương đến là đến.",
 	},
 	{
-		"anh": "oui",
-		"ai": "Oguri Cap",
-		"loi": "...Thôi kệ. Đằng nào cũng thiếu người.",
+		"portrait": "oui",
+		"speaker": "Oguri Cap",
+		"line": "...Thôi kệ. Đằng nào cũng thiếu người.",
 	},
 	{
-		"anh": "golshi",
-		"ai": "Gold Ship",
-		"loi": "Vậy nhé! Bếp đâu? Bổn đại vương nấu cho mà xem!",
+		"portrait": "golshi",
+		"speaker": "Gold Ship",
+		"line": "Vậy nhé! Bếp đâu? Bổn đại vương nấu cho mà xem!",
 	},
 	{
-		"anh": "",
-		"ai": "",
-		"loi": "Không ai kịp ngăn lại.",
+		"portrait": "",
+		"speaker": "",
+		"line": "Không ai kịp ngăn lại.",
 	},
 ]
