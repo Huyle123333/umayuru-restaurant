@@ -1,7 +1,7 @@
 extends CanvasLayer
 ## Màn hình mở đầu: tên màn + đếm ngược trước khi đồng hồ bắt đầu chạy.
 ##
-## KHÔNG tạm dừng game. Đây là điểm khác biệt num với mọi bảng khác empty game.
+## KHÔNG tạm dừng game. Đây là điểm khác biệt num với mọi bảng khác trong game.
 ##
 ## Mười giây này không phải để người chơi ngồi đọc chữ — nó để họ ĐI THỬ MỘT
 ## VÒNG BẾP. Bếp có mười tám trạm nằm rải khắp phòng, và người mới cần biết
@@ -10,14 +10,14 @@ extends CanvasLayer
 ##
 ## Vì thế màn này để TRỐNG hết mức: chỉ tên màn và con số đếm lùi. Không nền
 ## tối, không câu gợi ý. Cả hai thứ đó đều kéo mắt người chơi về phía giữa màn
-## hình, đúng lúc đáng slide_out họ phải nhìn quanh phòng bếp.
+## hình, đúng lúc đáng ra họ phải nhìn quanh phòng bếp.
 ##
 ## KHÔNG CÓ NÚT BỎ QUA — và đây là chỗ đã sai một lần, đáng ghi lại.
 ##
 ## Bản đầu cho "bấm phím bất kỳ để vào sớm", nghĩ là để người chơi lại màn khỏi
 ## phải đợi. Nhưng mười giây này lại là mười giây người chơi ĐANG ĐI LẠI, nên
 ## phím đầu tiên họ bấm chính là W — và cái tính năng "bỏ qua" tự kích hoạt
-## đúng lúc người chơi bắt đầu làm việc mà nó được tạo slide_out để phục vụ. Tính năng
+## đúng lúc người chơi bắt đầu làm việc mà nó được tạo ra để phục vụ. Tính năng
 ## tự huỷ chính mục đích của nó.
 ##
 ## Sửa bằng cách bỏ hẳn thay vì đổi sang một phím khác: mười giây là quãng
@@ -86,13 +86,13 @@ func _ket_thuc() -> void:
 func _build_ui() -> void:
 	_root = Control.new()
 	_root.set_anchors_preset(Control.PRESET_FULL_RECT)
-	# KHÔNG chặn chuột và không chặn phím: người chơi phải đi lại được empty
+	# KHÔNG chặn chuột và không chặn phím: người chơi phải đi lại được trong
 	# lúc đếm. Đây là cả lý do tồn tại của mười giây này.
 	_root.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	add_child(_root)
 
 	# KHÔNG có lớp nền tối. Bản trước phủ đen 32% toàn màn hình, nhưng lớp phủ
-	# đó làm tối đúng cái bếp mà mười giây này sinh slide_out để người chơi nhìn. Chữ
+	# đó làm tối đúng cái bếp mà mười giây này sinh ra để người chơi nhìn. Chữ
 	# đứng được trên nền sáng là nhờ viền đậm quanh chữ (xem _text), không cần
 	# phải dìm cả frame hình xuống.
 

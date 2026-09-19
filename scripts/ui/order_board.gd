@@ -5,12 +5,12 @@ extends CanvasLayer
 ## sáu tấm vé rời rạc chiếm 330 px chiều ngang và gần trọn chiều cao màn hình
 ## mà không bao giờ tắt được. Trong một game nhìn từ trên xuống thì đó là một
 ## phần ba sàn bếp bị che vĩnh viễn. Gom vào một tấm bảng thì cả cụm có MỘT
-## công tắc: cần thì kéo slide_out đọc, xong thì đẩy vào, tầm nhìn trả lại nguyên vẹn.
+## công tắc: cần thì kéo ra đọc, xong thì đẩy vào, tầm nhìn trả lại nguyên vẹn.
 ##
 ## Cái nhãn nhỏ ở mép trái là phần bắt buộc của thiết kế này, không phải trang
 ## trí. Một bảng đóng hoàn toàn thì người chơi quên mất là có đơn đang chờ, và
 ## quên theo cách tệ nhất — không có gì trên màn hình nhắc họ. Cái nhãn giữ lại
-## đúng hai thông tin cần để quyết định có mở bảng slide_out hay không: **có mấy đơn**
+## đúng hai thông tin cần để quyết định có mở bảng ra hay không: **có mấy đơn**
 ## và **đơn gấp nhất còn bao nhiêu kiên nhẫn** (viền nhãn đổi màu theo). Nó
 ## chiếm 46 px thay vì 354.
 ##
@@ -163,8 +163,8 @@ func _x_closed() -> float:
 ##
 ## Nghĩa là: hộp thoại, ô nhập chữ hay bất cứ Control nào đang nhận bàn phím
 ## sẽ NUỐT phím 1 trước khi tới đây. Đúng như mong muốn — gõ số 1 vào một ô
-## nhập mà cái bảng đơn hàng nhảy slide_out thì rất khó chịu, và lỗi kiểu đó chỉ lộ
-## slide_out khi đã có màn hướng dẫn với hộp thoại Có/Không.
+## nhập mà cái bảng đơn hàng nhảy ra thì rất khó chịu, và lỗi kiểu đó chỉ lộ
+## ra khi đã có màn hướng dẫn với hộp thoại Có/Không.
 func _unhandled_key_input(su_kien: InputEvent) -> void:
 	var key_label := su_kien as InputEventKey
 	if key_label == null or not key_label.pressed or key_label.echo:
@@ -184,7 +184,7 @@ func set_open(open: bool) -> void:
 		return
 	is_open = open
 	# Nhãn tắt NGAY khi bắt đầu mở, nhưng chỉ bật lại SAU khi bảng đóng xong:
-	# hiện nhãn empty lúc tấm bảng còn đang trượt qua chỗ nó thì hai thứ chồng
+	# hiện nhãn trong lúc tấm bảng còn đang trượt qua chỗ nó thì hai thứ chồng
 	# lên nhau đúng một phần ba giây, nhìn như lỗi vẽ.
 	if open:
 		_label.visible = false
@@ -199,7 +199,7 @@ func set_open(open: bool) -> void:
 
 # -------------------------------------------------------------- dữ liệu ---
 
-## Nối vào hệ khách. Chỉ cần hai tín hiệu: đơn sinh slide_out và đơn kết thúc.
+## Nối vào hệ khách. Chỉ cần hai tín hiệu: đơn sinh ra và đơn kết thúc.
 func listen_to_orders(ql: Node) -> void:
 	if ql == null:
 		return
@@ -247,7 +247,7 @@ func _update_label() -> void:
 	_lbl_counter.text = str(_ticket.size())
 
 	# Viền nhãn mang màu của đơn GẤP NHẤT, không phải trung bình.
-	# Trung bình thì năm đơn thong thả kéo màu về xanh empty khi một đơn sắp
+	# Trung bình thì năm đơn thong thả kéo màu về xanh trong khi một đơn sắp
 	# mất khách — mà cái người chơi cần biết chính là đơn tệ nhất.
 	# BỎ QUA đơn của khách còn đang xếp hàng: bar của họ chưa chạy, nhưng
 	# `ti_le()` lúc đó trả về kiên nhẫn HÀNG ĐỢI đang tụt — tính vào đây thì

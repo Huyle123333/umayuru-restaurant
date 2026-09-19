@@ -16,10 +16,10 @@ extends RefCounted
 ##
 ## Vì sao có loại khối "cong_thuc" thay vì gõ tay danh sách món:
 ##
-## Công thức là thứ đổi nhiều nhất empty cả game — riêng tuần này đã thêm ba
+## Công thức là thứ đổi nhiều nhất trong cả game — riêng tuần này đã thêm ba
 ## món và khoá/mở một nhánh cơ chế. Gõ tay vào đây thì trang hướng dẫn sẽ nói
 ## sai ngay lần sửa công thức đầu tiên, mà nó nói sai một cách IM LẶNG: không
-## có lỗi nào báo, chỉ có người chơi làm theo rồi không slide_out món. Sinh thẳng từ
+## có lỗi nào báo, chỉ có người chơi làm theo rồi không ra món. Sinh thẳng từ
 ## DanhMuc thì trang này không bao giờ lệch được với luật thật.
 ##
 ## ẢNH: đặt ở res://assets/ui/huong_dan/<name_>.png. Thiếu ảnh thì khối đó tự bỏ

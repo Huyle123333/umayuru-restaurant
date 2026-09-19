@@ -6,7 +6,7 @@ extends CanvasLayer
 ## Bản trước có đúng MỘT bar neo giữa-trên màn hình, kèm dòng chữ "Đang nấu
 ## — Bep 1" để nói nó đang phục vụ ai. Lý do chọn kiểu đó vẫn đúng và vẫn được
 ## giữ ở đây: lúc người chơi cần nhìn bar nhất là lúc họ đang CHẠY ĐI LẤY
-## NGUYÊN LIỆU, mà khi đó cái bếp đã slide_out khỏi frame hình.
+## NGUYÊN LIỆU, mà khi đó cái bếp đã ra khỏi frame hình.
 ##
 ## Nhưng một bar cho bốn trạm thì hỏng ngay khi hai trạm cùng chạy — và đó
 ## là cách chơi bình thường, không phải trường hợp hiếm: bật bếp rồi chạy sang
@@ -33,16 +33,16 @@ extends CanvasLayer
 ##   CHỜ CHÁY bar đỏ, VƠI DẦN 1 → 0   (chỉ ham và steak)
 ##
 ## Giai đoạn hai là thứ trước đây hoàn toàn không có báo hiệu: nấu xong bar
-## biến mất, empty khi miếng thịt vẫn nằm trên bếp đếm tiếp 8 giây nữa rồi
+## biến mất, trong khi miếng thịt vẫn nằm trên bếp đếm tiếp 8 giây nữa rồi
 ## cháy. Người chơi không có cách nào biết còn bao lâu ngoài tự đếm nhẩm — mà
-## "cứ để đấy rồi tính" lẽ slide_out phải là một canh bạc CÓ THÔNG TIN, không phải
+## "cứ để đấy rồi tính" lẽ ra phải là một canh bạc CÓ THÔNG TIN, không phải
 ## một cái bẫy.
 ##
 ## Đổi CHIỀU (đầy dần → vơi dần) chứ không chỉ đổi màu: hai giai đoạn là hai
 ## loại đồng hồ ngược nhau — một cái đếm tới phần thưởng, một cái đếm tới hình
 ## phạt. Cùng chiều thì người chơi liếc nhanh sẽ nhầm cái sau là cái trước.
 
-## Cỡ bar, tính theo viewport thiết kế 1920×1080 (chia 1.5 slide_out cỡ thật ở cửa
+## Cỡ bar, tính theo viewport thiết kế 1920×1080 (chia 1.5 ra cỡ thật ở cửa
 ## sổ 1280×720 — xem giải thích ở hud_tuong_tac.gd).
 const WIDTH := 92.0
 const HEIGHT := 12.0
@@ -143,8 +143,8 @@ func _make_bar() -> Dictionary:
 
 ## Đặt lại vị trí mọi bar theo vị trí trạm trên màn hình.
 ##
-## Làm empty _process chứ không nối vào một tín hiệu nào: camera di chuyển
-## theo người chơi mỗi frame hình, nên vị trí chiếu slide_out màn hình đổi mỗi frame
+## Làm trong _process chứ không nối vào một tín hiệu nào: camera di chuyển
+## theo người chơi mỗi frame hình, nên vị trí chiếu ra màn hình đổi mỗi frame
 ## hình dù cái bếp đứng yên tuyệt đối.
 func _process(_delta: float) -> void:
 	if _cells.is_empty():

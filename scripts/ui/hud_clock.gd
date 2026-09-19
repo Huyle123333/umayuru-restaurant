@@ -12,8 +12,8 @@ extends CanvasLayer
 ## cần nghe tín hiệu đó — không phải đi tìm và sửa lại chỗ đếm.
 ##
 ## Đơn vị tiền là củ cà rốt cầu vồng. Ảnh nằm ở assets/ui/money/ chứ không ở
-## assets/ui/nguyen_lieu/ vì empty đó ĐÃ CÓ carrot.png — củ cà rốt nguyên liệu
-## thật, thứ người chơi thái slide_out để làm chả rau củ. Hai củ cà rốt, hai vai trò,
+## assets/ui/nguyen_lieu/ vì trong đó ĐÃ CÓ carrot.png — củ cà rốt nguyên liệu
+## thật, thứ người chơi thái ra để làm chả rau củ. Hai củ cà rốt, hai vai trò,
 ## hai thư mục; để chung một chỗ thì sớm muộn cũng có người nạp nhầm.
 
 signal time_up
@@ -32,12 +32,12 @@ const COLOR_RUSH := Color("de6459")
 ## Dưới mức này thì đồng hồ chuyển đỏ và đập nhẹ.
 const RUSH_THRESHOLD := 30.0
 
-## Thời lượng một màn, giây. 420 = 7 phút, đúng con số empty bảng cân bằng.
+## Thời lượng một màn, giây. 420 = 7 phút, đúng con số trong bảng cân bằng.
 @export var duration: float = 420.0
 ## Có đếm ngược không. Màn hướng dẫn tắt: học thì không nên bị đuổi.
 ##
 ## Có setter vì cờ này bị đổi LÚC ĐANG CHẠY (bộ dẫn dắt tắt lúc vào màn học,
-## bật lại lúc học xong). Không vẽ lại ngay empty setter thì mặt đồng hồ giữ
+## bật lại lúc học xong). Không vẽ lại ngay trong setter thì mặt đồng hồ giữ
 ## nguyên giá trị cũ cho tới lần đếm kế tiếp — mà khi đã tắt đếm thì không còn
 ## lần kế tiếp nào cả, và ô giờ đứng im ở con số cũ mãi mãi.
 @export var counting_down: bool = true:
@@ -72,7 +72,7 @@ func _build_ui() -> void:
 
 	var frame := PanelContainer.new()
 	frame.set_anchors_preset(Control.PRESET_TOP_RIGHT)
-	# Neo góc phải nên offset ÂM tính ngược vào empty màn hình.
+	# Neo góc phải nên offset ÂM tính ngược vào trong màn hình.
 	frame.offset_right = -MARGIN
 	frame.offset_left = -MARGIN - WIDTH
 	frame.offset_top = MARGIN
@@ -136,7 +136,7 @@ func _process(delta: float) -> void:
 
 	if time_left <= 0.0:
 		_alerted = true
-		# KHÔNG phát tiếng ở đây. Bảng kết quả hiện slide_out ngay empty cùng frame
+		# KHÔNG phát tiếng ở đây. Bảng kết quả hiện ra ngay trong cùng frame
 		# hình và phát tiếng "tong_ket" của nó, nên hai tiếng đè lên nhau thành
 		# một mớ.
 		#
@@ -145,7 +145,7 @@ func _process(delta: float) -> void:
 		# giờ đi qua nhánh này — giữ "time_up" thay vì "tong_ket" thì kết thúc
 		# màn hướng dẫn im lặng hoàn toàn.
 		#
-		# File time_up_buzzer.mp3 vẫn nằm empty thư mục và vẫn có tên empty
+		# File time_up_buzzer.mp3 vẫn nằm trong thư mục và vẫn có tên trong
 		# bảng FILE_NAMES, chỉ là chưa chỗ nào gọi.
 		time_up.emit()
 
@@ -153,13 +153,13 @@ func _process(delta: float) -> void:
 ## Đặt thẳng số giây còn lại (cheat tua giờ của CODE No.7).
 ##
 ## Có hàm riêng thay vì để bên ngoài gán `time_left` trực tiếp, vì mặt đồng hồ
-## chỉ được vẽ lại empty _process, mà _process lại thoát sớm khi `counting_down`
-## đang tắt — tức đúng lúc màn hình mở đầu đang đếm 10 giây. Gán thẳng empty
+## chỉ được vẽ lại trong _process, mà _process lại thoát sớm khi `counting_down`
+## đang tắt — tức đúng lúc màn hình mở đầu đang đếm 10 giây. Gán thẳng trong
 ## quãng đó thì thời gian đã nhảy nhưng mặt đồng hồ vẫn hiện 7:00, và người
 ## bấm tưởng cheat không ăn.
 ##
-## clamp về [0, duration]: tua tới một con số âm thì phép chia empty _draw_clock
-## cho slide_out bar tiến trình âm, còn tua vượt quá thời lượng thì bar vượt 100%.
+## clamp về [0, duration]: tua tới một con số âm thì phép chia trong _draw_clock
+## cho ra bar tiến trình âm, còn tua vượt quá thời lượng thì bar vượt 100%.
 func set_time_left(seconds: float) -> void:
 	time_left = clampf(seconds, 0.0, duration)
 	_draw_clock()
@@ -175,7 +175,7 @@ func _on_money_changed(tong: int, _them: int, _cho: Vector3) -> void:
 	money = tong
 	_draw_money()
 	# Nảy nhẹ con số: phần thưởng phải có phản hồi, nhưng ở góc màn hình thì
-	# một cú nảy 1,15 lần empty 0,18 giây là đủ thấy mà không kéo mắt khỏi bếp.
+	# một cú nảy 1,15 lần trong 0,18 giây là đủ thấy mà không kéo mắt khỏi bếp.
 	var tween := create_tween().set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
 	_lbl_money.pivot_offset = _lbl_money.size * 0.5
 	tween.tween_property(_lbl_money, "scale", Vector2(1.15, 1.15), 0.09)

@@ -4,7 +4,7 @@ extends CanvasLayer
 ## Bố cục lấy theo tấm ảnh mẫu người dùng gửi: frame chữ bên trái, ảnh nhân vật
 ## bên phải, dưới ảnh là một dải nhãn nhỏ. Đọc từ trái sang phải thì mắt gặp
 ## CHỮ trước rồi mới tới mặt người nói — đúng thứ tự cần, vì cái phải làm nằm
-## empty chữ chứ không nằm ở cái mặt.
+## trong chữ chứ không nằm ở cái mặt.
 ##
 ## Vì sao ở góc phải dưới đồng hồ: hai khối HUD kia đều đã có chủ — mép trái là
 ## bảng đơn hàng, đáy giữa là danh sách trạm. Quan trọng hơn, hộp này KHÔNG
@@ -93,7 +93,7 @@ func _build_ui() -> void:
 	# BẮT BUỘC có bề rộng tối thiểu.
 	#
 	# RichTextLabel/Label có xuống dòng tự động mà KHÔNG được cho bề rộng thì
-	# Godot tính chiều cao tối thiểu ở bề rộng 0 — tức mỗi chữ một dòng — và slide_out
+	# Godot tính chiều cao tối thiểu ở bề rộng 0 — tức mỗi chữ một dòng — và ra
 	# một chiều cao khổng lồ. Đây đúng là cái bẫy đã làm hỏng bảng info màn
 	# chọn nhân vật (một Label đòi 5396 px chiều cao).
 	_lbl_line.custom_minimum_size = Vector2(WIDTH - IMAGE_SIZE - 130.0, 92.0)
@@ -132,7 +132,7 @@ func _build_ui() -> void:
 		push_warning("Thiếu ảnh trainer %s" % TRAINER_IMAGE)
 	img.set_anchors_preset(Control.PRESET_FULL_RECT)
 	img.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
-	# GIỮ TỈ LỆ, canh giữa: ảnh trainer gần vuông và đã tự gọn empty frame tròn
+	# GIỮ TỈ LỆ, canh giữa: ảnh trainer gần vuông và đã tự gọn trong frame tròn
 	# xanh của nó, nên không cần cắt. Dùng COVERED thì cắt mất hai bên vai.
 	img.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 	img.mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -146,7 +146,7 @@ func _build_ui() -> void:
 	if ResourceLoader.exists(RIBBON_LABEL):
 		var vien := NinePatchRect.new()
 		vien.texture = load(RIBBON_LABEL)
-		# Ảnh gốc 34×11: chừa 6 px hai đầu làm mép, phần giữa kéo dài slide_out.
+		# Ảnh gốc 34×11: chừa 6 px hai đầu làm mép, phần giữa kéo dài ra.
 		vien.patch_margin_left = 6
 		vien.patch_margin_right = 6
 		vien.patch_margin_top = 3
@@ -168,7 +168,7 @@ func _build_ui() -> void:
 	label.add_child(label_text)
 
 
-# ------------------------------------------------------------- slide_out / vào ---
+# ------------------------------------------------------------- ra / vào ---
 
 func _x_hidden() -> float:
 	return 1920.0 + 20.0

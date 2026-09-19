@@ -10,15 +10,15 @@ extends Control
 ## "trượt từ trái vào" cần đổi `position.x` của tấm thẻ, mà VBoxContainer thì
 ## GHI ĐÈ vị trí mọi node con của nó ở mỗi lần bố trí lại. Tween sẽ chạy được
 ## đúng một frame hình rồi bị container kéo về chỗ cũ. Lớp ngoài nhận việc bị
-## container xếp; lớp empty tự do vì nó không phải con của container nào cả.
+## container xếp; lớp trong tự do vì nó không phải con của container nào cả.
 ##
-## `clip_contents` trên lớp ngoài chính là cái cắt phần thẻ còn thò slide_out ngoài
-## lúc đang trượt, nên vé không đè lên vé bên cạnh empty lúc chạy hiệu ứng.
+## `clip_contents` trên lớp ngoài chính là cái cắt phần thẻ còn thò ra ngoài
+## lúc đang trượt, nên vé không đè lên vé bên cạnh trong lúc chạy hiệu ứng.
 ##
-## Neo của lớp empty để nguyên góc trên-trái (mọi anchor = 0) và ta gán `size`
+## Neo của lớp trong để nguyên góc trên-trái (mọi anchor = 0) và ta gán `size`
 ## bằng tay. KHÔNG dùng PRESET_FULL_RECT rồi tween position: neo full-rect tính
 ## lại rect từ anchor + offset mỗi lần bố trí, nên nó đánh nhau với position và
-## cái rect phình slide_out thêm mỗi frame hình.
+## cái rect phình ra thêm mỗi frame hình.
 
 const WIDTH := 330.0
 const HEIGHT := 110.0
@@ -44,7 +44,7 @@ const RED_THRESHOLD := 0.2
 ##
 ## Phải khác hẳn ba màu kia chứ không dùng màu xanh: xanh nghĩa là "còn nhiều
 ## thời gian", mà ở đây thì không có thời gian nào đang chạy cả. Một màu thứ
-## tư, nhạt hơn, đọc slide_out đúng thứ nó là — chưa bắt đầu.
+## tư, nhạt hơn, đọc ra đúng thứ nó là — chưa bắt đầu.
 const COLOR_WAIT := Color("b9ab93")
 
 ## Chữ trên ô số bàn khi khách chưa có bàn.
@@ -104,7 +104,7 @@ func build(dh: RefCounted, anh_tien: Texture2D) -> void:
 	lbl_name.add_theme_font_size_override("font_size", 22)
 	lbl_name.add_theme_color_override("font_color", COLOR_TEXT)
 	# Cắt bằng dấu … chứ không xuống dòng: tấm vé cao cố định, cho phép xuống
-	# dòng thì một cái tên dài đẩy bar kiên nhẫn slide_out khỏi thẻ.
+	# dòng thì một cái tên dài đẩy bar kiên nhẫn ra khỏi thẻ.
 	lbl_name.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
 	col.add_child(lbl_name)
 
@@ -153,10 +153,10 @@ func slide_in() -> void:
 	tween.tween_property(_card, "position:x", 0.0, SLIDE_SECONDS)
 
 
-## Trượt ngược slide_out rồi tự xoá. Trả về tween để bên gọi await nếu cần.
+## Trượt ngược ra rồi tự xoá. Trả về tween để bên gọi await nếu cần.
 func slide_out() -> void:
 	order = null
-	# Hai thứ chạy SONG SONG: thẻ trượt slide_out, đồng thời ô chứa nó xẹp chiều cao
+	# Hai thứ chạy SONG SONG: thẻ trượt ra, đồng thời ô chứa nó xẹp chiều cao
 	# về 0. Chỉ trượt không thôi thì cái vé biến mất nhưng để lại một khoảng
 	# trống, và những vé dưới nhảy cóc lên khi node bị xoá.
 	var tween := create_tween().set_parallel(true) \
@@ -191,7 +191,7 @@ func _draw_table_no() -> void:
 ## KHÁCH ĐANG XẾP HÀNG thì bar ĐẦY và ĐỨNG YÊN, màu chờ.
 ##
 ## Không vẽ kiên nhẫn hàng đợi lên đây dù đơn vẫn đang đếm nó: hai giai đoạn
-## có hai ngân sách riêng và hai chỗ hiển thị riêng — bar chờ nằm empty bong
+## có hai ngân sách riêng và hai chỗ hiển thị riêng — bar chờ nằm trong bong
 ## bóng trên đầu khách, bar phục vụ nằm ở đây. Vẽ cả hai vào cùng một chỗ
 ## thì người chơi thấy bar tụt rồi bỗng đầy lại lúc khách ngồi xuống, và họ
 ## sẽ tưởng là lỗi.
@@ -258,7 +258,7 @@ func _make_bar() -> ProgressBar:
 	#
 	# Luật cân bằng đã chốt: giao khi kiên nhẫn còn trên một nửa thì được
 	# thưởng. Một luật mà người chơi không nhìn thấy mốc thì không nhắm vào
-	# được, nên cái mốc phải nằm ngay trên bar chứ không nằm empty tài liệu.
+	# được, nên cái mốc phải nằm ngay trên bar chứ không nằm trong tài liệu.
 	var tick := ColorRect.new()
 	tick.color = Color(1, 1, 1, 0.9)
 	tick.mouse_filter = Control.MOUSE_FILTER_IGNORE

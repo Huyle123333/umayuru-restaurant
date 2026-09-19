@@ -36,8 +36,19 @@ extends Node
 ##   moc_nhac    float   — còn bao nhiêu giây thì đổi sang nhạc cao điểm
 ##   moc         Dict    — bốn mốc doanh thu S/A/B/C (GameData tự đọc)
 
-## Tên file nhạc cao điểm, thả vào assets/sfx/game/.
-const NHAC_CAO_DIEM := "nhac_cao_diem"
+## NHÓM nhạc cao điểm trong AmThanh.TRACK_GROUPS.
+##
+## (Sửa 19/9/2026) Trước là hằng `NHAC_CAO_DIEM := "nhac_cao_diem"` rồi gọi
+## `play_music()` thẳng bằng tên đó. Nhưng KHÔNG có file nào tên như vậy —
+## bài nhạc cao điểm thật tên `hashire_umamusume`. `play_music()` không tìm
+## thấy file thì THOÁT SỚM và im lặng: nhạc màn chơi cứ chạy tiếp, không lỗi,
+## không cảnh báo. Nên đoạn cao điểm chưa bao giờ đổi nhạc.
+##
+## Dùng NHÓM chứ không gõ thẳng tên bài: AmThanh đã có sẵn nhóm "cao_diem"
+## dành riêng cho việc này, và nhóm mới là chỗ khai báo bài nào thuộc giai
+## đoạn nào. Đổi bài sau này chỉ sửa một dòng bên AmThanh, không phải đi tìm
+## một hằng nằm lẫn trong luật màn.
+const NHOM_CAO_DIEM := "cao_diem"
 
 var _ql: Node
 var _gio: Node
@@ -122,7 +133,7 @@ func _process(_delta: float) -> void:
 	if not _da_doi_nhac and _luat.has("moc_nhac"):
 		if float(_gio.time_left) <= float(_luat["moc_nhac"]):
 			_da_doi_nhac = true
-			AmThanh.play_music(NHAC_CAO_DIEM)
+			AmThanh.play_random_music(NHOM_CAO_DIEM)
 
 	for i in _chang.size():
 		var c: Dictionary = _chang[i]

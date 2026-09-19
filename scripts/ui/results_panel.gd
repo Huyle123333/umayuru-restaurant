@@ -2,13 +2,13 @@ extends CanvasLayer
 ## Bảng tổng kết cuối màn: xếp hạng, doanh thu, thống kê, hai cái nút.
 ##
 ## Vì sao node này TỰ dựng chứ không phải một file .tscn: nó phải sống trên
-## MỌI màn chơi, mà tám màn dùng chung một file map. Đặt sẵn empty map thì nó
+## MỌI màn chơi, mà tám màn dùng chung một file map. Đặt sẵn trong map thì nó
 ## là một node luôn tồn tại và luôn phải nhớ ẩn đi; dựng lúc cần thì lúc chưa
 ## cần nó không tồn tại, không có gì để quên.
 ##
 ## TẠM DỪNG CẢ CÂY SCENE khi hiện bảng. Bắt buộc, không phải cho đẹp: hết giờ
 ## mà bếp vẫn chạy thì nồi vẫn sôi, khách vẫn đi lại phía sau tấm bảng, và
-## người chơi vẫn điều khiển được nhân vật empty lúc đang đọc kết quả.
+## người chơi vẫn điều khiển được nhân vật trong lúc đang đọc kết quả.
 
 const THEME := "res://ui/theme/menu_theme.tres"
 const COIN_ICON := "res://assets/ui/tien/carrot_tien.png"
@@ -17,8 +17,8 @@ const LEVEL_SELECT_SCENE := "res://scenes/menu/level_select.tscn"
 const WIDTH := 660.0
 
 ## Màu của từng hạng. Đúng bảng màu người dùng chốt: S vàng, A orange, B hồng,
-## C xanh lá. Chưa đạt thì xám — không dùng đỏ, vì đỏ đọc thành "hỏng" empty
-## khi thật slide_out chỉ là chưa đủ tiền.
+## C xanh lá. Chưa đạt thì xám — không dùng đỏ, vì đỏ đọc thành "hỏng" trong
+## khi thật ra chỉ là chưa đủ tiền.
 const COLOR_GRADE := {
 	"S": Color("f2c230"),
 	"A": Color("e8823f"),
@@ -36,7 +36,7 @@ var _box: PanelContainer
 func _ready() -> void:
 	layer = 20   # trên mọi HUD khác
 	# Bảng phải chạy được TRONG LÚC cây scene bị tạm dừng, nếu không hai cái
-	# nút bấm không ăn và hiệu ứng hiện slide_out đứng hình ở frame đầu.
+	# nút bấm không ăn và hiệu ứng hiện ra đứng hình ở frame đầu.
 	process_mode = Node.PROCESS_MODE_ALWAYS
 
 
@@ -72,7 +72,7 @@ func show_results(money: int, xong: int, hoan_hao: int, bo_di: int,
 		#
 		# Không ghi khi ep_hang có giá trị: đó là màn hướng dẫn tự ép hạng S
 		# với vài chục đồng tiền học việc, đứng chung bảng với màn chơi thật
-		# thì con số vô nghĩa. (Hiện "tutorial" cũng không nằm empty
+		# thì con số vô nghĩa. (Hiện "tutorial" cũng không nằm trong
 		# MAN_XEP_HANG nên có hai lớp chặn — cố ý, vì lớp thứ hai là thứ còn
 		# đúng khi sau này thêm màn mới.)
 		if ep_hang.is_empty():
@@ -89,13 +89,13 @@ func show_results(money: int, xong: int, hoan_hao: int, bo_di: int,
 	#
 	# Bám theo `resized` chứ không gán một lần: lúc này bảng vẫn đang được
 	# container tính kích thước, `size` còn là 0 — gán ngay thì tâm phóng to
-	# nằm ở góc và cái bảng bung slide_out từ góc trên-trái, lệch hẳn khỏi giữa empty
+	# nằm ở góc và cái bảng bung ra từ góc trên-trái, lệch hẳn khỏi giữa trong
 	# suốt 0,28 giây hiệu ứng.
 	_box.resized.connect(func() -> void:
 		_box.pivot_offset = _box.size * 0.5)
 	_box.pivot_offset = _box.size * 0.5
 
-	# Hiện bằng cách phóng to nhẹ từ 0,9: bảng bật slide_out đột ngột giữa màn hình
+	# Hiện bằng cách phóng to nhẹ từ 0,9: bảng bật ra đột ngột giữa màn hình
 	# thì giật mắt, còn trượt vào thì chậm quá cho một thứ kết thúc màn chơi.
 	_box.scale = Vector2(0.9, 0.9)
 	_box.modulate.a = 0.0
@@ -125,8 +125,8 @@ func _build_ui(money: int, xong: int, hoan_hao: int, bo_di: int,
 	#
 	# PRESET_CENTER chỉ đưa bốn cái neo về 0,5 — tức ghim GÓC TRÊN-TRÁI của
 	# bảng vào tâm màn hình, chứ không phải tâm bảng. Lúc gọi preset thì bảng
-	# còn rỗng (cao 0, rộng 0) nên offset tính slide_out cũng bằng 0; sau đó container
-	# nở slide_out tới kích thước tối thiểu, và mặc định nó nở về phía DƯỚI-PHẢI. Kết
+	# còn rỗng (cao 0, rộng 0) nên offset tính ra cũng bằng 0; sau đó container
+	# nở ra tới kích thước tối thiểu, và mặc định nó nở về phía DƯỚI-PHẢI. Kết
 	# quả: bảng nằm lệch hẳn xuống góc phần tư dưới-phải, tâm bảng cách tâm màn
 	# hình đúng nửa bề rộng và nửa chiều cao của nó.
 	#
@@ -268,7 +268,7 @@ func _divider() -> Control:
 ## Bỏ tạm dừng TRƯỚC khi đổi màn.
 ##
 ## get_tree().paused là cờ TOÀN CỤC, nó không tự tắt khi scene bị thay. Quên
-## bỏ thì màn mới hiện slide_out và đứng hình hoàn toàn, mà không có lỗi nào báo —
+## bỏ thì màn mới hiện ra và đứng hình hoàn toàn, mà không có lỗi nào báo —
 ## đúng kiểu bug làm người ta tưởng game bị treo.
 func _replay() -> void:
 	_leave_pause()

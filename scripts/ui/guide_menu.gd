@@ -3,7 +3,7 @@ extends CanvasLayer
 ##
 ## LÀ AUTOLOAD, không phải node của một màn chơi.
 ##
-## Lý do: F1 phải bấm được ở MỌI nơi — empty bếp, ở menu chính, ở màn chọn màn,
+## Lý do: F1 phải bấm được ở MỌI nơi — trong bếp, ở menu chính, ở màn chọn màn,
 ## và nhất là ở màn hướng dẫn nơi trainer vừa nhắc "bấm F1 lúc nào cũng được".
 ## Gắn vào từng scene thì có bao nhiêu scene là bấy nhiêu chỗ phải nhớ gắn, và
 ## quên một chỗ thì F1 im lặng không làm gì — người chơi kết luận là game hỏng.
@@ -300,7 +300,7 @@ func _key_hint(list: Array) -> Control:
 
 ## Thiếu ảnh thì BỎ QUA cả khối, không để lại ô trống và không báo lỗi.
 ##
-## Ảnh minh hoạ là thứ bổ sung dần: khai sẵn đường dẫn empty bảng nội build rồi
+## Ảnh minh hoạ là thứ bổ sung dần: khai sẵn đường dẫn trong bảng nội build rồi
 ## chụp ảnh sau lúc nào cũng được, và trang hướng dẫn vẫn đọc được ngay từ bây
 ## giờ. Nếu để một ô trống hay một dòng "thiếu ảnh" thì trang trông như hỏng.
 func _add_image(duong_dan: String, chu: String) -> void:
@@ -338,7 +338,7 @@ func _add_recipe(loai: String) -> void:
 	match loai:
 		"ban": table_ = DanhMuc.CONG_THUC_BAN
 		# (Đã bỏ) "noi": CONG_THUC_NOI. Bảng công thức nồi không còn tồn tại
-		# — công thức nấu canh giờ nằm empty CONG_THUC_BAN như mọi món khác,
+		# — công thức nấu canh giờ nằm trong CONG_THUC_BAN như mọi món khác,
 		# nên trang hướng dẫn tự có nó ở mục "ban".
 		"lo": table_ = DanhMuc.CONG_THUC_LO
 		_: return
