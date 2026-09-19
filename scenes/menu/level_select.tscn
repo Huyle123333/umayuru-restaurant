@@ -71,7 +71,7 @@ theme_override_colors/font_color = Color(1, 0.831373, 0.44, 1)
 theme_override_colors/font_shadow_color = Color(0, 0, 0, 0.6)
 theme_override_constants/shadow_offset_y = 4
 theme_override_font_sizes/font_size = 44
-text = "MAN_TIEU_DE"
+text = "LEVEL_TITLE"
 horizontal_alignment = 1
 
 [node name="Scroll" type="ScrollContainer" parent="Content/VBox"]
@@ -99,18 +99,18 @@ theme_override_colors/font_color = Color(1, 0.941176, 0.85098, 1)
 theme_override_colors/font_shadow_color = Color(0, 0, 0, 0.7)
 theme_override_constants/shadow_offset_y = 3
 theme_override_font_sizes/font_size = 30
-text = "MAN_NHOM_MO_DAU"
+text = "LEVEL_GROUP_INTRO"
 horizontal_alignment = 1
 
 [node name="BtnPrologue" type="Button" parent="Content/VBox/Scroll/Columns/ColIntro"]
 unique_name_in_owner = true
 layout_mode = 2
-text = "MAN_PROLOGUE"
+text = "LEVEL_PROLOGUE"
 
 [node name="BtnTutorial" type="Button" parent="Content/VBox/Scroll/Columns/ColIntro"]
 unique_name_in_owner = true
 layout_mode = 2
-text = "MAN_TUTORIAL"
+text = "LEVEL_TUTORIAL"
 
 [node name="Arrow1" type="Label" parent="Content/VBox/Scroll/Columns"]
 layout_mode = 2
@@ -131,18 +131,18 @@ theme_override_colors/font_color = Color(1, 0.941176, 0.85098, 1)
 theme_override_colors/font_shadow_color = Color(0, 0, 0, 0.7)
 theme_override_constants/shadow_offset_y = 3
 theme_override_font_sizes/font_size = 30
-text = "MAN_NGAY_1"
+text = "LEVEL_DAY_1"
 horizontal_alignment = 1
 
 [node name="BtnD1Sang" type="Button" parent="Content/VBox/Scroll/Columns/ColDay1"]
 unique_name_in_owner = true
 layout_mode = 2
-text = "CHUNG_SANG"
+text = "COMMON_MORNING"
 
 [node name="BtnD1Toi" type="Button" parent="Content/VBox/Scroll/Columns/ColDay1"]
 unique_name_in_owner = true
 layout_mode = 2
-text = "CHUNG_TOI"
+text = "COMMON_EVENING"
 
 [node name="Arrow2" type="Label" parent="Content/VBox/Scroll/Columns"]
 layout_mode = 2
@@ -163,18 +163,18 @@ theme_override_colors/font_color = Color(1, 0.941176, 0.85098, 1)
 theme_override_colors/font_shadow_color = Color(0, 0, 0, 0.7)
 theme_override_constants/shadow_offset_y = 3
 theme_override_font_sizes/font_size = 30
-text = "MAN_NGAY_2"
+text = "LEVEL_DAY_2"
 horizontal_alignment = 1
 
 [node name="BtnD2Sang" type="Button" parent="Content/VBox/Scroll/Columns/ColDay2"]
 unique_name_in_owner = true
 layout_mode = 2
-text = "CHUNG_SANG"
+text = "COMMON_MORNING"
 
 [node name="BtnD2Toi" type="Button" parent="Content/VBox/Scroll/Columns/ColDay2"]
 unique_name_in_owner = true
 layout_mode = 2
-text = "CHUNG_TOI"
+text = "COMMON_EVENING"
 
 [node name="Arrow3" type="Label" parent="Content/VBox/Scroll/Columns"]
 layout_mode = 2
@@ -195,18 +195,18 @@ theme_override_colors/font_color = Color(1, 0.941176, 0.85098, 1)
 theme_override_colors/font_shadow_color = Color(0, 0, 0, 0.7)
 theme_override_constants/shadow_offset_y = 3
 theme_override_font_sizes/font_size = 30
-text = "MAN_NGAY_3"
+text = "LEVEL_DAY_3"
 horizontal_alignment = 1
 
 [node name="BtnD3Sang" type="Button" parent="Content/VBox/Scroll/Columns/ColDay3"]
 unique_name_in_owner = true
 layout_mode = 2
-text = "CHUNG_SANG"
+text = "COMMON_MORNING"
 
 [node name="BtnD3Toi" type="Button" parent="Content/VBox/Scroll/Columns/ColDay3"]
 unique_name_in_owner = true
 layout_mode = 2
-text = "CHUNG_TOI"
+text = "COMMON_EVENING"
 
 [node name="Arrow4" type="Label" parent="Content/VBox/Scroll/Columns"]
 layout_mode = 2
@@ -227,14 +227,14 @@ theme_override_colors/font_color = Color(1, 0.941176, 0.85098, 1)
 theme_override_colors/font_shadow_color = Color(0, 0, 0, 0.7)
 theme_override_constants/shadow_offset_y = 3
 theme_override_font_sizes/font_size = 30
-text = "MAN_NHOM_ENDLESS"
+text = "LEVEL_GROUP_ENDLESS"
 horizontal_alignment = 1
 
 [node name="BtnEndless" type="Button" parent="Content/VBox/Scroll/Columns/ColEndless"]
 unique_name_in_owner = true
 layout_mode = 2
 disabled = true
-text = "MAN_ENDLESS"
+text = "LEVEL_ENDLESS"
 
 [node name="Bottom" type="HBoxContainer" parent="Content/VBox"]
 texture_filter = 1
@@ -243,7 +243,7 @@ layout_mode = 2
 [node name="BtnBack" type="Button" parent="Content/VBox/Bottom"]
 unique_name_in_owner = true
 layout_mode = 2
-text = "CHUNG_TRO_LAI"
+text = "COMMON_BACK"
 
 [node name="Spacer" type="Control" parent="Content/VBox/Bottom"]
 layout_mode = 2
@@ -253,7 +253,7 @@ mouse_filter = 2
 [node name="BtnBoard" type="Button" parent="Content/VBox/Bottom"]
 unique_name_in_owner = true
 layout_mode = 2
-text = "MENU_XEP_HANG"
+text = "MENU_LEADERBOARD"
 
 [node name="Spacer2" type="Control" parent="Content/VBox/Bottom"]
 custom_minimum_size = Vector2(16, 0)
@@ -263,7 +263,7 @@ mouse_filter = 2
 [node name="BtnWipe" type="Button" parent="Content/VBox/Bottom"]
 unique_name_in_owner = true
 layout_mode = 2
-text = "MAN_XOA_DU_LIEU"
+text = "LEVEL_DELETE_SAVE"
 
 [node name="ConfirmWipe" type="ConfirmationDialog" parent="."]
 unique_name_in_owner = true

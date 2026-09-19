@@ -25,9 +25,9 @@ extends Control
 ## Dùng KHOÁ chứ không gõ thẳng "Ngày 1": cả màn hình này chạy qua bảng dịch
 ## trong locale/translations.csv, gõ chữ Việt vào đây thì bản tiếng Anh mất.
 const KHOA_NGAY := {
-	"d1_sang": "MAN_NGAY_1",
-	"d2_sang": "MAN_NGAY_2",
-	"d3_sang": "MAN_NGAY_3",
+	"d1_sang": "LEVEL_DAY_1",
+	"d2_sang": "LEVEL_DAY_2",
+	"d3_sang": "LEVEL_DAY_3",
 }
 
 const MAN_TOI := ["d1_toi", "d2_toi", "d3_toi"]
@@ -78,7 +78,7 @@ func _ready() -> void:
 		btn.set_meta("base_text", btn.text)
 		btn.pressed.connect(_on_level_pressed.bind(id))
 
-	_btn_endless.tooltip_text = tr("MAN_SAP_CO")
+	_btn_endless.tooltip_text = tr("LEVEL_COMING_SOON")
 
 	_btn_back.pressed.connect(_on_back_pressed)
 	_btn_board.pressed.connect(func() -> void: _board.open(_btn_board))
@@ -122,7 +122,7 @@ func _refresh() -> void:
 		btn.focus_mode = Control.FOCUS_ALL if unlocked else Control.FOCUS_NONE
 
 		# tr() TRƯỚC rồi mới nối dấu tick. base_text là KHOÁ dịch
-		# ("MAN_NGAY_1"), mà "MAN_NGAY_1  ✔" thì không còn là khoá nào cả —
+		# ("LEVEL_DAY_1"), mà "LEVEL_DAY_1  ✔" thì không còn là khoá nào cả —
 		# nối trước khi dịch thì màn đã hoàn thành hiện nguyên cái khoá ra
 		# màn hình. Gán lại đúng khoá cho màn chưa xong để Godot tự dịch.
 		var base := str(btn.get_meta("base_text"))

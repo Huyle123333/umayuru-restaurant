@@ -111,22 +111,22 @@ theme_override_constants/separation = 10
 [node name="BtnNew" type="Button" parent="Content/VBox/Menu"]
 unique_name_in_owner = true
 layout_mode = 2
-text = "MENU_CHOI_MOI"
+text = "MENU_NEW_GAME"
 
 [node name="BtnLevels" type="Button" parent="Content/VBox/Menu"]
 unique_name_in_owner = true
 layout_mode = 2
-text = "MENU_CHON_MAN"
+text = "MENU_LEVEL_SELECT"
 
 [node name="BtnOptions" type="Button" parent="Content/VBox/Menu"]
 unique_name_in_owner = true
 layout_mode = 2
-text = "MENU_TUY_CHON"
+text = "MENU_OPTIONS"
 
 [node name="BtnQuit" type="Button" parent="Content/VBox/Menu"]
 unique_name_in_owner = true
 layout_mode = 2
-text = "MENU_THOAT"
+text = "MENU_QUIT"
 
 [node name="CreditsPanel" parent="." instance=ExtResource("5_credits")]
 unique_name_in_owner = true

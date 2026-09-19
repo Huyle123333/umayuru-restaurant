@@ -91,7 +91,7 @@ func _ready() -> void:
 	_btn_cancel.pressed.connect(close)
 	_btn_close.pressed.connect(close)
 	_btn_unlock.pressed.connect(_on_unlock_pressed)
-	# Nhãn của nút này nằm trong scene dưới dạng KHOÁ dịch ("CODE7_MO_KHOA_MAN").
+	# Nhãn của nút này nằm trong scene dưới dạng KHOÁ dịch ("CODE7_UNLOCK_LEVELS").
 	# Dịch ra ngay bây giờ rồi cất đi: khi đã tự gắn dấu vào text thì chuỗi
 	# không còn là khoá nữa nên Godot thôi dịch hộ.
 	_nhan_goc[_btn_unlock] = tr(_btn_unlock.text)

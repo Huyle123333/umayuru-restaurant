@@ -117,7 +117,7 @@ func _ve_bang() -> void:
 		_lbl_trong.show()
 		# Endless chưa làm nên nói rõ là "chưa có chế độ", chứ không nói
 		# "chưa ai chơi" — hai câu đó dẫn người đọc đi hai hướng khác nhau.
-		_lbl_trong.text = tr("XH_ENDLESS_SAP_CO") if _man_dang_xem == "endless" else tr("XH_TRONG")
+		_lbl_trong.text = tr("RANK_ENDLESS_SOON") if _man_dang_xem == "endless" else tr("RANK_EMPTY")
 		return
 
 	_lbl_trong.hide()
@@ -131,9 +131,9 @@ func _hang_tieu_de() -> Control:
 	var h := HBoxContainer.new()
 	h.add_theme_constant_override("separation", 12)
 	h.add_child(_o("#", 46, MAU_MO, 17, HORIZONTAL_ALIGNMENT_CENTER))
-	h.add_child(_o(tr("XH_COT_NHAN_VAT"), 0, MAU_MO, 17))
-	h.add_child(_o(tr("XH_COT_TIEN"), 130, MAU_MO, 17, HORIZONTAL_ALIGNMENT_RIGHT))
-	h.add_child(_o(tr("XH_COT_XEP"), 60, MAU_MO, 17, HORIZONTAL_ALIGNMENT_CENTER))
+	h.add_child(_o(tr("RANK_COL_CHARACTER"), 0, MAU_MO, 17))
+	h.add_child(_o(tr("RANK_COL_MONEY"), 130, MAU_MO, 17, HORIZONTAL_ALIGNMENT_RIGHT))
+	h.add_child(_o(tr("RANK_COL_PLACE"), 60, MAU_MO, 17, HORIZONTAL_ALIGNMENT_CENTER))
 	return h
 
 
