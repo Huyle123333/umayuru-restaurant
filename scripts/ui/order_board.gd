@@ -203,10 +203,10 @@ func set_open(open: bool) -> void:
 func listen_to_orders(ql: Node) -> void:
 	if ql == null:
 		return
-	if ql.has_signal("don_moi"):
-		ql.don_moi.connect(add_order)
-	if ql.has_signal("don_ket_thuc"):
-		ql.don_ket_thuc.connect(_on_order_finished)
+	if ql.has_signal("order_created"):
+		ql.order_created.connect(add_order)
+	if ql.has_signal("order_finished"):
+		ql.order_finished.connect(_on_order_finished)
 
 
 func add_order(order: RefCounted) -> void:
@@ -254,9 +254,9 @@ func _update_label() -> void:
 	# cái tab đỏ lên vì một đơn mà người chơi còn chưa được phép phục vụ.
 	var low := 1.0
 	for order in _ticket.keys():
-		if bool(order.o_hang):
+		if bool(order.in_queue):
 			continue
-		low = minf(low, float(order.ti_le()))
+		low = minf(low, float(order.patience_ratio()))
 
 	var color := COLOR_GREEN
 	if low <= 0.2:

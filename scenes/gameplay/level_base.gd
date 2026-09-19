@@ -188,14 +188,14 @@ func _gan_he_tuong_tac() -> void:
 
 	# Hệ khách hàng: sinh khách, xếp hàng, chia bàn, và nướng vùng đi lại.
 	# Cùng lý do đặt ở màn chơi với mọi hệ thống trên.
-	var lop_khach := load("res://scripts/nha_hang/quan_ly_khach.gd") as GDScript
+	var lop_khach := load("res://scripts/restaurant/customer_manager.gd") as GDScript
 	if lop_khach != null:
 		quan_ly_khach = lop_khach.new()
 		quan_ly_khach.name = "QuanLyKhach"
 		add_child(quan_ly_khach)
 		# chuan_bi() phải gọi SAU add_child: nó dùng get_tree() để tìm nhóm
 		# "ban_an" và gắn vùng navmesh vào cây scene.
-		quan_ly_khach.chuan_bi(self)
+		quan_ly_khach.setup(self)
 		_gan_hud_don_hang()
 	else:
 		push_warning("Không nạp được hệ khách hàng — màn chơi vẫn chạy, chỉ không có khách.")
@@ -330,7 +330,7 @@ func _ap_dung_luat_man(bang_gio: Node) -> void:
 	if luat.is_empty():
 		return
 
-	var lop := load("res://scripts/nha_hang/luat_man.gd") as GDScript
+	var lop := load("res://scripts/restaurant/level_rules.gd") as GDScript
 	if lop == null:
 		push_warning("Không nạp được luật màn — màn chơi dùng số mặc định.")
 		return
@@ -338,7 +338,7 @@ func _ap_dung_luat_man(bang_gio: Node) -> void:
 	var lm: Node = lop.new()
 	lm.name = "LuatMan"
 	add_child(lm)
-	if not lm.chuan_bi(quan_ly_khach, bang_gio, luat):
+	if not lm.setup(quan_ly_khach, bang_gio, luat):
 		lm.queue_free()
 
 
@@ -363,16 +363,16 @@ func _ap_dung_luat_man(bang_gio: Node) -> void:
 func _gan_doro() -> void:
 	if quan_ly_khach == null or player == null:
 		return
-	var lop := load("res://scripts/nha_hang/doro_pet.gd") as GDScript
+	var lop := load("res://scripts/restaurant/doro_pet.gd") as GDScript
 	if lop == null:
 		push_warning("Không nạp được Doro — màn chơi vẫn chạy, chỉ thiếu pet.")
 		return
 
-	var cho: Vector3 = lop.cho_dung_dau(get_world_3d().navigation_map, 0.0)
+	var cho: Vector3 = lop.first_stand_point(get_world_3d().navigation_map, 0.0)
 	var pet: Node3D = lop.new()
 	pet.name = "Doro"
 	add_child(pet)
-	pet.chuan_bi(cho, float(quan_ly_khach.lech_cao_navmesh()), player)
+	pet.setup(cho, float(quan_ly_khach.navmesh_height_offset()), player)
 
 
 ## Bộ dẫn dắt màn hướng dẫn — CHỈ dựng khi màn đang chơi là "tutorial".
@@ -479,11 +479,11 @@ func _ket_thuc_man(ep_hang: String) -> void:
 	var hoan_hao := 0
 	var bo_di := 0
 	if quan_ly_khach != null:
-		quan_ly_khach.dong_cua()
-		tien = int(quan_ly_khach.tien)
-		xong = int(quan_ly_khach.so_don_xong)
-		hoan_hao = int(quan_ly_khach.so_don_hoan_hao)
-		bo_di = int(quan_ly_khach.so_khach_bo_di)
+		quan_ly_khach.close_shop()
+		tien = int(quan_ly_khach.money)
+		xong = int(quan_ly_khach.orders_done)
+		hoan_hao = int(quan_ly_khach.perfect_orders)
+		bo_di = int(quan_ly_khach.customers_lost)
 
 	var bang: Node = lop.new()
 	bang.name = "BangKetQua"
@@ -520,7 +520,7 @@ func _gan_mo_man(bang_gio: Node) -> void:
 	if bang_gio != null:
 		bang_gio.counting_down = false
 	if quan_ly_khach != null:
-		quan_ly_khach.tu_sinh = false
+		quan_ly_khach.auto_spawn = false
 
 	var mo: Node = lop.new()
 	mo.name = "MoMan"
@@ -529,7 +529,7 @@ func _gan_mo_man(bang_gio: Node) -> void:
 		if bang_gio != null:
 			bang_gio.counting_down = true
 		if quan_ly_khach != null:
-			quan_ly_khach.tu_sinh = true
+			quan_ly_khach.auto_spawn = true
 		# Bốc ngẫu nhiên trong sáu bài, KHÔNG giữ liền mạch: vào một ca làm
 		# việc mới thì phải nghe như một ca mới, chứ không phải như đoạn giữa
 		# của bài nhạc đang chạy ở menu.

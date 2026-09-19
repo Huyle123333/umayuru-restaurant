@@ -139,9 +139,9 @@ func _meets_condition() -> bool:
 	var threshold := int(_active.get("threshold", 0))
 	match String(_active.get("condition", "")):
 		Registry.COND_PERFECT_ORDERS:
-			return int(_customers.so_don_hoan_hao) >= threshold
+			return int(_customers.perfect_orders) >= threshold
 		Registry.COND_ORDERS_DONE:
-			return int(_customers.so_don_xong) >= threshold
+			return int(_customers.orders_done) >= threshold
 	# Bốn kiểu điều kiện còn lại (đếm món nấu, đếm giây, cho pet ăn, phủ kín
 	# thực đơn) chưa có bộ đếm nào trong game. Trả false là câu trả lời ĐÚNG:
 	# chưa đếm được thì chưa ai đạt. Trả true cho tiện thử là nói dối giao
@@ -185,9 +185,9 @@ func _count_progress() -> int:
 		return -1
 	match String(_active.get("condition", "")):
 		Registry.COND_PERFECT_ORDERS:
-			return int(_customers.so_don_hoan_hao)
+			return int(_customers.perfect_orders)
 		Registry.COND_ORDERS_DONE:
-			return int(_customers.so_don_xong)
+			return int(_customers.orders_done)
 	return -1
 
 
@@ -216,8 +216,8 @@ func setup(customers: Node, cooking: Node, clock: Node = null) -> void:
 	# Điều kiện của Kita đếm ĐƠN, nên chỉ cần xem lại trạng thái mỗi khi một
 	# đơn kết thúc — không phải kiểm tra mỗi frame hình. Với những điều kiện
 	# đếm THỜI GIAN sau này (Oguri) thì sẽ cần thêm một nhịp kiểm tra riêng.
-	if _customers != null and _customers.has_signal("don_ket_thuc"):
-		_customers.don_ket_thuc.connect(_on_order_finished)
+	if _customers != null and _customers.has_signal("order_finished"):
+		_customers.order_finished.connect(_on_order_finished)
 	_emit_state()
 
 
@@ -229,8 +229,8 @@ func setup(customers: Node, cooking: Node, clock: Node = null) -> void:
 ## dựng node trong level_base.
 func _apply_passive(p: Dictionary) -> void:
 	if _customers != null:
-		_customers.he_so_kien_nhan = float(p["patience_factor"])
-		_customers.thuong_hoan_hao += float(p["perfect_bonus_add"])
+		_customers.patience_factor = float(p["patience_factor"])
+		_customers.perfect_bonus += float(p["perfect_bonus_add"])
 	if _cooking != null:
 		_cooking.bot_giay_chay += float(p["burn_time_cut"])
 
@@ -260,7 +260,7 @@ func _apply_effect() -> void:
 	match String(_active.get("effect", "")):
 		Registry.FX_FORCE_PERFECT:
 			if _customers != null:
-				_customers.ep_hoan_hao = true
+				_customers.force_perfect = true
 
 
 ## Nạp và chạy một hiệu ứng trong thư mục hieu_ung/. Xem effects/_template.gd để

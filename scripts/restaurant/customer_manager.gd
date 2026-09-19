@@ -4,44 +4,44 @@ extends Node
 ## Node này do level_base tạo lúc chạy, cùng lý do với bộ chọn mục tiêu và hệ
 ## bếp: bảy nhân vật người chơi thì nhét vào scene nhân vật là bảy chỗ phải sửa.
 ##
-## Máy trạng thái của MỘT người khách nằm ở đây chứ không nằm trong khach.gd.
-## khach.gd chỉ biết "đi tới đó rồi hét lên một tiếng"; còn thứ tự vào hàng →
+## Máy trạng thái của MỘT người khách nằm ở đây chứ không nằm trong customer.gd.
+## customer.gd chỉ biết "đi tới đó rồi hét lên một tiếng"; còn thứ tự vào hàng →
 ## nhích lên → ra bàn → ăn → về là LUẬT, mà luật thì đổi liên tục. Gom hết luật
 ## về một chỗ thì đọc một file là hiểu cả vòng đời người khách.
 
-signal khach_ngoi_xuong(khach: Node, ban: Node)
-signal khach_an_xong(khach: Node, ban: Node, id_mon: String)
-signal khach_bo_di(khach: Node)
+signal customer_seated(customer: Node, table: Node)
+signal customer_ate(customer: Node, table: Node, id_mon: String)
+signal customer_left(customer: Node)
 
 ## Một đơn vừa sinh ra (khách đã ngồi vào bàn và gọi món).
-signal don_moi(don: DonHang)
+signal order_created(don: Order)
 ## Một đơn kết thúc. ly_do: "xong" (giao đúng) hoặc "bo_di" (hết kiên nhẫn).
-signal don_ket_thuc(don: DonHang, ly_do: String)
+signal order_finished(don: Order, ly_do: String)
 ## Ví thay đổi. `cho` là chỗ vừa xảy ra việc, để bắn hiệu ứng tiền bay lên.
-signal tien_thay_doi(tong: int, them: int, cho: Vector3)
+signal money_changed(tong: int, them: int, cho: Vector3)
 
-const KHACH := preload("res://scenes/nha_hang/khach.tscn")
+const CUSTOMER_SCENE := preload("res://scenes/nha_hang/khach.tscn")
 const DanhMuc := preload("res://scripts/tuong_tac/danh_muc.gd")
-const DonHang := preload("res://scripts/nha_hang/don_hang.gd")
-const ANH_TIEN := "res://assets/ui/tien/carrot_tien.png"
+const Order := preload("res://scripts/restaurant/order.gd")
+const COIN_ICON := "res://assets/ui/tien/carrot_tien.png"
 
 ## Thời gian ăn, giây. Màn thật sẽ tỉ lệ với độ khó; tutorial để cố định.
-@export var thoi_gian_an: float = 5.0
+@export var eat_seconds: float = 5.0
 ## Ép mọi khách ngồi đúng bàn này (dùng cho tutorial). 0 = chọn ngẫu nhiên.
-@export var ep_ban: int = 0
+@export var force_table: int = 0
 
 ## Ép mọi khách gọi đúng món này (dùng cho tutorial). Rỗng = bốc ngẫu nhiên.
 ##
 ## Màn hướng dẫn dạy làm món Steak, nên người khách trong đó phải gọi đúng món
 ## Steak — để ngẫu nhiên thì có lúc bài giảng nói một đằng còn bong bóng trên
 ## đầu khách hiện một nẻo, và người chơi tin cái bong bóng.
-@export var ep_mon: String = ""
+@export var force_dish: String = ""
 ## Số khách tối đa có mặt cùng lúc, kể cả đang xếp hàng.
-@export var toi_da: int = 6
+@export var max_customers: int = 6
 
 ## Số khách tối đa ĐANG NGỒI BÀN cùng lúc. 0 = không giới hạn (dùng hết bàn).
 ##
-## Vì sao cần một trần RIÊNG bên cạnh `toi_da`: `toi_da` đếm tổng số người có
+## Vì sao cần một trần RIÊNG bên cạnh `max_customers`: `max_customers` đếm tổng số người có
 ## mặt, nên với sáu bàn trống thì cả sáu người đều được xếp chỗ ngay và người
 ## chơi phải phục vụ sáu đơn song song. Ngày 1 mà như thế là quá tải ngay từ
 ## phút đầu — người chơi mới chưa thuộc đường đi trong bếp, sáu đơn cùng lúc
@@ -50,14 +50,14 @@ const ANH_TIEN := "res://assets/ui/tien/carrot_tien.png"
 ## Chặn ở SỐ CHỖ NGỒI chứ không tắt bớt bàn: cả sáu bàn vẫn dùng được, khách
 ## vẫn rải khắp phòng, chỉ là không bao giờ quá ba người ngồi cùng lúc. Tắt
 ## bớt bàn thì quán trông vắng và nửa gian phòng thành đồ trang trí.
-@export var ban_toi_da: int = 0
+@export var max_tables: int = 0
 
 ## Số ô hàng đợi được dùng. 0 = dùng hết số Marker HangDoi có trong map.
 ##
-## Tách khỏi `ban_toi_da` vì hai con số điều khiển hai áp lực khác nhau: trần
+## Tách khỏi `max_tables` vì hai patience_left số điều khiển hai áp lực khác nhau: trần
 ## bàn quyết định "phải nấu mấy món cùng lúc", trần hàng đợi quyết định "có
 ## bao nhiêu người đang giận dần ở cửa". Ngày 1 hạ cả hai xuống 3.
-@export var o_hang_toi_da: int = 0
+@export var max_queue: int = 0
 
 ## Thực đơn RIÊNG của màn: chỉ những món trong đây mới được khách gọi.
 ##
@@ -70,7 +70,7 @@ const ANH_TIEN := "res://assets/ui/tien/carrot_tien.png"
 ## chuỗi bốn bước đã phải nấu Bữa tối năm bước, và họ thua vì chưa kịp biết
 ## công thức chứ không phải vì chậm tay. Mở dần thực đơn theo ngày biến cái
 ## danh mục món ăn thành đường cong học tập, thay vì một bức tường.
-@export var thuc_don: Array[String] = []
+@export var menu: Array[String] = []
 
 ## Trọng số bốc món: id -> số. Món không có tên trong đây tính là 1.
 ##
@@ -78,35 +78,35 @@ const ANH_TIEN := "res://assets/ui/tien/carrot_tien.png"
 ## từ 15 (kem) tới 95 (hamburger). Bốc đều thì ba loại kem chiếm đúng một nửa
 ## số đơn, doanh thu trần tụt gần một nửa, và điểm cuối màn phụ thuộc vào việc
 ## người chơi GẶP MAY được mấy đơn đắt — chứ không phụ thuộc họ nấu nhanh cỡ
-## nào. Có trọng số thì "trung bình một khách đáng bao nhiêu tiền" là con số
+## nào. Có trọng số thì "trung bình một khách đáng bao nhiêu tiền" là patience_left số
 ## người thiết kế đặt ra, và bốn mốc S/A/B/C mới có cơ sở để tính.
 ##
 ## Kem vẫn giữ trọng số thấp chứ không bỏ hẳn: một đơn 4 giây xen giữa hai đơn
 ## 20 giây là quãng nghỉ, và một màn không có quãng nghỉ nào thì mệt đều chứ
 ## không căng dần.
-@export var trong_so: Dictionary = {}
+@export var weights: Dictionary = {}
 
 ## Có trừ kiên nhẫn theo thời gian không.
 ##
 ## Màn hướng dẫn tắt cờ này: thanh kiên nhẫn vẫn hiện đầy đủ để người chơi làm
 ## quen với cách đọc nó, nhưng không bao giờ cạn. Bắt học một thứ mới VÀ chịu
 ## phạt vì nó cùng lúc là cách nhanh nhất để người mới bỏ game.
-@export var tru_kien_nhan: bool = true
+@export var drain_patience: bool = true
 
-## Tự sinh khách theo nhịp. Màn hướng dẫn tắt đi và gọi them_khach() bằng tay
+## Tự sinh khách theo nhịp. Màn hướng dẫn tắt đi và gọi spawn_customer() bằng tay
 ## ở đúng bước cần.
-@export var tu_sinh: bool = true
+@export var auto_spawn: bool = true
 ## Giây giữa hai lần thử sinh khách.
-@export var nhip_sinh: float = 12.0
+@export var spawn_interval: float = 12.0
 ## Giây chờ trước người khách đầu tiên — cho người chơi kịp nhìn quanh bếp.
-@export var cho_dau: float = 4.0
+@export var first_wait: float = 4.0
 
 ## Kiên nhẫn lúc đứng XẾP HÀNG (chưa có bàn), giây. CỐ ĐỊNH, không theo món.
 ##
 ## 45 giây: đủ để người chơi dọn xong một bàn và đón người tiếp theo, nhưng
-## không đủ để mặc kệ hàng đợi cả màn. Xem thêm lý do vì sao là con số cố định
-## ở DonHang.cho_ban().
-@export var kien_nhan_hang: float = 45.0
+## không đủ để mặc kệ hàng đợi cả màn. Xem thêm lý do vì sao là patience_left số cố định
+## ở Order.wait_in_queue().
+@export var queue_patience: float = 45.0
 
 ## Khách đứng cáu bao lâu trước khi bỏ ra cửa, giây.
 ##
@@ -116,8 +116,8 @@ const ANH_TIEN := "res://assets/ui/tien/carrot_tien.png"
 ## đơ ở khung cuối vì clip này KHÔNG lặp — và không lặp là cố ý, cáu là một
 ## cử chỉ diễn một lần chứ không phải một trạng thái.
 ##
-## Đổi model khách khác thì phải đo lại con số này theo clip của model đó.
-@export var giay_cau: float = 2.0
+## Đổi model khách khác thì phải đo lại patience_left số này theo clip của model đó.
+@export var beg_seconds: float = 2.0
 
 ## Thưởng thêm khi giao lúc kiên nhẫn còn trên 50%. 0,35 = +35%.
 ##
@@ -128,9 +128,9 @@ const ANH_TIEN := "res://assets/ui/tien/carrot_tien.png"
 ## nhất đúng, và điểm giữa người chơi giỏi với người chơi thường tách gấp đôi.
 ##
 ## Bốn kĩ năng bị động (Victory Cheer, Conguamoidaden, Aura farming, Fan tê
-## liệt) quy đổi giá trị theo đúng con số này — đổi ở đây là phải tính lại
+## liệt) quy đổi giá trị theo đúng patience_left số này — đổi ở đây là phải tính lại
 ## bảng kĩ năng trong Bang can bang.xlsx.
-@export var thuong_hoan_hao: float = 0.35
+@export var perfect_bonus: float = 0.35
 
 ## ───────────────────────────── HAI NÚM DO HỆ KĨ NĂNG VẶN ──────────────────
 ##
@@ -144,71 +144,71 @@ const ANH_TIEN := "res://assets/ui/tien/carrot_tien.png"
 
 ## Nhân vào kiên nhẫn của mọi đơn, cả lúc xếp hàng lẫn lúc ngồi bàn.
 ## Kita — "Kiên nhẫn là một đức tính": 1,30.
-@export var he_so_kien_nhan: float = 1.0
+@export var patience_factor: float = 1.0
 
 ## Bỏ qua thanh kiên nhẫn: MỌI đơn giao ra đều tính là hoàn hảo.
 ## Kita — "Victory Cheer!", bật khi bấm Space và giữ tới hết màn.
 ##
-## Đơn ép hoàn hảo được tính vào cả TIỀN THƯỞNG lẫn bộ đếm so_don_hoan_hao và
+## Đơn ép hoàn hảo được tính vào cả TIỀN THƯỞNG lẫn bộ đếm perfect_orders và
 ## tiếng "hoàn hảo" — tức nó hoàn hảo theo đúng mọi nghĩa mà game đang dùng.
 ## Làm nửa vời (ăn tiền nhưng không đếm) thì bảng tổng kết nói một đằng, ví
 ## tiền nói một nẻo.
-var ep_hoan_hao: bool = false
+var force_perfect: bool = false
 
 ## Tổng tiền đã kiếm trong màn.
-var tien: int = 0
+var money: int = 0
 
 ## Thống kê một lượt chơi, để bảng kết quả đọc lúc hết giờ.
 ##
 ## Đếm Ở ĐÂY chứ không để bảng kết quả tự đếm bằng cách nghe tín hiệu: bảng
 ## kết quả chỉ được dựng lúc hết giờ, mà lúc đó mọi tín hiệu đã bay qua từ lâu.
 ## Nơi biết chuyện gì đã xảy ra phải là nơi giữ sổ.
-var so_don_xong: int = 0
-var so_don_hoan_hao: int = 0
-var so_khach_bo_di: int = 0
+var orders_done: int = 0
+var perfect_orders: int = 0
+var customers_lost: int = 0
 
-var _don: Dictionary = {}       # khach -> DonHang
-var _hen_sinh: float = 0.0
+var _don: Dictionary = {}       # customer -> Order
+var _spawn_timer: float = 0.0
 
 var _map: Node3D
-var _moc: Node
-var _hang: Array[Marker3D] = []          # HangDoi1..N, [0] là đầu hàng
-var _cua: Marker3D
+var _spawn_points: Node
+var _queue: Array[Marker3D] = []          # HangDoi1..N, [0] là đầu hàng
+var _door: Marker3D
 var _ban: Array = []                     # mọi BanAn trong màn
-var _o_hang: Array = []                  # ai đang đứng ở ô hàng đợi nào
-var _ban_cua_khach: Dictionary = {}       # khach -> BanAn
-var _khach_cua_ban: Dictionary = {}       # BanAn -> khach
+var _in_queue: Array = []                  # ai đang đứng ở ô hàng đợi nào
+var _table_of: Dictionary = {}       # customer -> BanAn
+var _customer_at: Dictionary = {}       # BanAn -> customer
 
 
-func chuan_bi(map: Node3D) -> void:
+func setup(map: Node3D) -> void:
 	_map = map
-	_moc = map.get_node_or_null("Moc")
-	_cua = _lay_moc("CuaVao")
+	_spawn_points = map.get_node_or_null("Moc")
+	_door = _pick_spawn("CuaVao")
 
 	var i := 1
 	while true:
-		var m := _lay_moc("HangDoi%d" % i)
+		var m := _pick_spawn("HangDoi%d" % i)
 		if m == null:
 			break
-		_hang.append(m)
+		_queue.append(m)
 		i += 1
-	_o_hang.resize(_hang.size())
-	_o_hang.fill(null)
+	_in_queue.resize(_queue.size())
+	_in_queue.fill(null)
 
 	_ban = get_tree().get_nodes_in_group("ban_an")
-	_ban.sort_custom(func(a, b): return int(a.so_ban) < int(b.so_ban))
+	_ban.sort_custom(func(a, b): return int(a.table_number) < int(b.table_number))
 	for b in _ban:
-		if b.has_signal("da_nhan_mon"):
-			b.da_nhan_mon.connect(_khi_ban_nhan_mon)
+		if b.has_signal("dish_delivered"):
+			b.dish_delivered.connect(_on_dish_delivered)
 
-	_dung_vung_di_lai()
-	_hen_sinh = cho_dau
+	_bake_navmesh()
+	_spawn_timer = first_wait
 
 
-func _lay_moc(ten: String) -> Marker3D:
-	if _moc == null:
+func _pick_spawn(ten: String) -> Marker3D:
+	if _spawn_points == null:
 		return null
-	return _moc.get_node_or_null(ten) as Marker3D
+	return _spawn_points.get_node_or_null(ten) as Marker3D
 
 
 # ------------------------------------------------------- vùng đi lại (navmesh)
@@ -230,35 +230,35 @@ func _lay_moc(ten: String) -> Marker3D:
 ## bếp — khách sẽ đi thẳng vào bếp qua lối người chơi ở x=16. Hai hộp chạm nhau
 ## dọc cạnh z=12, Godot tự nối hai vùng ở cạnh chung nên khách vẫn đi qua lại
 ## được.
-const NHOM_NGUON := "nguon_navmesh"
+const SOURCE_GROUP := "nguon_navmesh"
 
 ## Lớp va chạm 5 (bit 16) dành RIÊNG cho mấy tấm chắn vô hình chỉ tồn tại với
 ## navmesh. Người chơi có mask 1 nên đi xuyên qua chúng như không có gì.
-const LOP_CHAN_NAV := 1 << 4
+const NAV_BLOCK_LAYER := 1 << 4
 
 ## Hai lối vào bếp, chắn lại để khách không lang thang vào khu bếp.
 ## Mỗi mục: [tâm hộp, nửa kích thước].
-const CHAN := [
+const BLOCKERS := [
 	# Lối người chơi ở x=16, z 4→8.
 	[Vector3(16.0, 1.0, 6.0), Vector3(0.4, 1.5, 2.2)],
 	# Khe trống ở tường nam khu bếp, z=12, x 0→4.
 	[Vector3(2.0, 1.0, 12.0), Vector3(2.2, 1.5, 0.4)],
 ]
 
-var _vung: Array[NavigationRegion3D] = []
+var _nav_region: Array[NavigationRegion3D] = []
 ## Mặt navmesh nằm cao hơn mặt sàn bấy nhiêu. ĐO lúc chạy chứ không gõ tay:
-## con số này do Recast quyết theo cell_height và chiều dày hình va chạm sàn,
+## patience_left số này do Recast quyết theo cell_height và chiều dày hình va chạm sàn,
 ## đổi một trong hai là nó đổi theo.
-var _lech_cao := 0.0
+var _height_offset := 0.0
 
 
-func _dung_vung_di_lai() -> void:
-	if not _map.is_in_group(NHOM_NGUON):
-		_map.add_to_group(NHOM_NGUON)
-	_dung_tam_chan()
+func _bake_navmesh() -> void:
+	if not _map.is_in_group(SOURCE_GROUP):
+		_map.add_to_group(SOURCE_GROUP)
+	_build_blockers()
 
 	var luoi := NavigationMesh.new()
-	# Ba con số này phải là BỘI SỐ của ô lưới, và ô lưới phải TRÙNG với ô lưới
+	# Ba patience_left số này phải là BỘI SỐ của ô lưới, và ô lưới phải TRÙNG với ô lưới
 	# của bản đồ điều hướng (mặc định project là 0,25). Lệch thì Godot cảnh báo
 	# "cell_size mismatch" và mép navmesh bị rasterize sai; còn agent_radius /
 	# agent_max_climb không tròn ô thì bị làm tròn và giá trị thật khác hẳn giá
@@ -275,19 +275,19 @@ func _dung_vung_di_lai() -> void:
 	# đều là StaticBody3D + CollisionShape3D, còn mesh gltf chỉ để nhìn. Đọc
 	# mesh thì mấy thứ trang trí không có va chạm cũng chắn đường.
 	luoi.geometry_parsed_geometry_type = NavigationMesh.PARSED_GEOMETRY_STATIC_COLLIDERS
-	luoi.geometry_collision_mask = 1 | LOP_CHAN_NAV
+	luoi.geometry_collision_mask = 1 | NAV_BLOCK_LAYER
 	luoi.geometry_source_geometry_mode = NavigationMesh.SOURCE_GEOMETRY_GROUPS_WITH_CHILDREN
-	luoi.geometry_source_group_name = NHOM_NGUON
+	luoi.geometry_source_group_name = SOURCE_GROUP
 
 	var vung := NavigationRegion3D.new()
 	vung.name = "VungKhach"
 	vung.navigation_mesh = luoi
 	_map.add_child(vung)
-	_vung.append(vung)
+	_nav_region.append(vung)
 	# Nướng đồng bộ: màn chơi chưa bắt đầu nên một nhịp khựng ở đây không ai
 	# thấy, đổi lại khách đầu tiên chắc chắn có đường để đi.
 	vung.bake_navigation_mesh(false)
-	_ghi_lech_cao(luoi)
+	_measure_height_offset(luoi)
 
 
 ## Tấm chắn vô hình bịt hai lối vào bếp.
@@ -302,11 +302,11 @@ func _dung_vung_di_lai() -> void:
 ## Một vùng duy nhất thì không có mép nào để nối, còn khu bếp thì loại ra bằng
 ## vật cản thật. Đặt tấm chắn ở lớp riêng để chúng chỉ tồn tại với bộ nướng
 ## navmesh, người chơi vẫn đi qua lối của mình như cũ.
-func _dung_tam_chan() -> void:
-	for c in CHAN:
+func _build_blockers() -> void:
+	for c in BLOCKERS:
 		var than := StaticBody3D.new()
 		than.name = "ChanNav"
-		than.collision_layer = LOP_CHAN_NAV
+		than.collision_layer = NAV_BLOCK_LAYER
 		than.collision_mask = 0
 		var hinh := CollisionShape3D.new()
 		var hop := BoxShape3D.new()
@@ -327,12 +327,12 @@ func _dung_tam_chan() -> void:
 ##
 ## Đọc đỉnh của chính cái NavigationMesh thì không phụ thuộc server, không phụ
 ## thuộc thời điểm, và là dữ liệu gốc chứ không phải kết quả suy ra.
-func _ghi_lech_cao(luoi: NavigationMesh) -> void:
+func _measure_height_offset(luoi: NavigationMesh) -> void:
 	var dinh := luoi.get_vertices()
 	if dinh.is_empty():
 		return
 	# Sàn phẳng nên mọi đỉnh cùng cao độ; lấy đỉnh đầu là đủ.
-	_lech_cao = dinh[0].y
+	_height_offset = dinh[0].y
 
 
 ## Chờ NavigationServer đồng bộ xong bản đồ.
@@ -345,7 +345,7 @@ func _ghi_lech_cao(luoi: NavigationMesh) -> void:
 ## Đợi bằng map_get_iteration_id() chứ không đợi "vài khung cho chắc": số nhịp
 ## cần đợi phụ thuộc thời điểm gọi trong khung hình, đoán bao nhiêu cũng có
 ## ngày trượt.
-func cho_san_sang() -> void:
+func is_ready() -> void:
 	var ban_do := _map.get_world_3d().navigation_map
 	while NavigationServer3D.map_get_iteration_id(ban_do) == 0:
 		await get_tree().physics_frame
@@ -354,69 +354,69 @@ func cho_san_sang() -> void:
 ## Số đa giác của từng vùng — dùng để kiểm nhanh navmesh có nướng ra gì không.
 ## Mặt navmesh cao hơn mặt sàn bao nhiêu — ĐO được lúc nướng.
 ##
-## Mở hàm đọc thay vì để nơi khác chọc thẳng vào `_lech_cao`: con số này chỉ
+## Mở hàm đọc thay vì để nơi khác chọc thẳng vào `_height_offset`: patience_left số này chỉ
 ## có nghĩa SAU khi navmesh nướng xong, và một hàm công khai là chỗ để ghi
 ## đúng điều đó. Hiện có hai nơi cần: khách hàng và Doro.
-func lech_cao_navmesh() -> float:
-	return _lech_cao
+func navmesh_height_offset() -> float:
+	return _height_offset
 
 
-func thong_ke_vung() -> Array:
+func nav_stats() -> Array:
 	var ra := []
-	for v in _vung:
+	for v in _nav_region:
 		ra.append({"ten": v.name, "da_giac": v.navigation_mesh.get_polygon_count()})
 	return ra
 
 
 # --------------------------------------------------------------- vòng đời khách
 
-func them_khach() -> Node:
-	if _cua == null or _hang.is_empty():
+func spawn_customer() -> Node:
+	if _door == null or _queue.is_empty():
 		push_warning("Map thiếu Moc/CuaVao hoặc Moc/HangDoi1 — không sinh khách được.")
 		return null
-	var o := _o_trong()
+	var o := _free_seat()
 	if o == -1:
 		return null
 
-	var k := KHACH.instantiate()
+	var k := CUSTOMER_SCENE.instantiate()
 	_map.add_child(k)
 	# Nắn chỗ sinh về navmesh rồi lệch ngẫu nhiên một chút: cửa vào nằm sát
 	# tường đông (x=31,5 so với tường x=32) nên điểm gốc rơi ra ngoài vùng đi
 	# được, mà sinh mấy người CHỒNG LÊN NHAU ở đúng một toạ độ thì họ đẩy nhau
 	# ra và có người bị ép xuyên qua tường.
-	var vt: Vector3 = k.nan_ve_navmesh(_map.get_world_3d().navigation_map,
-		_cua.global_position)
+	var vt: Vector3 = k.snap_to_navmesh(_map.get_world_3d().navigation_map,
+		_door.global_position)
 	vt.z += randf_range(-0.7, 0.7)
 	k.global_position = vt
-	k.dat_lech_cao(_lech_cao)
-	k.da_toi_noi.connect(_khi_toi_noi)
-	k.da_an_xong.connect(_khi_an_xong)
+	k.set_height_offset(_height_offset)
+	k.arrived.connect(_on_arrived)
+	k.ate.connect(_on_ate)
 
-	_o_hang[o] = k
-	k.set_meta("o_hang", o)
+	_in_queue[o] = k
+	k.set_meta("in_queue", o)
 	AmThanh.play_sfx("khach_vao")
-	k.di_toi(_hang[o].global_position, "hang")
+	k.go_to(_queue[o].global_position, "hang")
 	return k
 
 
 ## Ô hàng đợi trống gần đầu hàng nhất, hoặc -1 nếu hết chỗ.
 ##
-## Chỉ xét `o_hang_toi_da` ô ĐẦU TIÊN chứ không cắt bớt mảng `_o_hang`: các ô
-## sau vẫn tồn tại và vẫn đúng vị trí, nên Ngày 2 chỉ cần nâng con số lên là
+## Chỉ xét `max_queue` ô ĐẦU TIÊN chứ không cắt bớt mảng `_in_queue`: các ô
+## sau vẫn tồn tại và vẫn đúng vị trí, nên Ngày 2 chỉ cần nâng patience_left số lên là
 ## hàng đợi dài ra ngay, không phải dựng lại gì.
-func _o_trong() -> int:
-	var het: int = _o_hang.size()
-	if o_hang_toi_da > 0:
-		het = mini(het, o_hang_toi_da)
+func _free_seat() -> int:
+	var het: int = _in_queue.size()
+	if max_queue > 0:
+		het = mini(het, max_queue)
 	for i in het:
-		if _o_hang[i] == null:
+		if _in_queue[i] == null:
 			return i
 	return -1
 
 
 ## Đã đủ trần số khách ngồi bàn chưa.
-func _kin_ban() -> bool:
-	return ban_toi_da > 0 and _khach_cua_ban.size() >= ban_toi_da
+func _tables_full() -> bool:
+	return max_tables > 0 and _customer_at.size() >= max_tables
 
 
 ## Nhịp tim của cả nhà hàng: sinh khách và đếm kiên nhẫn.
@@ -428,124 +428,124 @@ func _process(delta: float) -> void:
 	if _map == null:
 		return
 
-	if tu_sinh:
-		_hen_sinh -= delta
-		if _hen_sinh <= 0.0:
-			_hen_sinh = nhip_sinh
-			them_khach()
+	if auto_spawn:
+		_spawn_timer -= delta
+		if _spawn_timer <= 0.0:
+			_spawn_timer = spawn_interval
+			spawn_customer()
 
-	if not tru_kien_nhan:
+	if not drain_patience:
 		return
-	# Duyệt trên BẢN SAO danh sách: _bo_di_gian() xoá phần tử khỏi _don ngay
+	# Duyệt trên BẢN SAO danh sách: _leave_angry() xoá phần tử khỏi _don ngay
 	# trong vòng lặp, mà sửa Dictionary đang duyệt thì Godot bỏ sót phần tử.
 	for don in _don.values().duplicate():
 		# Khai kiểu tường minh: `don` lấy từ Dictionary nên kiểu tĩnh là Variant,
 		# `:=` không suy được kiểu trả về và Godot báo lỗi biên dịch.
-		var het: bool = don.dem(delta)
+		var het: bool = don.tick(delta)
 		# Vẽ thanh chờ trên đầu người đang xếp hàng. Chỉ giai đoạn hàng đợi mới
 		# vẽ ở đây; ngồi vào bàn rồi thì tấm vé trên HUD lo phần đó.
-		if don.o_hang and is_instance_valid(don.khach):
-			don.khach.dat_thanh_cho(don.ti_le())
+		if don.in_queue and is_instance_valid(don.customer):
+			don.customer.set_patience_bar(don.patience_ratio())
 		if het:
-			_bo_di_gian(don)
+			_leave_angry(don)
 
 
-func _khi_toi_noi(khach: Node, viec: String) -> void:
+func _on_arrived(customer: Node, viec: String) -> void:
 	match viec:
 		"hang":
 			# Tới chỗ xếp hàng. Quay mặt về phía quầy rồi thử ra bàn ngay —
 			# nếu còn bàn trống thì không phải đợi ai.
-			khach.dung_lai(Vector3.LEFT)
+			customer.stop_moving(Vector3.LEFT)
 			# Gọi món NGAY khi vào hàng, trước cả khi biết có bàn hay không.
 			# Đúng ý đã chốt: kể cả lúc hết bàn trống thì đơn vẫn hiện trên
 			# đầu khách — người chơi nhìn thấy công việc đang dồn tới, đó là
 			# phần áp lực mà cái hàng đợi tồn tại để tạo ra.
-			_goi_mon(khach)
+			_place_order(customer)
 			# Đứng luôn vào ô đầu hàng (quán đang vắng) thì đơn lên bảng ngay.
-			if int(khach.get_meta("o_hang", -1)) == 0:
-				_bao_don_len_bang(khach)
-			_thu_xep_ban(khach)
-		"ban":
-			var ban = _ban_cua_khach.get(khach)
-			if ban == null:
+			if int(customer.get_meta("in_queue", -1)) == 0:
+				_push_to_board(customer)
+			_try_seat(customer)
+		"table":
+			var table = _table_of.get(customer)
+			if table == null:
 				return
 			# Quay mặt vào tâm bàn.
-			# Khai kiểu tường minh: `ban` lấy từ Dictionary nên kiểu tĩnh là
+			# Khai kiểu tường minh: `table` lấy từ Dictionary nên kiểu tĩnh là
 			# Variant, `:=` không suy được kiểu và Godot báo lỗi biên dịch.
-			var huong: Vector3 = ban.global_position - khach.global_position
+			var huong: Vector3 = table.global_position - customer.global_position
 			huong.y = 0.0
-			khach.dung_lai(huong.normalized())
-			khach_ngoi_xuong.emit(khach, ban)
-			_ngoi_vao_ban(khach, ban)
+			customer.stop_moving(huong.normalized())
+			customer_seated.emit(customer, table)
+			_seat_at_table(customer, table)
 		"ve":
-			_don_khach(khach)
+			_clear_customer(customer)
 
 
 ## Tìm bàn trống cho một người đang đứng ở hàng đợi.
 ##
 ## Chỉ người ĐẦU HÀNG mới được đi. Không có luật này thì người thứ ba có thể
 ## vọt lên bàn trước người thứ nhất, và cái hàng đợi mất hết ý nghĩa.
-func _thu_xep_ban(khach: Node) -> void:
-	if _o_hang.is_empty() or _o_hang[0] != khach:
+func _try_seat(customer: Node) -> void:
+	if _in_queue.is_empty() or _in_queue[0] != customer:
 		return
-	var ban = _ban_trong()
-	if ban == null:
+	var table = _empty_table()
+	if table == null:
 		return
 
-	var o: int = int(khach.get_meta("o_hang", -1))
+	var o: int = int(customer.get_meta("in_queue", -1))
 	if o >= 0:
-		_o_hang[o] = null
-	khach.remove_meta("o_hang")
+		_in_queue[o] = null
+	customer.remove_meta("in_queue")
 
-	_ban_cua_khach[khach] = ban
-	_khach_cua_ban[ban] = khach
+	_table_of[customer] = table
+	_customer_at[table] = customer
 
 	# ĐÓNG BĂNG đồng hồ chờ ngay khi có bàn, chứ không đợi tới lúc ngồi xuống.
 	# Quãng đường từ cửa tới bàn xa nhất là 33 đơn vị, đi mất hơn mười giây —
 	# để đồng hồ chạy tiếp thì có khách đã được xếp bàn vẫn bỏ đi giữa đường,
 	# và người chơi không hiểu vì sao vì họ đã thấy khách được gọi vào rồi.
-	var don: DonHang = _don.get(khach)
+	var don: Order = _don.get(customer)
 	if don != null:
-		don.chay = false
+		don.draining = false
 
-	khach.di_toi((ban.cho_dung(0) as Marker3D).global_position, "ban")
-	_nhich_hang()
+	customer.go_to((table.seat_marker(0) as Marker3D).global_position, "table")
+	_shift_queue()
 
 
 ## Dồn hàng lên một ô sau khi người đầu hàng rời đi.
-func _nhich_hang() -> void:
-	for i in range(1, _o_hang.size()):
-		var k = _o_hang[i]
+func _shift_queue() -> void:
+	for i in range(1, _in_queue.size()):
+		var k = _in_queue[i]
 		if k == null:
 			continue
 		var truoc := i - 1
-		if _o_hang[truoc] != null:
+		if _in_queue[truoc] != null:
 			continue
-		_o_hang[truoc] = k
-		_o_hang[i] = null
-		k.set_meta("o_hang", truoc)
+		_in_queue[truoc] = k
+		_in_queue[i] = null
+		k.set_meta("in_queue", truoc)
 		# Vừa nhích lên đầu hàng -> đơn lên bảng NGAY, không đợi đi tới nơi.
 		# Người chơi nhìn bảng chứ không nhìn chân khách, nên sớm vài giây ở
 		# đây chính là vài giây họ dùng để bắc nồi trước.
 		if truoc == 0:
-			_bao_don_len_bang(k)
-		k.di_toi(_hang[truoc].global_position, "hang")
+			_push_to_board(k)
+		k.go_to(_queue[truoc].global_position, "hang")
 
 
-func _ban_trong():
+func _empty_table():
 	# Trần số chỗ ngồi. Kiểm tra ở ĐÂY, chỗ duy nhất trả lời "có bàn cho người
 	# này không", nên mọi đường đi vào bàn đều bị chặn cùng một luật — kể cả
 	# nhánh ép bàn của màn hướng dẫn.
-	if _kin_ban():
+	if _tables_full():
 		return null
-	if ep_ban > 0:
+	if force_table > 0:
 		for b in _ban:
-			if int(b.so_ban) == ep_ban and not _khach_cua_ban.has(b):
+			if int(b.table_number) == force_table and not _customer_at.has(b):
 				return b
 		return null
 	var rong := []
 	for b in _ban:
-		if not _khach_cua_ban.has(b):
+		if not _customer_at.has(b):
 			rong.append(b)
 	if rong.is_empty():
 		return null
@@ -553,11 +553,11 @@ func _ban_trong():
 
 
 ## Bàn nhận được món. Chỉ người đang ngồi ở CHÍNH bàn đó mới ăn.
-func _khi_ban_nhan_mon(ban: Node, id_mon: String) -> void:
-	var khach = _khach_cua_ban.get(ban)
-	if khach == null:
+func _on_dish_delivered(table: Node, id_mon: String) -> void:
+	var customer = _customer_at.get(table)
+	if customer == null:
 		return
-	var don: DonHang = _don.get(khach)
+	var don: Order = _don.get(customer)
 	if don == null:
 		return
 
@@ -569,7 +569,7 @@ func _khi_ban_nhan_mon(ban: Node, id_mon: String) -> void:
 	# tiền đắt nhất. Tịch thu cả món lẫn đơn thì một lần bấm nhầm lúc vội đủ
 	# làm hỏng cả màn, và người chơi học được điều sai: "đừng vội" thay vì
 	# "nhìn vé trước khi bê".
-	if id_mon != don.mon:
+	if id_mon != don.dish:
 		return
 
 	# Chốt tiền NGAY LÚC GIAO, trả vào ví lúc khách ăn xong.
@@ -577,69 +577,69 @@ func _khi_ban_nhan_mon(ban: Node, id_mon: String) -> void:
 	# Phải chốt ở đây vì "hoàn hảo" đo bằng kiên nhẫn còn lại, mà trong 5 giây
 	# ngồi ăn thì thanh đó vẫn đang chạy. Tính lúc ăn xong thì mọi đơn đều
 	# thành không hoàn hảo, và cái thưởng 20% coi như không tồn tại.
-	don.chay = false
-	don.da_hoan_hao = ep_hoan_hao or don.hoan_hao()
-	don.tien_tra = don.gia
-	if don.da_hoan_hao:
-		don.tien_tra = int(round(don.gia * (1.0 + thuong_hoan_hao)))
+	don.draining = false
+	don.was_perfect = force_perfect or don.is_perfect()
+	don.payout = don.price
+	if don.was_perfect:
+		don.payout = int(round(don.price * (1.0 + perfect_bonus)))
 
-	so_don_xong += 1
-	if don.da_hoan_hao:
-		so_don_hoan_hao += 1
+	orders_done += 1
+	if don.was_perfect:
+		perfect_orders += 1
 		# Chồng LÊN TRÊN tiếng giao món, không thay thế: người chơi vẫn nghe
 		# tiếng giao quen thuộc, cộng thêm một tiếng nữa báo "lần này hoàn hảo".
-		AmThanh.play_sfx("hoan_hao")
+		AmThanh.play_sfx("is_perfect")
 
-	khach.set_meta("mon", id_mon)
-	khach.an(thoi_gian_an)
-	don_ket_thuc.emit(don, "xong")
+	customer.set_meta("dish", id_mon)
+	customer.eat(eat_seconds)
+	order_finished.emit(don, "xong")
 
 
-func _khi_an_xong(khach: Node) -> void:
-	var ban = _ban_cua_khach.get(khach)
-	var id_mon := str(khach.get_meta("mon", ""))
-	if ban != null:
-		ban.don_sach()
-		ban.xoa_mo_hinh()
-	var don: DonHang = _don.get(khach)
+func _on_ate(customer: Node) -> void:
+	var table = _table_of.get(customer)
+	var id_mon := str(customer.get_meta("dish", ""))
+	if table != null:
+		table.don_sach()
+		table.xoa_mo_hinh()
+	var don: Order = _don.get(customer)
 	if don != null:
-		_don.erase(khach)
-		if don.tien_tra > 0:
-			tien += don.tien_tra
-			var cho: Vector3 = ban.global_position if ban != null \
-				else khach.global_position
-			tien_thay_doi.emit(tien, don.tien_tra, cho)
-			AmThanh.play_sfx("tien")
-			_tien_bay(cho, don.tien_tra, don.da_hoan_hao)
+		_don.erase(customer)
+		if don.payout > 0:
+			money += don.payout
+			var cho: Vector3 = table.global_position if table != null \
+				else customer.global_position
+			money_changed.emit(money, don.payout, cho)
+			AmThanh.play_sfx("money")
+			_money_popup(cho, don.payout, don.was_perfect)
 
-	khach_an_xong.emit(khach, ban, id_mon)
-	if _cua != null:
-		khach.di_toi(_cua.global_position, "ve")
+	customer_ate.emit(customer, table, id_mon)
+	if _door != null:
+		customer.go_to(_door.global_position, "ve")
 
 
 ## Xoá hẳn người khách và trả lại cái bàn.
-func _don_khach(khach: Node) -> void:
-	var ban = _ban_cua_khach.get(khach)
-	if ban != null:
-		_khach_cua_ban.erase(ban)
-		_ban_cua_khach.erase(khach)
-	var o: int = int(khach.get_meta("o_hang", -1))
-	if o >= 0 and o < _o_hang.size() and _o_hang[o] == khach:
-		_o_hang[o] = null
-		_nhich_hang()
-	# Lưới an toàn: nếu vì lý do nào đó người khách biến mất khi đơn còn treo
+func _clear_customer(customer: Node) -> void:
+	var table = _table_of.get(customer)
+	if table != null:
+		_customer_at.erase(table)
+		_table_of.erase(customer)
+	var o: int = int(customer.get_meta("in_queue", -1))
+	if o >= 0 and o < _in_queue.size() and _in_queue[o] == customer:
+		_in_queue[o] = null
+		_shift_queue()
+	# Lưới eat toàn: nếu vì lý do nào đó người khách biến mất khi đơn còn treo
 	# (đổi màn, gọi don_khach thẳng tay), cái vé phải đi theo. Đơn mồ côi thì
 	# vé nằm lại trên HUD vĩnh viễn và trỏ vào một node đã bị xoá.
-	var don: DonHang = _don.get(khach)
+	var don: Order = _don.get(customer)
 	if don != null:
-		_don.erase(khach)
-		don_ket_thuc.emit(don, "bo_di")
+		_don.erase(customer)
+		order_finished.emit(don, "bo_di")
 
-	khach_bo_di.emit(khach)
-	khach.queue_free()
+	customer_left.emit(customer)
+	customer.queue_free()
 	# Người đầu hàng có thể đã chờ sẵn một cái bàn vừa trống ra.
-	if not _o_hang.is_empty() and _o_hang[0] != null:
-		_thu_xep_ban(_o_hang[0])
+	if not _in_queue.is_empty() and _in_queue[0] != null:
+		_try_seat(_in_queue[0])
 
 
 # ------------------------------------------------------------- đơn hàng ---
@@ -650,30 +650,30 @@ func _don_khach(khach: Node) -> void:
 ## sách gõ tay ở đây. Nhờ vậy thêm một món có giá vào danh mục là nó tự vào
 ## thực đơn, còn khoá một món (như cả nhóm món nồi hiện giờ) là khách tự động
 ## thôi gọi — không có chỗ thứ hai để quên cập nhật.
-func _goi_mon(khach: Node) -> void:
-	if _don.has(khach):
+func _place_order(customer: Node) -> void:
+	if _don.has(customer):
 		return
-	var mon_co_the := _thuc_don_thuc_te()
+	var mon_co_the := _actual_menu()
 	if mon_co_the.is_empty():
 		push_warning("Thực đơn rỗng — không món nào có giá trong DanhMuc.")
 		return
 
-	var chon := _boc_mon(mon_co_the)
+	var chon := _pick_dish(mon_co_the)
 	# Chỉ ép khi món đó THẬT SỰ bán được. Gõ nhầm tên món vào ô ép thì quay về
 	# ngẫu nhiên chứ không sinh ra một đơn không bao giờ giao được.
-	if not ep_mon.is_empty() and mon_co_the.has(ep_mon):
-		chon = ep_mon
+	if not force_dish.is_empty() and mon_co_the.has(force_dish):
+		chon = force_dish
 
-	var don := DonHang.new(khach, chon)
-	# Gán hệ số TRƯỚC cho_ban(): hàm đó chốt ngân sách kiên nhẫn ngay tại chỗ.
-	don.he_so_kien_nhan = he_so_kien_nhan
-	don.cho_ban(kien_nhan_hang)
-	don.chay = tru_kien_nhan
-	_don[khach] = don
+	var don := Order.new(customer, chon)
+	# Gán hệ số TRƯỚC wait_in_queue(): hàm đó chốt ngân sách kiên nhẫn ngay tại chỗ.
+	don.patience_factor = patience_factor
+	don.wait_in_queue(queue_patience)
+	don.draining = drain_patience
+	_don[customer] = don
 
-	# Bong bóng trên đầu. Vé ở HUD do `_bao_don_len_bang()` lo, và chỉ cho
+	# Bong bóng trên đầu. Vé ở HUD do `_push_to_board()` lo, và chỉ cho
 	# người ĐỨNG ĐẦU HÀNG — xem giải thích ở hàm đó.
-	khach.hien_don(_anh_mon(don.mon))
+	customer.show_order(_dish_icon(don.dish))
 
 
 ## Đẩy đơn của một người lên BẢNG ĐƠN HÀNG (phím 1), nếu chưa có.
@@ -686,29 +686,29 @@ func _goi_mon(khach: Node) -> void:
 ## dài dằng dặc và mất luôn cảm giác "đơn tới dồn dập". Một đơn nhìn trước là
 ## đủ để chuẩn bị, không đủ để chơi thành game xếp lịch.
 ##
-## Phát lại `don_moi` cho cùng một đơn là AN TOÀN: bảng bỏ qua đơn đã có
+## Phát lại `order_created` cho cùng một đơn là AN TOÀN: bảng bỏ qua đơn đã có
 ## (`them()` kiểm tra `_ve.has(don)`), nên lúc người này ngồi vào bàn và
-## `_ngoi_vao_ban()` phát lần nữa thì không sinh vé thứ hai.
-func _bao_don_len_bang(khach: Node) -> void:
-	var don: DonHang = _don.get(khach)
+## `_seat_at_table()` phát lần nữa thì không sinh vé thứ hai.
+func _push_to_board(customer: Node) -> void:
+	var don: Order = _don.get(customer)
 	if don != null:
-		don_moi.emit(don)
+		order_created.emit(don)
 
 
 ## Thực đơn thật sự dùng để bốc món.
 ##
-## LỌC qua danh mục chứ không tin thẳng ô `thuc_don`: gõ sai một id trong bảng
+## LỌC qua danh mục chứ không tin thẳng ô `menu`: gõ sai một id trong bảng
 ## luật màn (hoặc để sót một món thuộc nhóm đang bị khoá, ví dụ nhóm món nồi)
 ## thì khách sẽ gọi một món KHÔNG THỂ nấu ra, và cái đơn đó đứng đó cho tới
 ## khi hết kiên nhẫn. Lỗi kiểu này không có thông báo nào và rất khó nhìn ra
 ## khi đang chơi — nên chặn ngay ở đây, kèm cảnh báo chỉ đúng tên món sai.
-func _thuc_don_thuc_te() -> Array[String]:
+func _actual_menu() -> Array[String]:
 	var day_du := DanhMuc.danh_sach_mon_ban()
-	if thuc_don.is_empty():
+	if menu.is_empty():
 		return day_du
 
 	var ra: Array[String] = []
-	for m in thuc_don:
+	for m in menu:
 		var id := String(m)
 		if day_du.has(id):
 			ra.append(id)
@@ -728,40 +728,40 @@ func _thuc_don_thuc_te() -> Array[String]:
 ## theo trọng số, và quan trọng hơn là nhận được trọng số THẬP PHÂN — sau này
 ## muốn chỉnh "hamburger hiếm hơn steak một chút" thì đổi 3 thành 2.5, không
 ## phải nhân cả bảng lên mười lần.
-func _boc_mon(ds: Array[String]) -> String:
+func _pick_dish(ds: Array[String]) -> String:
 	var tong := 0.0
 	for id in ds:
-		tong += maxf(0.0, float(trong_so.get(id, 1)))
+		tong += maxf(0.0, float(weights.get(id, 1)))
 	# Không có trọng số nào (hoặc toàn số 0): quay về bốc đều.
 	if tong <= 0.0:
 		return String(ds.pick_random())
 
 	var moc := randf() * tong
 	for id in ds:
-		moc -= maxf(0.0, float(trong_so.get(id, 1)))
+		moc -= maxf(0.0, float(weights.get(id, 1)))
 		if moc <= 0.0:
 			return id
-	# Lưới an toàn cho sai số dấu phẩy động: randf() trả về gần đúng 1.0 thì
+	# Lưới eat toàn cho sai số dấu phẩy động: randf() trả về gần đúng 1.0 thì
 	# vòng trên có thể chạy hết mà chưa chạm 0.
 	return ds[ds.size() - 1]
 
 
 ## Khách đã tới bàn: tắt bong bóng, nạp đầy kiên nhẫn, bật vé trên HUD.
-func _ngoi_vao_ban(khach: Node, ban: Node) -> void:
-	var don: DonHang = _don.get(khach)
+func _seat_at_table(customer: Node, table: Node) -> void:
+	var don: Order = _don.get(customer)
 	if don == null:
-		# Lưới an toàn: nếu vì lý do nào đó khách tới bàn mà chưa có đơn (bị
-		# gọi thẳng them_khach rồi ép ngồi trong lúc thử), vẫn tạo đơn để bàn
+		# Lưới eat toàn: nếu vì lý do nào đó khách tới bàn mà chưa có đơn (bị
+		# gọi thẳng spawn_customer rồi ép ngồi trong lúc thử), vẫn tạo đơn để bàn
 		# không kẹt vĩnh viễn với một người không bao giờ gọi món.
-		_goi_mon(khach)
-		don = _don.get(khach)
+		_place_order(customer)
+		don = _don.get(customer)
 		if don == null:
 			return
 
-	khach.an_don()
-	don.vao_ban(ban)
-	don.chay = tru_kien_nhan
-	don_moi.emit(don)
+	customer.hide_order()
+	don.sit_at_table(table)
+	don.draining = drain_patience
+	order_created.emit(don)
 
 
 ## Ảnh 2D của một món, hoặc null nếu thiếu file.
@@ -769,7 +769,7 @@ func _ngoi_vao_ban(khach: Node, ban: Node) -> void:
 ## Nạp qua ResourceLoader.exists() chứ không load() thẳng: thiếu một ảnh thì
 ## chỉ mất cái hình trong bong bóng, còn cả màn chơi vẫn chạy. Ảnh món là thứ
 ## đang được vẽ dần, nên thiếu là chuyện bình thường trong lúc làm.
-func _anh_mon(id: String) -> Texture2D:
+func _dish_icon(id: String) -> Texture2D:
 	var dd := DanhMuc.duong_dan_anh(id)
 	if not ResourceLoader.exists(dd):
 		push_warning("Bong bóng đơn: thiếu ảnh %s" % dd)
@@ -779,62 +779,62 @@ func _anh_mon(id: String) -> Texture2D:
 
 ## Hết kiên nhẫn: cáu, bỏ đơn, ĐỢI DIỄN XONG rồi mới đi ra cửa.
 ##
-## LỖI ĐÃ SỬA: bản trước gọi `cau()` rồi gọi `di_toi()` ngay dòng sau, nên
+## LỖI ĐÃ SỬA: bản trước gọi `beg()` rồi gọi `go_to()` ngay dòng sau, nên
 ## animation "angry" bị "walk" đè lên trong CÙNG một khung hình — người chơi
 ## không bao giờ thấy khách cáu. Hỏng lặng lẽ: không có lỗi nào báo, chỉ là
 ## một phản hồi quan trọng biến mất.
 ##
-## Chỗ chờ đặt Ở ĐÂY chứ không trong khach.gd, đúng theo phân vai đã chốt:
-## khach.gd chỉ biết ĐI và DIỄN, còn "cáu bao lâu rồi mới bỏ đi" là LUẬT nhà
-## hàng. Bỏ luật vào khach.gd thì sau này muốn màn khó cho khách bỏ đi nhanh
+## Chỗ chờ đặt Ở ĐÂY chứ không trong customer.gd, đúng theo phân vai đã chốt:
+## customer.gd chỉ biết ĐI và DIỄN, còn "cáu bao lâu rồi mới bỏ đi" là LUẬT nhà
+## hàng. Bỏ luật vào customer.gd thì sau này muốn màn khó cho khách bỏ đi nhanh
 ## hơn lại phải sửa cả hai file.
 ##
 ## Hàm thành coroutine (có await) nhưng bên gọi trong _process KHÔNG await:
 ## nó chạy tới chỗ await rồi trả quyền về ngay, nên vòng đếm kiên nhẫn không
 ## bị khựng lại 2 giây. Đơn đã bị xoá khỏi `_don` TRƯỚC khi chờ, nên trong lúc
 ## chờ không có nguy cơ hàm này bị gọi lần hai cho cùng một người.
-func _bo_di_gian(don: DonHang) -> void:
-	var khach: Node = don.khach
-	_don.erase(khach)
-	so_khach_bo_di += 1
-	AmThanh.play_sfx("khach_bo_di")
-	don_ket_thuc.emit(don, "bo_di")
-	if not is_instance_valid(khach):
+func _leave_angry(don: Order) -> void:
+	var customer: Node = don.customer
+	_don.erase(customer)
+	customers_lost += 1
+	AmThanh.play_sfx("customer_left")
+	order_finished.emit(don, "bo_di")
+	if not is_instance_valid(customer):
 		return
 
 	# Nhả ô hàng đợi NGAY, đừng đợi tới lúc ra tới cửa.
 	#
 	# Không phải để hàng nhích nhanh hơn cho đẹp, mà để chặn một lỗi thật:
-	# người vừa bỏ cuộc vẫn là _o_hang[0], nên hễ có bàn trống là _thu_xep_ban
+	# người vừa bỏ cuộc vẫn là _in_queue[0], nên hễ có bàn trống là _try_seat
 	# lại gọi chính họ vào bàn — một người đã cáu bỏ đi bỗng quay lại ngồi
 	# xuống và gọi món mới. Dòng meta này chỉ có ở người đang xếp hàng, nên
 	# khách đang ngồi bàn không bị đụng tới.
-	var o: int = int(khach.get_meta("o_hang", -1))
-	if o >= 0 and o < _o_hang.size() and _o_hang[o] == khach:
-		_o_hang[o] = null
-		khach.remove_meta("o_hang")
-		_nhich_hang()
+	var o: int = int(customer.get_meta("in_queue", -1))
+	if o >= 0 and o < _in_queue.size() and _in_queue[o] == customer:
+		_in_queue[o] = null
+		customer.remove_meta("in_queue")
+		_shift_queue()
 
-	khach.an_don()
-	khach.cau()
-	await get_tree().create_timer(giay_cau).timeout
+	customer.hide_order()
+	customer.beg()
+	await get_tree().create_timer(beg_seconds).timeout
 
 	# Kiểm tra lại sau khi chờ: 2 giây là cả một quãng đời trong game — đổi
 	# màn, thoát ra menu hay dọn khách bằng tay đều có thể đã xoá node này.
 	# Gọi vào node đã giải phóng là lỗi làm sập game.
-	if not is_instance_valid(khach) or not khach.is_inside_tree():
+	if not is_instance_valid(customer) or not customer.is_inside_tree():
 		return
-	if _cua != null:
-		khach.di_toi(_cua.global_position, "ve")
+	if _door != null:
+		customer.go_to(_door.global_position, "ve")
 
 
 ## Số tiền bay lên ở chỗ vừa phục vụ xong.
 ##
 ## Đặt trong không gian 3D chứ không ở góc HUD: phần thưởng phải hiện ra ĐÚNG
 ## CHỖ vừa xảy ra việc tốt, nếu không người chơi phải tự nối "tôi vừa làm gì"
-## với "con số ở góc màn hình vừa nhảy". Ở góc còn có ví tiền nảy lên một cái
+## với "patience_left số ở góc màn hình vừa nhảy". Ở góc còn có ví tiền nảy lên một cái
 ## nữa — hai phản hồi, một ngay tại chỗ, một ở nơi lưu tổng.
-func _tien_bay(cho: Vector3, so: int, hoan_hao: bool) -> void:
+func _money_popup(cho: Vector3, so: int, is_perfect: bool) -> void:
 	if _map == null:
 		return
 	var goc := Node3D.new()
@@ -842,9 +842,9 @@ func _tien_bay(cho: Vector3, so: int, hoan_hao: bool) -> void:
 	_map.add_child(goc)
 
 	var icon: Sprite3D = null
-	if ResourceLoader.exists(ANH_TIEN):
+	if ResourceLoader.exists(COIN_ICON):
 		icon = Sprite3D.new()
-		icon.texture = load(ANH_TIEN)
+		icon.texture = load(COIN_ICON)
 		icon.pixel_size = 0.0022
 		icon.billboard = BaseMaterial3D.BILLBOARD_ENABLED
 		icon.no_depth_test = true
@@ -858,12 +858,12 @@ func _tien_bay(cho: Vector3, so: int, hoan_hao: bool) -> void:
 	chu.billboard = BaseMaterial3D.BILLBOARD_ENABLED
 	chu.no_depth_test = true
 	chu.outline_size = 28
-	chu.modulate = Color("ffd76a") if hoan_hao else Color("d8f0c8")
+	chu.modulate = Color("ffd76a") if is_perfect else Color("d8f0c8")
 	chu.position.x = 0.22
 	goc.add_child(chu)
 
 	# Bay lên 0,9 đơn vị rồi mờ dần. Mờ CHẬM HƠN lúc bay: biến mất cùng lúc
-	# với lúc dừng thì con số như bị cắt ngang, còn mờ nốt ở đỉnh thì mắt kịp
+	# với lúc dừng thì patience_left số như bị cắt ngang, còn mờ nốt ở đỉnh thì mắt kịp
 	# đọc xong rồi mới mất.
 	var tw := create_tween().set_parallel(true)
 	tw.tween_property(goc, "position:y", goc.position.y + 0.9, 1.2) \
@@ -877,13 +877,13 @@ func _tien_bay(cho: Vector3, so: int, hoan_hao: bool) -> void:
 ## Đóng cửa: ngừng sinh khách và ngừng đếm kiên nhẫn.
 ##
 ## Gọi lúc hết giờ, TRƯỚC khi hiện bảng kết quả. Không có bước này thì trong
-## lúc người chơi đang đọc bảng, đồng hồ kiên nhẫn vẫn chạy ngầm và con số
+## lúc người chơi đang đọc bảng, đồng hồ kiên nhẫn vẫn chạy ngầm và patience_left số
 ## "khách bỏ đi" trên bảng cứ tăng lên trước mắt họ.
 ##
 ## Không đụng tới người khách đang có mặt: họ cứ đứng đó cho tới khi đổi màn.
 ## Xoá sạch thì phía sau tấm bảng bỗng thành một cái quán trống trơn.
-func dong_cua() -> void:
-	tu_sinh = false
-	tru_kien_nhan = false
+func close_shop() -> void:
+	auto_spawn = false
+	drain_patience = false
 	for don in _don.values():
-		don.chay = false
+		don.draining = false

@@ -9,7 +9,7 @@ extends RefCounted
 ## không qua bộ nhớ đệm nào cả — luôn đúng, kể cả ở lần chạy đầu tiên.
 ##
 ## Vì sao là một lớp riêng chứ không phải vài `set_meta()` gắn lên người khách:
-## cái vé trên HUD và luật trong quan_ly_khach.gd phải nhìn thấy CÙNG MỘT con
+## cái vé trên HUD và luật trong customer_manager.gd phải nhìn thấy CÙNG MỘT patience_left
 ## số kiên nhẫn. Nếu mỗi bên giữ một bản sao thì sớm muộn thanh trên màn hình
 ## và luật tính điểm lệch nhau, mà lệch kiểu đó không báo lỗi — chỉ làm người
 ## chơi thấy "rõ ràng còn thanh mà khách vẫn bỏ đi".
@@ -30,27 +30,27 @@ const DanhMuc := preload("res://scripts/tuong_tac/danh_muc.gd")
 ## nhẫn = 2,5 × thời gian làm, nên còn trên một nửa nghĩa là người chơi xong
 ## trong khoảng 1,25 lần thời gian tối ưu. Đủ chặt để phải cố, đủ rộng để
 ## không cần chơi hoàn hảo.
-const NGUONG_HOAN_HAO := 0.5
+const PERFECT_THRESHOLD := 0.5
 
-var khach: Node
-var ban: Node
-var mon: String = ""
-var gia: int = 0
+var customer: Node
+var table: Node
+var dish: String = ""
+var price: int = 0
 
-var toi_da: float = 0.0     ## kiên nhẫn ban đầu của GIAI ĐOẠN hiện tại, giây
-var con: float = 0.0        ## kiên nhẫn còn lại, giây
+var patience_max: float = 0.0     ## kiên nhẫn table đầu của GIAI ĐOẠN hiện tại, giây
+var patience_left: float = 0.0        ## kiên nhẫn còn lại, giây
 
 ## Nhân vào ngân sách kiên nhẫn của CẢ HAI giai đoạn. 1,0 = không đổi.
 ##
 ## Đây là chỗ kĩ năng "Kiên nhẫn là một đức tính" của Kita cắm vào (1,30).
-## quan_ly_khach gán giá trị này ngay sau khi tạo đơn, TRƯỚC cho_ban().
+## quan_ly_khach gán giá trị này ngay sau khi tạo đơn, TRƯỚC wait_in_queue().
 ##
-## Vì sao để ở đơn chứ không nhân sẵn vào hai con số gốc bên quan_ly_khach:
-## ngân sách lúc ngồi bàn tính từ DanhMuc.kien_nhan(mon), tức nó được tính
+## Vì sao để ở đơn chứ không nhân sẵn vào hai patience_left số gốc bên quan_ly_khach:
+## ngân sách lúc ngồi bàn tính từ DanhMuc.kien_nhan(dish), tức nó được tính
 ## LẠI ở thời điểm khách ngồi xuống chứ không phải lúc tạo đơn. Nhân sẵn ở
 ## ngoài thì phải nhớ nhân ở hai chỗ, và chỗ thứ hai rất dễ quên vì nó nằm
-## trong vao_ban() của file này.
-var he_so_kien_nhan: float = 1.0
+## trong sit_at_table() của file này.
+var patience_factor: float = 1.0
 
 ## Đang ở giai đoạn nào. true = đứng xếp hàng, false = đã ngồi vào bàn.
 ##
@@ -59,18 +59,18 @@ var he_so_kien_nhan: float = 1.0
 ## đầu khách, lúc ngồi bàn thì nằm trên tấm vé ở HUD. Hai giai đoạn khác nhau,
 ## hai chỗ nhìn khác nhau — người chơi phân biệt được ngay "đang mất khách ở
 ## cửa" hay "đang mất khách ở bàn".
-var o_hang: bool = true
+var in_queue: bool = true
 
 ## Có trừ kiên nhẫn theo thời gian không.
 ##
 ## Màn hướng dẫn tắt cờ này: thanh vẫn hiện đầy đủ để người chơi làm quen với
 ## nó, nhưng không bao giờ cạn. Dạy cách đọc một thứ trước, rồi mới cho nó
 ## gây áp lực — bắt học và chịu phạt cùng lúc thì người mới bỏ ngay.
-var chay: bool = true
+var draining: bool = true
 
 ## Tiền đã chốt lúc GIAO, gồm cả thưởng hoàn hảo. Trả vào ví lúc khách ăn xong.
-var tien_tra: int = 0
-var da_hoan_hao: bool = false
+var payout: int = 0
+var was_perfect: bool = false
 
 
 ## Đơn sinh ra lúc khách vào hàng đợi, khi CHƯA biết sẽ ngồi bàn nào.
@@ -79,21 +79,21 @@ var da_hoan_hao: bool = false
 ## còn chưa có bàn nào cả. Gắn vào bàn thì phải đợi tới khi ngồi mới tạo được
 ## đơn, mà như vậy thì không hiện được món trên đầu người đang xếp hàng.
 func _init(nguoi: Node, id_mon: String) -> void:
-	khach = nguoi
-	mon = id_mon
-	gia = DanhMuc.gia(id_mon)
+	customer = nguoi
+	dish = id_mon
+	price = DanhMuc.gia(id_mon)
 
 
 ## Bắt đầu giai đoạn CHỜ BÀN với ngân sách kiên nhẫn cho trước.
 ##
 ## Ngân sách này CỐ ĐỊNH, không suy từ món như lúc ngồi bàn. Lý do: đứng xếp
 ## hàng thì khách chưa được phục vụ gì cả, nên thời gian chờ dài ngắn theo món
-## là thứ người chơi không đoán được và cũng không tác động được. Một con số
+## là thứ người chơi không đoán được và cũng không tác động được. Một patience_left số
 ## cố định thì thành một luật học một lần là thuộc.
-func cho_ban(giay: float) -> void:
-	o_hang = true
-	toi_da = giay * he_so_kien_nhan
-	con = toi_da
+func wait_in_queue(giay: float) -> void:
+	in_queue = true
+	patience_max = giay * patience_factor
+	patience_left = patience_max
 
 
 ## Ngồi được vào bàn: NẠP ĐẦY LẠI kiên nhẫn, lần này tính theo món.
@@ -102,39 +102,39 @@ func cho_ban(giay: float) -> void:
 ## thủ phạm khác nhau: hết bàn trống là lỗi của cái QUÁN, còn nấu chậm mới là
 ## lỗi người chơi. Trừ tiếp thì một lúc đông khách bị phạt hai lần, và tệ hơn
 ## là thành vòng xoáy — càng đông càng mất khách, càng mất càng đông.
-func vao_ban(cai_ban: Node) -> void:
-	ban = cai_ban
-	o_hang = false
-	toi_da = DanhMuc.kien_nhan(mon) * he_so_kien_nhan
-	con = toi_da
+func sit_at_table(cai_ban: Node) -> void:
+	table = cai_ban
+	in_queue = false
+	patience_max = DanhMuc.kien_nhan(dish) * patience_factor
+	patience_left = patience_max
 
 
 ## Trừ thời gian. Trả về true đúng MỘT lần, ở khoảnh khắc kiên nhẫn vừa cạn.
-func dem(delta: float) -> bool:
-	if not chay or con <= 0.0:
+func tick(delta: float) -> bool:
+	if not draining or patience_left <= 0.0:
 		return false
-	con = maxf(0.0, con - delta)
-	return con <= 0.0
+	patience_left = maxf(0.0, patience_left - delta)
+	return patience_left <= 0.0
 
 
 ## Kiên nhẫn còn lại, quy về 0…1 để vẽ thanh.
-func ti_le() -> float:
-	if toi_da <= 0.0:
+func patience_ratio() -> float:
+	if patience_max <= 0.0:
 		return 0.0
-	return clampf(con / toi_da, 0.0, 1.0)
+	return clampf(patience_left / patience_max, 0.0, 1.0)
 
 
-func hoan_hao() -> bool:
-	return ti_le() > NGUONG_HOAN_HAO
+func is_perfect() -> bool:
+	return patience_ratio() > PERFECT_THRESHOLD
 
 
-func so_ban() -> int:
-	return int(ban.so_ban) if ban != null and "so_ban" in ban else 0
+func table_number() -> int:
+	return int(table.table_number) if table != null and "table_number" in table else 0
 
 
-func ten_mon() -> String:
-	return DanhMuc.ten(mon)
+func dish_name() -> String:
+	return DanhMuc.ten(dish)
 
 
-func duong_dan_anh() -> String:
-	return DanhMuc.duong_dan_anh(mon)
+func icon_path() -> String:
+	return DanhMuc.duong_dan_anh(dish)

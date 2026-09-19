@@ -3,7 +3,7 @@ extends CharacterBody3D
 ## Một người khách. CHỈ biết đi và diễn: đi tới một điểm, đứng chờ, ăn, rồi về.
 ##
 ## Không biết đơn hàng, không biết tiền, không biết bàn nào còn trống — tất cả
-## những thứ đó do quan_ly_khach.gd quyết rồi RA LỆNH xuống đây. Lý do tách:
+## những thứ đó do customer_manager.gd quyết rồi RA LỆNH xuống đây. Lý do tách:
 ## luật nhà hàng (ai ngồi bàn nào, đơn nào khớp món nào) sẽ còn đổi rất nhiều,
 ## còn "đi từ A tới B rồi phát tín hiệu đã tới" thì gần như không đổi. Trộn hai
 ## thứ vào một file thì mỗi lần sửa luật lại phải đọc qua cả phần điều khiển.
@@ -12,16 +12,16 @@ extends CharacterBody3D
 ## một lỗi cú pháp ở đây không kéo sập cả màn chơi. class_name phân giải lúc
 ## biên dịch nên sẽ phá mất lớp bảo vệ đó.
 
-## Đi tới nơi rồi. `viec` là chuỗi do người ra lệnh gửi kèm lúc gọi di_toi(),
+## Đi tới nơi rồi. `viec` là chuỗi do người ra lệnh gửi kèm lúc gọi go_to(),
 ## trả lại nguyên vẹn để bên đó biết đây là chuyến nào — nhờ vậy máy trạng
 ## thái NẰM Ở quản lý, còn ở đây chỉ có "đang đi" và "đứng yên".
-signal da_toi_noi(khach: Node, viec: String)
+signal arrived(customer: Node, viec: String)
 ## Ăn xong.
-signal da_an_xong(khach: Node)
+signal ate(customer: Node)
 
 ## Cỡ người khách. 1,0 = đúng cỡ model gốc (cao 1,52 đơn vị).
 ##
-## ĐÂY LÀ Ô DUY NHẤT CẦN CHỈNH. Mở scenes/nha_hang/khach.tscn, chọn node gốc
+## ĐÂY LÀ Ô DUY NHẤT CẦN CHỈNH. Mở scenes/nha_hang/customer.tscn, chọn node gốc
 ## "Khach", sửa số này trong Inspector — model, hộp va chạm, bán kính agent và
 ## độ cao bong bóng đều đổi theo cùng lúc.
 ##
@@ -36,40 +36,40 @@ signal da_an_xong(khach: Node)
 ##
 ## Nhân vật người chơi (model chibi) cao khoảng 1,94 sau khi phóng 1,6; để
 ## khách cao ngang thì tỉ lệ khoảng 1,3.
-@export var ti_le: float = 1.3:
+@export var patience_ratio: float = 1.3:
 	set(v):
-		ti_le = maxf(0.1, v)
-		_ap_ti_le()
+		patience_ratio = maxf(0.1, v)
+		_apply_scale()
 
-## Cỡ gốc, dùng làm mốc nhân. Phải trùng số trong khach.tscn.
-const BAN_KINH_GOC := 0.4
-const CAO_GOC := 1.5
-const BAN_KINH_AGENT_GOC := 0.45
-const CAO_BONG_GOC := 2.05
+## Cỡ gốc, dùng làm mốc nhân. Phải trùng số trong customer.tscn.
+const BASE_RADIUS := 0.4
+const BASE_HEIGHT := 1.5
+const BASE_AGENT_RADIUS := 0.45
+const BASE_BUBBLE_HEIGHT := 2.05
 
-const TOC_DO := 2.6
+const SPEED := 2.6
 ## Xoay người mượt thay vì bẻ lái tức thì. Đơn vị: radian mỗi giây.
-const TOC_XOAY := 8.0
-const TRONG_LUC := 24.0
+const TURN_SPEED := 8.0
+const GRAVITY := 24.0
 
 @onready var _agent: NavigationAgent3D = $Agent
 @onready var _hoat_hinh: AnimationPlayer = $Model/AnimationPlayer
 @onready var _bong: Node3D = $Bong
 
-var _viec := ""
-var _dang_di := false
+var _task := ""
+var _moving := false
 ## Hướng quay đích khi đứng yên (ví dụ quay mặt vào bàn). Vector3.ZERO = kệ.
-var _huong_dung := Vector3.ZERO
-var _hoat_hinh_hien := ""
+var _face_dir := Vector3.ZERO
+var _anim_now := ""
 
 
 func _ready() -> void:
-	_ap_ti_le()
+	_apply_scale()
 	if Engine.is_editor_hint():
 		return
 	_bong.visible = false
-	_dung_bong()
-	_dat_hoat_hinh("idle")
+	_build_bubble()
+	_set_anim("idle")
 
 
 ## Áp tỉ lệ cho model, hộp va chạm, agent và bong bóng.
@@ -77,27 +77,27 @@ func _ready() -> void:
 ## is_node_ready() chặn lần gọi đầu: setter của @export chạy NGAY LÚC NẠP
 ## SCENE, sớm hơn @onready, nên lúc đó _agent và _bong còn là null. _ready()
 ## gọi lại một lần nữa nên không mất giá trị nào.
-func _ap_ti_le() -> void:
+func _apply_scale() -> void:
 	if not is_node_ready():
 		return
 	var model := get_node_or_null("Model") as Node3D
 	if model != null:
-		model.scale = Vector3.ONE * ti_le
+		model.scale = Vector3.ONE * patience_ratio
 
 	var col := get_node_or_null("Col") as CollisionShape3D
 	if col != null and col.shape is CapsuleShape3D:
 		var hinh := col.shape as CapsuleShape3D
-		hinh.radius = BAN_KINH_GOC * ti_le
-		hinh.height = CAO_GOC * ti_le
+		hinh.radius = BASE_RADIUS * patience_ratio
+		hinh.height = BASE_HEIGHT * patience_ratio
 		# Capsule lấy gốc ở TÂM, nên phải nâng lên nửa chiều cao thì chân mới
 		# chạm sàn. Quên bước này là nhân vật lún nửa người xuống đất.
-		col.position.y = CAO_GOC * 0.5 * ti_le
+		col.position.y = BASE_HEIGHT * 0.5 * patience_ratio
 
 	if _agent != null:
-		_agent.radius = BAN_KINH_AGENT_GOC * ti_le
-		_agent.height = CAO_GOC * ti_le
+		_agent.radius = BASE_AGENT_RADIUS * patience_ratio
+		_agent.height = BASE_HEIGHT * patience_ratio
 	if _bong != null:
-		_bong.position.y = CAO_BONG_GOC * ti_le
+		_bong.position.y = BASE_BUBBLE_HEIGHT * patience_ratio
 
 
 ## Ra lệnh đi tới một vị trí.
@@ -107,13 +107,13 @@ func _ap_ti_le() -> void:
 ## x=31,5 trong khi tường ở x=32) nên rơi ra NGOÀI vùng đi được sau khi navmesh
 ## co vào theo bán kính agent. Giao thẳng điểm ngoài mesh thì agent tìm đường
 ## tới chỗ gần nhất rồi loay hoay không bao giờ báo "đã tới".
-func di_toi(dich: Vector3, viec: String, huong_cuoi: Vector3 = Vector3.ZERO) -> void:
-	_viec = viec
-	_huong_dung = huong_cuoi
-	dich = nan_ve_navmesh(get_world_3d().navigation_map, dich)
+func go_to(dich: Vector3, viec: String, huong_cuoi: Vector3 = Vector3.ZERO) -> void:
+	_task = viec
+	_face_dir = huong_cuoi
+	dich = snap_to_navmesh(get_world_3d().navigation_map, dich)
 	_agent.target_position = dich
-	_dang_di = true
-	_dat_hoat_hinh("walk")
+	_moving = true
+	_set_anim("walk")
 
 
 ## Đứng lại tại chỗ, quay mặt về một hướng nếu có.
@@ -127,7 +127,7 @@ func di_toi(dich: Vector3, viec: String, huong_cuoi: Vector3 = Vector3.ZERO) -> 
 ##     vì thế nhận đích là gốc toạ độ, đứng chết ngay cửa, và hai người sinh
 ##     sau chồng lên rồi kẹt cả đám. Nên phải coi (0,0,0) là "hỏng" và giữ
 ##     nguyên điểm gốc — trừ khi bản thân điểm cần nắn vốn đã là gốc toạ độ.
-static func nan_ve_navmesh(ban_do: RID, diem: Vector3) -> Vector3:
+static func snap_to_navmesh(ban_do: RID, diem: Vector3) -> Vector3:
 	if not ban_do.is_valid() or NavigationServer3D.map_get_iteration_id(ban_do) == 0:
 		return diem
 	var gan := NavigationServer3D.map_get_closest_point(ban_do, diem)
@@ -147,39 +147,39 @@ static func nan_ve_navmesh(ban_do: RID, diem: Vector3) -> Vector3:
 
 ## Khai báo mặt navmesh cao hơn chân nhân vật bao nhiêu.
 ##
-## NavigationAgent3D trừ con số này khỏi trục Y ở CẢ điểm đường trả về LẪN phép
+## NavigationAgent3D trừ patience_left số này khỏi trục Y ở CẢ điểm đường trả về LẪN phép
 ## đo "đã tới điểm giữa chưa". Không khai thì agent thấy mỗi điểm đường luôn
 ## cách nó ít nhất 0,5 theo trục đứng, không bao giờ nhích sang điểm kế tiếp,
 ## và người khách đi mãi về phía một cái mốc ngay dưới chân mình.
-func dat_lech_cao(cao: float) -> void:
+func set_height_offset(cao: float) -> void:
 	_agent.path_height_offset = cao
 
 
-func dung_lai(huong_cuoi: Vector3 = Vector3.ZERO) -> void:
-	_dang_di = false
-	_huong_dung = huong_cuoi
+func stop_moving(huong_cuoi: Vector3 = Vector3.ZERO) -> void:
+	_moving = false
+	_face_dir = huong_cuoi
 	velocity.x = 0.0
 	velocity.z = 0.0
-	_dat_hoat_hinh("idle")
+	_set_anim("idle")
 
 
-func an(giay: float) -> void:
-	_dang_di = false
+func eat(giay: float) -> void:
+	_moving = false
 	velocity = Vector3(0.0, velocity.y, 0.0)
-	_dat_hoat_hinh("eat")
+	_set_anim("eat")
 	await get_tree().create_timer(giay).timeout
 	if not is_inside_tree():
 		return
-	_dat_hoat_hinh("idle")
-	da_an_xong.emit(self)
+	_set_anim("idle")
+	ate.emit(self)
 
 
-func cau() -> void:
-	_dat_hoat_hinh("angry")
+func beg() -> void:
+	_set_anim("angry")
 
 
 ## Bong bóng trên đầu (đơn hàng). Nội dung do hệ đơn hàng đổ vào sau.
-func bong_bong() -> Node3D:
+func bubble() -> Node3D:
 	return _bong
 
 
@@ -196,8 +196,8 @@ func bong_bong() -> Node3D:
 ## Rẻ hơn vẻ ngoài của nó: ảnh chỉ 640 điểm ảnh, và chỉ vẽ lại khi số cột đã
 ## tô THAY ĐỔI — tức nhiều nhất 64 lần cho trọn một lần đếm ngược, chứ không
 ## phải mỗi khung hình.
-const RONG_THANH := 64
-const CAO_THANH := 10
+const BAR_WIDTH := 64
+const BAR_HEIGHT := 10
 
 ## Chiều cao mong muốn của ảnh món trong không gian 3D, đơn vị Godot.
 ##
@@ -205,92 +205,92 @@ const CAO_THANH := 10
 ## 512 px. Để nguyên pixel_size 0,004 như trong scene thì bong bóng cao hơn 2
 ## đơn vị — to hơn cả người khách. Nên phải suy pixel_size ngược từ chiều cao
 ## mong muốn, và như vậy ảnh to nhỏ khác nhau vẫn hiện cùng một cỡ.
-const CAO_ANH_MON := 0.55
+const DISH_ICON_HEIGHT := 0.55
 
-const MAU_NEN_THANH := Color(0.10, 0.08, 0.07, 0.85)
-const MAU_XANH := Color("4f9d5d")
-const MAU_VANG := Color("d9a520")
-const MAU_DO := Color("c4433a")
+const BAR_BG := Color(0.10, 0.08, 0.07, 0.85)
+const COLOR_GREEN := Color("4f9d5d")
+const COLOR_YELLOW := Color("d9a520")
+const COLOR_RED := Color("c4433a")
 
-var _anh_mon: Sprite3D
-var _thanh: Sprite3D
-var _hinh_thanh: Image
-var _tex_thanh: ImageTexture
-var _cot_cuoi := -1
+var _dish_icon: Sprite3D
+var _bar: Sprite3D
+var _bar_sprite: Image
+var _bar_tex: ImageTexture
+var _last_col := -1
 
 
-func _dung_bong() -> void:
+func _build_bubble() -> void:
 	if _bong == null:
 		return
-	_anh_mon = _bong.get_node_or_null("Anh") as Sprite3D
+	_dish_icon = _bong.get_node_or_null("Anh") as Sprite3D
 
-	_thanh = Sprite3D.new()
-	_thanh.name = "ThanhCho"
-	_thanh.billboard = BaseMaterial3D.BILLBOARD_ENABLED
-	_thanh.shaded = false
-	_thanh.no_depth_test = true
+	_bar = Sprite3D.new()
+	_bar.name = "ThanhCho"
+	_bar.billboard = BaseMaterial3D.BILLBOARD_ENABLED
+	_bar.shaded = false
+	_bar.no_depth_test = true
 	# Lọc điểm ảnh KIỂU GẦN NHẤT: ảnh chỉ 64 px mà kéo rộng ra, lọc mượt sẽ
 	# làm mép thanh nhoè thành một vệt chuyển màu, đọc không ra mốc.
-	_thanh.texture_filter = BaseMaterial3D.TEXTURE_FILTER_NEAREST
-	_thanh.pixel_size = 0.6 / float(RONG_THANH)
-	_thanh.position.y = -CAO_ANH_MON * 0.5 - 0.08
-	_bong.add_child(_thanh)
+	_bar.texture_filter = BaseMaterial3D.TEXTURE_FILTER_NEAREST
+	_bar.pixel_size = 0.6 / float(BAR_WIDTH)
+	_bar.position.y = -DISH_ICON_HEIGHT * 0.5 - 0.08
+	_bong.add_child(_bar)
 
-	_hinh_thanh = Image.create(RONG_THANH, CAO_THANH, false, Image.FORMAT_RGBA8)
-	_tex_thanh = ImageTexture.create_from_image(_hinh_thanh)
-	_thanh.texture = _tex_thanh
-	_ve_thanh(1.0)
+	_bar_sprite = Image.create(BAR_WIDTH, BAR_HEIGHT, false, Image.FORMAT_RGBA8)
+	_bar_tex = ImageTexture.create_from_image(_bar_sprite)
+	_bar.texture = _bar_tex
+	_draw_bar(1.0)
 
 
 ## Hiện bong bóng với ảnh món. Gọi lúc khách vào hàng đợi.
-func hien_don(anh: Texture2D) -> void:
+func show_order(anh: Texture2D) -> void:
 	if _bong == null:
 		return
-	if _anh_mon != null and anh != null:
-		_anh_mon.texture = anh
+	if _dish_icon != null and anh != null:
+		_dish_icon.texture = anh
 		var cao := maxi(anh.get_height(), 1)
-		_anh_mon.pixel_size = CAO_ANH_MON / float(cao)
-	_cot_cuoi = -1
-	_ve_thanh(1.0)
+		_dish_icon.pixel_size = DISH_ICON_HEIGHT / float(cao)
+	_last_col = -1
+	_draw_bar(1.0)
 	_bong.visible = true
 
 
-func an_don() -> void:
+func hide_order() -> void:
 	if _bong != null:
 		_bong.visible = false
 
 
 ## Cập nhật thanh chờ. `ti` là phần kiên nhẫn còn lại, 0…1.
 ##
-## Tham số tên `ti` chứ không phải `ti_le`: lớp này đã có @export `ti_le` (cỡ
+## Tham số tên `ti` chứ không phải `patience_ratio`: lớp này đã có @export `patience_ratio` (cỡ
 ## người khách), trùng tên thì tham số che mất biến thành viên — Godot cảnh
 ## báo, và kiểu nhầm đó rất khó thấy khi đọc lại.
-func dat_thanh_cho(ti: float) -> void:
+func set_patience_bar(ti: float) -> void:
 	if _bong == null or not _bong.visible:
 		return
-	_ve_thanh(ti)
+	_draw_bar(ti)
 
 
-func _ve_thanh(ti: float) -> void:
-	if _hinh_thanh == null:
+func _draw_bar(ti: float) -> void:
+	if _bar_sprite == null:
 		return
-	var cot := int(round(clampf(ti, 0.0, 1.0) * RONG_THANH))
-	if cot == _cot_cuoi:
+	var cot := int(round(clampf(ti, 0.0, 1.0) * BAR_WIDTH))
+	if cot == _last_col:
 		return
-	_cot_cuoi = cot
+	_last_col = cot
 
 	# Ba bậc màu theo ngưỡng, khớp đúng ba bậc trên tấm vé ở HUD. Cùng một
 	# thông tin thì phải cùng một mã màu, dù vẽ ở hai chỗ khác nhau.
-	var mau := MAU_XANH
+	var mau := COLOR_GREEN
 	if ti <= 0.2:
-		mau = MAU_DO
+		mau = COLOR_RED
 	elif ti <= 0.5:
-		mau = MAU_VANG
+		mau = COLOR_YELLOW
 
-	_hinh_thanh.fill(MAU_NEN_THANH)
+	_bar_sprite.fill(BAR_BG)
 	if cot > 0:
-		_hinh_thanh.fill_rect(Rect2i(0, 0, cot, CAO_THANH), mau)
-	_tex_thanh.update(_hinh_thanh)
+		_bar_sprite.fill_rect(Rect2i(0, 0, cot, BAR_HEIGHT), mau)
+	_bar_tex.update(_bar_sprite)
 
 
 func _physics_process(delta: float) -> void:
@@ -299,27 +299,27 @@ func _physics_process(delta: float) -> void:
 	# Giữ dính sàn. Sàn phẳng tuyệt đối nhưng vẫn cần trọng lực: nhân vật được
 	# sinh ra hơi cao hơn mặt sàn, không có trọng lực thì lơ lửng mãi.
 	if not is_on_floor():
-		velocity.y -= TRONG_LUC * delta
+		velocity.y -= GRAVITY * delta
 	else:
 		velocity.y = 0.0
 
-	if _dang_di:
+	if _moving:
 		if _agent.is_navigation_finished():
-			_dang_di = false
+			_moving = false
 			velocity.x = 0.0
 			velocity.z = 0.0
-			_dat_hoat_hinh("idle")
-			da_toi_noi.emit(self, _viec)
+			_set_anim("idle")
+			arrived.emit(self, _task)
 		else:
 			var toi := _agent.get_next_path_position()
 			var huong := (toi - global_position)
 			huong.y = 0.0
 			huong = huong.normalized()
-			velocity.x = huong.x * TOC_DO
-			velocity.z = huong.z * TOC_DO
-			_xoay_ve(huong, delta)
-	elif _huong_dung != Vector3.ZERO:
-		_xoay_ve(_huong_dung, delta)
+			velocity.x = huong.x * SPEED
+			velocity.z = huong.z * SPEED
+			_turn_towards(huong, delta)
+	elif _face_dir != Vector3.ZERO:
+		_turn_towards(_face_dir, delta)
 
 	move_and_slide()
 
@@ -329,12 +329,12 @@ func _physics_process(delta: float) -> void:
 ## Xoay CẢ CharacterBody3D chứ không xoay riêng node Model như bên nhân vật
 ## người chơi: khách không có camera gắn vào nên không có lý do gì phải tách
 ## thân và model, mà xoay thẳng thân thì hướng nhìn và hướng va chạm luôn khớp.
-func _xoay_ve(huong: Vector3, delta: float) -> void:
+func _turn_towards(huong: Vector3, delta: float) -> void:
 	if huong.length_squared() < 0.0001:
 		return
 	# Model nhìn về −Z, đúng quy ước của Godot, nên atan2 lấy thẳng góc.
 	var dich := atan2(huong.x, huong.z)
-	rotation.y = rotate_toward(rotation.y, dich, TOC_XOAY * delta)
+	rotation.y = rotate_toward(rotation.y, dich, TURN_SPEED * delta)
 
 
 ## Đổi animation, bỏ qua nếu đang chạy đúng cái đó.
@@ -342,10 +342,10 @@ func _xoay_ve(huong: Vector3, delta: float) -> void:
 ## Kiểm trùng chứ không gọi play() vô tư: play() cùng tên vẫn khởi động lại
 ## từ đầu, nên gọi mỗi khung hình thì animation đứng mãi ở khung 0 — đúng kiểu
 ## lỗi nhìn như "model bị đơ" mà không có dòng lỗi nào.
-func _dat_hoat_hinh(ten: String) -> void:
-	if _hoat_hinh_hien == ten:
+func _set_anim(ten: String) -> void:
+	if _anim_now == ten:
 		return
 	if _hoat_hinh == null or not _hoat_hinh.has_animation(ten):
 		return
-	_hoat_hinh_hien = ten
+	_anim_now = ten
 	_hoat_hinh.play(ten)

@@ -85,7 +85,7 @@ func build(dh: RefCounted, anh_tien: Texture2D) -> void:
 	img.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 	img.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 	img.size_flags_vertical = Control.SIZE_SHRINK_CENTER
-	var path_ := String(dh.duong_dan_anh())
+	var path_ := String(dh.icon_path())
 	if ResourceLoader.exists(path_):
 		img.texture = load(path_)
 	else:
@@ -100,7 +100,7 @@ func build(dh: RefCounted, anh_tien: Texture2D) -> void:
 	row.add_child(col)
 
 	var lbl_name := Label.new()
-	lbl_name.text = String(dh.ten_mon())
+	lbl_name.text = String(dh.dish_name())
 	lbl_name.add_theme_font_size_override("font_size", 22)
 	lbl_name.add_theme_color_override("font_color", COLOR_TEXT)
 	# Cắt bằng dấu … chứ không xuống dòng: tấm vé cao cố định, cho phép xuống
@@ -123,7 +123,7 @@ func build(dh: RefCounted, anh_tien: Texture2D) -> void:
 
 	var price := Label.new()
 	# `gia` van la ten thuoc tinh cua DonHang (don_hang.gd, lo 5 — chua doi).
-	price.text = str(int(dh.gia))
+	price.text = str(int(dh.price))
 	price.add_theme_font_size_override("font_size", 17)
 	price.add_theme_color_override("font_color", COLOR_DIM)
 	price_row.add_child(price)
@@ -180,7 +180,7 @@ func _process(_delta: float) -> void:
 func _draw_table_no() -> void:
 	if order == null or _lbl_number == null:
 		return
-	var num := int(order.so_ban())
+	var num := int(order.table_number())
 	var chu := NO_TABLE_YET if num <= 0 else str(num)
 	if _lbl_number.text != chu:
 		_lbl_number.text = chu
@@ -202,13 +202,13 @@ func _draw_bar() -> void:
 	if order == null or _bar == null:
 		return
 
-	if bool(order.o_hang):
+	if bool(order.in_queue):
 		_bar.value = 100.0
 		if _fill_style.bg_color != COLOR_WAIT:
 			_fill_style.bg_color = COLOR_WAIT
 		return
 
-	var ratio: float = float(order.ti_le())
+	var ratio: float = float(order.patience_ratio())
 	_bar.value = ratio * 100.0
 	var color := COLOR_GREEN
 	if ratio <= RED_THRESHOLD:

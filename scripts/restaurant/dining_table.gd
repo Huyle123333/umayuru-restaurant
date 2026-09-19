@@ -26,10 +26,10 @@ extends TramTuongTac
 ## Là NGUỒN DUY NHẤT: chữ trên biển do hàm này ghi ra, không gõ tay vào node
 ## Label3D. Gõ tay thì sớm muộn cũng có một bàn mang số khác với biển của nó,
 ## và lỗi đó chỉ lộ ra khi người chơi mang món tới nhầm bàn.
-@export var so_ban: int = 1:
+@export var table_number: int = 1:
 	set(v):
-		so_ban = v
-		_cap_nhat_bien()
+		table_number = v
+		_update_sign()
 
 ## Phát khi người chơi vừa đặt một món lên bàn.
 ##
@@ -42,41 +42,41 @@ extends TramTuongTac
 ## trong chính file này. Đó là chủ ý — cái bàn chỉ khai báo, người phát và
 ## người nghe đều ở ngoài.
 @warning_ignore("unused_signal")
-signal da_nhan_mon(ban: Node, id_mon: String)
+signal dish_delivered(table: Node, id_mon: String)
 
 ## Bật/tắt biển số, dùng khi muốn chụp ảnh map cho báo cáo.
-@export var hien_so := true:
+@export var show_number := true:
 	set(v):
-		hien_so = v
-		_cap_nhat_bien()
+		show_number = v
+		_update_sign()
 
-var _bien: Label3D = null
+var _sign: Label3D = null
 
 
 func _ready() -> void:
-	_cap_nhat_bien()
+	_update_sign()
 	# Tên hiển thị trên HUD bám theo số bàn, không gõ tay trong Inspector —
 	# cùng lý do với biển số: hai chỗ ghi số thì sớm muộn cũng lệch nhau.
 	if not Engine.is_editor_hint():
-		ten_hien_thi = "Bàn %d" % so_ban
+		ten_hien_thi = "Bàn %d" % table_number
 
 
 ## Món đang nằm trên bàn, chuỗi rỗng nếu bàn trống.
-func mon_tren_ban() -> String:
+func dish_on_table() -> String:
 	return String(chua[0]) if not chua.is_empty() else ""
 
 
-func _cap_nhat_bien() -> void:
-	if _bien == null or not is_instance_valid(_bien):
-		_bien = get_node_or_null("So") as Label3D
-	if _bien == null:
+func _update_sign() -> void:
+	if _sign == null or not is_instance_valid(_sign):
+		_sign = get_node_or_null("So") as Label3D
+	if _sign == null:
 		return
-	_bien.text = str(so_ban)
-	_bien.visible = hien_so
+	_sign.text = str(table_number)
+	_sign.visible = show_number
 
 
 ## Số chỗ khách đứng được quanh bàn này.
-func so_cho() -> int:
+func seat_count() -> int:
 	var n := 0
 	for c in get_children():
 		if c is Marker3D and String(c.name).begins_with("ChoDung"):
@@ -90,7 +90,7 @@ func so_cho() -> int:
 ## quay mặt, mà hướng đó đã nằm sẵn trong transform của marker. Trả toạ độ
 ## không thôi thì mỗi chỗ gọi lại phải tự tính hướng quay về phía bàn, và bốn
 ## chỗ tính ra bốn kiểu.
-func cho_dung(i: int) -> Marker3D:
+func seat_marker(i: int) -> Marker3D:
 	var ds: Array[Marker3D] = []
 	for c in get_children():
 		if c is Marker3D and String(c.name).begins_with("ChoDung"):
@@ -105,17 +105,17 @@ func cho_dung(i: int) -> Marker3D:
 static func tim(cay: SceneTree, so: int) -> BanAn:
 	for n in cay.get_nodes_in_group("ban_an"):
 		var b := n as BanAn
-		if b != null and b.so_ban == so:
+		if b != null and b.table_number == so:
 			return b
 	return null
 
 
 ## Danh sách mọi bàn, đã sắp theo số bàn tăng dần.
-static func tat_ca(cay: SceneTree) -> Array[BanAn]:
+static func all_nodes(cay: SceneTree) -> Array[BanAn]:
 	var ds: Array[BanAn] = []
 	for n in cay.get_nodes_in_group("ban_an"):
 		var b := n as BanAn
 		if b != null:
 			ds.append(b)
-	ds.sort_custom(func(a: BanAn, b: BanAn) -> bool: return a.so_ban < b.so_ban)
+	ds.sort_custom(func(a: BanAn, b: BanAn) -> bool: return a.table_number < b.table_number)
 	return ds

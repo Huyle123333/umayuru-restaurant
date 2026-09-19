@@ -600,8 +600,8 @@ func _giao_mon(ban: TramTuongTac) -> void:
 	# CHỖ CẮM: hệ đơn hàng sau này nghe tín hiệu này để đối chiếu món vừa
 	# giao với đơn của bàn, tính tiền và tính "hoàn hảo".
 	AmThanh.play_sfx("giao_mon")
-	if ban.has_signal("da_nhan_mon"):
-		ban.emit_signal("da_nhan_mon", ban, id)
+	if ban.has_signal("dish_delivered"):
+		ban.emit_signal("dish_delivered", ban, id)
 
 
 ## Tay không, bấm E ở bàn: nhấc món đã ráp, hoặc LẤY LẠI nguyên liệu vừa bỏ.

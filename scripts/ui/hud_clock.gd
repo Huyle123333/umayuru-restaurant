@@ -167,8 +167,8 @@ func set_time_left(seconds: float) -> void:
 
 ## Nối vào hệ khách để ví tự cập nhật.
 func listen_to_orders(ql: Node) -> void:
-	if ql != null and ql.has_signal("tien_thay_doi"):
-		ql.tien_thay_doi.connect(_on_money_changed)
+	if ql != null and ql.has_signal("money_changed"):
+		ql.money_changed.connect(_on_money_changed)
 
 
 func _on_money_changed(tong: int, _them: int, _cho: Vector3) -> void:

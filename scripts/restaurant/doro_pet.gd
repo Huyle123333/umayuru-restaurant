@@ -23,7 +23,7 @@ extends "res://scripts/tuong_tac/tram_tuong_tac.gd"
 ##
 ## Lớp đó vốn được nghĩ ra cho đồ ăn rơi dưới đất, và yêu cầu của nó giống hệt
 ## yêu cầu ở đây: bộ chọn mục tiêu PHẢI nhìn thấy (để bấm E được), nhưng nhân
-## vật KHÔNG được bị chặn. Một con thú chạy loăng quăng giữa bếp mà đẩy được
+## vật KHÔNG được bị chặn. Một patience_left thú chạy loăng quăng giữa bếp mà đẩy được
 ## người chơi thì đúng lúc cao điểm nó sẽ chèn người chơi vào góc tường — một
 ## thứ trang trí không bao giờ được phép làm hỏng lượt chơi.
 ##
@@ -33,7 +33,7 @@ extends "res://scripts/tuong_tac/tram_tuong_tac.gd"
 ##
 ## ═════════════════════════════════════════════════ VÌ SAO ĐỨNG YÊN KHI GẦN
 ##
-## Tới gần người chơi thì Doro dừng hẳn. Lý do là thao tác: bấm E cần con trỏ
+## Tới gần người chơi thì Doro dừng hẳn. Lý do là thao tác: bấm E cần patience_left trỏ
 ## nằm trên mục tiêu trong đúng khoảnh khắc bấm, mà một mục tiêu đang bò ngang
 ## thì người chơi phải rượt theo nó. Đứng yên biến việc "cho Doro ăn rác"
 ## từ một pha đuổi bắt thành một cái bấm nút.
@@ -44,7 +44,7 @@ extends "res://scripts/tuong_tac/tram_tuong_tac.gd"
 const MODEL := "res://assets/models/doro.glb"
 
 ## MỌI CON SỐ chỉnh được của Doro nằm ở file riêng — sửa bên đó, không sửa ở
-## đây. Xem `scripts/nha_hang/doro_chinh.gd`.
+## đây. Xem `scripts/restaurant/doro_main.gd`.
 ##
 ## Vì sao tách: chỉnh cho vừa mắt là việc làm đi làm lại nhiều lượt. Một file
 ## chỉ có số thì mở ra thấy ngay, và lịch sử git không lẫn giữa "đổi số cho
@@ -52,17 +52,17 @@ const MODEL := "res://assets/models/doro.glb"
 ##
 ## preload chứ không load: bảng số phải có SẴN lúc biên dịch, và gõ sai tên
 ## file thì lỗi hiện ngay lúc mở project chứ không đợi tới giữa màn chơi.
-const Chinh := preload("res://scripts/nha_hang/doro_chinh.gd")
+const Config := preload("res://scripts/restaurant/doro_main.gd")
 
 var _agent: NavigationAgent3D
 var _hoat_hinh: AnimationPlayer
-var _than: Node3D
-var _nguoi_choi: Node3D
+var _body: Node3D
+var _player: Node3D
 
-var _anim_hien := ""
-var _nghi := 0.0
-var _dang_di := false
-var _cao_san := 0.0
+var _anim_now := ""
+var _rest_left := 0.0
+var _moving := false
+var _floor_y := 0.0
 
 
 ## Dựng Doro. Gọi từ level_base sau khi hệ khách đã nướng xong navmesh.
@@ -72,10 +72,10 @@ var _cao_san := 0.0
 ## nửa đơn vị theo trục đứng, không bao giờ nhích sang điểm kế tiếp, và Doro
 ## đứng rung tại chỗ suốt màn. Đây đúng là cái bẫy đã làm khách hàng đi mãi
 ## về một cái mốc ngay dưới chân mình.
-func chuan_bi(cho_dung: Vector3, lech_cao: float, nguoi_choi: Node3D) -> void:
-	_nguoi_choi = nguoi_choi
-	_cao_san = cho_dung.y
-	global_position = cho_dung
+func setup(seat_marker: Vector3, lech_cao: float, nguoi_choi: Node3D) -> void:
+	_player = nguoi_choi
+	_floor_y = seat_marker.y
+	global_position = seat_marker
 
 	ten_hien_thi = "Doro"
 	loai = "mang_bo_do"
@@ -92,63 +92,63 @@ func chuan_bi(cho_dung: Vector3, lech_cao: float, nguoi_choi: Node3D) -> void:
 	collision_layer = LOP_VAT_PHAM
 	collision_mask = 0
 
-	_dung_than()
-	_dung_va_cham()
-	_dung_agent(lech_cao)
+	_build_body()
+	_build_collision()
+	_build_agent(lech_cao)
 
-	_dat_anim("idle")
-	_nghi = randf_range(Chinh.NGHI_MIN, Chinh.NGHI_MAX)
+	_set_anim("idle")
+	_rest_left = randf_range(Config.REST_MIN, Config.REST_MAX)
 
 	# Nảy nhẹ mỗi lần được tương tác. Nối ở đây chứ không ở nơi gọi: phản ứng
 	# của Doro là việc của Doro.
-	if not da_tuong_tac.is_connected(_khi_duoc_cho):
-		da_tuong_tac.connect(_khi_duoc_cho)
+	if not da_tuong_tac.is_connected(_on_fed):
+		da_tuong_tac.connect(_on_fed)
 
 
 # ------------------------------------------------------------------ dựng ---
 
-func _dung_than() -> void:
+func _build_body() -> void:
 	if not ResourceLoader.exists(MODEL):
 		push_warning("Thiếu model Doro: %s — pet sẽ vô hình." % MODEL)
 		return
 	var goi := load(MODEL) as PackedScene
 	if goi == null:
 		return
-	_than = goi.instantiate() as Node3D
-	_than.name = "Mesh"
-	# Co theo TỈ LỆ ĐO ĐƯỢC chứ không gõ sẵn 0,28: đổi Chinh.CAO là xong,
+	_body = goi.instantiate() as Node3D
+	_body.name = "Mesh"
+	# Co theo TỈ LỆ ĐO ĐƯỢC chứ không gõ sẵn 0,28: đổi Config.HEIGHT là xong,
 	# không phải bấm máy tính.
-	var ti := Chinh.CAO / Chinh.CAO_GOC
-	_than.scale = Vector3(ti, ti, ti)
-	add_child(_than)
-	_hoat_hinh = _than.find_child("AnimationPlayer", true, false) as AnimationPlayer
+	var ti := Config.HEIGHT / Config.BASE_HEIGHT
+	_body.scale = Vector3(ti, ti, ti)
+	add_child(_body)
+	_hoat_hinh = _body.find_child("AnimationPlayer", true, false) as AnimationPlayer
 	if _hoat_hinh == null:
 		push_warning("Model Doro không có AnimationPlayer — pet sẽ đứng đơ.")
 
 
-func _dung_va_cham() -> void:
+func _build_collision() -> void:
 	var hinh := CollisionShape3D.new()
 	var hop := BoxShape3D.new()
-	var canh := Chinh.CAO * Chinh.RONG_HOP
-	hop.size = Vector3(canh, Chinh.CAO, canh)
+	var canh := Config.HEIGHT * Config.BOX_WIDTH
+	hop.size = Vector3(canh, Config.HEIGHT, canh)
 	hinh.shape = hop
-	hinh.position = Vector3(0.0, Chinh.CAO * 0.5, 0.0)
+	hinh.position = Vector3(0.0, Config.HEIGHT * 0.5, 0.0)
 	add_child(hinh)
 
 	var moc := Marker3D.new()
 	moc.name = "DiemNham"
-	moc.position = Vector3(0.0, Chinh.CAO + 0.12, 0.0)
+	moc.position = Vector3(0.0, Config.HEIGHT + 0.12, 0.0)
 	add_child(moc)
 	diem_nham = NodePath("DiemNham")
 
 
-func _dung_agent(lech_cao: float) -> void:
+func _build_agent(lech_cao: float) -> void:
 	_agent = NavigationAgent3D.new()
 	_agent.name = "Agent"
 	# Nhỏ hơn bán kính agent của navmesh (0,5): navmesh đã bào lùi khỏi tường
 	# đúng 0,5 rồi, khai lớn hơn nữa thì Doro không lách qua được lối đi hẹp.
 	_agent.radius = 0.3
-	_agent.height = Chinh.CAO
+	_agent.height = Config.HEIGHT
 	_agent.path_desired_distance = 0.3
 	_agent.target_desired_distance = 0.35
 	_agent.path_height_offset = lech_cao
@@ -159,8 +159,8 @@ func _dung_agent(lech_cao: float) -> void:
 # ------------------------------------------------------------------ đi lại ---
 
 func _physics_process(delta: float) -> void:
-	# @tool ở dòng đầu CHỈ để tắt cảnh báo "lớp cha có @tool mà lớp con thì
-	# không" — TrạmTươngTác phải là @tool vì lớp con BanAn cần hiện số bàn lúc
+	# @tool ở dòng đầu CHỈ để tắt cảnh báo "lớp cha có @tool mà lớp patience_left thì
+	# không" — TrạmTươngTác phải là @tool vì lớp patience_left BanAn cần hiện số bàn lúc
 	# đang kê map. Doro thì ngược lại: nó chỉ được dựng lúc chạy, không bao giờ
 	# nằm sẵn trong file map, nên không có việc gì để làm trong trình soạn thảo.
 	# Chặn ngay đây cho chắc, phòng khi sau này có ai kéo nó vào một scene.
@@ -170,27 +170,27 @@ func _physics_process(delta: float) -> void:
 		return
 
 	# 1. Người chơi tới gần -> đứng yên, quay mặt về phía họ.
-	if _gan_nguoi_choi():
-		if _dang_di:
-			_dang_di = false
-		_dat_anim("idle")
-		var ve := _nguoi_choi.global_position - global_position
+	if _near_player():
+		if _moving:
+			_moving = false
+		_set_anim("idle")
+		var ve := _player.global_position - global_position
 		ve.y = 0.0
-		_xoay_ve(ve, delta)
+		_turn_towards(ve, delta)
 		return
 
 	# 2. Đang nghỉ -> đếm ngược rồi chọn chỗ mới.
-	if not _dang_di:
-		_nghi -= delta
-		if _nghi <= 0.0:
-			_di_cho_khac()
+	if not _moving:
+		_rest_left -= delta
+		if _rest_left <= 0.0:
+			_wander()
 		return
 
 	# 3. Đang đi.
 	if _agent.is_navigation_finished():
-		_dang_di = false
-		_nghi = randf_range(Chinh.NGHI_MIN, Chinh.NGHI_MAX)
-		_dat_anim("idle")
+		_moving = false
+		_rest_left = randf_range(Config.REST_MIN, Config.REST_MAX)
+		_set_anim("idle")
 		return
 
 	var toi := _agent.get_next_path_position()
@@ -201,19 +201,19 @@ func _physics_process(delta: float) -> void:
 	huong = huong.normalized()
 	# Cộng thẳng vào vị trí: Doro là StaticBody3D nên không có move_and_slide,
 	# và cũng không cần — nó không va vào gì cả.
-	global_position += huong * Chinh.TOC_DO * delta
+	global_position += huong * Config.SPEED * delta
 	# Khoá độ cao về mặt sàn. Điểm đường của agent nằm trên mặt navmesh, cao
 	# hơn sàn một chút; đi theo cả trục Y thì Doro trôi dần lên trên.
-	global_position.y = _cao_san
-	_xoay_ve(huong, delta)
+	global_position.y = _floor_y
+	_turn_towards(huong, delta)
 
 
-func _gan_nguoi_choi() -> bool:
-	if not is_instance_valid(_nguoi_choi):
+func _near_player() -> bool:
+	if not is_instance_valid(_player):
 		return false
-	var d := _nguoi_choi.global_position - global_position
+	var d := _player.global_position - global_position
 	d.y = 0.0
-	return d.length() <= Chinh.GAN_NGUOI
+	return d.length() <= Config.NEAR_PLAYER
 
 
 ## Chọn chỗ đi tiếp: bốc quanh chỗ đang đứng, KẸP vào vùng cho phép, rồi nắn
@@ -227,62 +227,62 @@ func _gan_nguoi_choi() -> bool:
 ## đã kẹp vẫn có thể bị nắn ra ngoài. Ra ngoài thì bỏ lượt này, nghỉ rồi bốc
 ## lại — rẻ hơn nhiều so với việc thử lặp cho tới khi trúng, và Doro đứng
 ## nghỉ thêm một nhịp thì không ai nhận ra.
-func _di_cho_khac() -> void:
+func _wander() -> void:
 	var ban_do := get_world_3d().navigation_map
 	if not ban_do.is_valid():
 		return
 
 	var goc := randf() * TAU
-	var xa := randf_range(1.5, Chinh.BAN_KINH_DI)
+	var xa := randf_range(1.5, Config.WANDER_RADIUS)
 	var dich := global_position + Vector3(cos(goc) * xa, 0.0, sin(goc) * xa)
-	dich = _kep_vao_vung(dich)
+	dich = _clamp_to_area(dich)
 	dich = NavigationServer3D.map_get_closest_point(ban_do, dich)
 
-	if dich.is_equal_approx(Vector3.ZERO) or not _trong_vung(dich):
-		_nghi = randf_range(Chinh.NGHI_MIN, Chinh.NGHI_MAX)
+	if dich.is_equal_approx(Vector3.ZERO) or not _inside_area(dich):
+		_rest_left = randf_range(Config.REST_MIN, Config.REST_MAX)
 		return
 
 	_agent.target_position = dich
-	_dang_di = true
-	_dat_anim("walk")
+	_moving = true
+	_set_anim("walk")
 
 
 ## Kéo một điểm vào trong hình chữ nhật cho phép (giữ nguyên độ cao).
-static func _kep_vao_vung(diem: Vector3) -> Vector3:
+static func _clamp_to_area(diem: Vector3) -> Vector3:
 	return Vector3(
-		clampf(diem.x, Chinh.VUNG_MIN.x, Chinh.VUNG_MAX.x),
+		clampf(diem.x, Config.AREA_MIN.x, Config.AREA_MAX.x),
 		diem.y,
-		clampf(diem.z, Chinh.VUNG_MIN.y, Chinh.VUNG_MAX.y))
+		clampf(diem.z, Config.AREA_MIN.y, Config.AREA_MAX.y))
 
 
 ## Điểm có nằm trong vùng cho phép không.
 ##
-## Nới thêm LE_VUNG ở mọi phía: navmesh bị Recast bào lùi khỏi tường, nên một
+## Nới thêm AREA_MARGIN ở mọi phía: navmesh bị Recast bào lùi khỏi tường, nên một
 ## điểm hợp lệ sát mép vùng rất hay bị nắn ra ngoài vài chục centimet. Không
 ## nới thì Doro bỏ gần hết số lượt bốc và đứng nghỉ gần như suốt màn.
-const LE_VUNG := 0.6
+const AREA_MARGIN := 0.6
 
-static func _trong_vung(diem: Vector3) -> bool:
-	return diem.x >= Chinh.VUNG_MIN.x - LE_VUNG \
-		and diem.x <= Chinh.VUNG_MAX.x + LE_VUNG \
-		and diem.z >= Chinh.VUNG_MIN.y - LE_VUNG \
-		and diem.z <= Chinh.VUNG_MAX.y + LE_VUNG
+static func _inside_area(diem: Vector3) -> bool:
+	return diem.x >= Config.AREA_MIN.x - AREA_MARGIN \
+		and diem.x <= Config.AREA_MAX.x + AREA_MARGIN \
+		and diem.z >= Config.AREA_MIN.y - AREA_MARGIN \
+		and diem.z <= Config.AREA_MAX.y + AREA_MARGIN
 
 
 ## Chỗ Doro đứng lúc màn bắt đầu: GIỮA vùng cho phép, nắn về navmesh.
 ##
 ## Hàm static để level_base hỏi được mà không phải dựng node trước — chỗ đứng
-## phải biết TRƯỚC khi gọi chuan_bi().
-static func cho_dung_dau(ban_do: RID, cao_san: float) -> Vector3:
+## phải biết TRƯỚC khi gọi setup().
+static func first_stand_point(ban_do: RID, cao_san: float) -> Vector3:
 	var giua := Vector3(
-		(Chinh.VUNG_MIN.x + Chinh.VUNG_MAX.x) * 0.5,
+		(Config.AREA_MIN.x + Config.AREA_MAX.x) * 0.5,
 		cao_san,
-		(Chinh.VUNG_MIN.y + Chinh.VUNG_MAX.y) * 0.5)
+		(Config.AREA_MIN.y + Config.AREA_MAX.y) * 0.5)
 	# `is_valid()` CHƯA đủ. Bản đồ điều hướng chỉ trả lời được sau lần đồng bộ
 	# đầu tiên; hỏi sớm thì NavigationServer in một dòng lỗi đỏ rồi trả về
 	# (0,0,0). Đây đúng là cái bẫy đã làm người khách đầu tiên đứng chết ở cửa
 	# hồi tháng 9 — `map_get_iteration_id() == 0` là cách kiểm tra mà
-	# `Khach.nan_ve_navmesh()` đang dùng.
+	# `Khach.snap_to_navmesh()` đang dùng.
 	#
 	# Chưa sẵn sàng thì lấy thẳng tâm vùng: nó nằm giữa khu khách nên gần như
 	# chắc chắn đi được, và ngay nhịp đi đầu tiên Doro sẽ tự nắn về navmesh.
@@ -295,21 +295,21 @@ static func cho_dung_dau(ban_do: RID, cao_san: float) -> Vector3:
 	return nan
 
 
-func _xoay_ve(huong: Vector3, delta: float) -> void:
+func _turn_towards(huong: Vector3, delta: float) -> void:
 	if huong.length_squared() < 0.0001:
 		return
 	var dich := atan2(huong.x, huong.z)
-	rotation.y = rotate_toward(rotation.y, dich, Chinh.TOC_XOAY * delta)
+	rotation.y = rotate_toward(rotation.y, dich, Config.TURN_SPEED * delta)
 
 
 # ------------------------------------------------------------------ diễn ---
 
-func _dat_anim(ten: String) -> void:
-	if _anim_hien == ten:
+func _set_anim(ten: String) -> void:
+	if _anim_now == ten:
 		return
 	if _hoat_hinh == null or not _hoat_hinh.has_animation(ten):
 		return
-	_anim_hien = ten
+	_anim_now = ten
 	_hoat_hinh.play(ten)
 
 
@@ -318,15 +318,15 @@ func _dat_anim(ten: String) -> void:
 ## Nảy bằng SCALE của node thân chứ không bằng animation: model chỉ có hai clip
 ## (idle, walk), không có clip "ăn". Một cú nảy 0,18 giây đủ để người chơi biết
 ## thao tác đã ăn — mà đó mới là việc cần làm, không phải diễn cho đẹp.
-func _khi_duoc_cho(_tram: Node, _chi_so: int) -> void:
-	if _than == null:
+func _on_fed(_tram: Node, _index: int) -> void:
+	if _body == null:
 		return
 	# KHÔNG phát tiếng ở đây: `tay_cam._bo_di()` đã phát "vut_rac" khi thật sự
 	# có đồ bị vứt. Phát thêm ở đây thì tiếng kêu hai lần chồng nhau.
 	#
 	# Và vì thế, bấm E lúc tay TRỐNG chỉ có cú nảy mà không có tiếng — hoá ra
-	# lại đúng: đó thành ra thao tác VUỐT VE con thú, không phải vứt rác.
-	var ti := Chinh.CAO / Chinh.CAO_GOC
+	# lại đúng: đó thành ra thao tác VUỐT VE patience_left thú, không phải vứt rác.
+	var ti := Config.HEIGHT / Config.BASE_HEIGHT
 	var tw := create_tween().set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
-	tw.tween_property(_than, "scale", Vector3(ti * 1.2, ti * 0.8, ti * 1.2), 0.09)
-	tw.tween_property(_than, "scale", Vector3(ti, ti, ti), 0.09)
+	tw.tween_property(_body, "scale", Vector3(ti * 1.2, ti * 0.8, ti * 1.2), 0.09)
+	tw.tween_property(_body, "scale", Vector3(ti, ti, ti), 0.09)

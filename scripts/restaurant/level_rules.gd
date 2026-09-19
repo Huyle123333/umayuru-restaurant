@@ -4,12 +4,12 @@ extends Node
 ## ─────────────────────────────────────────────── vì sao cần thêm một node nữa
 ##
 ## Trước file này, tám màn trong GameData.LEVELS dùng chung một file map VÀ
-## chung một bộ số mặc định trong quan_ly_khach.gd. Nghĩa là Ngày 1, Ngày 2,
+## chung một bộ số mặc định trong customer_manager.gd. Nghĩa là Ngày 1, Ngày 2,
 ## Ngày 3 giống hệt nhau: cùng thực đơn 15 món, cùng 12 giây một khách, cùng
 ## 7 phút. Ba màn mà không có gì phân biệt thì chúng không phải ba màn, chúng
 ## là một màn chơi ba lần.
 ##
-## Chỗ đặt luật đó KHÔNG thể là quan_ly_khach.gd, vì file đó giữ luật CỦA NHÀ
+## Chỗ đặt luật đó KHÔNG thể là customer_manager.gd, vì file đó giữ luật CỦA NHÀ
 ## HÀNG — những thứ đúng ở mọi màn: khách xếp hàng thế nào, giao đúng món thì
 ## được bao nhiêu tiền, hết kiên nhẫn thì bỏ đi. Nhét thêm "Ngày 1 thì thế
 ## này, Ngày 2 thì thế kia" vào đó là trộn luật chơi với nội dung màn, và mỗi
@@ -26,12 +26,12 @@ extends Node
 ## ────────────────────────────────────────────────────── các khoá trong `luat`
 ##
 ##   thoi_luong  float   — độ dài màn, giây
-##   toi_da      int     — số khách có mặt cùng lúc tối đa (bàn + hàng đợi)
-##   ban_toi_da  int     — số khách ĐANG NGỒI BÀN tối đa. 0 = dùng hết bàn
-##   o_hang_toi_da int   — số ô hàng đợi được dùng. 0 = dùng hết ô có trong map
-##   cho_dau     float   — chờ bao lâu trước người khách đầu tiên
-##   thuc_don    Array   — id những món khách được phép gọi. Rỗng = cả danh mục
-##   trong_so    Dict    — id -> trọng số bốc món. Thiếu = 1
+##   max_customers      int     — số khách có mặt cùng lúc tối đa (bàn + hàng đợi)
+##   max_tables  int     — số khách ĐANG NGỒI BÀN tối đa. 0 = dùng hết bàn
+##   max_queue int   — số ô hàng đợi được dùng. 0 = dùng hết ô có trong map
+##   first_wait     float   — chờ bao lâu trước người khách đầu tiên
+##   menu    Array   — id những món khách được phép gọi. Rỗng = cả danh mục
+##   weights    Dict    — id -> trọng số bốc món. Thiếu = 1
 ##   chang       Array   — các chặng độ khó, xem _ap_dung_chang()
 ##   moc_nhac    float   — còn bao nhiêu giây thì đổi sang nhạc cao điểm
 ##   moc         Dict    — bốn mốc doanh thu S/A/B/C (GameData tự đọc)
@@ -50,14 +50,14 @@ extends Node
 ## một hằng nằm lẫn trong luật màn.
 const NHOM_CAO_DIEM := "cao_diem"
 
-var _ql: Node
-var _gio: Node
-var _luat: Dictionary = {}
+var _customers: Node
+var _clock: Node
+var _rules: Dictionary = {}
 
-var _chang: Array = []
+var _stages: Array = []
 ## Chặng đang áp dụng. -1 = chưa áp chặng nào.
-var _chi_so := -1
-var _da_doi_nhac := false
+var _index := -1
+var _music_switched := false
 
 
 ## Gắn luật vào màn. Gọi từ level_base ngay sau khi dựng xong đồng hồ.
@@ -65,50 +65,59 @@ var _da_doi_nhac := false
 ## Trả về false khi màn này không có luật riêng (ví dụ màn hướng dẫn, hoặc
 ## chạy thẳng map bằng F6) — lúc đó level_base xoá node này đi và màn chạy
 ## bằng số mặc định như trước.
-func chuan_bi(ql: Node, gio: Node, luat: Dictionary) -> bool:
+func setup(ql: Node, gio: Node, luat: Dictionary) -> bool:
 	if ql == null or luat.is_empty():
 		return false
-	_ql = ql
-	_gio = gio
-	_luat = luat
+	_customers = ql
+	_clock = gio
+	_rules = luat
 
-	_ap_dung_tinh()
-	_chang = _luat.get("chang", [])
+	_apply_static()
+	_stages = _rules.get("chang", [])
 	# Áp chặng đầu NGAY, không đợi khung hình sau: giữa lúc này và khung hình
 	# kế tiếp, quan_ly_khach có thể đã đặt hẹn sinh khách theo nhịp mặc định.
-	_doi_chang(0)
+	_go_to_stage(0)
 	return true
 
 
 ## Những thứ đặt một lần rồi thôi.
-func _ap_dung_tinh() -> void:
-	if _luat.has("toi_da"):
-		_ql.toi_da = int(_luat["toi_da"])
-	if _luat.has("ban_toi_da"):
-		_ql.ban_toi_da = int(_luat["ban_toi_da"])
-	if _luat.has("o_hang_toi_da"):
-		_ql.o_hang_toi_da = int(_luat["o_hang_toi_da"])
-	if _luat.has("cho_dau"):
-		_ql.cho_dau = float(_luat["cho_dau"])
-	if _luat.has("thuc_don"):
+##
+## ⚠ KHOÁ bên trái (_rules["toi_da"]...) là khoá của bảng LUAT trong GameData —
+## GameData thuộc lô 7, CHƯA đổi tên, nên khoá phải giữ nguyên tiếng Việt.
+## THUỘC TÍNH bên phải (_customers.max_customers...) đã là tiếng Anh vì
+## customer_manager thuộc lô 5.
+##
+## Hai bên lệch ngôn ngữ trông khó chịu, nhưng đổi bên trái trước khi tới lô 7
+## thì `.has()` trả false và TOÀN BỘ luật màn im lặng không được áp — đúng lỗi
+## đã xảy ra ngày 19/9: Ngày 1 chạy bằng số mặc định, không ai báo gì.
+func _apply_static() -> void:
+	if _rules.has("toi_da"):
+		_customers.max_customers = int(_rules["toi_da"])
+	if _rules.has("ban_toi_da"):
+		_customers.max_tables = int(_rules["ban_toi_da"])
+	if _rules.has("o_hang_toi_da"):
+		_customers.max_queue = int(_rules["o_hang_toi_da"])
+	if _rules.has("cho_dau"):
+		_customers.first_wait = float(_rules["cho_dau"])
+	if _rules.has("thuc_don"):
 		# Ép về Array[String]: ô @export bên quan_ly_khach khai kiểu chặt, mà
 		# mảng đọc ra từ Dictionary là mảng trần (phần tử kiểu Variant). Gán
 		# thẳng thì Godot báo lỗi kiểu lúc chạy.
 		var td: Array[String] = []
-		for m in _luat["thuc_don"]:
+		for m in _rules["thuc_don"]:
 			td.append(String(m))
-		_ql.thuc_don = td
-	if _luat.has("trong_so"):
-		_ql.trong_so = _luat["trong_so"]
+		_customers.menu = td
+	if _rules.has("trong_so"):
+		_customers.weights = _rules["trong_so"]
 
-	if _gio != null and _luat.has("thoi_luong"):
-		var t := float(_luat["thoi_luong"])
-		_gio.duration = t
+	if _clock != null and _rules.has("thoi_luong"):
+		var t := float(_rules["thoi_luong"])
+		_clock.duration = t
 		# Gán CẢ `con_lai`, không chỉ `thoi_luong`. Bảng thời gian chép
 		# thoi_luong sang con_lai trong _ready() của nó, mà _ready() đã chạy
 		# xong từ lúc add_child — sửa mỗi thoi_luong thì đồng hồ vẫn đếm từ
-		# con số cũ và chỉ có cái thanh tiến trình là sai lệch.
-		_gio.time_left = t
+		# patience_left số cũ và chỉ có cái thanh tiến trình là sai lệch.
+		_clock.time_left = t
 
 
 ## Đổi độ khó theo thời gian đã trôi.
@@ -122,36 +131,36 @@ func _ap_dung_tinh() -> void:
 ## sau ba mươi giây đầu. Chia chặng cho màn chơi một đường cong — mở cửa vắng
 ## khách, trưa đông dần, cao điểm dồn dập — tức là một CA LÀM VIỆC.
 func _process(_delta: float) -> void:
-	if _ql == null or _gio == null:
+	if _customers == null or _clock == null:
 		return
 
-	var da_troi: float = float(_gio.duration) - float(_gio.time_left)
+	var da_troi: float = float(_clock.duration) - float(_clock.time_left)
 
 	# Nhạc cao điểm. Đặt theo GIÂY CÒN LẠI chứ không theo giây đã trôi, vì bài
 	# hát phải kết thúc đúng lúc hết giờ — mốc của nó là cái đích, không phải
 	# vạch xuất phát.
-	if not _da_doi_nhac and _luat.has("moc_nhac"):
-		if float(_gio.time_left) <= float(_luat["moc_nhac"]):
-			_da_doi_nhac = true
+	if not _music_switched and _rules.has("moc_nhac"):
+		if float(_clock.time_left) <= float(_rules["moc_nhac"]):
+			_music_switched = true
 			AmThanh.play_random_music(NHOM_CAO_DIEM)
 
-	for i in _chang.size():
-		var c: Dictionary = _chang[i]
+	for i in _stages.size():
+		var c: Dictionary = _stages[i]
 		if da_troi < float(c.get("den", 0.0)):
-			if i != _chi_so:
-				_doi_chang(i)
+			if i != _index:
+				_go_to_stage(i)
 			return
 	# Trôi quá chặng cuối (đồng hồ dài hơn tổng các chặng): giữ chặng cuối.
-	if not _chang.is_empty() and _chi_so != _chang.size() - 1:
-		_doi_chang(_chang.size() - 1)
+	if not _stages.is_empty() and _index != _stages.size() - 1:
+		_go_to_stage(_stages.size() - 1)
 
 
-func _doi_chang(i: int) -> void:
-	if i < 0 or i >= _chang.size():
+func _go_to_stage(i: int) -> void:
+	if i < 0 or i >= _stages.size():
 		return
-	_chi_so = i
-	var c: Dictionary = _chang[i]
+	_index = i
+	var c: Dictionary = _stages[i]
 	if c.has("nhip"):
-		_ql.nhip_sinh = float(c["nhip"])
+		_customers.spawn_interval = float(c["nhip"])
 	if c.has("toi_da"):
-		_ql.toi_da = int(c["toi_da"])
+		_customers.max_customers = int(c["toi_da"])

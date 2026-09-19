@@ -29,7 +29,7 @@
 [ext_resource type="PackedScene" uid="uid://b5ing1pj2wnao" path="res://assets/gltf/pot_A.gltf" id="27_enn6r"]
 [ext_resource type="PackedScene" uid="uid://dr06c6stvx8wi" path="res://assets/gltf/table_round_A.gltf" id="29_nu63k"]
 [ext_resource type="Script" uid="uid://b6tuyh33rtbwm" path="res://scripts/tuong_tac/tram_tuong_tac.gd" id="30_tram"]
-[ext_resource type="Script" path="res://scripts/nha_hang/ban_an.gd" id="31_ban"]
+[ext_resource type="Script" uid="uid://dypk2j6rjr26h" path="res://scripts/restaurant/dining_table.gd" id="31_ban"]
 
 [sub_resource type="CapsuleShape3D" id="Cap_player"]
 radius = 0.45
@@ -150,10 +150,6 @@ ssao_radius = 0.6
 ssao_intensity = 1.4
 ssao_power = 1.2
 
-[sub_resource type="CylinderShape3D" id="Shape_BanTron"]
-height = 1.0
-radius = 1.5
-
 [sub_resource type="BoxShape3D" id="Shape_ThungRac"]
 size = Vector3(1.03, 1.365, 1.19)
 
@@ -183,6 +179,10 @@ size = Vector3(2, 2.4, 2.03)
 
 [sub_resource type="BoxShape3D" id="Shape_Noi"]
 size = Vector3(0.9, 0.55, 0.9)
+
+[sub_resource type="CylinderShape3D" id="Shape_BanTron"]
+height = 1.0
+radius = 1.5
 
 [node name="RestaurantMapPlanB" type="Node3D"]
 script = ExtResource("1_level")
@@ -583,6 +583,7 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.8055229, 0.0073019266, 10.8
 script = ExtResource("30_tram")
 ten_hien_thi = "Mang bo do"
 loai = "mang_bo_do"
+lua_chon = PackedStringArray()
 
 [node name="Mesh" parent="NoiThatBep/bocchi bin" instance=ExtResource("14_ek3jt")]
 
@@ -595,6 +596,7 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.3, 0, 1.25)
 script = ExtResource("30_tram")
 ten_hien_thi = "Banh mi"
 loai = "ke_nguyen_lieu"
+lua_chon = PackedStringArray()
 vat_pham = "bun"
 
 [node name="Mesh" parent="NoiThatBep/crate_buns2" instance=ExtResource("8_cypln")]
@@ -608,6 +610,7 @@ transform = Transform3D(1, 0, 0, 0, 0.81915206, -0.57357645, 0, 0.57357645, 0.81
 script = ExtResource("30_tram")
 ten_hien_thi = "Bot"
 loai = "ke_nguyen_lieu"
+lua_chon = PackedStringArray()
 vat_pham = "dough"
 
 [node name="Mesh" parent="NoiThatBep/crate_dough2" instance=ExtResource("9_yieiy")]
@@ -621,6 +624,7 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 5.3, 0, 1.25)
 script = ExtResource("30_tram")
 ten_hien_thi = "Xa lach"
 loai = "ke_nguyen_lieu"
+lua_chon = PackedStringArray()
 vat_pham = "lettuce"
 
 [node name="Mesh" parent="NoiThatBep/crate_lettuce2" instance=ExtResource("10_enn6r")]
@@ -634,6 +638,7 @@ transform = Transform3D(1, 0, 0, 0, 0.81915206, -0.57357645, 0, 0.57357645, 0.81
 script = ExtResource("30_tram")
 ten_hien_thi = "Ca rot"
 loai = "ke_nguyen_lieu"
+lua_chon = PackedStringArray()
 vat_pham = "carrot"
 
 [node name="Mesh" parent="NoiThatBep/crate_carrots2" instance=ExtResource("11_en7o4")]
@@ -647,6 +652,7 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 9.3, 0, 1.25)
 script = ExtResource("30_tram")
 ten_hien_thi = "Khoai tay"
 loai = "ke_nguyen_lieu"
+lua_chon = PackedStringArray()
 vat_pham = "potato"
 
 [node name="Mesh" parent="NoiThatBep/crate_potatoes2" instance=ExtResource("12_nu63k")]
@@ -660,6 +666,7 @@ transform = Transform3D(1, 0, 0, 0, 0.81915206, -0.57357645, 0, 0.57357645, 0.81
 script = ExtResource("30_tram")
 ten_hien_thi = "Ca chua"
 loai = "ke_nguyen_lieu"
+lua_chon = PackedStringArray()
 vat_pham = "tomato"
 
 [node name="Mesh" parent="NoiThatBep/crate_tomatoes2" instance=ExtResource("13_yqu5o")]
@@ -673,6 +680,7 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 13.3, 0, 1.25)
 script = ExtResource("30_tram")
 ten_hien_thi = "Hanh tay"
 loai = "ke_nguyen_lieu"
+lua_chon = PackedStringArray()
 vat_pham = "onion"
 
 [node name="Mesh" parent="NoiThatBep/crate_onions2" instance=ExtResource("14_em3yi")]
@@ -686,6 +694,7 @@ transform = Transform3D(1, 0, 0, 0, 0.81915206, -0.57357645, 0, 0.57357645, 0.81
 script = ExtResource("30_tram")
 ten_hien_thi = "Nam"
 loai = "ke_nguyen_lieu"
+lua_chon = PackedStringArray()
 vat_pham = "mushroom"
 
 [node name="Mesh" parent="NoiThatBep/crate_mushrooms2" instance=ExtResource("15_gktc8")]
@@ -713,6 +722,7 @@ transform = Transform3D(-1, 0, -8.742278e-08, 0, 1, 0, 8.742278e-08, 0, -1, 8.27
 script = ExtResource("30_tram")
 ten_hien_thi = "Bep 1"
 loai = "bep"
+lua_chon = PackedStringArray()
 
 [node name="Mesh" parent="NoiThatBep/stove_single2" instance=ExtResource("17_ddgsb")]
 
@@ -725,6 +735,7 @@ transform = Transform3D(-1, 0, -8.742278e-08, 0, 1, 0, 8.742278e-08, 0, -1, 5.94
 script = ExtResource("30_tram")
 ten_hien_thi = "Bep 2"
 loai = "bep"
+lua_chon = PackedStringArray()
 
 [node name="Mesh" parent="NoiThatBep/stove_single3" instance=ExtResource("17_ddgsb")]
 
@@ -737,6 +748,7 @@ transform = Transform3D(-0.7, 0, -6.119594e-08, 0, 0.7, 0, 6.119594e-08, 0, -0.7
 script = ExtResource("30_tram")
 ten_hien_thi = "Lo nuong"
 loai = "lo_nuong"
+lua_chon = PackedStringArray()
 
 [node name="Mesh" parent="NoiThatBep/pizza_oven2" instance=ExtResource("18_va5r0")]
 
@@ -749,6 +761,7 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 7.071475, 0.0037517548, 6.125
 script = ExtResource("30_tram")
 ten_hien_thi = "Thot"
 loai = "thot"
+lua_chon = PackedStringArray()
 
 [node name="Mesh" parent="NoiThatBep/kitchentable_A_large2" instance=ExtResource("19_17y88")]
 
@@ -770,6 +783,7 @@ transform = Transform3D(-1, 0, -8.742278e-08, 0, 1, 0, 8.742278e-08, 0, -1, 12.5
 script = ExtResource("30_tram")
 ten_hien_thi = "Chong dia"
 loai = "chong_dia"
+lua_chon = PackedStringArray()
 
 [node name="Mesh" parent="NoiThatBep/kitchencounter_straight_A_decorated_styleB2" instance=ExtResource("23_sv34q")]
 
@@ -782,6 +796,7 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 9.671643, 0, 6.101334)
 script = ExtResource("30_tram")
 ten_hien_thi = "Ban che tao"
 loai = "ban_che_tao"
+lua_chon = PackedStringArray()
 
 [node name="Mesh" parent="NoiThatBep/crafting_table" instance=ExtResource("24_k37c3")]
 
@@ -810,6 +825,7 @@ collision_mask = 0
 script = ExtResource("30_tram")
 ten_hien_thi = "Chong noi"
 loai = "chong_noi"
+lua_chon = PackedStringArray()
 
 [node name="Mesh" parent="NoiThatBep/Noi" instance=ExtResource("27_enn6r")]
 
@@ -822,14 +838,14 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.3, 0)
 
 [node name="BanAn" type="Node3D" parent="."]
 
-[node name="Ban1" type="StaticBody3D" parent="BanAn" groups=["tram", "ban_an"]]
+[node name="Ban1" type="StaticBody3D" parent="BanAn" groups=["ban_an", "tram"]]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 6, 0, 19)
 script = ExtResource("31_ban")
 ten_hien_thi = "Bàn 1"
 loai = "ban_khach"
+lua_chon = PackedStringArray()
 diem_nham = NodePath("DiemNham")
 cao_dat = 1.05
-so_ban = 1
 
 [node name="Mesh" parent="BanAn/Ban1" instance=ExtResource("29_nu63k")]
 
@@ -842,15 +858,14 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.1, 0)
 
 [node name="So" type="Label3D" parent="BanAn/Ban1"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.75, 0)
+pixel_size = 0.006
+billboard = 1
+no_depth_test = true
 modulate = Color(1, 0.92, 0.58, 1)
 outline_modulate = Color(0.08, 0.07, 0.05, 1)
 text = "1"
 font_size = 128
 outline_size = 32
-billboard = 1
-shaded = false
-no_depth_test = true
-pixel_size = 0.006
 
 [node name="ChoDung1" type="Marker3D" parent="BanAn/Ban1"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 2.15)
@@ -858,14 +873,15 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 2.15)
 [node name="ChoDung2" type="Marker3D" parent="BanAn/Ban1"]
 transform = Transform3D(-1, 0, 0, 0, 1, 0, 0, 0, -1, 0, 0, -2.15)
 
-[node name="Ban2" type="StaticBody3D" parent="BanAn" groups=["tram", "ban_an"]]
+[node name="Ban2" type="StaticBody3D" parent="BanAn" groups=["ban_an", "tram"]]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 12, 0, 19)
 script = ExtResource("31_ban")
+table_number = 2
 ten_hien_thi = "Bàn 2"
 loai = "ban_khach"
+lua_chon = PackedStringArray()
 diem_nham = NodePath("DiemNham")
 cao_dat = 1.05
-so_ban = 2
 
 [node name="Mesh" parent="BanAn/Ban2" instance=ExtResource("29_nu63k")]
 
@@ -878,15 +894,14 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.1, 0)
 
 [node name="So" type="Label3D" parent="BanAn/Ban2"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.75, 0)
+pixel_size = 0.006
+billboard = 1
+no_depth_test = true
 modulate = Color(1, 0.92, 0.58, 1)
 outline_modulate = Color(0.08, 0.07, 0.05, 1)
 text = "2"
 font_size = 128
 outline_size = 32
-billboard = 1
-shaded = false
-no_depth_test = true
-pixel_size = 0.006
 
 [node name="ChoDung1" type="Marker3D" parent="BanAn/Ban2"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 2.15)
@@ -894,14 +909,15 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 2.15)
 [node name="ChoDung2" type="Marker3D" parent="BanAn/Ban2"]
 transform = Transform3D(-1, 0, 0, 0, 1, 0, 0, 0, -1, 0, 0, -2.15)
 
-[node name="Ban3" type="StaticBody3D" parent="BanAn" groups=["tram", "ban_an"]]
+[node name="Ban3" type="StaticBody3D" parent="BanAn" groups=["ban_an", "tram"]]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 18, 0, 19)
 script = ExtResource("31_ban")
+table_number = 3
 ten_hien_thi = "Bàn 3"
 loai = "ban_khach"
+lua_chon = PackedStringArray()
 diem_nham = NodePath("DiemNham")
 cao_dat = 1.05
-so_ban = 3
 
 [node name="Mesh" parent="BanAn/Ban3" instance=ExtResource("29_nu63k")]
 
@@ -914,15 +930,14 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.1, 0)
 
 [node name="So" type="Label3D" parent="BanAn/Ban3"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.75, 0)
+pixel_size = 0.006
+billboard = 1
+no_depth_test = true
 modulate = Color(1, 0.92, 0.58, 1)
 outline_modulate = Color(0.08, 0.07, 0.05, 1)
 text = "3"
 font_size = 128
 outline_size = 32
-billboard = 1
-shaded = false
-no_depth_test = true
-pixel_size = 0.006
 
 [node name="ChoDung1" type="Marker3D" parent="BanAn/Ban3"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 2.15)
@@ -930,14 +945,15 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 2.15)
 [node name="ChoDung2" type="Marker3D" parent="BanAn/Ban3"]
 transform = Transform3D(-1, 0, 0, 0, 1, 0, 0, 0, -1, 0, 0, -2.15)
 
-[node name="Ban4" type="StaticBody3D" parent="BanAn" groups=["tram", "ban_an"]]
+[node name="Ban4" type="StaticBody3D" parent="BanAn" groups=["ban_an", "tram"]]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 24, 0, 19)
 script = ExtResource("31_ban")
+table_number = 4
 ten_hien_thi = "Bàn 4"
 loai = "ban_khach"
+lua_chon = PackedStringArray()
 diem_nham = NodePath("DiemNham")
 cao_dat = 1.05
-so_ban = 4
 
 [node name="Mesh" parent="BanAn/Ban4" instance=ExtResource("29_nu63k")]
 
@@ -950,15 +966,14 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.1, 0)
 
 [node name="So" type="Label3D" parent="BanAn/Ban4"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.75, 0)
+pixel_size = 0.006
+billboard = 1
+no_depth_test = true
 modulate = Color(1, 0.92, 0.58, 1)
 outline_modulate = Color(0.08, 0.07, 0.05, 1)
 text = "4"
 font_size = 128
 outline_size = 32
-billboard = 1
-shaded = false
-no_depth_test = true
-pixel_size = 0.006
 
 [node name="ChoDung1" type="Marker3D" parent="BanAn/Ban4"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 2.15)
@@ -966,14 +981,15 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 2.15)
 [node name="ChoDung2" type="Marker3D" parent="BanAn/Ban4"]
 transform = Transform3D(-1, 0, 0, 0, 1, 0, 0, 0, -1, 0, 0, -2.15)
 
-[node name="Ban5" type="StaticBody3D" parent="BanAn" groups=["tram", "ban_an"]]
+[node name="Ban5" type="StaticBody3D" parent="BanAn" groups=["ban_an", "tram"]]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 20, 0, 12)
 script = ExtResource("31_ban")
+table_number = 5
 ten_hien_thi = "Bàn 5"
 loai = "ban_khach"
+lua_chon = PackedStringArray()
 diem_nham = NodePath("DiemNham")
 cao_dat = 1.05
-so_ban = 5
 
 [node name="Mesh" parent="BanAn/Ban5" instance=ExtResource("29_nu63k")]
 
@@ -986,15 +1002,14 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.1, 0)
 
 [node name="So" type="Label3D" parent="BanAn/Ban5"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.75, 0)
+pixel_size = 0.006
+billboard = 1
+no_depth_test = true
 modulate = Color(1, 0.92, 0.58, 1)
 outline_modulate = Color(0.08, 0.07, 0.05, 1)
 text = "5"
 font_size = 128
 outline_size = 32
-billboard = 1
-shaded = false
-no_depth_test = true
-pixel_size = 0.006
 
 [node name="ChoDung1" type="Marker3D" parent="BanAn/Ban5"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 2.15)
@@ -1002,14 +1017,15 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 2.15)
 [node name="ChoDung2" type="Marker3D" parent="BanAn/Ban5"]
 transform = Transform3D(-1, 0, 0, 0, 1, 0, 0, 0, -1, 0, 0, -2.15)
 
-[node name="Ban6" type="StaticBody3D" parent="BanAn" groups=["tram", "ban_an"]]
+[node name="Ban6" type="StaticBody3D" parent="BanAn" groups=["ban_an", "tram"]]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 28, 0, 12)
 script = ExtResource("31_ban")
+table_number = 6
 ten_hien_thi = "Bàn 6"
 loai = "ban_khach"
+lua_chon = PackedStringArray()
 diem_nham = NodePath("DiemNham")
 cao_dat = 1.05
-so_ban = 6
 
 [node name="Mesh" parent="BanAn/Ban6" instance=ExtResource("29_nu63k")]
 
@@ -1022,15 +1038,14 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.1, 0)
 
 [node name="So" type="Label3D" parent="BanAn/Ban6"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.75, 0)
+pixel_size = 0.006
+billboard = 1
+no_depth_test = true
 modulate = Color(1, 0.92, 0.58, 1)
 outline_modulate = Color(0.08, 0.07, 0.05, 1)
 text = "6"
 font_size = 128
 outline_size = 32
-billboard = 1
-shaded = false
-no_depth_test = true
-pixel_size = 0.006
 
 [node name="ChoDung1" type="Marker3D" parent="BanAn/Ban6"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 2.15)

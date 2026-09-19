@@ -105,10 +105,10 @@ func setup(nguoi_choi: Node3D, tay: Node, he_bep: Node,
 ## không cần biết màn hướng dẫn tồn tại.
 func _apply_tutorial_rules() -> void:
 	if _customers != null:
-		_customers.tru_kien_nhan = false   # thanh kiên nhẫn hiện nhưng không cạn
-		_customers.tu_sinh = false         # khách vào đúng lúc kịch bản gọi
-		_customers.ep_ban = 1              # bàn gần bếp nhất
-		_customers.ep_mon = "mon_steak"    # đúng món đang dạy
+		_customers.drain_patience = false   # thanh kiên nhẫn hiện nhưng không cạn
+		_customers.auto_spawn = false         # khách vào đúng lúc kịch bản gọi
+		_customers.force_table = 1              # bàn gần bếp nhất
+		_customers.force_dish = "mon_steak"    # đúng món đang dạy
 	if _clock != null:
 		_clock.counting_down = false
 
@@ -117,10 +117,10 @@ func _apply_tutorial_rules() -> void:
 ## "Bỏ qua". Một hàm cho hai lối thì không có lối nào bị quên.
 func _restore_normal() -> void:
 	if _customers != null:
-		_customers.tru_kien_nhan = true
-		_customers.tu_sinh = true
-		_customers.ep_ban = 0
-		_customers.ep_mon = ""
+		_customers.drain_patience = true
+		_customers.auto_spawn = true
+		_customers.force_table = 0
+		_customers.force_dish = ""
 	if _clock != null:
 		_clock.counting_down = true
 
@@ -142,8 +142,8 @@ func _connect_signals() -> void:
 		_hands.vat_tren_tay_doi.connect(_on_hands_changed)
 	if _cooking != null and _cooking.has_signal("nau_xong"):
 		_cooking.nau_xong.connect(_on_cook_finished)
-	if _customers != null and _customers.has_signal("don_ket_thuc"):
-		_customers.don_ket_thuc.connect(_on_order_finished)
+	if _customers != null and _customers.has_signal("order_finished"):
+		_customers.order_finished.connect(_on_order_finished)
 
 	# Bàn chế tạo: nghe nội dung đổi để biết người chơi đã đặt được thứ cần đặt.
 	# Duyệt nhóm "tram" chứ không đi theo đường dẫn node, vì bàn chế tạo có thể
@@ -254,7 +254,7 @@ func _go_to_step(i: int) -> void:
 
 func _do_action(action: String) -> void:
 	if action == "spawn_customer" and _customers != null:
-		_customers.them_khach()
+		_customers.spawn_customer()
 
 
 ## Bước hiện tại coi như xong. Chặn gọi hai lần rồi trễ một nhịp mới sang bước.
