@@ -372,7 +372,7 @@ func _bam_theo_ban() -> void:
 ## và dòng chữ "Đang nấu — Bep 1" đổi theo; người chơi không đọc được gì.
 ##
 ## Thay bằng thanh RIÊNG cho từng trạm, nổi ngay trên trạm đó — xem
-## `scripts/giao_dien/thanh_tram.gd`. HUD này không còn vẽ tiến trình nữa.
+## `scripts/ui/station_bars.gd`. HUD này không còn vẽ tiến trình nữa.
 
 
 ## Nối vào hệ bếp. Giờ chỉ còn nghe MỘT tín hiệu: câu báo "nấu xong / nấu

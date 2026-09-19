@@ -246,7 +246,7 @@ func _ket_thuc(tram: Node, kho: TramTuongTac, kieu: String) -> void:
 	# Đổi model trên mặt trạm sang thành phẩm: người chơi thấy ngay miếng
 	# thịt đã đổi màu, không phải đọc chữ mới biết xong.
 	kho.hien_mo_hinh(ra)
-	AmThanh.phat("nau_xong" if thanh_cong else "nau_hong")
+	AmThanh.play_sfx("nau_xong" if thanh_cong else "nau_hong")
 	nau_xong.emit(tram, mon, thanh_cong)
 
 
@@ -259,6 +259,6 @@ func _chay(tram: Node, kho: TramTuongTac, goc: String) -> void:
 	kho.them_vao(chay)
 	kho.hien_mo_hinh(chay)
 	_dang_nau.erase(tram)
-	AmThanh.phat("chay")
+	AmThanh.play_sfx("chay")
 	tien_trinh_doi.emit(tram, 0.0)
 	nau_xong.emit(tram, "", false)

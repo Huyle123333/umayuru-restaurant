@@ -394,7 +394,7 @@ func them_khach() -> Node:
 
 	_o_hang[o] = k
 	k.set_meta("o_hang", o)
-	AmThanh.phat("khach_vao")
+	AmThanh.play_sfx("khach_vao")
 	k.di_toi(_hang[o].global_position, "hang")
 	return k
 
@@ -588,7 +588,7 @@ func _khi_ban_nhan_mon(ban: Node, id_mon: String) -> void:
 		so_don_hoan_hao += 1
 		# Chồng LÊN TRÊN tiếng giao món, không thay thế: người chơi vẫn nghe
 		# tiếng giao quen thuộc, cộng thêm một tiếng nữa báo "lần này hoàn hảo".
-		AmThanh.phat("hoan_hao")
+		AmThanh.play_sfx("hoan_hao")
 
 	khach.set_meta("mon", id_mon)
 	khach.an(thoi_gian_an)
@@ -609,7 +609,7 @@ func _khi_an_xong(khach: Node) -> void:
 			var cho: Vector3 = ban.global_position if ban != null \
 				else khach.global_position
 			tien_thay_doi.emit(tien, don.tien_tra, cho)
-			AmThanh.phat("tien")
+			AmThanh.play_sfx("tien")
 			_tien_bay(cho, don.tien_tra, don.da_hoan_hao)
 
 	khach_an_xong.emit(khach, ban, id_mon)
@@ -797,7 +797,7 @@ func _bo_di_gian(don: DonHang) -> void:
 	var khach: Node = don.khach
 	_don.erase(khach)
 	so_khach_bo_di += 1
-	AmThanh.phat("khach_bo_di")
+	AmThanh.play_sfx("khach_bo_di")
 	don_ket_thuc.emit(don, "bo_di")
 	if not is_instance_valid(khach):
 		return

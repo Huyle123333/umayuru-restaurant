@@ -92,12 +92,12 @@ func _ap_dung_tinh() -> void:
 
 	if _gio != null and _luat.has("thoi_luong"):
 		var t := float(_luat["thoi_luong"])
-		_gio.thoi_luong = t
+		_gio.duration = t
 		# Gán CẢ `con_lai`, không chỉ `thoi_luong`. Bảng thời gian chép
 		# thoi_luong sang con_lai trong _ready() của nó, mà _ready() đã chạy
 		# xong từ lúc add_child — sửa mỗi thoi_luong thì đồng hồ vẫn đếm từ
 		# con số cũ và chỉ có cái thanh tiến trình là sai lệch.
-		_gio.con_lai = t
+		_gio.time_left = t
 
 
 ## Đổi độ khó theo thời gian đã trôi.
@@ -114,15 +114,15 @@ func _process(_delta: float) -> void:
 	if _ql == null or _gio == null:
 		return
 
-	var da_troi: float = float(_gio.thoi_luong) - float(_gio.con_lai)
+	var da_troi: float = float(_gio.duration) - float(_gio.time_left)
 
 	# Nhạc cao điểm. Đặt theo GIÂY CÒN LẠI chứ không theo giây đã trôi, vì bài
 	# hát phải kết thúc đúng lúc hết giờ — mốc của nó là cái đích, không phải
 	# vạch xuất phát.
 	if not _da_doi_nhac and _luat.has("moc_nhac"):
-		if float(_gio.con_lai) <= float(_luat["moc_nhac"]):
+		if float(_gio.time_left) <= float(_luat["moc_nhac"]):
 			_da_doi_nhac = true
-			AmThanh.nhac(NHAC_CAO_DIEM)
+			AmThanh.play_music(NHAC_CAO_DIEM)
 
 	for i in _chang.size():
 		var c: Dictionary = _chang[i]

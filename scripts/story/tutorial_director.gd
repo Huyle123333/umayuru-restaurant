@@ -3,7 +3,7 @@ extends Node
 ##
 ## Chia ba phần rạch ròi, và đây là điểm đáng nói nhất của cả hệ:
 ##   cutscene_tutorial.gd  — DẠY CÁI GÌ (dữ liệu, đọc như tờ giấy)
-##   bang_huong_dan.gd     — VẼ RA SAO (chỉ hiện chữ, không biết luật)
+##   guide_panel.gd     — VẼ RA SAO (chỉ hiện chữ, không biết luật)
 ##   file này              — BIẾT KHI NÀO NGƯỜI CHƠI ĐÃ LÀM ĐƯỢC
 ## Ba việc đó đổi với ba nhịp khác nhau: lời thoại sửa liên tục, giao diện sửa
 ## thỉnh thoảng, còn cách phát hiện gần như không đổi. Gộp lại một file thì mỗi
@@ -16,7 +16,7 @@ extends Node
 ## gọi ngược vào ai cả.
 
 const Cutscene := preload("res://scripts/story/cutscene_tutorial.gd")
-const GuidePanel := preload("res://scripts/giao_dien/bang_huong_dan.gd")
+const GuidePanel := preload("res://scripts/ui/guide_panel.gd")
 
 ## Hướng dẫn kết thúc. `tong_ket` = true thì màn dừng luôn và hiện bảng kết
 ## quả hạng S.
@@ -87,7 +87,7 @@ func setup(nguoi_choi: Node3D, tay: Node, he_bep: Node,
 	_panel = GuidePanel.new()
 	_panel.name = "GuidePanel"
 	add_child(_panel)
-	_panel.chon_bat_dau.connect(_on_select)
+	_panel.start_choice.connect(_on_select)
 
 	_apply_tutorial_rules()
 	_connect_signals()
@@ -95,8 +95,8 @@ func setup(nguoi_choi: Node3D, tay: Node, he_bep: Node,
 	if _player != null:
 		_last_position = _player.global_position
 
-	# `mo()` la ten ham cua bang_huong_dan.gd (lo 4, chua doi ten).
-	_panel.mo()
+	# `mo()` la ten ham cua guide_panel.gd (lo 4, chua doi ten).
+	_panel.open()
 	_go_to_step(0)
 
 
@@ -110,7 +110,7 @@ func _apply_tutorial_rules() -> void:
 		_customers.ep_ban = 1              # bàn gần bếp nhất
 		_customers.ep_mon = "mon_steak"    # đúng món đang dạy
 	if _clock != null:
-		_clock.dem_nguoc = false
+		_clock.counting_down = false
 
 
 ## Trả màn chơi về luật bình thường. Dùng cho CẢ HAI lối ra: học xong, và bấm
@@ -122,7 +122,7 @@ func _restore_normal() -> void:
 		_customers.ep_ban = 0
 		_customers.ep_mon = ""
 	if _clock != null:
-		_clock.dem_nguoc = true
+		_clock.counting_down = true
 
 	# ĐÁNH DẤU HOÀN THÀNH — bắt buộc, không phải tuỳ chọn.
 	#
@@ -193,7 +193,7 @@ func _on_select(dong_y: bool) -> void:
 		return
 	_learned_all = true
 	_wait_for = ""
-	_panel.dong()
+	_panel.close()
 	_restore_normal()
 
 
@@ -228,7 +228,7 @@ func _go_to_step(i: int) -> void:
 	if i >= Cutscene.STEPS.size():
 		_wait_for = ""
 		_learned_all = true
-		_panel.dong()
+		_panel.close()
 		_restore_normal()
 		return
 
@@ -243,11 +243,11 @@ func _go_to_step(i: int) -> void:
 		_seconds_left = float(_wait_for.substr(WAIT_SECONDS.length()))
 
 	if _wait_for == "ask":
-		_panel.hoi(String(step.get("line", "")), Cutscene.BTN_YES, Cutscene.BTN_NO)
+		_panel.ask(String(step.get("line", "")), Cutscene.BTN_YES, Cutscene.BTN_NO)
 	else:
 		# Đánh số bỏ qua bước hỏi: người chơi đếm "bước 1" từ bài học đầu tiên,
 		# còn câu hỏi mở màn thì không phải một bài học.
-		_panel.dat_buoc(String(step.get("line", "")), i, Cutscene.STEPS.size() - 1)
+		_panel.set_step(String(step.get("line", "")), i, Cutscene.STEPS.size() - 1)
 
 	_do_action(String(step.get("action", "")))
 

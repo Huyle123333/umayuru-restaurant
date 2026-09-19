@@ -20,8 +20,8 @@ boot_splash/show_image=false
 GameData="*res://autoload/game_data.gd"
 SaveSystem="*res://autoload/save_system.gd"
 SettingsManager="*res://autoload/settings_manager.gd"
-AmThanh="*res://scripts/giao_dien/am_thanh.gd"
-HuongDan="*res://scripts/giao_dien/menu_huong_dan.gd"
+AmThanh="*res://scripts/ui/audio_manager.gd"
+HuongDan="*res://scripts/ui/guide_menu.gd"
 
 [display]
 

@@ -67,7 +67,7 @@ func _ready() -> void:
 	# không đổi gì cả. Người chơi bấm Menu chính → Chọn màn → Chọn nhân vật →
 	# quay lại, cả bốn màn hình dùng chung một bài đang chạy dở. Bốc lại ở mỗi
 	# màn hình thì chỉ cần bấm qua lại vài lần là nhạc giật liên tục.
-	AmThanh.nhac_ngau_nhien("menu", true)
+	AmThanh.play_random_music("menu", true)
 
 	if not GameData.HIEN_MAN_TOI:
 		_rut_gon_theo_ngay()

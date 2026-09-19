@@ -152,12 +152,12 @@ func _gan_he_tuong_tac() -> void:
 			# lực, ô kĩ năng, bảng bàn chế tạo). Thanh trạm thì chỉ cần biết
 			# hệ bếp và cái camera — không đụng gì tới bốn thứ đó, nên tách ra
 			# là tách được sạch.
-			var lop_thanh := load("res://scripts/giao_dien/thanh_tram.gd") as GDScript
+			var lop_thanh := load("res://scripts/ui/station_bars.gd") as GDScript
 			if lop_thanh != null:
 				var tt: Node = lop_thanh.new()
 				tt.name = "ThanhTram"
 				add_child(tt)
-				tt.nghe_he_bep(he_bep)
+				tt.listen_to_cooking(he_bep)
 			else:
 				push_warning("Không nạp được thanh tiến trình của trạm.")
 
@@ -272,23 +272,23 @@ func _tim_tram(goc: Node) -> Array[TramTuongTac]:
 ## Cả hai chỉ NGHE tín hiệu. Chúng không đọc trạng thái khách, không tự đếm
 ## kiên nhẫn, không tự cộng tiền — luật nằm trọn trong quan_ly_khach.gd.
 func _gan_hud_don_hang() -> void:
-	var lop_ve := load("res://scripts/giao_dien/bang_don_hang.gd") as GDScript
+	var lop_ve := load("res://scripts/ui/order_board.gd") as GDScript
 	if lop_ve != null:
 		var bang: Node = lop_ve.new()
 		bang.name = "BangDonHang"
 		add_child(bang)
-		bang.nghe_don_hang(quan_ly_khach)
+		bang.listen_to_orders(quan_ly_khach)
 	else:
 		push_warning("Không nạp được cột vé đơn hàng.")
 
-	var lop_gio := load("res://scripts/giao_dien/bang_thoi_gian.gd") as GDScript
+	var lop_gio := load("res://scripts/ui/hud_clock.gd") as GDScript
 	var bang_gio: Node = null
 	if lop_gio != null:
 		bang_gio = lop_gio.new()
 		bang_gio.name = "BangThoiGian"
 		add_child(bang_gio)
-		bang_gio.nghe_don_hang(quan_ly_khach)
-		bang_gio.het_gio.connect(_ket_thuc_man.bind(""))
+		bang_gio.listen_to_orders(quan_ly_khach)
+		bang_gio.time_up.connect(_ket_thuc_man.bind(""))
 	else:
 		push_warning("Không nạp được bảng thời gian.")
 
@@ -454,11 +454,11 @@ func _tua_gio() -> void:
 		# Màn không có đồng hồ (hướng dẫn): bấm một cái là tổng kết luôn.
 		_ket_thuc_man("")
 		return
-	if float(gio.con_lai) > GIAY_TUA:
+	if float(gio.time_left) > GIAY_TUA:
 		# Gán thẳng con_lai thay vì gọi một hàm riêng: _process của đồng hồ đọc
 		# biến này mỗi khung hình và tự so trước-sau để bắn tín hiệu mốc, nên
 		# đổi giá trị là mọi thứ ăn theo đúng như thời gian trôi tự nhiên.
-		gio.con_lai = GIAY_TUA
+		gio.time_left = GIAY_TUA
 	else:
 		_ket_thuc_man("")
 
@@ -469,7 +469,7 @@ func _ket_thuc_man(ep_hang: String) -> void:
 	if get_node_or_null("BangKetQua") != null:
 		return
 
-	var lop := load("res://scripts/giao_dien/bang_ket_qua.gd") as GDScript
+	var lop := load("res://scripts/ui/results_panel.gd") as GDScript
 	if lop == null:
 		push_warning("Không nạp được bảng kết quả — màn chơi kết thúc mà không tổng kết.")
 		return
@@ -488,7 +488,7 @@ func _ket_thuc_man(ep_hang: String) -> void:
 	var bang: Node = lop.new()
 	bang.name = "BangKetQua"
 	add_child(bang)
-	bang.hien(tien, xong, hoan_hao, bo_di, ep_hang)
+	bang.show_results(tien, xong, hoan_hao, bo_di, ep_hang)
 
 
 ## Màn hình mở đầu: hiện tên màn, đếm ngược, rồi mới thả đồng hồ và khách vào.
@@ -505,7 +505,7 @@ func _gan_mo_man(bang_gio: Node) -> void:
 			and String(GameData.current_level) == "tutorial":
 		return
 
-	var lop := load("res://scripts/giao_dien/mo_man.gd") as GDScript
+	var lop := load("res://scripts/ui/level_intro.gd") as GDScript
 	if lop == null:
 		return
 
@@ -518,20 +518,20 @@ func _gan_mo_man(bang_gio: Node) -> void:
 	# Đóng băng TRƯỚC khi hiện chữ, không phải sau: giữa hai việc đó có ít nhất
 	# một khung hình, và một khung hình đủ để đồng hồ trừ mất thời gian.
 	if bang_gio != null:
-		bang_gio.dem_nguoc = false
+		bang_gio.counting_down = false
 	if quan_ly_khach != null:
 		quan_ly_khach.tu_sinh = false
 
 	var mo: Node = lop.new()
 	mo.name = "MoMan"
 	add_child(mo)
-	mo.bat_dau.connect(func() -> void:
+	mo.started.connect(func() -> void:
 		if bang_gio != null:
-			bang_gio.dem_nguoc = true
+			bang_gio.counting_down = true
 		if quan_ly_khach != null:
 			quan_ly_khach.tu_sinh = true
 		# Bốc ngẫu nhiên trong sáu bài, KHÔNG giữ liền mạch: vào một ca làm
 		# việc mới thì phải nghe như một ca mới, chứ không phải như đoạn giữa
 		# của bài nhạc đang chạy ở menu.
-		AmThanh.nhac_ngau_nhien("man"))
-	mo.bat_dau_dem(ten)
+		AmThanh.play_random_music("man"))
+	mo.start_countdown(ten)

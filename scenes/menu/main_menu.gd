@@ -30,7 +30,7 @@ func _ready() -> void:
 	# không đổi gì cả. Người chơi bấm Menu chính → Chọn màn → Chọn nhân vật →
 	# quay lại, cả bốn màn hình dùng chung một bài đang chạy dở. Bốc lại ở mỗi
 	# màn hình thì chỉ cần bấm qua lại vài lần là nhạc giật liên tục.
-	AmThanh.nhac_ngau_nhien("menu", true)
+	AmThanh.play_random_music("menu", true)
 
 	_btn_new.pressed.connect(_on_new_pressed)
 	_btn_levels.pressed.connect(_on_levels_pressed)
@@ -111,7 +111,7 @@ func _on_levels_pressed() -> void:
 ## chính (vốn không tạm dừng) cũng không để lại game bị treo.
 func _on_guide_pressed() -> void:
 	_options.close()
-	HuongDan.mo()
+	HuongDan.open()
 
 
 ## Mở bảng Tuỳ chọn.

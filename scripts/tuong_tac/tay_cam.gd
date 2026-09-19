@@ -299,14 +299,14 @@ func _rap_ban(ban: TramTuongTac) -> void:
 		for x in ban.chua:
 			ds.append(DanhMuc.ten(String(x)))
 		bao.emit("Không thành món: " + ", ".join(ds), false)
-		AmThanh.phat("rap_hut")
+		AmThanh.play_sfx("rap_hut")
 		return
 
 	ban.don_sach()
 	ban.them_vao(mon)
 	ban.hien_mo_hinh(mon)
 	bao.emit("Ghép xong: " + DanhMuc.ten(mon), true)
-	AmThanh.phat("rap_xong")
+	AmThanh.play_sfx("rap_xong")
 
 
 ## Bảng chọn trả về một id vật phẩm. Sinh vật rồi cầm lên, cùng đường với
@@ -388,7 +388,7 @@ func _cam_len(t: TramTuongTac) -> void:
 	_cha_goc = t.get_parent()
 	# Cao độ lệch ngẫu nhiên một chút: tiếng nhặt đồ phát mấy chục lần một màn,
 	# phát y hệt nhau thì tai nghe ra ngay là máy móc.
-	AmThanh.phat("cam_len", randf_range(0.94, 1.06))
+	AmThanh.play_sfx("cam_len", randf_range(0.94, 1.06))
 
 	_doi_va_cham(t, false)
 	if _cha_goc != null:
@@ -487,7 +487,7 @@ func _dung_lo(lo: TramTuongTac) -> void:
 func _bo_di(_mang: TramTuongTac) -> void:
 	if _dang_cam == null:
 		return
-	AmThanh.phat("vut_rac")
+	AmThanh.play_sfx("vut_rac")
 	_xoa_do_tren_tay()
 
 
@@ -547,7 +547,7 @@ func _dat_len_ban(ban: TramTuongTac) -> void:
 		return
 	ban.them_vao(id)
 	_xoa_do_tren_tay()
-	AmThanh.phat("dat_xuong", randf_range(0.94, 1.06))
+	AmThanh.play_sfx("dat_xuong", randf_range(0.94, 1.06))
 
 	# KHÔNG tự ráp nữa — người chơi bấm F để ráp. Xem lý do đầy đủ ở _rap_ban().
 	# Ở đây cái bàn chỉ làm đúng một việc: giữ đồ.
@@ -599,7 +599,7 @@ func _giao_mon(ban: TramTuongTac) -> void:
 
 	# CHỖ CẮM: hệ đơn hàng sau này nghe tín hiệu này để đối chiếu món vừa
 	# giao với đơn của bàn, tính tiền và tính "hoàn hảo".
-	AmThanh.phat("giao_mon")
+	AmThanh.play_sfx("giao_mon")
 	if ban.has_signal("da_nhan_mon"):
 		ban.emit_signal("da_nhan_mon", ban, id)
 

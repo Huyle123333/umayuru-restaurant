@@ -137,7 +137,7 @@ var _fading: bool = false
 
 func _ready() -> void:
 	if not music_group.is_empty():
-		AmThanh.nhac_ngau_nhien(music_group)
+		AmThanh.play_random_music(music_group)
 	_load_cutscene()
 	_tint.color = Color(0, 0, 0, 1)
 	_portrait.modulate.a = 0.0
@@ -310,7 +310,7 @@ func _next_line() -> void:
 	# ĐỌC. Tiếng động trong game kể chuyện nên đánh dấu SỰ KIỆN, không mô tả
 	# quá trình.
 	if not speaker.is_empty():
-		AmThanh.go_chu()
+		AmThanh.play_type_tick()
 	_arrow.hide()
 
 

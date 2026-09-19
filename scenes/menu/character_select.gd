@@ -76,11 +76,11 @@ var _selected := ""
 func _ready() -> void:
 	# Nhạc menu: bốc ngẫu nhiên MỘT lần cho cả cụm menu.
 	#
-	# giu_lien_mach = true nghĩa là nếu bài đang phát đã thuộc nhóm "menu" thì
+	# keep_playing = true nghĩa là nếu bài đang phát đã thuộc nhóm "menu" thì
 	# không đổi gì cả. Người chơi bấm Menu chính → Chọn màn → Chọn nhân vật →
 	# quay lại, cả bốn màn hình dùng chung một bài đang chạy dở. Bốc lại ở mỗi
 	# màn hình thì chỉ cần bấm qua lại vài lần là nhạc giật liên tục.
-	AmThanh.nhac_ngau_nhien("menu", true)
+	AmThanh.play_random_music("menu", true)
 
 	var index := 0
 	for key in GameData.CHARACTER_ORDER:
