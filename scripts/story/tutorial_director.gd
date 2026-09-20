@@ -76,11 +76,11 @@ var _learned_all := false
 ## Gắn vào màn chơi. Truyền thẳng các node cần nghe thay vì tự đi tìm trong
 ## cây scene: tìm bằng đường dẫn thì đổi tên một node là hỏng lặng lẽ, mà lỗi
 ## kiểu đó chỉ lộ ra khi chơi tới đúng bước dùng nó.
-func setup(nguoi_choi: Node3D, tay: Node, he_bep: Node,
+func setup(nguoi_choi: Node3D, hands_node: Node, cooking: Node,
 		quan_ly_khach: Node, bang_gio: Node) -> void:
 	_player = nguoi_choi
-	_hands = tay
-	_cooking = he_bep
+	_hands = hands_node
+	_cooking = cooking
 	_customers = quan_ly_khach
 	_clock = bang_gio
 
@@ -138,10 +138,10 @@ func _restore_normal() -> void:
 # ------------------------------------------------------------- tín hiệu ---
 
 func _connect_signals() -> void:
-	if _hands != null and _hands.has_signal("vat_tren_tay_doi"):
-		_hands.vat_tren_tay_doi.connect(_on_hands_changed)
-	if _cooking != null and _cooking.has_signal("nau_xong"):
-		_cooking.nau_xong.connect(_on_cook_finished)
+	if _hands != null and _hands.has_signal("held_item_changed"):
+		_hands.held_item_changed.connect(_on_hands_changed)
+	if _cooking != null and _cooking.has_signal("cook_finished"):
+		_cooking.cook_finished.connect(_on_cook_finished)
 	if _customers != null and _customers.has_signal("order_finished"):
 		_customers.order_finished.connect(_on_order_finished)
 
@@ -149,8 +149,8 @@ func _connect_signals() -> void:
 	# Duyệt nhóm "tram" chứ không đi theo đường dẫn node, vì bàn chế tạo có thể
 	# được kê lại chỗ khác trong map bất cứ lúc nào.
 	for n in get_tree().get_nodes_in_group("tram"):
-		if String(n.loai) == "ban_che_tao" and n.has_signal("noi_dung_thay_doi"):
-			n.noi_dung_thay_doi.connect(_on_table_changed)
+		if String(n.kind) == "ban_che_tao" and n.has_signal("contents_changed"):
+			n.contents_changed.connect(_on_table_changed)
 
 
 func _on_hands_changed(id: String) -> void:
@@ -158,22 +158,22 @@ func _on_hands_changed(id: String) -> void:
 		_finish_step()
 
 
-func _on_cook_finished(tram: Node, _mon: String, thanh_cong: bool) -> void:
-	if not thanh_cong:
+func _on_cook_finished(station: Node, _dish: String, success: bool) -> void:
+	if not success:
 		return
 	# `loai` van la ten thuoc tinh cua TramTuongTac — lop do thuoc lo 6, chua doi.
 	# Doc bang ten CU o day la dung; bien cuc bo thi da la tieng Anh.
-	var kind := String(tram.loai)
+	var kind := String(station.kind)
 	if _wait_for == "chop" and kind == "thot":
 		_finish_step()
 	elif _wait_for == "cook" and kind == "bep":
 		_finish_step()
 
 
-func _on_table_changed(ban: Node) -> void:
+func _on_table_changed(table: Node) -> void:
 	if not _wait_for.begins_with(WAIT_TABLE_HAS):
 		return
-	if ban.chua.has(_wait_for.substr(WAIT_TABLE_HAS.length())):
+	if table.contents.has(_wait_for.substr(WAIT_TABLE_HAS.length())):
 		_finish_step()
 
 

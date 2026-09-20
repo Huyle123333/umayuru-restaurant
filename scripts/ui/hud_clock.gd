@@ -132,7 +132,7 @@ func _process(delta: float) -> void:
 	# không num `time_left <= 30`. Điều kiện kiểu đó đúng ở MỌI frame hình sau đó,
 	# nên nó sẽ kêu sáu chục lần một giây suốt nửa phút cuối.
 	if before > RUSH_THRESHOLD and time_left <= RUSH_THRESHOLD:
-		AmThanh.play_sfx("sap_het_gio")
+		AmThanh.play_sfx("time_warning")
 
 	if time_left <= 0.0:
 		_alerted = true

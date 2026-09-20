@@ -16,7 +16,7 @@ extends CanvasLayer
 ## TOÀN BỘ NỘI DUNG nằm ở guide_content.gd. File này chỉ biết VẼ.
 
 const GuideContent := preload("res://scripts/ui/guide_content.gd")
-const DanhMuc := preload("res://scripts/tuong_tac/danh_muc.gd")
+const ItemCatalog := preload("res://scripts/interaction/item_catalog.gd")
 const THEME := "res://ui/theme/menu_theme.tres"
 
 const FRAME_WIDTH := 1440.0
@@ -333,19 +333,19 @@ func _add_image(duong_dan: String, chu: String) -> void:
 ## Đây là điểm đáng nói nhất của cả menu này: trang hướng dẫn không thể nói sai
 ## được, vì nó đọc đúng cái bảng mà luật chơi đang dùng. Món bị khoá thì tự
 ## biến mất khỏi trang; thêm một công thức là trang tự có thêm một dòng.
-func _add_recipe(loai: String) -> void:
+func _add_recipe(kind: String) -> void:
 	var table_: Dictionary = {}
-	match loai:
-		"ban": table_ = DanhMuc.CONG_THUC_BAN
+	match kind:
+		"ban": table_ = ItemCatalog.TABLE_RECIPES
 		# (Đã bỏ) "noi": CONG_THUC_NOI. Bảng công thức nồi không còn tồn tại
 		# — công thức nấu canh giờ nằm trong CONG_THUC_BAN như mọi món khác,
 		# nên trang hướng dẫn tự có nó ở mục "ban".
-		"lo": table_ = DanhMuc.CONG_THUC_LO
+		"lo": table_ = ItemCatalog.OVEN_RECIPES
 		_: return
 
 	for key_ in table_:
 		var value := String(table_[key_])
-		if DanhMuc.bi_khoa(value):
+		if ItemCatalog.is_locked(value):
 			continue
 		_content_col.add_child(_recipe_row(String(key_).split("+"), value))
 
@@ -363,8 +363,8 @@ func _recipe_row(nguyen_lieu: PackedStringArray, value: String) -> Control:
 	row.add_child(_item_cells(value))
 
 	var lbl_name := Label.new()
-	var price := DanhMuc.gia(value)
-	lbl_name.text = DanhMuc.ten(value) + ("  (%d)" % price if price > 0 else "")
+	var price := ItemCatalog.price(value)
+	lbl_name.text = ItemCatalog.display_name(value) + ("  (%d)" % price if price > 0 else "")
 	lbl_name.add_theme_font_size_override("font_size", 18)
 	lbl_name.add_theme_color_override("font_color", COLOR_TEXT)
 	lbl_name.size_flags_vertical = Control.SIZE_SHRINK_CENTER
@@ -377,18 +377,18 @@ func _recipe_row(nguyen_lieu: PackedStringArray, value: String) -> Control:
 ## Lùi về CHỮ chứ không bỏ trống: bộ ảnh chưa đủ cho mọi id, mà một công thức
 ## thiếu mất một ô thì đọc thành công thức khác.
 func _item_cells(id: String) -> Control:
-	var path_ := DanhMuc.duong_dan_anh(id)
+	var path_ := ItemCatalog.icon_path(id)
 	if ResourceLoader.exists(path_):
 		var img := TextureRect.new()
 		img.texture = load(path_)
 		img.custom_minimum_size = Vector2(INGREDIENT_ICON_SIZE, INGREDIENT_ICON_SIZE)
 		img.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 		img.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
-		img.tooltip_text = DanhMuc.ten(id)
+		img.tooltip_text = ItemCatalog.display_name(id)
 		return img
 
 	var l := Label.new()
-	l.text = DanhMuc.ten(id)
+	l.text = ItemCatalog.display_name(id)
 	l.add_theme_font_size_override("font_size", 15)
 	l.add_theme_color_override("font_color", COLOR_DIM)
 	l.size_flags_vertical = Control.SIZE_SHRINK_CENTER

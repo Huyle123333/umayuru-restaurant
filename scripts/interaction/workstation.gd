@@ -1,13 +1,13 @@
 @tool
-class_name TramTuongTac
+class_name Workstation
 extends StaticBody3D
-## Ghi chú về @tool ở dòng đầu: lớp con BanAn cần chạy trong editor để hiện
+## Ghi chú về @tool ở dòng đầu: lớp con DiningTable cần chạy trong editor để hiện
 ## số bàn ngay lúc đang sắp bàn. Godot chỉ chạy script nào ĐƯỢC ĐÁNH DẤU
 ## @tool, nên lớp cha cũng phải đánh dấu thì lớp con mới chạy trọn vẹn.
 ## An toàn: file này không có _ready/_process và không @export nào có setter,
 ## nên đánh dấu @tool KHÔNG làm gì xảy ra trong editor.
 
-const _DanhMuc := preload("res://scripts/tuong_tac/danh_muc.gd")
+const _ItemCatalog := preload("res://scripts/interaction/item_catalog.gd")
 
 ## Lớp vật lý số 3 — dành riêng cho VẬT PHẨM cầm được đang nằm dưới đất.
 ##
@@ -20,10 +20,10 @@ const _DanhMuc := preload("res://scripts/tuong_tac/danh_muc.gd")
 ## Nội thất (tủ, bếp, bàn, tường) VẪN Ở LỚP 1 và vẫn chặn đường như cũ: nếu
 ## đi xuyên được cả cái tủ lạnh thì bố cục bếp mất hết ý nghĩa, mà toàn bộ
 ## cân bằng thời gian di chuyển đều dựa trên bố cục đó.
-const LOP_VAT_PHAM := 1 << 2
+const LAYER_ITEM := 1 << 2
 
 ## Mặt nạ cho bộ chọn mục tiêu: nhìn thấy CẢ nội thất lẫn vật phẩm.
-const MAT_NA_TRAM := 1 | LOP_VAT_PHAM
+const STATION_MASK := 1 | LAYER_ITEM
 ## Một trạm người chơi tương tác được: kệ nguyên liệu, tủ lạnh, thớt, bếp,
 ## chồng đĩa, máng bỏ đồ.
 ##
@@ -43,7 +43,7 @@ const MAT_NA_TRAM := 1 | LOP_VAT_PHAM
 ## Phát khi người chơi bấm tương tác. Trạm KHÔNG tự xử lý hậu quả — hệ thống
 ## nấu ăn sẽ nghe tín hiệu này. Tách như vậy để trạm chỉ lo phần "là một mục
 ## tiêu bấm được", còn luật chơi nằm chỗ khác.
-signal da_tuong_tac(tram: Node, chi_so: int)
+signal interacted(station: Node, index: int)
 
 ## Tương tác PHỤ — phím F. Hiện chỉ bàn chế tạo dùng tới (ráp món).
 ##
@@ -53,10 +53,10 @@ signal da_tuong_tac(tram: Node, chi_so: int)
 ## thì mỗi bên nghe đúng cái nó quan tâm, và trạm nào không dùng F thì đơn giản
 ## là không ai nối vào.
 @warning_ignore("unused_signal")
-signal da_tuong_tac_phu(tram: Node, chi_so: int)
+signal interacted_alt(station: Node, index: int)
 
 ## Tên hiện trên HUD.
-@export var ten_hien_thi: String = ""
+@export var display_name: String = ""
 
 ## Loại trạm, để hệ thống nấu ăn biết phải làm gì.
 ##
@@ -80,12 +80,12 @@ signal da_tuong_tac_phu(tram: Node, chi_so: int)
 ##                      dung_vat_cam() bên dưới vì nó vẫn là cách duy nhất
 ##                      đặt sẵn một vật cầm được vào map lúc kê bố cục.
 ##   "mang_bo_do"     — vứt đồ hỏng
-@export var loai: String = ""
+@export var kind: String = ""
 
 ## Danh sách lựa chọn hiện ra khi người chơi đứng trong tầm.
 ## Để RỖNG nghĩa là trạm chỉ có một hành động duy nhất — thớt, bếp, chồng đĩa
 ## và máng bỏ đồ đều thuộc loại này.
-@export var lua_chon: PackedStringArray = PackedStringArray()
+@export var options: PackedStringArray = PackedStringArray()
 
 ## Id vật phẩm mà trạm này cho ra (thùng nguyên liệu), hoặc id của chính vật
 ## phẩm này khi nó là một thứ cầm được đang nằm dưới đất.
@@ -93,7 +93,7 @@ signal da_tuong_tac_phu(tram: Node, chi_so: int)
 ## Dùng ID chứ không dùng tên hiển thị: tên là chữ cho người đọc và sẽ đổi
 ## (dịch, sửa chính tả), còn id là khoá tra trong danh mục và phải bất biến.
 ## Lẫn hai thứ vào nhau thì sửa một dấu tiếng Việt là hỏng cả công thức.
-@export var vat_pham: String = ""
+@export var item_id: String = ""
 
 ## Trạm này mở BẢNG CHỌN riêng thay vì đổ hết lựa chọn vào danh sách Tab.
 ##
@@ -104,7 +104,7 @@ signal da_tuong_tac_phu(tram: Node, chi_so: int)
 ##
 ## Bật cờ này thì trạm chỉ chiếm MỘT dòng trong danh sách Tab (chính nó),
 ## còn phần chọn nguyên liệu do bảng lo.
-@export var dung_bang_chon: bool = false
+@export var use_picker: bool = false
 
 ## Điểm để bộ chọn đo hướng và khoảng cách.
 ##
@@ -112,7 +112,7 @@ signal da_tuong_tac_phu(tram: Node, chi_so: int)
 ## nhắm bị lệch vào trong tường, và người chơi đứng đúng chỗ vẫn thấy trạm
 ## khác được ưu tiên. Đặt một Marker3D nhô ra phía lối đi thì hướng nhắm khớp
 ## với chỗ người chơi thật sự đứng.
-@export var diem_nham: NodePath
+@export var aim_point: NodePath
 
 
 ## Những thứ đang NẰM TRÊN trạm này (bàn chế tạo, bếp, lò nướng).
@@ -121,30 +121,30 @@ signal da_tuong_tac_phu(tram: Node, chi_so: int)
 ## là thuộc tính của cái bàn đó. Gom hết vào một chỗ thì mỗi lần hỏi "trên
 ## bàn có gì" lại phải tra ngược xem món nào thuộc bàn nào — thừa một lớp mà
 ## không được gì.
-var chua: Array[String] = []
+var contents: Array[String] = []
 
 ## Phát khi `chua` đổi. HUD nghe để cập nhật ghi chú trên bàn chế tạo.
-signal noi_dung_thay_doi(tram: Node)
+signal contents_changed(station: Node)
 
 
-func them_vao(ten: String) -> void:
-	chua.append(ten)
-	noi_dung_thay_doi.emit(self)
+func add_item(item_name: String) -> void:
+	contents.append(item_name)
+	contents_changed.emit(self)
 
 
 ## Lấy ra phần tử cuối cùng. Trả về "" nếu đang rỗng.
-func bo_cuoi() -> String:
-	if chua.is_empty():
+func pop_last() -> String:
+	if contents.is_empty():
 		return ""
-	var id: String = String(chua[chua.size() - 1])
-	chua.remove_at(chua.size() - 1)
-	noi_dung_thay_doi.emit(self)
+	var id: String = String(contents[contents.size() - 1])
+	contents.remove_at(contents.size() - 1)
+	contents_changed.emit(self)
 	return id
 
 
-func don_sach() -> void:
-	chua.clear()
-	noi_dung_thay_doi.emit(self)
+func clear_all() -> void:
+	contents.clear()
+	contents_changed.emit(self)
 
 
 ## Model của thứ đang nằm TRÊN mặt trạm (thớt, bếp, bàn chế tạo).
@@ -153,26 +153,26 @@ func don_sach() -> void:
 ## gắn vào: cả ba hệ đó đều có lúc cần đổi thứ đang bày trên mặt bàn, và nếu
 ## ai cũng tự gắn thì rất dễ có hai model chồng lên nhau — một cái cũ không
 ## ai xoá. Trạm giữ đúng MỘT tham chiếu, nên bày cái mới là cái cũ tự đi.
-var _mo_hinh: Node3D = null
+var _model_node: Node3D = null
 
 ## Model bày cao bao nhiêu so với gốc trạm. Mặt bàn/quầy KayKit cao 1 đơn vị.
-@export var cao_dat := 1.02
+@export var place_height := 1.02
 
 
 ## Bày một vật phẩm lên mặt trạm. Truyền "" để dọn sạch.
-func hien_mo_hinh(id: String) -> void:
-	xoa_mo_hinh()
+func show_model(id: String) -> void:
+	clear_model()
 	if id.is_empty():
 		return
-	var m: Node3D = _DanhMuc.tao_mo_hinh(id)
+	var m: Node3D = _ItemCatalog.make_model(id)
 	if m == null:
 		return
 	m.name = "MoHinhTren"
 	# Không cấp va chạm cho model bày trên bàn: nó chỉ để nhìn. Cấp va chạm
 	# thì nó chắn mất chính cái bàn, và người chơi hết bấm được vào trạm.
 	add_child(m)
-	m.position = Vector3(0.0, cao_dat, 0.0)
-	_mo_hinh = m
+	m.position = Vector3(0.0, place_height, 0.0)
+	_model_node = m
 
 
 ## Bày CẢ CHỒNG đồ đang nằm trên mặt trạm. Truyền mảng rỗng để dọn sạch.
@@ -181,60 +181,60 @@ func hien_mo_hinh(id: String) -> void:
 ## khác nhau — "bày đúng một thứ này" (thớt, bếp) và "bày tất cả những gì đang
 ## có" (bàn chế tạo). Gộp lại thì mọi nơi gọi đều phải truyền thêm một tham số
 ## mà chín trên mười nơi không quan tâm.
-func hien_chong(ds: Array[String]) -> void:
-	xoa_mo_hinh()
-	if ds.is_empty():
+func show_stack(list_: Array[String]) -> void:
+	clear_model()
+	if list_.is_empty():
 		return
-	var m: Node3D = _DanhMuc.tao_chong(ds)
+	var m: Node3D = _ItemCatalog.make_stack(list_)
 	if m == null:
 		return
 	m.name = "MoHinhTren"
 	add_child(m)
-	m.position = Vector3(0.0, cao_dat, 0.0)
-	_mo_hinh = m
+	m.position = Vector3(0.0, place_height, 0.0)
+	_model_node = m
 
 
-func xoa_mo_hinh() -> void:
-	if _mo_hinh != null and is_instance_valid(_mo_hinh):
-		_mo_hinh.queue_free()
-	_mo_hinh = null
+func clear_model() -> void:
+	if _model_node != null and is_instance_valid(_model_node):
+		_model_node.queue_free()
+	_model_node = null
 
 
-func vi_tri_nham() -> Vector3:
-	if diem_nham.is_empty():
+func aim_position() -> Vector3:
+	if aim_point.is_empty():
 		return global_position
-	var n := get_node_or_null(diem_nham) as Node3D
+	var n := get_node_or_null(aim_point) as Node3D
 	return n.global_position if n != null else global_position
 
 
 ## Số mục tiêu trạm này đóng góp vào danh sách chọn.
 ## Trạm không có lựa chọn vẫn là MỘT mục tiêu (chính nó), nên dùng max(_, 1).
-func so_muc_tieu() -> int:
-	if dung_bang_chon:
+func target_count() -> int:
+	if use_picker:
 		return 1
-	return maxi(lua_chon.size(), 1)
+	return maxi(options.size(), 1)
 
 
-func nhan_muc_tieu(chi_so: int) -> String:
-	if dung_bang_chon or lua_chon.is_empty():
-		return ten_hien_thi
-	return "%s · %s" % [ten_hien_thi, lua_chon[chi_so]]
+func target_label(index: int) -> String:
+	if use_picker or options.is_empty():
+		return display_name
+	return "%s · %s" % [display_name, options[index]]
 
 
-func tuong_tac(chi_so: int) -> void:
-	da_tuong_tac.emit(self, chi_so)
+func interact(index: int) -> void:
+	interacted.emit(self, index)
 
 
 ## Phím F trên trạm này.
-func tuong_tac_phu(chi_so: int = 0) -> void:
-	da_tuong_tac_phu.emit(self, chi_so)
+func interact_alt(index: int = 0) -> void:
+	interacted_alt.emit(self, index)
 
 
 # ---------------------------------------------- vật cầm đặt sẵn trong map ---
 
 ## Cạnh hộp va chạm của một vật cầm được. Trùng với `canh_vat_pham` bên
 ## tay_cam.gd — hai nơi sinh ra cùng một loại vật thì phải cùng kích thước.
-const CANH_VAT := 0.55
+const ITEM_SIZE := 0.55
 
 
 ## Dựng phần NHÌN THẤY và phần BẤM ĐƯỢC cho một `vat_cam` đặt sẵn trong map.
@@ -252,38 +252,38 @@ const CANH_VAT := 0.55
 ## Gọi lúc CHẠY từ level_base chứ không tự gọi trong _ready: lớp này là @tool,
 ## _ready cũng chạy trong trình soạn thảo, và thêm node ngầm vào lúc đang kê
 ## map là thứ gây nhầm lẫn hơn là giúp.
-func dung_vat_cam() -> void:
-	if loai != "vat_cam" or vat_pham.is_empty():
+func build_carriable() -> void:
+	if kind != "vat_cam" or item_id.is_empty():
 		return
 
 	if get_node_or_null("Mesh") == null:
-		_thay_mesh()
+		_swap_mesh()
 
 	# Hộp va chạm: thiếu nó thì trạm không bao giờ được bộ chọn nhìn thấy.
-	if _tim_hinh_va_cham() == null:
-		var hinh := CollisionShape3D.new()
-		var hop := BoxShape3D.new()
-		hop.size = Vector3(CANH_VAT, CANH_VAT, CANH_VAT)
-		hinh.shape = hop
-		hinh.position = Vector3(0.0, CANH_VAT * 0.5, 0.0)
-		add_child(hinh)
+	if _find_collision_shape() == null:
+		var shape := CollisionShape3D.new()
+		var box := BoxShape3D.new()
+		box.size = Vector3(ITEM_SIZE, ITEM_SIZE, ITEM_SIZE)
+		shape.shape = box
+		shape.position = Vector3(0.0, ITEM_SIZE * 0.5, 0.0)
+		add_child(shape)
 
 	if get_node_or_null("DiemNham") == null:
-		var moc := Marker3D.new()
-		moc.name = "DiemNham"
-		moc.position = Vector3(0.0, 0.25, 0.0)
-		add_child(moc)
-		diem_nham = NodePath("DiemNham")
+		var mark := Marker3D.new()
+		mark.name = "DiemNham"
+		mark.position = Vector3(0.0, 0.25, 0.0)
+		add_child(mark)
+		aim_point = NodePath("DiemNham")
 
 	# Ruột đổi thì hình đổi theo (nồi rỗng ↔ nồi có đồ). Nối MỘT lần ở đây
 	# thay vì bắt mọi chỗ gọi them_vao/bo_cuoi/don_sach nhớ vẽ lại — bốn chỗ
 	# gọi là bốn cơ hội quên.
-	if not noi_dung_thay_doi.is_connected(_khi_ruot_doi):
-		noi_dung_thay_doi.connect(_khi_ruot_doi)
+	if not contents_changed.is_connected(_on_contents_changed):
+		contents_changed.connect(_on_contents_changed)
 
 
-func _khi_ruot_doi(_tram: Node) -> void:
-	_thay_mesh()
+func _on_contents_changed(_station: Node) -> void:
+	_swap_mesh()
 
 
 ## Dựng lại node "Mesh" theo trạng thái rỗng/đầy hiện tại.
@@ -292,26 +292,26 @@ func _khi_ruot_doi(_tram: Node) -> void:
 ## thêm một nguyên liệu, mà từ nguyên liệu thứ hai trở đi hình không đổi gì
 ## cả. Dựng lại vô tư thì mỗi lần bỏ đồ là một lần nạp scene và xoá node, chỉ
 ## để ra đúng cái hình cũ.
-func _thay_mesh() -> void:
-	var co_do := not chua.is_empty()
-	var moi := "day" if co_do else "rong"
-	if String(get_meta("kieu_mesh", "")) == moi and get_node_or_null("Mesh") != null:
+func _swap_mesh() -> void:
+	var has_content := not contents.is_empty()
+	var new_ := "day" if has_content else "rong"
+	if String(get_meta("kieu_mesh", "")) == new_ and get_node_or_null("Mesh") != null:
 		return
-	set_meta("kieu_mesh", moi)
+	set_meta("kieu_mesh", new_)
 
-	var cu := get_node_or_null("Mesh")
-	if cu != null:
-		cu.queue_free()
+	var old := get_node_or_null("Mesh")
+	if old != null:
+		old.queue_free()
 
-	var m: Node3D = _DanhMuc.tao_mo_hinh(vat_pham, co_do)
+	var m: Node3D = _ItemCatalog.make_model(item_id, has_content)
 	if m == null:
-		push_warning("Vật cầm '%s' chưa có model." % vat_pham)
+		push_warning("Vật cầm '%s' chưa có model." % item_id)
 		return
 	m.name = "Mesh"
 	add_child(m)
 
 
-func _tim_hinh_va_cham() -> CollisionShape3D:
+func _find_collision_shape() -> CollisionShape3D:
 	for c in get_children():
 		if c is CollisionShape3D:
 			return c

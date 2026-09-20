@@ -46,27 +46,27 @@ const EXT: Array[String] = [".ogg", ".wav", ".mp3"]
 ## TÊN SỰ KIỆN (code gọi)  ->  TÊN FILE (trên đĩa).
 const FILE_NAMES := {
 	# --- đôi tay ---
-	"cam_len":     "pick_up",        # nhấc một vật lên
-	"dat_xuong":   "drop_out",       # đặt vật lên bàn / trạm
-	"vut_rac":     "bin_or_pet",     # vứt đồ vào thùng rác bocchi
-	"rap_xong":    "craft_success",  # bàn chế tạo ráp thành món
-	"rap_hut":     "nope_click",     # bấm F mà không thành món nào
-	"giao_mon":    "serve_dish",     # giao đúng món cho khách
+	"pick_up":       "pick_up",        # nhấc một vật lên
+	"put_down":      "drop_out",       # đặt vật lên bàn / trạm
+	"trash":         "bin_or_pet",     # vứt đồ vào thùng rác bocchi
+	"craft_ok":      "craft_success",  # bàn chế tạo ráp thành món
+	"craft_fail":    "nope_click",     # bấm F mà không thành món nào
+	"serve":         "serve_dish",     # giao đúng món cho khách
 	# --- bếp ---
-	"nau_xong":    "cooking_done",   # bếp / lò / thớt xong một mẻ
-	"nau_hong":    "wrong_recipe",   # slide_out đồ hỏng vì sai công thức
-	"chay":        "sizzle_burn",    # để trên bếp quá lâu
+	"cook_done":     "cooking_done",   # bếp / lò / thớt xong một mẻ
+	"cook_fail":     "wrong_recipe",   # ra đồ hỏng vì sai công thức
+	"burn":          "sizzle_burn",    # để trên bếp quá lâu
 	# --- khách và tiền ---
-	"khach_vao":   "door_chime",
-	"khach_bo_di": "fail_soft",
-	"hoan_hao":    "perfect_bonus",  # giao khi kiên nhẫn còn trên nửa
-	"tien":        "coin_collect",
+	"customer_in":   "door_chime",
+	"customer_out":  "fail_soft",
+	"perfect":       "perfect_bonus",  # giao khi kiên nhẫn còn trên nửa
+	"coin":          "coin_collect",
 	# --- vòng đời màn chơi ---
-	"sap_het_gio": "warning_beep",   # còn 30 giây
-	"time_up":     "time_up_buzzer",
-	"tong_ket":    "results_screen",
+	"time_warning":  "warning_beep",   # còn 30 giây
+	"time_up":       "time_up_buzzer",
+	"results":       "results_screen",
 	# --- kể chuyện ---
-	"type_tick":           "text_sound",     # tiếng gõ chữ empty hội thoại
+	"type_tick":     "text_sound",     # tiếng gõ chữ trong hội thoại
 }
 
 ## Các NHÓM nhạc nền. Bốc ngẫu nhiên trong nhóm bằng play_random_music().

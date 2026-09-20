@@ -21,7 +21,7 @@ signal order_finished(don: Order, ly_do: String)
 signal money_changed(tong: int, them: int, cho: Vector3)
 
 const CUSTOMER_SCENE := preload("res://scenes/nha_hang/khach.tscn")
-const DanhMuc := preload("res://scripts/tuong_tac/danh_muc.gd")
+const ItemCatalog := preload("res://scripts/interaction/item_catalog.gd")
 const Order := preload("res://scripts/restaurant/order.gd")
 const COIN_ICON := "res://assets/ui/tien/carrot_tien.png"
 
@@ -174,10 +174,10 @@ var _map: Node3D
 var _spawn_points: Node
 var _queue: Array[Marker3D] = []          # HangDoi1..N, [0] là đầu hàng
 var _door: Marker3D
-var _ban: Array = []                     # mọi BanAn trong màn
+var _tables: Array = []                     # mọi DiningTable trong màn
 var _in_queue: Array = []                  # ai đang đứng ở ô hàng đợi nào
-var _table_of: Dictionary = {}       # customer -> BanAn
-var _customer_at: Dictionary = {}       # BanAn -> customer
+var _table_of: Dictionary = {}       # customer -> DiningTable
+var _customer_at: Dictionary = {}       # DiningTable -> customer
 
 
 func setup(map: Node3D) -> void:
@@ -195,9 +195,9 @@ func setup(map: Node3D) -> void:
 	_in_queue.resize(_queue.size())
 	_in_queue.fill(null)
 
-	_ban = get_tree().get_nodes_in_group("ban_an")
-	_ban.sort_custom(func(a, b): return int(a.table_number) < int(b.table_number))
-	for b in _ban:
+	_tables = get_tree().get_nodes_in_group("ban_an")
+	_tables.sort_custom(func(a, b): return int(a.table_number) < int(b.table_number))
+	for b in _tables:
 		if b.has_signal("dish_delivered"):
 			b.dish_delivered.connect(_on_dish_delivered)
 
@@ -394,7 +394,7 @@ func spawn_customer() -> Node:
 
 	_in_queue[o] = k
 	k.set_meta("in_queue", o)
-	AmThanh.play_sfx("khach_vao")
+	AmThanh.play_sfx("customer_in")
 	k.go_to(_queue[o].global_position, "hang")
 	return k
 
@@ -539,12 +539,12 @@ func _empty_table():
 	if _tables_full():
 		return null
 	if force_table > 0:
-		for b in _ban:
+		for b in _tables:
 			if int(b.table_number) == force_table and not _customer_at.has(b):
 				return b
 		return null
 	var rong := []
-	for b in _ban:
+	for b in _tables:
 		if not _customer_at.has(b):
 			rong.append(b)
 	if rong.is_empty():
@@ -588,7 +588,7 @@ func _on_dish_delivered(table: Node, id_mon: String) -> void:
 		perfect_orders += 1
 		# Chồng LÊN TRÊN tiếng giao món, không thay thế: người chơi vẫn nghe
 		# tiếng giao quen thuộc, cộng thêm một tiếng nữa báo "lần này hoàn hảo".
-		AmThanh.play_sfx("is_perfect")
+		AmThanh.play_sfx("perfect")
 
 	customer.set_meta("dish", id_mon)
 	customer.eat(eat_seconds)
@@ -599,8 +599,8 @@ func _on_ate(customer: Node) -> void:
 	var table = _table_of.get(customer)
 	var id_mon := str(customer.get_meta("dish", ""))
 	if table != null:
-		table.don_sach()
-		table.xoa_mo_hinh()
+		table.clear_all()
+		table.clear_model()
 	var don: Order = _don.get(customer)
 	if don != null:
 		_don.erase(customer)
@@ -609,7 +609,7 @@ func _on_ate(customer: Node) -> void:
 			var cho: Vector3 = table.global_position if table != null \
 				else customer.global_position
 			money_changed.emit(money, don.payout, cho)
-			AmThanh.play_sfx("money")
+			AmThanh.play_sfx("coin")
 			_money_popup(cho, don.payout, don.was_perfect)
 
 	customer_ate.emit(customer, table, id_mon)
@@ -646,7 +646,7 @@ func _clear_customer(customer: Node) -> void:
 
 ## Người khách vừa ngồi xuống thì gọi món.
 ##
-## Món bốc NGẪU NHIÊN từ DanhMuc.danh_sach_mon_ban() chứ không từ một danh
+## Món bốc NGẪU NHIÊN từ DanhMuc.sellable_dishes() chứ không từ một danh
 ## sách gõ tay ở đây. Nhờ vậy thêm một món có giá vào danh mục là nó tự vào
 ## thực đơn, còn khoá một món (như cả nhóm món nồi hiện giờ) là khách tự động
 ## thôi gọi — không có chỗ thứ hai để quên cập nhật.
@@ -703,7 +703,7 @@ func _push_to_board(customer: Node) -> void:
 ## khi hết kiên nhẫn. Lỗi kiểu này không có thông báo nào và rất khó nhìn ra
 ## khi đang chơi — nên chặn ngay ở đây, kèm cảnh báo chỉ đúng tên món sai.
 func _actual_menu() -> Array[String]:
-	var day_du := DanhMuc.danh_sach_mon_ban()
+	var day_du := ItemCatalog.sellable_dishes()
 	if menu.is_empty():
 		return day_du
 
@@ -770,7 +770,7 @@ func _seat_at_table(customer: Node, table: Node) -> void:
 ## chỉ mất cái hình trong bong bóng, còn cả màn chơi vẫn chạy. Ảnh món là thứ
 ## đang được vẽ dần, nên thiếu là chuyện bình thường trong lúc làm.
 func _dish_icon(id: String) -> Texture2D:
-	var dd := DanhMuc.duong_dan_anh(id)
+	var dd := ItemCatalog.icon_path(id)
 	if not ResourceLoader.exists(dd):
 		push_warning("Bong bóng đơn: thiếu ảnh %s" % dd)
 		return null
@@ -797,7 +797,7 @@ func _leave_angry(don: Order) -> void:
 	var customer: Node = don.customer
 	_don.erase(customer)
 	customers_lost += 1
-	AmThanh.play_sfx("customer_left")
+	AmThanh.play_sfx("customer_out")
 	order_finished.emit(don, "bo_di")
 	if not is_instance_valid(customer):
 		return

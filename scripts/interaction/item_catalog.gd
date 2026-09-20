@@ -48,76 +48,76 @@ extends RefCounted
 ## hay không. Hai khoá thì mỗi trạm chỉ hỏi đúng khoá của mình, và "mang
 ## steak chưa thái lên bếp" tự động không làm gì — không cần viết luật chặn.
 
-const ANH := "res://assets/ui/nguyen_lieu/%s.png"
-const MODEL := "res://assets/gltf/%s.gltf"
+const ICON_FMT := "res://assets/ui/nguyen_lieu/%s.png"
+const MODEL_FMT := "res://assets/gltf/%s.gltf"
 
-const MUC := {
+const ITEMS := {
 	# ---- nguyên liệu lấy từ thùng ----
-	"bun":        {"ten": "Bánh mì",   "model": "food_ingredient_bun",
+	"bun":        {"name": "Bánh mì",   "model": "food_ingredient_bun",
 		# Ổ bánh nguyên lúc cầm trên tay; TRÊN BÀN thì tách làm hai mảnh —
 		# đế nằm dưới cùng (nấc 10), nắp luôn đậy trên cùng cả chồng.
 		# Số đo: đế dày 0,200; nắp dày 0,307.
-		"bay": {"thu_tu": 10, "cao": 0.20,
+		"layout": {"order": 10, "height": 0.20,
 			"model": "food_ingredient_bun_bottom",
-			"model_tren": "food_ingredient_bun_top"}},
-	"lettuce":    {"ten": "Xà lách",   "model": "food_ingredient_lettuce",
+			"model_top": "food_ingredient_bun_top"}},
+	"lettuce":    {"name": "Xà lách",   "model": "food_ingredient_lettuce",
 		# Cả cây xà lách cao 0,82 — kẹp nguyên cây vào bánh thì bánh cao gấp
 		# bốn lần bình thường. Trong chồng dùng MỘT LÁT, dày 0,088.
-		"bay": {"thu_tu": 20, "cao": 0.088, "y": 0.034,
+		"layout": {"order": 20, "height": 0.088, "y": 0.034,
 			"model": "food_ingredient_lettuce_slice"}},
-	"carrot":     {"ten": "Cà rốt",    "model": "food_ingredient_carrot",
-		"bay": {"cao": 1.27, "y": 0.585}},
-	"potato":     {"ten": "Khoai tây", "model": "food_ingredient_potato",
-		"bay": {"cao": 0.78, "y": 0.394}},
-	"tomato":     {"ten": "Cà chua",   "model": "food_ingredient_tomato",
-		"bay": {"cao": 0.70}},
-	"onion":      {"ten": "Hành tây",  "model": "food_ingredient_onion",
-		"bay": {"cao": 0.86, "y": 0.011}},
-	"mushroom":   {"ten": "Nấm",       "model": "food_ingredient_mushroom",
-		"bay": {"cao": 0.57, "y": 0.217}},
-	"dough":      {"ten": "Bột",       "model": "food_ingredient_dough",
-		"so_che": "dough_pre"},
-	"dough_pre":  {"ten": "Bột đã cán", "model": "food_ingredient_dough_base",
-		"bay": {"day": 0.14}},
+	"carrot":     {"name": "Cà rốt",    "model": "food_ingredient_carrot",
+		"layout": {"height": 1.27, "y": 0.585}},
+	"potato":     {"name": "Khoai tây", "model": "food_ingredient_potato",
+		"layout": {"height": 0.78, "y": 0.394}},
+	"tomato":     {"name": "Cà chua",   "model": "food_ingredient_tomato",
+		"layout": {"height": 0.70}},
+	"onion":      {"name": "Hành tây",  "model": "food_ingredient_onion",
+		"layout": {"height": 0.86, "y": 0.011}},
+	"mushroom":   {"name": "Nấm",       "model": "food_ingredient_mushroom",
+		"layout": {"height": 0.57, "y": 0.217}},
+	"dough":      {"name": "Bột",       "model": "food_ingredient_dough",
+		"prep": "dough_pre"},
+	"dough_pre":  {"name": "Bột đã cán", "model": "food_ingredient_dough_base",
+		"layout": {"thickness": 0.14}},
 
 	# ---- nguyên liệu trong tủ lạnh ----
 	# Ham KHÔNG qua thớt — nấu thẳng. Ảnh dùng lại ham_uncook.png (ham sống)
 	# vì bộ ảnh không có file "ham.png" riêng.
-	"ham":        {"ten": "Ham", "model": "food_ingredient_ham",
-		"anh": "ham_uncook", "nau": "ham_cooked", "hong": "ham_cooked_fail"},
-	"ham_cooked": {"ten": "Ham đã nấu",  "model": "food_ingredient_ham_cooked",
-		"bay": {"cao": 0.83, "y": 0.415}},
-	"ham_cooked_fail": {"ten": "Ham cháy", "model": "food_ingredient_ham_trash"},
+	"ham":        {"name": "Ham", "model": "food_ingredient_ham",
+		"icon": "ham_uncook", "cook": "ham_cooked", "burnt": "ham_cooked_fail"},
+	"ham_cooked": {"name": "Ham đã nấu",  "model": "food_ingredient_ham_cooked",
+		"layout": {"height": 0.83, "y": 0.415}},
+	"ham_cooked_fail": {"name": "Ham cháy", "model": "food_ingredient_ham_trash"},
 
-	"steak":        {"ten": "Steak", "model": "food_ingredient_steak",
-		"so_che": "steak_uncook"},
-	"steak_uncook": {"ten": "Steak đã thái", "bay": {"cao": 0.20},
+	"steak":        {"name": "Steak", "model": "food_ingredient_steak",
+		"prep": "steak_uncook"},
+	"steak_uncook": {"name": "Steak đã thái", "layout": {"height": 0.20},
 		"model": "food_ingredient_burger_uncooked",
-		"nau": "steak_cooked", "hong": "steak_cooked_fail"},
-	"steak_cooked": {"ten": "Steak đã nấu",
+		"cook": "steak_cooked", "burnt": "steak_cooked_fail"},
+	"steak_cooked": {"name": "Steak đã nấu",
 		# Nấc 30: giữa xà lách (20) và phô mai (40), đúng thứ tự một cái burger.
 		# Model food_ingredient_burger_cooked vốn đã là miếng chả tròn dày 0,20,
 		# không cần đổi model.
-		"bay": {"thu_tu": 30, "cao": 0.20},
+		"layout": {"order": 30, "height": 0.20},
 		"model": "food_ingredient_burger_cooked"},
-	"steak_cooked_fail": {"ten": "Steak cháy",
+	"steak_cooked_fail": {"name": "Steak cháy",
 		"model": "food_ingredient_burger_trash"},
 
-	"cheese":      {"ten": "Phô mai",  "model": "food_ingredient_cheese",
+	"cheese":      {"name": "Phô mai",  "model": "food_ingredient_cheese",
 		# Khối phô mai cao 0,50 → một lát dày 0,105. Gốc toạ độ của lát nằm
 		# gần MẶT TRÊN (y từ −0,087 tới 0,018) nên phải nâng 0,087.
-		"bay": {"thu_tu": 40, "cao": 0.105, "y": 0.087,
+		"layout": {"order": 40, "height": 0.105, "y": 0.087,
 			"model": "food_ingredient_cheese_slice"}},
-	"cookiestick": {"ten": "Bánh quế", "model": "icecream_cookiestick",
-		"bay": {"cao": 0.52, "y": 0.258}},
+	"cookiestick": {"name": "Bánh quế", "model": "icecream_cookiestick",
+		"layout": {"height": 0.52, "y": 0.258}},
 
-	"peperoni":     {"ten": "Xúc xích", "model": "food_ingredient_pepperoni",
-		"so_che": "peperoni_pre"},
-	"peperoni_pre": {"ten": "Xúc xích đã thái", "bay": {"cao": 0.40},
+	"peperoni":     {"name": "Xúc xích", "model": "food_ingredient_pepperoni",
+		"prep": "peperoni_pre"},
+	"peperoni_pre": {"name": "Xúc xích đã thái", "layout": {"height": 0.40},
 		"model": "food_ingredient_pepperoni_chopped"},
 
 	# ---- vật chứa ----
-	"bowl": {"ten": "Đĩa", "model": "plate", "bay": {"day": 0.08}},
+	"bowl": {"name": "Đĩa", "model": "plate", "layout": {"thickness": 0.08}},
 	# CÁI NỒI RỖNG — từ 14/9/2026 là một NGUYÊN LIỆU BÌNH THƯỜNG, lấy vô hạn
 	# ở chồng nồi y như cái đĩa lấy ở chồng đĩa.
 	#
@@ -135,7 +135,7 @@ const MUC := {
 	#
 	# Không còn `model_day`: nồi không bao giờ chứa gì nữa. Thứ "nồi có đồ
 	# bên trong" giờ là một vật phẩm riêng — noi_canh ngay dưới đây.
-	"noi": {"ten": "Nồi", "model": "pot_A", "bay": {"day": 0.48}},
+	"noi": {"name": "Nồi", "model": "pot_A", "layout": {"thickness": 0.48}},
 	# NỒI CANH SỐNG — thành phẩm của bàn chế tạo, nguyên liệu của cái bếp.
 	#
 	# `nau` trỏ sang "stew" nên cái bếp không cần biết đây là nồi: nó đọc
@@ -164,22 +164,22 @@ const MUC := {
 	# `trang_thai_hong(goc)` KHÁC RỖNG; không có khoá `hong` thì nấu xong là
 	# mẻ bị gỡ khỏi bảng đang-nấu ngay, không có đường nào đi tới _chay().
 	# Nghĩa là nồi canh nằm trên bếp bao lâu cũng được.
-	"noi_canh": {"ten": "Nồi canh (sống)", "model": "pot_A_stew",
-		"nau": "stew", "bay": {"day": 0.48}},
+	"noi_canh": {"name": "Nồi canh (sống)", "model": "pot_A_stew",
+		"cook": "stew", "layout": {"thickness": 0.48}},
 
 	# ---- món hoàn chỉnh ----
-	"hambuger":      {"ten": "Hamburger",       "model": "food_burger",
-		"gia": 95, "giay": 20.0},
-	"vegetablebuger_uncook": {"ten": "Steak rau củ (sống)",
+	"hambuger":      {"name": "Hamburger",       "model": "food_burger",
+		"price": 95, "seconds": 20.0},
+	"vegetablebuger_uncook": {"name": "Steak rau củ (sống)",
 		"model": "food_ingredient_vegetableburger_uncooked",
-		"nau": "vegetablebuger_cooked"},
-	"vegetablebuger_cooked": {"ten": "Steak rau củ (chín)",
-		"bay": {"thu_tu": 30, "cao": 0.216},
+		"cook": "vegetablebuger_cooked"},
+	"vegetablebuger_cooked": {"name": "Steak rau củ (chín)",
+		"layout": {"order": 30, "height": 0.216},
 		"model": "food_ingredient_vegetableburger_cooked"},
-	"vegetablebuger": {"ten": "Hamburger rau củ", "model": "food_vegetableburger",
-		"gia": 110, "giay": 22.6},
-	"dinner":        {"ten": "Bữa tối",         "model": "food_dinner",
-		"gia": 150, "giay": 30.6},
+	"vegetablebuger": {"name": "Hamburger rau củ", "model": "food_vegetableburger",
+		"price": 110, "seconds": 22.6},
+	"dinner":        {"name": "Bữa tối",         "model": "food_dinner",
+		"price": 150, "seconds": 30.6},
 	# CANH RAU CỦ — món hoàn chỉnh, ra thẳng từ bếp, giao được cho khách ngay.
 	#
 	# Trước đây chỗ này có HAI mục cho cùng một bát canh: "stew" (canh múc ra
@@ -192,46 +192,46 @@ const MUC := {
 	# bảng này đều theo tên model của KayKit (food_stew), còn "mon_" là tiền tố
 	# của ba MÓN BÀY BÁT ghép lúc chạy (mon_ham, mon_steak) — canh không thuộc
 	# nhóm đó vì nó có model sẵn.
-	"stew": {"ten": "Canh rau củ", "model": "food_stew", "bay": {"cao": 0.37},
-		"gia": 135, "giay": 28.0},
+	"stew": {"name": "Canh rau củ", "model": "food_stew", "layout": {"height": 0.37},
+		"price": 135, "seconds": 28.0},
 	# Ba loại pizza thu nhỏ còn 0.7: model "plated" của KayKit đã kèm sẵn cái
 	# khay bên dưới nên to hơn hẳn mọi món khác, cầm trên tay thì che mất
 	# nửa nhân vật.
-	"pizza_cheese":   {"ten": "Pizza phô mai",  "model": "food_pizza_cheese_plated",
-		"ti_le": 0.5, "gia": 105, "giay": 23.0},
-	"pizza_mushroom": {"ten": "Pizza nấm",      "model": "food_pizza_mushroom_plated",
-		"ti_le": 0.5, "gia": 100, "giay": 23.0},
-	"pizza_peperoni": {"ten": "Pizza xúc xích", "model": "food_pizza_pepperoni_plated",
-		"ti_le": 0.5, "gia": 100, "giay": 23.0},
-	"icecream_vani":       {"ten": "Kem vani",
-		"model": "icecream_bowl_icecream_vanilla", "bay": {"cao": 0.36},
-		"gia": 15, "giay": 4.2},
-	"icecream_chocolate":  {"ten": "Kem chocolate",
-		"model": "icecream_bowl_icecream_chocolate", "bay": {"cao": 0.36},
-		"gia": 15, "giay": 4.2},
-	"icecream_strawberry": {"ten": "Kem dâu",
-		"model": "icecream_bowl_icecream_strawberry", "bay": {"cao": 0.36},
-		"gia": 15, "giay": 4.2},
+	"pizza_cheese":   {"name": "Pizza phô mai",  "model": "food_pizza_cheese_plated",
+		"scale": 0.5, "price": 105, "seconds": 23.0},
+	"pizza_mushroom": {"name": "Pizza nấm",      "model": "food_pizza_mushroom_plated",
+		"scale": 0.5, "price": 100, "seconds": 23.0},
+	"pizza_peperoni": {"name": "Pizza xúc xích", "model": "food_pizza_pepperoni_plated",
+		"scale": 0.5, "price": 100, "seconds": 23.0},
+	"icecream_vani":       {"name": "Kem vani",
+		"model": "icecream_bowl_icecream_vanilla", "layout": {"height": 0.36},
+		"price": 15, "seconds": 4.2},
+	"icecream_chocolate":  {"name": "Kem chocolate",
+		"model": "icecream_bowl_icecream_chocolate", "layout": {"height": 0.36},
+		"price": 15, "seconds": 4.2},
+	"icecream_strawberry": {"name": "Kem dâu",
+		"model": "icecream_bowl_icecream_strawberry", "layout": {"height": 0.36},
+		"price": 15, "seconds": 4.2},
 	# Hai món kem ghép. Khác ba loại kem lẻ ở trên (lấy thẳng từ máy rồi giao
 	# luôn), hai món này phải qua bàn chế tạo — xem CONG_THUC_BAN.
 	#
 	# Ảnh riêng chứ không mượn ảnh kem lẻ: cả hai đều là BA viên kem trong một
 	# bát, nhìn từ xa mà dùng ảnh một viên thì người chơi không phân biệt được
 	# mình đang cầm món ghép hay nguyên liệu rời.
-	"kem_tam_hop": {"ten": "Kem tam hợp",
-		"model": "icecream_bowl_decorated_B", "bay": {"cao": 0.73},
-		"gia": 40, "giay": 8.9},
-	"kem_tam_hop_que": {"ten": "Kem tam hợp và bánh quế",
-		"model": "icecream_bowl_decorated_A", "gia": 55, "giay": 12.2},
+	"kem_tam_hop": {"name": "Kem tam hợp",
+		"model": "icecream_bowl_decorated_B", "layout": {"height": 0.73},
+		"price": 40, "seconds": 8.9},
+	"kem_tam_hop_que": {"name": "Kem tam hợp và bánh quế",
+		"model": "icecream_bowl_decorated_A", "price": 55, "seconds": 12.2},
 
 	# ---- món bày ra đĩa (dùng lại ảnh của nguyên liệu cuối) ----
 	# Ba món dưới đây là BÁT GHÉP: bộ KayKit không có model nào sẵn "thức ăn
 	# nằm trong bát", nên phải ghép cái bát với phần thức ăn lúc chạy. Ghép
 	# bằng dữ liệu chứ không dựng ba file .tscn: ba dòng ở đây rẻ hơn ba file
 	# phải mở ra sửa mỗi lần đổi độ cao, và món thứ tư chỉ là thêm một dòng.
-	"mon_ham":  {"ten": "Ham",
-		"bat": {"model": "food_ingredient_ham_cooked", "y": 0.37, "ti_le": 0.75},
-		"anh": "ham_cooked", "gia": 60, "giay": 14.9},
+	"mon_ham":  {"name": "Ham",
+		"on_plate": {"model": "food_ingredient_ham_cooked", "y": 0.37, "scale": 0.75},
+		"icon": "ham_cooked", "price": 60, "seconds": 14.9},
 	# Món dạy trong màn hướng dẫn. Đây là món NGẮN NHẤT đi qua đủ cả bốn trạm
 	# thái → nấu → đĩa → bàn chế tạo: chuỗi "thái rồi nấu" trong game chỉ có ở
 	# steak, mà trước đó steak_cooked chỉ dùng cho Hamburger 5 nguyên liệu —
@@ -240,9 +240,9 @@ const MUC := {
 	# Giá suy từ đúng công thức trong bảng cân bằng: 4 × 19,4 giây × 1,04
 	# (một nguyên liệu phụ trội) ≈ 80. Thời gian 19,4 s = thời gian món Ham
 	# (14,9 s) cộng một chuyến ghé thớt.
-	"mon_steak": {"ten": "Steak",
-		"bat": {"model": "food_ingredient_burger_cooked", "y": 0.12},
-		"anh": "steak_cooked", "gia": 80, "giay": 19.4},
+	"mon_steak": {"name": "Steak",
+		"on_plate": {"model": "food_ingredient_burger_cooked", "y": 0.12},
+		"icon": "steak_cooked", "price": 80, "seconds": 19.4},
 	# Steak rau củ bày bát.
 	#
 	# (Đổi tên 18/9/2026) Trước là "Chả rau củ". Ba mục vegetablebuger_* cùng
@@ -252,12 +252,12 @@ const MUC := {
 	# Giá 105 suy từ công thức bảng cân bằng khi miếng này còn là 2 nguyên
 	# liệu (steak + cà rốt). Từ 18/9 nó thành 4 nguyên liệu, nên con số này
 	# ĐANG THẤP so với công sức bỏ ra — xem ghi chú ở CONG_THUC_BAN.
-	"vegetablesteak": {"ten": "Steak rau củ",
-		"bat": {"model": "food_ingredient_vegetableburger_cooked", "y": 0.12},
-		"anh": "vegetablebuger_cooked", "gia": 105, "giay": 24.5},
+	"vegetablesteak": {"name": "Steak rau củ",
+		"on_plate": {"model": "food_ingredient_vegetableburger_cooked", "y": 0.12},
+		"icon": "vegetablebuger_cooked", "price": 105, "seconds": 24.5},
 
 	# ---- đồ hỏng ----
-	"do_hong": {"ten": "Đồ hỏng", "model": "food_ingredient_ham_trash"},
+	"do_hong": {"name": "Đồ hỏng", "model": "food_ingredient_ham_trash"},
 }
 
 ## Những nguyên liệu cho được vào NỒI.
@@ -288,11 +288,11 @@ const MUC := {
 ## một dòng khi cần thử cân bằng hay quay phim demo. Đổi thành false là thực
 ## đơn tự bỏ ba món nấu nồi, khách thôi gọi chúng, và cái nồi biến khỏi map —
 ## không phải sửa chỗ nào khác.
-const NOI_MO := true
+const POT_ENABLED := true
 
 ## Những id chỉ tồn tại được khi có nồi: chính cái nồi, món nấu ra từ nồi, và
 ## mọi món CHỨA món đó. Bữa tối nằm đây vì công thức của nó cần "stew".
-const VAT_KHOA_THEO_NOI := ["noi", "noi_canh", "stew", "dinner"]
+const POT_LOCKED_ITEMS := ["noi", "noi_canh", "stew", "dinner"]
 
 ## (Đã bỏ) Danh sách đen KHONG_LEN_BAN và hàm len_ban_duoc().
 ##
@@ -307,8 +307,8 @@ const VAT_KHOA_THEO_NOI := ["noi", "noi_canh", "stew", "dinner"]
 
 ## Id này hiện có bị khoá không. Hệ đơn hàng, bàn chế tạo và đôi tay đều hỏi
 ## qua đây, nên chỉ cần một chỗ để bật/tắt.
-static func bi_khoa(id: String) -> bool:
-	return not NOI_MO and VAT_KHOA_THEO_NOI.has(id)
+static func is_locked(id: String) -> bool:
+	return not POT_ENABLED and POT_LOCKED_ITEMS.has(id)
 
 
 ## (Đã bỏ) CHO_VAO_NOI và CONG_THUC_NOI — bảng "thứ gì đổ được vào nồi" và
@@ -324,14 +324,14 @@ static func bi_khoa(id: String) -> bool:
 ## Không có dough_pre trong danh sách này: đế bánh là thứ KHỞI ĐỘNG lò, không
 ## phải topping. Tách hai vai ra thì "bỏ đế thứ hai vào lò đang chạy" tự động
 ## là hành động không hợp lệ, không cần viết thêm luật nào để chặn.
-const CHO_VAO_LO := ["cheese", "mushroom", "onion", "tomato", "peperoni_pre"]
+const OVEN_TOPPINGS := ["cheese", "mushroom", "onion", "tomato", "peperoni_pre"]
 
 ## Đế bánh — thứ duy nhất bật được lò nướng.
-const DE_BANH := "dough_pre"
+const PIZZA_BASE := "dough_pre"
 
 ## Công thức lò nướng. Cùng quy ước khoá với CONG_THUC_NOI: sắp xếp rồi nối
 ## bằng "+", nên thứ tự bỏ vào không quan trọng.
-const CONG_THUC_LO := {
+const OVEN_RECIPES := {
 	"dough_pre+peperoni_pre+tomato": "pizza_peperoni",
 	"dough_pre+mushroom+tomato": "pizza_mushroom",
 	"cheese+dough_pre+onion+tomato": "pizza_cheese",
@@ -344,7 +344,7 @@ const CONG_THUC_LO := {
 ## bày ra đĩa mới giao được. Để đĩa thành một NGUYÊN LIỆU thay vì một bước
 ## riêng thì không cần thêm trạng thái nào cho cái bàn — quên lấy đĩa cũng
 ## chỉ là một công thức không khớp, giống hệt quên một nguyên liệu.
-const CONG_THUC_BAN := {
+const TABLE_RECIPES := {
 	"bowl+ham_cooked": "mon_ham",
 	"bowl+steak_cooked": "mon_steak",
 	"bowl+vegetablebuger_cooked": "vegetablesteak",
@@ -441,8 +441,8 @@ const CONG_THUC_BAN := {
 ## theo định nghĩa là thứ nằm ở vế PHẢI của một công thức. Thêm công thức mới
 ## là tự động có thêm một món, không phải nhớ đánh dấu ở chỗ thứ hai.
 ## Giá bán của một món. 0 = chưa định giá.
-static func gia(id: String) -> int:
-	return int(MUC.get(id, {}).get("gia", 0))
+static func price(id: String) -> int:
+	return int(ITEMS.get(id, {}).get("price", 0))
 
 
 ## Thời gian kiên nhẫn của khách gọi món này, tính bằng giây.
@@ -462,28 +462,28 @@ static func gia(id: String) -> int:
 ## ra 2,5 × 4,2 = 10,5 giây, tức nó luôn bị cái sàn 35 kéo lên. Chỉ nâng hệ số
 ## thì mọi món ngắn giữ nguyên 35 giây và "thêm 50% cho TẤT CẢ các món" không
 ## đúng với đúng những món đang dễ bị mất khách nhất.
-const HE_SO_KIEN_NHAN := 3.75
-const KIEN_NHAN_TOI_THIEU := 52.5
+const PATIENCE_FACTOR := 3.75
+const PATIENCE_MIN := 52.5
 
-static func kien_nhan(id: String) -> float:
-	var t := float(MUC.get(id, {}).get("giay", 0.0))
+static func patience(id: String) -> float:
+	var t := float(ITEMS.get(id, {}).get("seconds", 0.0))
 	if t <= 0.0:
-		return KIEN_NHAN_TOI_THIEU
-	return maxf(KIEN_NHAN_TOI_THIEU, HE_SO_KIEN_NHAN * t)
+		return PATIENCE_MIN
+	return maxf(PATIENCE_MIN, PATIENCE_FACTOR * t)
 
 
 ## Mọi món BÁN ĐƯỢC, tức có giá. Hệ đơn hàng bốc món từ đây.
-static func danh_sach_mon_ban() -> Array[String]:
-	var ra: Array[String] = []
-	for id in MUC:
-		if bi_khoa(String(id)):
+static func sellable_dishes() -> Array[String]:
+	var out: Array[String] = []
+	for id in ITEMS:
+		if is_locked(String(id)):
 			continue
-		if int(MUC[id].get("gia", 0)) > 0:
-			ra.append(String(id))
-	return ra
+		if int(ITEMS[id].get("price", 0)) > 0:
+			out.append(String(id))
+	return out
 
 
-static func la_mon(id: String) -> bool:
+static func is_dish(id: String) -> bool:
 	# HOẶC có giá. Chỉ hỏi CONG_THUC_BAN là thiếu, vì có những món hoàn chỉnh
 	# KHÔNG ra đời ở bàn chế tạo: ba loại kem lẻ lấy thẳng từ máy, và từ
 	# 14/9/2026 thêm món canh — nấu xong trên bếp là xong luôn.
@@ -491,28 +491,28 @@ static func la_mon(id: String) -> bool:
 	# Hàm này chỉ quyết định BÀY MODEL GÌ trên mặt bàn chế tạo, nên hậu quả
 	# của việc thiếu là một lỗi im lặng và nhỏ: đặt bát canh lên bàn để ghép
 	# Bữa tối thì mặt bàn hiện trống trơn, người chơi tưởng mình đặt hụt.
-	return CONG_THUC_BAN.values().has(id) or gia(id) > 0
+	return TABLE_RECIPES.values().has(id) or price(id) > 0
 
 
-static func ghep_ban(nguyen_lieu: Array) -> String:
-	var ds := nguyen_lieu.duplicate()
-	ds.sort()
-	var mon := String(CONG_THUC_BAN.get("+".join(ds), ""))
+static func combine_on_table(ingredients: Array) -> String:
+	var list_ := ingredients.duplicate()
+	list_.sort()
+	var dish := String(TABLE_RECIPES.get("+".join(list_), ""))
 	# Chặn ở KẾT QUẢ chứ không xoá dòng công thức: bảng công thức là tài liệu
 	# thiết kế, xoá đi thì lúc mở khoá phải nhớ gõ lại từng dòng.
-	if bi_khoa(mon):
+	if is_locked(dish):
 		return ""
-	return mon
+	return dish
 
 
-static func cho_vao_lo(id: String) -> bool:
-	return CHO_VAO_LO.has(id)
+static func can_go_in_oven(id: String) -> bool:
+	return OVEN_TOPPINGS.has(id)
 
 
-static func nuong_lo(nguyen_lieu: Array) -> String:
-	var ds := nguyen_lieu.duplicate()
-	ds.sort()
-	return String(CONG_THUC_LO.get("+".join(ds), ""))
+static func bake_in_oven(ingredients: Array) -> String:
+	var list_ := ingredients.duplicate()
+	list_.sort()
+	return String(OVEN_RECIPES.get("+".join(list_), ""))
 
 
 ## Dựng node model 3D của một vật phẩm, hoặc null nếu không có model.
@@ -521,26 +521,26 @@ static func nuong_lo(nguyen_lieu: Array) -> String:
 ## dựng model từ một id, mà cả ba đều không có lý do gì để biết file .gltf
 ## nằm ở đâu.
 ## Tên file gltf của cái bát dùng chung cho mọi món bày bát.
-const MODEL_BAT := "bowl"
+const BOWL_MODEL := "bowl"
 ## Độ cao mặc định đặt thức ăn trong lòng bát. Bát cao 0,30; lòng bát bắt đầu
 ## khoảng 0,12 — đo từ chính model `stew_bowl` (phần ruột của bát, y 0,12→0,37).
-const CAO_TRONG_BAT := 0.12
+const BOWL_INNER_HEIGHT := 0.12
 
 ## `co_do` = vật này đang chứa thứ gì bên trong. Chỉ mục nào khai `model_day`
 ## mới quan tâm tới cờ này; số còn lại bỏ qua.
-static func tao_mo_hinh(id: String, co_do: bool = false) -> Node3D:
-	var muc: Dictionary = MUC.get(id, {})
-	if muc.has("bat"):
-		return _tao_bat_ghep(muc["bat"])
+static func make_model(id: String, has_content: bool = false) -> Node3D:
+	var entry: Dictionary = ITEMS.get(id, {})
+	if entry.has("on_plate"):
+		return _make_bowl_combo(entry["on_plate"])
 
-	var ten_m := String(muc.get("model", ""))
-	if co_do and muc.has("model_day"):
-		ten_m = String(muc["model_day"])
-	var m := _nap_model(ten_m)
+	var model_name := String(entry.get("model", ""))
+	if has_content and entry.has("model_inner"):
+		model_name = String(entry["model_inner"])
+	var m := _load_model(model_name)
 	if m != null:
-		var ti: float = float(muc.get("ti_le", 1.0))
-		if not is_equal_approx(ti, 1.0):
-			m.scale = Vector3.ONE * ti
+		var scale_: float = float(entry.get("scale", 1.0))
+		if not is_equal_approx(scale_, 1.0):
+			m.scale = Vector3.ONE * scale_
 	return m
 
 
@@ -555,7 +555,7 @@ static func tao_mo_hinh(id: String, co_do: bool = false) -> Node3D:
 # là giấu bớt, mà là cho mỗi món một ĐỘ CAO riêng.
 
 ## Món kế tiếp nhích lên bao nhiêu, khi nó không tự khai "cao".
-const CAO_NAC := 0.08
+const STACK_STEP := 0.08
 
 ## Thu nhỏ bấy nhiêu khi nằm trong chồng trên bàn, nếu món đó không tự khai
 ## "ti_le". ĐÂY LÀ NÚM VẶN CHÍNH của cả cơ chế — sửa một số này là cả chồng
@@ -572,14 +572,14 @@ const CAO_NAC := 0.08
 ##
 ## VẬT ĐẾ KHÔNG bị thu: cái đĩa phải giữ đúng cỡ đĩa thì đồ mới nhìn như đang
 ## nằm TRONG nó.
-const TI_LE_CHONG := 0.6
+const STACK_SCALE := 0.6
 
 ## Món không khai "thu_tu" thì nằm ở nấc này. Chọn 50 để còn chỗ cho cả thứ
 ## phải nằm dưới nó (10–40) lẫn thứ phải nằm trên (60–90).
-const THU_TU_MAC_DINH := 50
+const DEFAULT_ORDER := 50
 
 ## Vật đế mặc định cao bao nhiêu, khi nó không tự khai "day".
-const DAY_MAC_DINH := 0.12
+const DEFAULT_THICKNESS := 0.12
 
 ## Mỗi tầng xoay thêm bấy nhiêu độ quanh trục đứng.
 ##
@@ -587,7 +587,7 @@ const DAY_MAC_DINH := 0.12
 ## cùng góc quay thì nhìn ra MỘT củ méo, không ra hai. Dùng một góc CỐ ĐỊNH
 ## chứ không randf(): mặt bàn phải bày y hệt nhau mỗi lần dựng lại, nếu không
 ## thì mỗi lần nhấc một món ra, cả chồng còn lại nhảy sang tư thế khác.
-const XOAY_MOI_TANG := 37.0
+const ROTATION_PER_LAYER := 37.0
 
 ## Thứ có thể làm ĐẾ cho những thứ khác chồng lên, xếp theo ĐỘ ƯU TIÊN.
 ##
@@ -599,12 +599,12 @@ const XOAY_MOI_TANG := 37.0
 ## Là một DANH SÁCH chứ không phải một khoá trong MUC: thứ tự ưu tiên là quan
 ## hệ GIỮA các món với nhau, không phải thuộc tính của từng món — viết vào MUC
 ## thì phải gán số thứ tự cho mỗi cái và đọc bốn dòng rời rạc mới ra thứ tự.
-const VAT_DE := ["bowl", "noi", "noi_canh", "dough_pre"]
+const BASE_ITEMS := ["bowl", "noi", "noi_canh", "dough_pre"]
 
 
 ## Số liệu bày biện của một vật phẩm. Luôn trả Dictionary, rỗng là hợp lệ.
-static func bay(id: String) -> Dictionary:
-	return MUC.get(id, {}).get("bay", {})
+static func layout(id: String) -> Dictionary:
+	return ITEMS.get(id, {}).get("layout", {})
 
 
 ## Dựng MỘT node gồm cả chồng đồ đang nằm trên bàn chế tạo.
@@ -614,33 +614,33 @@ static func bay(id: String) -> Dictionary:
 ##
 ## Một món thì đi thẳng tao_mo_hinh(): món đã ráp xong nằm một mình trên bàn
 ## phải trông y hệt lúc cầm trên tay, không bị nhấc lên một nấc vô cớ.
-static func tao_chong(ds: Array[String]) -> Node3D:
-	if ds.is_empty():
+static func make_stack(list_: Array[String]) -> Node3D:
+	if list_.is_empty():
 		return null
-	if ds.size() == 1:
-		return tao_mo_hinh(String(ds[0]))
+	if list_.size() == 1:
+		return make_model(String(list_[0]))
 
-	var con: Array[String] = ds.duplicate()
-	var goc: Node3D = null
-	var cao := 0.0
+	var parts: Array[String] = list_.duplicate()
+	var origin: Node3D = null
+	var height := 0.0
 
-	for de in VAT_DE:
-		var vt := con.find(String(de))
-		if vt < 0:
+	for base in BASE_ITEMS:
+		var pos := parts.find(String(base))
+		if pos < 0:
 			continue
-		goc = tao_mo_hinh(String(de))
-		if goc == null:
+		origin = make_model(String(base))
+		if origin == null:
 			continue
-		con.remove_at(vt)
-		cao = float(bay(String(de)).get("day", DAY_MAC_DINH))
+		parts.remove_at(pos)
+		height = float(layout(String(base)).get("thickness", DEFAULT_THICKNESS))
 		break
 
 	# Không có vật đế nào: chồng thẳng trên mặt bàn. Dùng một Node3D rỗng làm
 	# gốc chứ không lấy món đầu tiên làm gốc — như vậy mọi món con đều tính
 	# độ cao theo cùng một mốc, và món đầu không bị nhân hai lần tỉ lệ khi
 	# chính nó có "ti_le".
-	if goc == null:
-		goc = Node3D.new()
+	if origin == null:
+		origin = Node3D.new()
 
 	# SẮP XẾP THEO "thu_tu" chứ không theo thứ tự người chơi bỏ lên bàn.
 	#
@@ -652,59 +652,59 @@ static func tao_chong(ds: Array[String]) -> Node3D:
 	# Cùng "thu_tu" thì giữ nguyên thứ tự bỏ vào (so thêm chỉ số i): sort_custom
 	# của Godot KHÔNG bảo đảm ổn định, nên thiếu vế này thì hai món cùng nấc có
 	# thể đổi chỗ cho nhau mỗi lần dựng lại chồng.
-	var xep: Array = []
-	for i in con.size():
-		xep.append({
-			"id": String(con[i]),
-			"tt": int(bay(String(con[i])).get("thu_tu", THU_TU_MAC_DINH)),
+	var ordered: Array = []
+	for i in parts.size():
+		ordered.append({
+			"id": String(parts[i]),
+			"tt": int(layout(String(parts[i])).get("order", DEFAULT_ORDER)),
 			"i": i,
 		})
-	xep.sort_custom(func(a: Dictionary, b: Dictionary) -> bool:
+	ordered.sort_custom(func(a: Dictionary, b: Dictionary) -> bool:
 		if int(a["tt"]) != int(b["tt"]):
 			return int(a["tt"]) < int(b["tt"])
 		return int(a["i"]) < int(b["i"]))
 
-	var tang := 0
+	var layer := 0
 	# Mảnh phải nằm TRÊN CÙNG (nắp bánh mì), để dành đặt sau cùng.
-	var tren := ""
-	var ti_tren := 1.0
+	var top := ""
+	var top_scale := 1.0
 
-	for muc in xep:
-		var id := String(muc["id"])
-		var b: Dictionary = bay(id)
-		var m := _mo_hinh_chong(id)
+	for entry in ordered:
+		var id := String(entry["id"])
+		var b: Dictionary = layout(id)
+		var m := _stack_model(id)
 		if m == null:
 			continue
-		var ti := float(b.get("ti_le", TI_LE_CHONG))
-		if not is_equal_approx(ti, 1.0):
-			m.scale = Vector3.ONE * ti
+		var scale_ := float(b.get("scale", STACK_SCALE))
+		if not is_equal_approx(scale_, 1.0):
+			m.scale = Vector3.ONE * scale_
 		# NHÂN cả "y" với tỉ lệ, không chỉ "cao": "y" đo trên model cỡ gốc
 		# (cà rốt có gốc toạ độ ở GIỮA thân nên phải nâng 0,585 mới chạm đáy).
 		# Thu nhỏ rồi mà vẫn nâng 0,585 thì củ cà rốt lơ lửng trên không.
-		m.position.y = cao + float(b.get("y", 0.0)) * ti
+		m.position.y = height + float(b.get("y", 0.0)) * scale_
 		# KHÔNG xoay những món có "thu_tu" riêng: chúng là những lát phẳng phải
 		# nằm khít lên nhau, xoay đi thì cái bánh thành vẹo. Chỉ xoay đám
 		# nguyên liệu nguyên củ nằm ở nấc mặc định.
-		if not b.has("thu_tu"):
-			m.rotate_y(deg_to_rad(XOAY_MOI_TANG * float(tang)))
-		goc.add_child(m)
+		if not b.has("order"):
+			m.rotate_y(deg_to_rad(ROTATION_PER_LAYER * float(layer)))
+		origin.add_child(m)
 		# Nhân với ti_le: thu nhỏ một món thì nó cũng MỎNG đi đúng bấy nhiêu,
 		# nếu không thì chồng đồ có những khoảng hở giữa các tầng.
-		cao += float(b.get("cao", CAO_NAC)) * ti
-		tang += 1
-		if tren.is_empty() and b.has("model_tren"):
-			tren = String(b["model_tren"])
-			ti_tren = ti
+		height += float(b.get("height", STACK_STEP)) * scale_
+		layer += 1
+		if top.is_empty() and b.has("model_top"):
+			top = String(b["model_top"])
+			top_scale = scale_
 
-	if not tren.is_empty():
-		var nap := _nap_model(tren)
-		if nap != null:
-			if not is_equal_approx(ti_tren, 1.0):
-				nap.scale = Vector3.ONE * ti_tren
-			nap.position.y = cao
-			goc.add_child(nap)
+	if not top.is_empty():
+		var lid := _load_model(top)
+		if lid != null:
+			if not is_equal_approx(top_scale, 1.0):
+				lid.scale = Vector3.ONE * top_scale
+			lid.position.y = height
+			origin.add_child(lid)
 
-	return goc
+	return origin
 
 
 ## Model của một vật phẩm KHI NÓ NẰM TRONG CHỒNG.
@@ -718,11 +718,11 @@ static func tao_chong(ds: Array[String]) -> Node3D:
 ## vào bánh nó mới là một lát.
 ## Tham số đặt tên `ten_m` chứ không `ten`: lớp này đã có hàm ten(id), trùng
 ## tên thì Godot cảnh báo che khuất — cùng cái bẫy đã ghi ở _nap_model().
-static func _mo_hinh_chong(id: String) -> Node3D:
-	var ten_m := String(bay(id).get("model", ""))
-	if ten_m.is_empty():
-		return tao_mo_hinh(id)
-	return _nap_model(ten_m)
+static func _stack_model(id: String) -> Node3D:
+	var model_name := String(layout(id).get("model", ""))
+	if model_name.is_empty():
+		return make_model(id)
+	return _load_model(model_name)
 
 
 ## Dựng "thức ăn nằm trong bát" = model bát + model thức ăn gắn vào trong.
@@ -733,18 +733,18 @@ static func _mo_hinh_chong(id: String) -> Node3D:
 ##
 ## Thiếu model thức ăn thì vẫn trả về cái bát rỗng chứ không trả null: mất một
 ## món ăn trên bàn còn dễ nhận ra và dễ chơi tiếp hơn là mất luôn cả vật phẩm.
-static func _tao_bat_ghep(cai: Dictionary) -> Node3D:
-	var bat := _nap_model(MODEL_BAT)
-	if bat == null:
+static func _make_bowl_combo(piece: Dictionary) -> Node3D:
+	var bowl := _load_model(BOWL_MODEL)
+	if bowl == null:
 		return null
-	var an := _nap_model(String(cai.get("model", "")))
-	if an != null:
-		an.position.y = float(cai.get("y", CAO_TRONG_BAT))
-		var ti := float(cai.get("ti_le", 1.0))
-		if not is_equal_approx(ti, 1.0):
-			an.scale = Vector3.ONE * ti
-		bat.add_child(an)
-	return bat
+	var hidden_ := _load_model(String(piece.get("model", "")))
+	if hidden_ != null:
+		hidden_.position.y = float(piece.get("y", BOWL_INNER_HEIGHT))
+		var scale_ := float(piece.get("scale", 1.0))
+		if not is_equal_approx(scale_, 1.0):
+			hidden_.scale = Vector3.ONE * scale_
+		bowl.add_child(hidden_)
+	return bowl
 
 
 ## Nạp một file gltf theo TÊN MODEL (không phải id vật phẩm).
@@ -752,49 +752,49 @@ static func _tao_bat_ghep(cai: Dictionary) -> Node3D:
 ## Tham số đặt tên `ten_model` chứ không phải `ten`: lớp này đã có hàm ten(id),
 ## trùng tên thì Godot cảnh báo che khuất và trong thân hàm không gọi được hàm
 ## đó nữa.
-static func _nap_model(ten_model: String) -> Node3D:
-	if ten_model.is_empty():
+static func _load_model(model_name: String) -> Node3D:
+	if model_name.is_empty():
 		return null
-	var duong_dan := MODEL % ten_model
-	if not ResourceLoader.exists(duong_dan):
-		push_warning("Thiếu model: %s" % duong_dan)
+	var path := MODEL_FMT % model_name
+	if not ResourceLoader.exists(path):
+		push_warning("Thiếu model: %s" % path)
 		return null
-	var canh := load(duong_dan) as PackedScene
-	if canh == null:
+	var edge := load(path) as PackedScene
+	if edge == null:
 		return null
-	return canh.instantiate() as Node3D
+	return edge.instantiate() as Node3D
 
 
-static func co(id: String) -> bool:
-	return MUC.has(id)
+static func has_item(id: String) -> bool:
+	return ITEMS.has(id)
 
 
-static func ten(id: String) -> String:
-	return String(MUC.get(id, {}).get("ten", id))
+static func display_name(id: String) -> String:
+	return String(ITEMS.get(id, {}).get("name", id))
 
 
 ## Đường dẫn ảnh 2D. Mặc định tên file TRÙNG id — bớt một cột dữ liệu và bớt
 ## luôn một chỗ để gõ sai; chỉ những món dùng lại ảnh của nguyên liệu mới
 ## phải khai báo khoá "anh".
-static func duong_dan_anh(id: String) -> String:
-	return ANH % String(MUC.get(id, {}).get("anh", id))
+static func icon_path(id: String) -> String:
+	return ICON_FMT % String(ITEMS.get(id, {}).get("icon", id))
 
 
-static func duong_dan_model(id: String) -> String:
-	var m := String(MUC.get(id, {}).get("model", ""))
-	return MODEL % m if not m.is_empty() else ""
+static func model_path(id: String) -> String:
+	var m := String(ITEMS.get(id, {}).get("model", ""))
+	return MODEL_FMT % m if not m.is_empty() else ""
 
 
 ## Kết quả sau khi thái ở thớt. Rỗng nghĩa là thứ này không thái được.
-static func so_che(id: String) -> String:
-	return String(MUC.get(id, {}).get("so_che", ""))
+static func prep_step(id: String) -> String:
+	return String(ITEMS.get(id, {}).get("prep", ""))
 
 
 ## Kết quả sau khi nấu lẻ trên bếp. Rỗng nghĩa là không nấu lẻ được.
-static func nau_don(id: String) -> String:
-	return String(MUC.get(id, {}).get("nau", ""))
+static func cook_step(id: String) -> String:
+	return String(ITEMS.get(id, {}).get("cook", ""))
 
 
 ## Trạng thái cháy nếu để quá lửa. Rỗng nghĩa là món này không cháy được.
-static func trang_thai_hong(id: String) -> String:
-	return String(MUC.get(id, {}).get("hong", ""))
+static func burnt_state(id: String) -> String:
+	return String(ITEMS.get(id, {}).get("burnt", ""))

@@ -83,7 +83,7 @@ func show_results(money: int, xong: int, hoan_hao: int, bo_di: int,
 	get_tree().paused = true
 	Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
 	AmThanh.stop_music()
-	AmThanh.play_sfx("tong_ket")
+	AmThanh.play_sfx("results")
 
 	# Tâm phóng to phải là TÂM BẢNG, không phải góc trên-trái (mặc định).
 	#

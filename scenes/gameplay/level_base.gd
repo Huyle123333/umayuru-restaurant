@@ -89,9 +89,9 @@ func _scene_nhan_vat_dang_chon() -> PackedScene:
 	return player_scene
 
 
-func _khoa_nhan_vat(dang_mo: bool) -> void:
+func _khoa_nhan_vat(is_open: bool) -> void:
 	if player != null:
-		player.khoa_di_chuyen = dang_mo
+		player.khoa_di_chuyen = is_open
 
 
 ## Gắn bộ chọn mục tiêu vào nhân vật và bật HUD tương tác.
@@ -110,8 +110,8 @@ func _khoa_nhan_vat(dang_mo: bool) -> void:
 ## Với load() thì lỗi ở hệ tương tác chỉ làm mất HUD, map vẫn chạy và console
 ## in ra đúng file hỏng.
 func _gan_he_tuong_tac() -> void:
-	var lop_bo_chon := load("res://scripts/tuong_tac/bo_chon_muc_tieu.gd") as GDScript
-	var lop_hud := load("res://scripts/tuong_tac/hud_tuong_tac.gd") as GDScript
+	var lop_bo_chon := load("res://scripts/interaction/target_picker.gd") as GDScript
+	var lop_hud := load("res://scripts/interaction/interaction_hud.gd") as GDScript
 	if lop_bo_chon == null or lop_hud == null:
 		push_warning("Hệ tương tác không nạp được — màn chơi vẫn chạy nhưng không có HUD chọn mục tiêu.")
 		return
@@ -123,27 +123,27 @@ func _gan_he_tuong_tac() -> void:
 	var hud: Node = lop_hud.new()
 	hud.name = "HudTuongTac"
 	add_child(hud)
-	hud.nghe_bo_chon(bo_chon)
-	hud.theo_doi_nhan_vat(player)
+	hud.listen_to_picker(bo_chon)
+	hud.follow_character(player)
 
 	# Đôi tay: cầm/đặt/thả vật thể. Cũng nạp lúc chạy vì cùng lý do với hai
 	# script trên — lỗi ở đây không được phép làm cả màn chơi không mở lên.
-	var lop_tay := load("res://scripts/tuong_tac/tay_cam.gd") as GDScript
-	var lop_bang := load("res://scripts/tuong_tac/bang_chon.gd") as GDScript
+	var lop_tay := load("res://scripts/interaction/hands.gd") as GDScript
+	var lop_bang := load("res://scripts/interaction/picker_menu.gd") as GDScript
 	if lop_tay != null:
 		var tay: Node = lop_tay.new()
 		tay.name = "TayCam"
 		player.add_child(tay)
-		hud.nghe_tay_cam(tay)
+		hud.listen_to_hands(tay)
 
 		# Hệ thống bếp: một node quản lý chung cho mọi cái bếp trong màn.
-		var lop_bep := load("res://scripts/tuong_tac/bep_nau.gd") as GDScript
+		var lop_bep := load("res://scripts/interaction/cooking_system.gd") as GDScript
 		if lop_bep != null:
-			var he_bep: Node = lop_bep.new()
-			he_bep.name = "HeBep"
-			add_child(he_bep)
-			tay.he_bep = he_bep
-			hud.nghe_he_bep(he_bep)
+			var cooking: Node = lop_bep.new()
+			cooking.name = "HeBep"
+			add_child(cooking)
+			tay.cooking = cooking
+			hud.listen_to_cooking(cooking)
 
 			# Thanh tiến trình RIÊNG cho từng trạm, nổi trên đầu trạm đó.
 			#
@@ -157,7 +157,7 @@ func _gan_he_tuong_tac() -> void:
 				var tt: Node = lop_thanh.new()
 				tt.name = "ThanhTram"
 				add_child(tt)
-				tt.listen_to_cooking(he_bep)
+				tt.listen_to_cooking(cooking)
 			else:
 				push_warning("Không nạp được thanh tiến trình của trạm.")
 
@@ -167,9 +167,9 @@ func _gan_he_tuong_tac() -> void:
 			add_child(bang)
 			# Ba mối nối, mỗi cái một việc: tay xin mở bảng, bảng báo đã
 			# chọn xong, và bảng báo mở/đóng để khoá di chuyển nhân vật.
-			tay.xin_mo_bang.connect(bang.mo)
-			bang.da_chon.connect(tay.nhan_nguyen_lieu)
-			bang.doi_trang_thai.connect(_khoa_nhan_vat)
+			tay.request_picker.connect(bang.open)
+			bang.item_chosen.connect(tay.receive_ingredient)
+			bang.open_state_changed.connect(_khoa_nhan_vat)
 
 	# Hệ kĩ năng chủ động (phím Space). Hiện mới lo phần cut-in; hiệu ứng thật
 	# cắm vào sau. Đặt ở màn chơi chứ không trong scene nhân vật, cùng lý do
@@ -206,7 +206,7 @@ func _gan_he_tuong_tac() -> void:
 	# cái bàn — nhất là cái lò, nơi họ phải nhớ đã bỏ đủ topping chưa.
 	for n in get_tree().get_nodes_in_group("tram"):
 		if n.get("loai") in ["ban_che_tao", "ban_de_tam"]:
-			hud.nghe_ban(n)
+			hud.listen_to_table(n)
 
 
 ## Duyệt mọi vật cầm ĐẶT SẴN trong file map và xử lý hai việc trái ngược nhau.
@@ -231,32 +231,32 @@ func _gan_he_tuong_tac() -> void:
 ## chỉ cần đổi một công tắc trong DanhMuc, không phải dựng lại node vào đúng
 ## chỗ cũ trong map.
 func _lo_vat_cam_trong_map() -> void:
-	var danh_muc := load("res://scripts/tuong_tac/danh_muc.gd") as GDScript
-	if danh_muc == null:
+	var item_catalog := load("res://scripts/interaction/item_catalog.gd") as GDScript
+	if item_catalog == null:
 		return
-	for tram in _tim_tram(self):
+	for station in _tim_tram(self):
 		# Chồng nồi không phải vật cầm được, nhưng nó là NGUỒN của cái nồi —
 		# công tắc NOI_MO tắt thì nó phải biến mất cùng cả nhóm món nồi, nếu
 		# không người chơi vẫn lấy được một cái nồi vô dụng.
-		if tram.loai == "chong_noi" and danh_muc.bi_khoa("noi"):
-			tram.hide()
-			tram.collision_layer = 0
-			tram.collision_mask = 0
+		if station.kind == "chong_noi" and item_catalog.is_locked("noi"):
+			station.hide()
+			station.collision_layer = 0
+			station.collision_mask = 0
 			continue
-		if tram.loai != "vat_cam":
+		if station.kind != "vat_cam":
 			continue
-		if danh_muc.bi_khoa(tram.vat_pham):
-			tram.hide()
-			tram.collision_layer = 0
-			tram.collision_mask = 0
+		if item_catalog.is_locked(station.item_id):
+			station.hide()
+			station.collision_layer = 0
+			station.collision_mask = 0
 			continue
-		tram.dung_vat_cam()
+		station.build_carriable()
 
 
-func _tim_tram(goc: Node) -> Array[TramTuongTac]:
-	var ra: Array[TramTuongTac] = []
+func _tim_tram(goc: Node) -> Array[Workstation]:
+	var ra: Array[Workstation] = []
 	for con in goc.get_children():
-		var t := con as TramTuongTac
+		var t := con as Workstation
 		if t != null:
 			ra.append(t)
 		ra.append_array(_tim_tram(con))
@@ -395,12 +395,12 @@ func _gan_tutorial(bang_gio: Node) -> void:
 		return
 
 	var tay := player.get_node_or_null("TayCam")
-	var he_bep := get_node_or_null("HeBep")
+	var cooking := get_node_or_null("HeBep")
 	var dd: Node = lop.new()
 	dd.name = "TutorialDirector"
 	add_child(dd)
 	dd.tutorial_finished.connect(_khi_xong_tutorial)
-	dd.setup(player, tay, he_bep, quan_ly_khach, bang_gio)
+	dd.setup(player, tay, cooking, quan_ly_khach, bang_gio)
 
 
 ## Hướng dẫn kết thúc.

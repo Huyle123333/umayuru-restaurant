@@ -77,29 +77,29 @@ func _ready() -> void:
 ## hình lệch với đồng hồ thật, kiểu lỗi không bao giờ báo mà chỉ làm người
 ## chơi thấy "rõ ràng bar chưa đầy mà món đã cháy".
 func listen_to_cooking(he: Node) -> void:
-	he.tien_trinh_doi.connect(_on_cooking)
-	he.nguy_co_chay.connect(_on_burn_warning)
+	he.progress_changed.connect(_on_cooking)
+	he.burn_warning.connect(_on_burn_warning)
 
 
-func _on_cooking(tram: Node, ti_le: float) -> void:
+func _on_cooking(station: Node, ti_le: float) -> void:
 	if ti_le <= 0.0:
-		_drop_bar(tram)
+		_drop_bar(station)
 		return
-	_set_bar(tram, ti_le, false)
+	_set_bar(station, ti_le, false)
 
 
-func _on_burn_warning(tram: Node, time_left: float) -> void:
+func _on_burn_warning(station: Node, time_left: float) -> void:
 	if time_left <= 0.0:
-		_drop_bar(tram)
+		_drop_bar(station)
 		return
-	_set_bar(tram, time_left, true)
+	_set_bar(station, time_left, true)
 
 
-func _set_bar(tram: Node, ti_le: float, dang_cho_chay: bool) -> void:
-	var entry: Dictionary = _cells.get(tram, {})
+func _set_bar(station: Node, ti_le: float, dang_cho_chay: bool) -> void:
+	var entry: Dictionary = _cells.get(station, {})
 	if entry.is_empty():
 		entry = _make_bar()
-		_cells[tram] = entry
+		_cells[station] = entry
 	var bar: ProgressBar = entry["bar"]
 	bar.value = ti_le
 	if bool(entry["chay"]) != dang_cho_chay:
@@ -113,12 +113,12 @@ func _set_bar(tram: Node, ti_le: float, dang_cho_chay: bool) -> void:
 		bar.modulate.a = 1.0
 
 
-func _drop_bar(tram: Node) -> void:
-	var entry: Dictionary = _cells.get(tram, {})
+func _drop_bar(station: Node) -> void:
+	var entry: Dictionary = _cells.get(station, {})
 	if entry.is_empty():
 		return
 	(entry["bar"] as ProgressBar).queue_free()
-	_cells.erase(tram)
+	_cells.erase(station)
 
 
 func _make_bar() -> Dictionary:
@@ -154,13 +154,13 @@ func _process(_delta: float) -> void:
 		return
 	var viewport_size := get_viewport().get_visible_rect().size
 
-	for tram in _cells.keys():
-		if not is_instance_valid(tram):
-			_cells.erase(tram)
+	for station in _cells.keys():
+		if not is_instance_valid(station):
+			_cells.erase(station)
 			continue
-		var entry: Dictionary = _cells[tram]
+		var entry: Dictionary = _cells[station]
 		var bar: ProgressBar = entry["bar"]
-		var point: Vector3 = (tram as Node3D).global_position + Vector3(0.0, ANCHOR_HEIGHT, 0.0)
+		var point: Vector3 = (station as Node3D).global_position + Vector3(0.0, ANCHOR_HEIGHT, 0.0)
 		var man := orange.unproject_position(point)
 		# Trạm nằm SAU LƯNG camera: unproject trả về toạ độ lộn ngược, chiếu
 		# thẳng là bar nhảy sang phía đối diện màn hình. Lấy đối xứng qua tâm

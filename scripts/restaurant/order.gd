@@ -22,7 +22,7 @@ extends RefCounted
 ## được từ thời gian làm món (2,5 × thời gian, sàn 35 giây). Hai cột số rời
 ## nhau thì sửa cột này quên cột kia.
 
-const DanhMuc := preload("res://scripts/tuong_tac/danh_muc.gd")
+const ItemCatalog := preload("res://scripts/interaction/item_catalog.gd")
 
 ## Ngưỡng "đơn hoàn hảo": giao khi kiên nhẫn còn TRÊN mức này.
 ##
@@ -46,7 +46,7 @@ var patience_left: float = 0.0        ## kiên nhẫn còn lại, giây
 ## quan_ly_khach gán giá trị này ngay sau khi tạo đơn, TRƯỚC wait_in_queue().
 ##
 ## Vì sao để ở đơn chứ không nhân sẵn vào hai patience_left số gốc bên quan_ly_khach:
-## ngân sách lúc ngồi bàn tính từ DanhMuc.kien_nhan(dish), tức nó được tính
+## ngân sách lúc ngồi bàn tính từ DanhMuc.patience(dish), tức nó được tính
 ## LẠI ở thời điểm khách ngồi xuống chứ không phải lúc tạo đơn. Nhân sẵn ở
 ## ngoài thì phải nhớ nhân ở hai chỗ, và chỗ thứ hai rất dễ quên vì nó nằm
 ## trong sit_at_table() của file này.
@@ -81,7 +81,7 @@ var was_perfect: bool = false
 func _init(nguoi: Node, id_mon: String) -> void:
 	customer = nguoi
 	dish = id_mon
-	price = DanhMuc.gia(id_mon)
+	price = ItemCatalog.price(id_mon)
 
 
 ## Bắt đầu giai đoạn CHỜ BÀN với ngân sách kiên nhẫn cho trước.
@@ -105,7 +105,7 @@ func wait_in_queue(giay: float) -> void:
 func sit_at_table(cai_ban: Node) -> void:
 	table = cai_ban
 	in_queue = false
-	patience_max = DanhMuc.kien_nhan(dish) * patience_factor
+	patience_max = ItemCatalog.patience(dish) * patience_factor
 	patience_left = patience_max
 
 
@@ -133,8 +133,8 @@ func table_number() -> int:
 
 
 func dish_name() -> String:
-	return DanhMuc.ten(dish)
+	return ItemCatalog.display_name(dish)
 
 
 func icon_path() -> String:
-	return DanhMuc.duong_dan_anh(dish)
+	return ItemCatalog.icon_path(dish)

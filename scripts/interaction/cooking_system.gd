@@ -32,12 +32,12 @@ extends Node
 ## Đổi lại: không còn "bỏ thêm nguyên liệu vào nồi đang sôi". Chỗ quyết định
 ## đó chuyển sang bàn chế tạo (ráp đủ năm thứ trước khi lên bếp).
 
-const DanhMuc := preload("res://scripts/tuong_tac/danh_muc.gd")
+const ItemCatalog := preload("res://scripts/interaction/item_catalog.gd")
 
 ## Nấu xong một mẻ. `thanh_cong` false nghĩa là ra đồ hỏng.
-signal nau_xong(bep: Node, mon: String, thanh_cong: bool)
+signal cook_finished(cooker: Node, dish: String, success: bool)
 ## Tiến trình NẤU đổi. 0..1, đầy dần. Phát 0 nghĩa là "hết việc" — thanh ẩn.
-signal tien_trinh_doi(bep: Node, ti_le: float)
+signal progress_changed(cooker: Node, ratio: float)
 
 ## Món đã CHÍN và đang nằm chờ trên bếp, đếm tới lúc cháy. 1..0, VƠI dần.
 ##
@@ -49,34 +49,34 @@ signal tien_trinh_doi(bep: Node, ti_le: float)
 ##
 ## Chỉ phát cho món CÓ khoá `hong` trong danh mục (hiện là ham và steak) —
 ## những món khác nấu xong là gỡ khỏi bảng đang-nấu luôn.
-signal nguy_co_chay(bep: Node, con_lai: float)
+signal burn_warning(cooker: Node, con_lai: float)
 
 ## Nấu một mẻ trên bếp mất bao nhiêu giây.
 ##
 ## 8 giây là con số đủ để người chơi chạy được một chuyến lấy nguyên liệu
 ## (đã đo: một chuyến khứ hồi trong bếp ~4,6 s) nhưng không đủ cho hai
 ## chuyến — nên phải chọn: bỏ đủ trước rồi bật, hay bật sớm và chạy đua.
-@export var thoi_gian_nau := 8.0
+@export var cook_seconds := 8.0
 
 ## Nướng một cái pizza mất bao nhiêu giây.
 ##
 ## Dài hơn bếp vì pizza cần tới ba bốn thứ, tức hai chuyến. Đây cũng là cách
 ## hai trạm có nhịp khác nhau thay vì là hai bản sao của cùng một thao tác.
-@export var thoi_gian_nuong := 11.0
+@export var bake_seconds := 11.0
 
 ## Thái ở thớt mất bao nhiêu giây.
 ##
 ## Ngắn hơn hẳn nấu, vì thái là thao tác BẮT BUỘC và không có quyết định nào
 ## bên trong: đứng đó chờ lâu chỉ là thời gian chết. Cái đáng để người chơi
 ## cân nhắc là bếp và lò, nơi họ chọn giữa chờ và chạy.
-@export var thoi_gian_thai := 2.5
+@export var chop_seconds := 2.5
 
 ## Để trên bếp quá bao nhiêu LẦN thời gian nấu thì cháy.
 ##
 ## 2.0 nghĩa là người chơi có thêm đúng một khoảng bằng thời gian nấu nữa để
 ## quay lại lấy. Đủ rộng để không phạt oan khi đang bận chỗ khác, nhưng vẫn
 ## đủ hẹp để "cứ để đấy rồi tính" là một canh bạc thật.
-@export var he_so_chay := 2.0
+@export var burn_factor := 2.0
 
 ## BỚT bấy nhiêu giây vào mốc cháy. 0 = số gốc của game.
 ##
@@ -86,7 +86,7 @@ signal nguy_co_chay(bep: Node, con_lai: float)
 ##
 ## File này không biết kĩ năng là gì, chỉ có một biến số — xem giải thích
 ## đầy đủ ở quan_ly_ki_nang.gd.
-@export var bot_giay_chay := 0.0
+@export var burn_time_cut := 0.0
 
 ## trạm -> { "kho": TramTuongTac, "t": float, "kieu": String }
 ##
@@ -96,56 +96,56 @@ signal nguy_co_chay(bep: Node, con_lai: float)
 ##
 ## "kieu" quyết định tra bảng nào lúc kết thúc:
 ##   "lo"   — nướng pizza        -> CONG_THUC_LO
-##   "don"  — nấu một món lẻ     -> DanhMuc.nau_don()
-##   "thot" — thái một món lẻ    -> DanhMuc.so_che()
-var _dang_nau: Dictionary = {}
+##   "don"  — nấu một món lẻ     -> DanhMuc.cook_step()
+##   "thot" — thái một món lẻ    -> DanhMuc.prep_step()
+var _running: Dictionary = {}
 
 
 func _process(delta: float) -> void:
-	for tram in _dang_nau.keys():
-		var m: Dictionary = _dang_nau[tram]
-		var kho: TramTuongTac = m["kho"]
-		var kieu: String = m["kieu"]
+	for station in _running.keys():
+		var m: Dictionary = _running[station]
+		var store: Workstation = m["store"]
+		var mode: String = m["mode"]
 
 		# Kho bị xoá khỏi cây scene giữa chừng thì huỷ mẻ.
-		if not is_instance_valid(kho):
-			_huy(tram)
+		if not is_instance_valid(store):
+			_cancel(station)
 			continue
-		if kho.chua.is_empty():
+		if store.contents.is_empty():
 			continue
 
-		var han: float = _han_gio(kieu)
-		m["t"] += delta
+		var limit: float = _duration_for(mode)
+		m["elapsed"] += delta
 
 		# Hai giai đoạn, hai tín hiệu. Phân nhánh TRƯỚC khi xét mốc thời gian:
 		# cờ "xong" đã nói rõ đang ở giai đoạn nào, không cần suy từ con số.
-		if not bool(m.get("xong", false)):
-			tien_trinh_doi.emit(tram, clampf(m["t"] / han, 0.0, 1.0))
+		if not bool(m.get("done", false)):
+			progress_changed.emit(station, clampf(m["elapsed"] / limit, 0.0, 1.0))
 		else:
-			var han_chay: float = _moc_chay(han)
+			var burn_limit: float = _burn_mark(limit)
 			# maxf(0.001, …) chặn chia cho 0 khi bot_giay_chay bị đặt lớn tới
 			# mức mốc cháy trùng luôn với lúc chín.
-			var quang: float = maxf(0.001, han_chay - han)
-			nguy_co_chay.emit(tram, clampf((han_chay - m["t"]) / quang, 0.0, 1.0))
+			var span: float = maxf(0.001, burn_limit - limit)
+			burn_warning.emit(station, clampf((burn_limit - m["elapsed"]) / span, 0.0, 1.0))
 
-		if m["t"] < han:
+		if m["elapsed"] < limit:
 			continue
-		if not bool(m.get("xong", false)):
-			m["xong"] = true
-			_ket_thuc(tram, kho, kieu)
+		if not bool(m.get("done", false)):
+			m["done"] = true
+			_finish(station, store, mode)
 			# Món lẻ nấu xong vẫn nằm trên bếp và VẪN ĐẾM TIẾP, để quá lâu
 			# thì cháy. Các kiểu khác dừng hẳn ở đây.
-			if kieu != "don" or DanhMuc.trang_thai_hong(String(m["goc"])).is_empty():
-				_dang_nau.erase(tram)
+			if mode != "don" or ItemCatalog.burnt_state(String(m["source_id"])).is_empty():
+				_running.erase(station)
 				# Phát 0 Ở ĐÂY chứ không ở _ket_thuc: chỉ khi mẻ thật sự kết
 				# thúc mới được ẩn thanh. Phát trong _ket_thuc thì món còn
 				# chờ cháy cũng bị ẩn mất một khung hình rồi hiện lại.
-				tien_trinh_doi.emit(tram, 0.0)
+				progress_changed.emit(station, 0.0)
 		# maxf(han, ...) là chốt chặn: đặt bot_giay_chay lớn hơn quãng ân hạn
 		# thì mốc cháy sẽ tụt xuống DƯỚI thời gian nấu, tức món cháy trước cả
 		# khi chín — một trạng thái không có đường thoát.
-		elif m["t"] >= _moc_chay(han):
-			_chay(tram, kho, String(m["goc"]))
+		elif m["elapsed"] >= _burn_mark(limit):
+			_burn(station, store, String(m["source_id"]))
 
 
 ## Mốc CHÁY, tính bằng giây kể từ lúc bỏ món lên.
@@ -158,39 +158,39 @@ func _process(delta: float) -> void:
 ## maxf(han, …) là chốt chặn: đặt bot_giay_chay lớn hơn quãng ân hạn thì mốc
 ## cháy sẽ tụt xuống DƯỚI thời gian nấu, tức món cháy trước cả khi chín — một
 ## trạng thái không có đường thoát.
-func _moc_chay(han: float) -> float:
-	return maxf(han, han * he_so_chay - bot_giay_chay)
+func _burn_mark(limit: float) -> float:
+	return maxf(limit, limit * burn_factor - burn_time_cut)
 
 
-func _han_gio(kieu: String) -> float:
-	match kieu:
-		"lo": return thoi_gian_nuong
-		"thot": return thoi_gian_thai
-		_: return thoi_gian_nau
+func _duration_for(mode: String) -> float:
+	match mode:
+		"lo": return bake_seconds
+		"thot": return chop_seconds
+		_: return cook_seconds
 
 
 # --------------------------------------------------------------- lò nướng ---
 
 ## Bỏ đế bánh vào lò và bật lò.
-func bat_lo(lo: TramTuongTac) -> bool:
-	if lo == null or _dang_nau.has(lo) or not lo.chua.is_empty():
+func start_oven(oven: Workstation) -> bool:
+	if oven == null or _running.has(oven) or not oven.contents.is_empty():
 		return false
-	lo.them_vao(DanhMuc.DE_BANH)
-	_dang_nau[lo] = {"kho": lo, "t": 0.0, "kieu": "lo", "goc": ""}
-	tien_trinh_doi.emit(lo, 0.0)
+	oven.add_item(ItemCatalog.PIZZA_BASE)
+	_running[oven] = {"store": oven, "elapsed": 0.0, "mode": "lo", "source_id": ""}
+	progress_changed.emit(oven, 0.0)
 	return true
 
 
 ## Thêm topping vào lò đang chạy.
-func them_vao_lo(lo: TramTuongTac, id: String) -> bool:
-	if not _dang_nau.has(lo) or not DanhMuc.cho_vao_lo(id):
+func add_to_oven(oven: Workstation, id: String) -> bool:
+	if not _running.has(oven) or not ItemCatalog.can_go_in_oven(id):
 		return false
-	lo.them_vao(id)
+	oven.add_item(id)
 	return true
 
 
-func dang_chay(tram: TramTuongTac) -> bool:
-	return _dang_nau.has(tram) and not bool(_dang_nau[tram].get("xong", false))
+func is_burning(station: Workstation) -> bool:
+	return _running.has(station) and not bool(_running[station].get("done", false))
 
 
 # ------------------------------------------------- thao tác trên một món ---
@@ -201,64 +201,64 @@ func dang_chay(tram: TramTuongTac) -> bool:
 ## bàn: ở góc top-down, một củ cà rốt nhỏ nằm trên cái thớt bị chính cái thớt
 ## che gần hết. Người chơi đọc trạng thái qua thanh tiến trình và ghi chú,
 ## không qua việc soi mặt bàn.
-func dat_mon(tram: TramTuongTac, id: String, kieu: String) -> bool:
-	if tram == null or _dang_nau.has(tram) or not tram.chua.is_empty():
+func put_item(station: Workstation, id: String, mode: String) -> bool:
+	if station == null or _running.has(station) or not station.contents.is_empty():
 		return false
-	var ra: String = DanhMuc.so_che(id) if kieu == "thot" else DanhMuc.nau_don(id)
-	if ra.is_empty():
+	var out: String = ItemCatalog.prep_step(id) if mode == "thot" else ItemCatalog.cook_step(id)
+	if out.is_empty():
 		return false
-	tram.them_vao(id)
-	tram.hien_mo_hinh(id)
-	_dang_nau[tram] = {"kho": tram, "t": 0.0, "kieu": kieu, "goc": id}
-	tien_trinh_doi.emit(tram, 0.0)
+	station.add_item(id)
+	station.show_model(id)
+	_running[station] = {"store": station, "elapsed": 0.0, "mode": mode, "source_id": id}
+	progress_changed.emit(station, 0.0)
 	return true
 
 
 ## Lấy thành phẩm khỏi trạm. Trả về id, hoặc "" nếu chưa có gì để lấy.
-func lay_ra(tram: TramTuongTac) -> String:
-	if tram == null or tram.chua.is_empty() or dang_chay(tram):
+func take_out(station: Workstation) -> String:
+	if station == null or station.contents.is_empty() or is_burning(station):
 		return ""
-	var id: String = String(tram.chua[0])
-	tram.don_sach()
-	tram.xoa_mo_hinh()
-	_dang_nau.erase(tram)
-	tien_trinh_doi.emit(tram, 0.0)
+	var id: String = String(station.contents[0])
+	station.clear_all()
+	station.clear_model()
+	_running.erase(station)
+	progress_changed.emit(station, 0.0)
 	return id
 
 
-func _huy(bep: Node) -> void:
-	_dang_nau.erase(bep)
-	tien_trinh_doi.emit(bep, 0.0)
+func _cancel(cooker: Node) -> void:
+	_running.erase(cooker)
+	progress_changed.emit(cooker, 0.0)
 
 
 ## Chỗ DUY NHẤT bốn kiểu rẽ nhánh: tra bảng nào.
-func _ket_thuc(tram: Node, kho: TramTuongTac, kieu: String) -> void:
-	var mon: String = ""
-	match kieu:
-		"lo": mon = DanhMuc.nuong_lo(kho.chua)
-		"thot": mon = DanhMuc.so_che(String(kho.chua[0]))
-		_: mon = DanhMuc.nau_don(String(kho.chua[0]))
+func _finish(station: Node, store: Workstation, mode: String) -> void:
+	var dish: String = ""
+	match mode:
+		"lo": dish = ItemCatalog.bake_in_oven(store.contents)
+		"thot": dish = ItemCatalog.prep_step(String(store.contents[0]))
+		_: dish = ItemCatalog.cook_step(String(store.contents[0]))
 
-	var thanh_cong := not mon.is_empty()
-	kho.don_sach()
-	var ra: String = mon if thanh_cong else "do_hong"
-	kho.them_vao(ra)
+	var success := not dish.is_empty()
+	store.clear_all()
+	var out: String = dish if success else "do_hong"
+	store.add_item(out)
 	# Đổi model trên mặt trạm sang thành phẩm: người chơi thấy ngay miếng
 	# thịt đã đổi màu, không phải đọc chữ mới biết xong.
-	kho.hien_mo_hinh(ra)
-	AmThanh.play_sfx("nau_xong" if thanh_cong else "nau_hong")
-	nau_xong.emit(tram, mon, thanh_cong)
+	store.show_model(out)
+	AmThanh.play_sfx("cook_done" if success else "cook_fail")
+	cook_finished.emit(station, dish, success)
 
 
 ## Để trên bếp quá lâu.
-func _chay(tram: Node, kho: TramTuongTac, goc: String) -> void:
-	var chay: String = DanhMuc.trang_thai_hong(goc)
-	if chay.is_empty():
-		chay = "do_hong"
-	kho.don_sach()
-	kho.them_vao(chay)
-	kho.hien_mo_hinh(chay)
-	_dang_nau.erase(tram)
-	AmThanh.play_sfx("chay")
-	tien_trinh_doi.emit(tram, 0.0)
-	nau_xong.emit(tram, "", false)
+func _burn(station: Node, store: Workstation, source_id: String) -> void:
+	var burnt: String = ItemCatalog.burnt_state(source_id)
+	if burnt.is_empty():
+		burnt = "do_hong"
+	store.clear_all()
+	store.add_item(burnt)
+	store.show_model(burnt)
+	_running.erase(station)
+	AmThanh.play_sfx("burn")
+	progress_changed.emit(station, 0.0)
+	cook_finished.emit(station, "", false)

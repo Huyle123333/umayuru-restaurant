@@ -1,6 +1,6 @@
 @tool
-class_name BanAn
-extends TramTuongTac
+class_name DiningTable
+extends Workstation
 ## Một bàn ăn trong khu khách ngồi.
 ##
 ## Kế thừa TramTuongTac chứ không phải Node3D, vì người chơi MANG MÓN TỚI BÀN
@@ -58,12 +58,12 @@ func _ready() -> void:
 	# Tên hiển thị trên HUD bám theo số bàn, không gõ tay trong Inspector —
 	# cùng lý do với biển số: hai chỗ ghi số thì sớm muộn cũng lệch nhau.
 	if not Engine.is_editor_hint():
-		ten_hien_thi = "Bàn %d" % table_number
+		display_name = "Bàn %d" % table_number
 
 
 ## Món đang nằm trên bàn, chuỗi rỗng nếu bàn trống.
 func dish_on_table() -> String:
-	return String(chua[0]) if not chua.is_empty() else ""
+	return String(contents[0]) if not contents.is_empty() else ""
 
 
 func _update_sign() -> void:
@@ -102,20 +102,20 @@ func seat_marker(i: int) -> Marker3D:
 
 ## Tìm bàn theo số. Dùng nhóm "ban_an" nên không phụ thuộc đường dẫn node —
 ## đổi chỗ bàn trong cây scene vẫn tìm ra.
-static func tim(cay: SceneTree, so: int) -> BanAn:
+static func tim(cay: SceneTree, so: int) -> DiningTable:
 	for n in cay.get_nodes_in_group("ban_an"):
-		var b := n as BanAn
+		var b := n as DiningTable
 		if b != null and b.table_number == so:
 			return b
 	return null
 
 
 ## Danh sách mọi bàn, đã sắp theo số bàn tăng dần.
-static func all_nodes(cay: SceneTree) -> Array[BanAn]:
-	var ds: Array[BanAn] = []
+static func all_nodes(cay: SceneTree) -> Array[DiningTable]:
+	var ds: Array[DiningTable] = []
 	for n in cay.get_nodes_in_group("ban_an"):
-		var b := n as BanAn
+		var b := n as DiningTable
 		if b != null:
 			ds.append(b)
-	ds.sort_custom(func(a: BanAn, b: BanAn) -> bool: return a.table_number < b.table_number)
+	ds.sort_custom(func(a: DiningTable, b: DiningTable) -> bool: return a.table_number < b.table_number)
 	return ds

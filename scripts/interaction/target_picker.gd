@@ -1,4 +1,4 @@
-class_name BoChonMucTieu
+class_name TargetPicker
 extends Area3D
 ## Bộ chọn mục tiêu tương tác. Gắn vào nhân vật lúc chạy bởi level_base.gd.
 ##
@@ -25,7 +25,7 @@ extends Area3D
 ## nhặt/bỏ đồ mỗi lần đi lướt qua — mà trong bếp chật thì lướt qua liên tục.
 
 ## Danh sách đã đổi hoặc lựa chọn đã đổi — HUD nghe tín hiệu này.
-signal danh_sach_thay_doi(ung_vien: Array, chi_so_chon: int)
+signal candidates_changed(candidates: Array, selected_index: int)
 
 ## Vùng với: một khối hộp ÔM SÁT người chơi theo chiều ngang, nhưng CAO.
 ##
@@ -43,45 +43,45 @@ signal danh_sach_thay_doi(ung_vien: Array, chi_so_chon: int)
 ## xoay — chỉ node _model bên trong xoay. Nên hộp luôn thẳng trục với thế giới,
 ## vùng với giống hệt nhau ở mọi hướng quay mặt, không có góc nào "với xa hơn
 ## góc khác" như khi xoay một hộp theo nhân vật.
-@export var rong_voi: float = 1.9
-@export var cao_voi: float = 3.2
+@export var reach_width: float = 1.9
+@export var reach_height: float = 3.2
 ## Sau khi bấm Tab, khoá lựa chọn bằng tay trong bao lâu (giây).
-@export var thoi_gian_khoa_tay: float = 2.0
+@export var hand_lock_time: float = 2.0
 
 ## Mỗi phần tử: { "tram": TramTuongTac, "chi_so": int, "nhan": String }
-var _ung_vien: Array[Dictionary] = []
-var _chi_so_chon: int = -1
-var _khoa_tay: float = 0.0
+var _candidates: Array[Dictionary] = []
+var _selected: int = -1
+var _hand_lock: float = 0.0
 ## Nhớ lựa chọn đang khoá để giữ đúng nó khi danh sách thay đổi thứ tự.
-var _tram_khoa: TramTuongTac = null
-var _chi_so_khoa: int = 0
+var _locked_station: Workstation = null
+var _locked_index: int = 0
 
-var _than: Node3D = null
+var _body: Node3D = null
 ## Hình hộp dùng để dò. Giữ tham chiếu để mỗi frame lấy lại đúng vị trí của nó.
-var _hinh: CollisionShape3D = null
+var _shape: CollisionShape3D = null
 
 
 func _ready() -> void:
-	_than = get_parent() as Node3D
+	_body = get_parent() as Node3D
 	monitoring = true
 	monitorable = false
 	# Nhìn thấy cả nội thất (lớp 1) lẫn vật phẩm rơi dưới đất (lớp 3) — nhân
 	# vật thì chỉ va chạm với lớp 1, nên đi xuyên qua vật phẩm được.
-	collision_mask = TramTuongTac.MAT_NA_TRAM
-	_hinh = CollisionShape3D.new()
-	var hop := BoxShape3D.new()
-	hop.size = Vector3(rong_voi, cao_voi, rong_voi)
-	_hinh.shape = hop
+	collision_mask = Workstation.STATION_MASK
+	_shape = CollisionShape3D.new()
+	var box := BoxShape3D.new()
+	box.size = Vector3(reach_width, reach_height, reach_width)
+	_shape.shape = box
 	# Gốc toạ độ nhân vật nằm ở chân, nên đẩy hộp lên nửa chiều cao thì đáy
 	# hộp trùng mặt sàn và đỉnh chạm quá nóc thùng tầng trên.
-	_hinh.position = Vector3(0.0, cao_voi * 0.5, 0.0)
-	add_child(_hinh)
+	_shape.position = Vector3(0.0, reach_height * 0.5, 0.0)
+	add_child(_shape)
 
 
 func _process(delta: float) -> void:
-	if _khoa_tay > 0.0:
-		_khoa_tay -= delta
-	_dung_danh_sach()
+	if _hand_lock > 0.0:
+		_hand_lock -= delta
+	_build_candidates()
 
 
 # ------------------------------------------------------------ danh sách ---
@@ -92,32 +92,32 @@ func _process(delta: float) -> void:
 ## khoảng cách thay đổi liên tục khi đi lại nên thứ tự sẽ nhảy loạn, bấm Tab
 ## hai lần giống nhau ra hai kết quả khác nhau. Sắp theo góc thì Tab luôn chạy
 ## vòng quanh theo một chiều cố định — đoán trước được.
-func _dung_danh_sach() -> void:
-	var cu_size := _ung_vien.size()
-	var cu_chon := _chi_so_chon
-	_ung_vien.clear()
+func _build_candidates() -> void:
+	var prev_size := _candidates.size()
+	var prev_sel := _selected
+	_candidates.clear()
 
-	var tam := global_position
-	for co_the in _do_va_cham():
-		var tram := co_the as TramTuongTac
-		if tram == null:
+	var center_pos := global_position
+	for body in _probe_collisions():
+		var station := body as Workstation
+		if station == null:
 			continue
-		var v := tram.vi_tri_nham() - tam
-		var goc := atan2(v.x, v.z)
-		for i in tram.so_muc_tieu():
-			_ung_vien.append({
-				"tram": tram,
-				"chi_so": i,
-				"nhan": tram.nhan_muc_tieu(i),
-				"_goc": goc,
-				"_xa": v.length(),
+		var v := station.aim_position() - center_pos
+		var angle := atan2(v.x, v.z)
+		for i in station.target_count():
+			_candidates.append({
+				"station": station,
+				"index": i,
+				"label": station.target_label(i),
+				"_angle": angle,
+				"_dist": v.length(),
 			})
-	_ung_vien.sort_custom(_so_sanh_goc)
+	_candidates.sort_custom(_compare_angle)
 
-	_chi_so_chon = _tim_lua_chon()
+	_selected = _find_choice()
 
-	if _ung_vien.size() != cu_size or _chi_so_chon != cu_chon:
-		danh_sach_thay_doi.emit(_ung_vien, _chi_so_chon)
+	if _candidates.size() != prev_size or _selected != prev_sel:
+		candidates_changed.emit(_candidates, _selected)
 
 
 ## Trả về danh sách vật thể đang chạm hộp với.
@@ -138,84 +138,84 @@ func _dung_danh_sach() -> void:
 ## Giá phải trả là một truy vấn mỗi frame. Với một hộp nhỏ và vài chục vật
 ## thể tĩnh thì chi phí này không đáng kể, và đổi lại là hành vi đoán trước
 ## được — thứ đắt hơn nhiều so với vài micro giây.
-func _do_va_cham() -> Array:
-	if _hinh == null or _than == null:
+func _probe_collisions() -> Array:
+	if _shape == null or _body == null:
 		return []
-	var truy := PhysicsShapeQueryParameters3D.new()
-	truy.shape = _hinh.shape
-	truy.transform = _hinh.global_transform
-	truy.collision_mask = collision_mask
-	truy.collide_with_areas = false
-	truy.collide_with_bodies = true
+	var query := PhysicsShapeQueryParameters3D.new()
+	query.shape = _shape.shape
+	query.transform = _shape.global_transform
+	query.collision_mask = collision_mask
+	query.collide_with_areas = false
+	query.collide_with_bodies = true
 	# Bỏ chính nhân vật ra: hộp dò nằm ôm quanh thân nên lúc nào cũng chạm
 	# chính mình, và mỗi frame lại phải lọc lại một phần tử vô nghĩa.
-	if _than is CollisionObject3D:
-		truy.exclude = [(_than as CollisionObject3D).get_rid()]
+	if _body is CollisionObject3D:
+		query.exclude = [(_body as CollisionObject3D).get_rid()]
 
-	var ra: Array = []
-	for r in get_world_3d().direct_space_state.intersect_shape(truy, 12):
-		ra.append(r["collider"])
-	return ra
+	var out: Array = []
+	for r in get_world_3d().direct_space_state.intersect_shape(query, 12):
+		out.append(r["collider"])
+	return out
 
 
 ## Hàm so sánh viết rời thay vì lambda nhiều dòng ngay trong lời gọi.
 ## Lambda nhiều dòng của GDScript rất kén chỗ đặt dấu đóng ngoặc; viết rời thì
 ## không bao giờ vướng, và đặt breakpoint để soi thứ tự cũng dễ hơn.
-static func _so_sanh_goc(a: Dictionary, b: Dictionary) -> bool:
-	if is_equal_approx(float(a["_goc"]), float(b["_goc"])):
-		return int(a["chi_so"]) < int(b["chi_so"])
-	return float(a["_goc"]) < float(b["_goc"])
+static func _compare_angle(a: Dictionary, b: Dictionary) -> bool:
+	if is_equal_approx(float(a["_angle"]), float(b["_angle"])):
+		return int(a["index"]) < int(b["index"])
+	return float(a["_angle"]) < float(b["_angle"])
 
 
-func _tim_lua_chon() -> int:
-	if _ung_vien.is_empty():
-		_tram_khoa = null
+func _find_choice() -> int:
+	if _candidates.is_empty():
+		_locked_station = null
 		return -1
 
 	# Đang khoá bằng tay: giữ đúng mục tiêu đó nếu nó còn trong tầm.
-	if _khoa_tay > 0.0 and is_instance_valid(_tram_khoa):
-		for i in _ung_vien.size():
-			if _ung_vien[i]["tram"] == _tram_khoa and _ung_vien[i]["chi_so"] == _chi_so_khoa:
+	if _hand_lock > 0.0 and is_instance_valid(_locked_station):
+		for i in _candidates.size():
+			if _candidates[i]["station"] == _locked_station and _candidates[i]["index"] == _locked_index:
 				return i
 		# Ra khỏi tầm rồi thì bỏ khoá luôn, không giữ một mục tiêu đã biến mất.
-		_khoa_tay = 0.0
+		_hand_lock = 0.0
 
 	# Chấm điểm theo hướng quay mặt. Tích vô hướng của hướng nhìn với hướng
 	# tới mục tiêu: 1.0 là ngay trước mặt, -1.0 là sau lưng. Trừ một chút theo
 	# khoảng cách để hai mục tiêu cùng hướng thì cái gần hơn thắng.
-	var huong := -_than.global_transform.basis.z if _than != null else Vector3.FORWARD
-	huong.y = 0.0
-	huong = huong.normalized()
+	var dir := -_body.global_transform.basis.z if _body != null else Vector3.FORWARD
+	dir.y = 0.0
+	dir = dir.normalized()
 
-	var tot_nhat := -INF
-	var chon := 0
-	for i in _ung_vien.size():
-		var tram: TramTuongTac = _ung_vien[i]["tram"]
-		var v: Vector3 = tram.vi_tri_nham() - global_position
+	var best := -INF
+	var choice := 0
+	for i in _candidates.size():
+		var station: Workstation = _candidates[i]["station"]
+		var v: Vector3 = station.aim_position() - global_position
 		v.y = 0.0
 		if v.length() < 0.001:
 			continue
-		var diem: float = huong.dot(v.normalized()) - float(_ung_vien[i]["_xa"]) * 0.08
-		if diem > tot_nhat:
-			tot_nhat = diem
-			chon = i
-	return chon
+		var point: float = dir.dot(v.normalized()) - float(_candidates[i]["_dist"]) * 0.08
+		if point > best:
+			best = point
+			choice = i
+	return choice
 
 
 # ---------------------------------------------------------------- nhập ---
 
 func _unhandled_input(event: InputEvent) -> void:
-	if _ung_vien.is_empty():
+	if _candidates.is_empty():
 		return
 
 	if event.is_action_pressed("chon_muc_tieu"):
-		_chi_so_chon = (_chi_so_chon + 1) % _ung_vien.size()
-		_khoa_lua_chon()
+		_selected = (_selected + 1) % _candidates.size()
+		_lock_choice()
 		get_viewport().set_input_as_handled()
 		return
 
 	if event.is_action_pressed("interact"):
-		_kich_hoat()
+		_activate()
 		get_viewport().set_input_as_handled()
 		return
 
@@ -226,7 +226,7 @@ func _unhandled_input(event: InputEvent) -> void:
 	# đường bắt phím riêng trong tay_cam thì hai phím sẽ nhắm vào hai thứ khác
 	# nhau đúng lúc trong bếp có nhiều trạm sát nhau.
 	if event.is_action_pressed("rap_mon"):
-		_kich_hoat_phu()
+		_activate_alt()
 		get_viewport().set_input_as_handled()
 		return
 
@@ -235,56 +235,56 @@ func _unhandled_input(event: InputEvent) -> void:
 	# vì Tab. Tab VẪN dùng được — hai cách song song, tuỳ người chơi.
 	if GameData.third_person_active and event is InputEventMouseButton \
 			and event.pressed and event.button_index == MOUSE_BUTTON_LEFT:
-		if _chon_bang_tam_ngam():
-			_kich_hoat()
+		if _pick_by_crosshair():
+			_activate()
 		get_viewport().set_input_as_handled()
 
 
-func _khoa_lua_chon() -> void:
-	_tram_khoa = _ung_vien[_chi_so_chon]["tram"]
-	_chi_so_khoa = _ung_vien[_chi_so_chon]["chi_so"]
-	_khoa_tay = thoi_gian_khoa_tay
-	danh_sach_thay_doi.emit(_ung_vien, _chi_so_chon)
+func _lock_choice() -> void:
+	_locked_station = _candidates[_selected]["station"]
+	_locked_index = _candidates[_selected]["index"]
+	_hand_lock = hand_lock_time
+	candidates_changed.emit(_candidates, _selected)
 
 
-func _kich_hoat() -> void:
-	if _chi_so_chon < 0 or _chi_so_chon >= _ung_vien.size():
+func _activate() -> void:
+	if _selected < 0 or _selected >= _candidates.size():
 		return
-	var m := _ung_vien[_chi_so_chon]
-	(m["tram"] as TramTuongTac).tuong_tac(m["chi_so"])
+	var m := _candidates[_selected]
+	(m["station"] as Workstation).interact(m["index"])
 
 
-func _kich_hoat_phu() -> void:
-	if _chi_so_chon < 0 or _chi_so_chon >= _ung_vien.size():
+func _activate_alt() -> void:
+	if _selected < 0 or _selected >= _candidates.size():
 		return
-	var m := _ung_vien[_chi_so_chon]
-	(m["tram"] as TramTuongTac).tuong_tac_phu(m["chi_so"])
+	var m := _candidates[_selected]
+	(m["station"] as Workstation).interact_alt(m["index"])
 
 
 ## Bắn tia từ giữa màn hình. Trả về true nếu trúng một trạm đang trong tầm.
 ##
 ## Chỉ chấp nhận trạm CÓ TRONG danh sách ứng viên: nhìn thấy chưa đủ, vẫn phải
 ## đứng đủ gần. Nếu không, người chơi sẽ nấu được món ở đầu bên kia phòng.
-func _chon_bang_tam_ngam() -> bool:
+func _pick_by_crosshair() -> bool:
 	var cam := get_viewport().get_camera_3d()
 	if cam == null:
 		return false
-	var giua := get_viewport().get_visible_rect().size * 0.5
-	var tu := cam.project_ray_origin(giua)
-	var den := tu + cam.project_ray_normal(giua) * 30.0
+	var center := get_viewport().get_visible_rect().size * 0.5
+	var from_pt := cam.project_ray_origin(center)
+	var to_pt := from_pt + cam.project_ray_normal(center) * 30.0
 
-	var truy := PhysicsRayQueryParameters3D.create(tu, den)
-	truy.exclude = [_than.get_rid()] if _than is CollisionObject3D else []
-	var kq := get_world_3d().direct_space_state.intersect_ray(truy)
-	if kq.is_empty():
+	var query := PhysicsRayQueryParameters3D.create(from_pt, to_pt)
+	query.exclude = [_body.get_rid()] if _body is CollisionObject3D else []
+	var result := get_world_3d().direct_space_state.intersect_ray(query)
+	if result.is_empty():
 		return false
 
-	var tram := kq.get("collider") as TramTuongTac
-	if tram == null:
+	var station := result.get("collider") as Workstation
+	if station == null:
 		return false
-	for i in _ung_vien.size():
-		if _ung_vien[i]["tram"] == tram:
-			_chi_so_chon = i
-			_khoa_lua_chon()
+	for i in _candidates.size():
+		if _candidates[i]["station"] == station:
+			_selected = i
+			_lock_choice()
 			return true
 	return false

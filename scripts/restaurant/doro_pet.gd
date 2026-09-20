@@ -1,5 +1,5 @@
 @tool
-extends "res://scripts/tuong_tac/tram_tuong_tac.gd"
+extends "res://scripts/interaction/workstation.gd"
 ## DORO — thú cưng của quán. Vừa là thùng rác biết đi, vừa là thứ để nhìn.
 ##
 ## ═══════════════════════════════════════════════ VÌ SAO KẾ THỪA TrạmTươngTác
@@ -77,8 +77,8 @@ func setup(seat_marker: Vector3, lech_cao: float, nguoi_choi: Node3D) -> void:
 	_floor_y = seat_marker.y
 	global_position = seat_marker
 
-	ten_hien_thi = "Doro"
-	loai = "mang_bo_do"
+	display_name = "Doro"
+	kind = "mang_bo_do"
 
 	# NHÓM "tram": đây là thứ duy nhất khiến tay_cam nối được tín hiệu
 	# `da_tuong_tac` của Doro vào hàm xử lý của nó. Thiếu dòng này thì bộ chọn
@@ -89,7 +89,7 @@ func setup(seat_marker: Vector3, lech_cao: float, nguoi_choi: Node3D) -> void:
 	add_to_group("tram")
 	# Lớp VẬT PHẨM: bộ chọn nhìn thấy, nhân vật đi xuyên qua. Mặt nạ 0 vì Doro
 	# không cần phát hiện va chạm với bất cứ thứ gì — navmesh lo phần đó.
-	collision_layer = LOP_VAT_PHAM
+	collision_layer = LAYER_ITEM
 	collision_mask = 0
 
 	_build_body()
@@ -101,8 +101,8 @@ func setup(seat_marker: Vector3, lech_cao: float, nguoi_choi: Node3D) -> void:
 
 	# Nảy nhẹ mỗi lần được tương tác. Nối ở đây chứ không ở nơi gọi: phản ứng
 	# của Doro là việc của Doro.
-	if not da_tuong_tac.is_connected(_on_fed):
-		da_tuong_tac.connect(_on_fed)
+	if not interacted.is_connected(_on_fed):
+		interacted.connect(_on_fed)
 
 
 # ------------------------------------------------------------------ dựng ---
@@ -139,7 +139,7 @@ func _build_collision() -> void:
 	moc.name = "DiemNham"
 	moc.position = Vector3(0.0, Config.HEIGHT + 0.12, 0.0)
 	add_child(moc)
-	diem_nham = NodePath("DiemNham")
+	aim_point = NodePath("DiemNham")
 
 
 func _build_agent(lech_cao: float) -> void:
@@ -160,7 +160,7 @@ func _build_agent(lech_cao: float) -> void:
 
 func _physics_process(delta: float) -> void:
 	# @tool ở dòng đầu CHỈ để tắt cảnh báo "lớp cha có @tool mà lớp patience_left thì
-	# không" — TrạmTươngTác phải là @tool vì lớp patience_left BanAn cần hiện số bàn lúc
+	# không" — TrạmTươngTác phải là @tool vì lớp con DiningTable cần hiện số bàn lúc
 	# đang kê map. Doro thì ngược lại: nó chỉ được dựng lúc chạy, không bao giờ
 	# nằm sẵn trong file map, nên không có việc gì để làm trong trình soạn thảo.
 	# Chặn ngay đây cho chắc, phòng khi sau này có ai kéo nó vào một scene.
@@ -318,7 +318,7 @@ func _set_anim(ten: String) -> void:
 ## Nảy bằng SCALE của node thân chứ không bằng animation: model chỉ có hai clip
 ## (idle, walk), không có clip "ăn". Một cú nảy 0,18 giây đủ để người chơi biết
 ## thao tác đã ăn — mà đó mới là việc cần làm, không phải diễn cho đẹp.
-func _on_fed(_tram: Node, _index: int) -> void:
+func _on_fed(_station: Node, _index: int) -> void:
 	if _body == null:
 		return
 	# KHÔNG phát tiếng ở đây: `tay_cam._bo_di()` đã phát "vut_rac" khi thật sự

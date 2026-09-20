@@ -232,7 +232,7 @@ func _apply_passive(p: Dictionary) -> void:
 		_customers.patience_factor = float(p["patience_factor"])
 		_customers.perfect_bonus += float(p["perfect_bonus_add"])
 	if _cooking != null:
-		_cooking.bot_giay_chay += float(p["burn_time_cut"])
+		_cooking.burn_time_cut += float(p["burn_time_cut"])
 
 
 func _on_order_finished(_order: Variant, _reason: String) -> void:
