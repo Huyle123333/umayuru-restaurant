@@ -130,7 +130,7 @@ func _ready() -> void:
 ## che nằm ở _fill_panel, qua GameData.thong_tin_the().)
 func _fill_card(card: Control, id: String) -> void:
 	var btn := card.get_node("Btn") as TextureButton
-	btn.texture_normal = load(GameData.anh_the(id))
+	btn.texture_normal = load(GameData.card_image(id))
 	# Lá khóa vẫn bấm được để xem thông tin — chỉ nút Chơi là không sáng.
 	btn.disabled = false
 
@@ -262,7 +262,7 @@ func _animate_card(id: String, rise: float, angle: float, layer: int) -> void:
 func _fill_panel(id: String) -> void:
 	# Cùng lý do với _fill_card: phải qua thong_tin_the() thì nhân vật đang
 	# giấu mới hiện dấu hỏi thay vì tên, tiểu sử và tên kỹ năng thật.
-	var info: Dictionary = GameData.thong_tin_the(id)
+	var info: Dictionary = GameData.card_info(id)
 	_lbl_name.text = str(info["label"])
 	_lbl_tagline.text = str(info.get("tagline", ""))
 	_lbl_intro.text = str(info.get("intro", ""))
@@ -464,7 +464,7 @@ func _on_play_pressed() -> void:
 	# đường vào màn đi qua một chỗ, nhưng riêng chỗ gọi này thì quên đổi. Kết
 	# quả là chỉ prologue chiếu được cắt cảnh (hoi_thoai.gd gọi đúng hàm), còn
 	# bấm Chơi từ màn chọn nhân vật thì không bao giờ.
-	var scene := GameData.vao_man(GameData.current_level)
+	var scene := GameData.enter_level(GameData.current_level)
 	if scene.is_empty():
 		scene = gameplay_scene
 	get_tree().change_scene_to_file(scene)

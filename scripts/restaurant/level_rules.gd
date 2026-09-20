@@ -48,7 +48,7 @@ extends Node
 ## dành riêng cho việc này, và nhóm mới là chỗ khai báo bài nào thuộc giai
 ## đoạn nào. Đổi bài sau này chỉ sửa một dòng bên AmThanh, không phải đi tìm
 ## một hằng nằm lẫn trong luật màn.
-const NHOM_CAO_DIEM := "cao_diem"
+const PEAK_GROUP := "peak"
 
 var _customers: Node
 var _clock: Node
@@ -65,15 +65,15 @@ var _music_switched := false
 ## Trả về false khi màn này không có luật riêng (ví dụ màn hướng dẫn, hoặc
 ## chạy thẳng map bằng F6) — lúc đó level_base xoá node này đi và màn chạy
 ## bằng số mặc định như trước.
-func setup(ql: Node, gio: Node, luat: Dictionary) -> bool:
-	if ql == null or luat.is_empty():
+func setup(customers: Node, clock: Node, rules: Dictionary) -> bool:
+	if customers == null or rules.is_empty():
 		return false
-	_customers = ql
-	_clock = gio
-	_rules = luat
+	_customers = customers
+	_clock = clock
+	_rules = rules
 
 	_apply_static()
-	_stages = _rules.get("chang", [])
+	_stages = _rules.get("stages", [])
 	# Áp chặng đầu NGAY, không đợi khung hình sau: giữa lúc này và khung hình
 	# kế tiếp, quan_ly_khach có thể đã đặt hẹn sinh khách theo nhịp mặc định.
 	_go_to_stage(0)
@@ -82,36 +82,32 @@ func setup(ql: Node, gio: Node, luat: Dictionary) -> bool:
 
 ## Những thứ đặt một lần rồi thôi.
 ##
-## ⚠ KHOÁ bên trái (_rules["toi_da"]...) là khoá của bảng LUAT trong GameData —
-## GameData thuộc lô 7, CHƯA đổi tên, nên khoá phải giữ nguyên tiếng Việt.
-## THUỘC TÍNH bên phải (_customers.max_customers...) đã là tiếng Anh vì
-## customer_manager thuộc lô 5.
-##
-## Hai bên lệch ngôn ngữ trông khó chịu, nhưng đổi bên trái trước khi tới lô 7
-## thì `.has()` trả false và TOÀN BỘ luật màn im lặng không được áp — đúng lỗi
-## đã xảy ra ngày 19/9: Ngày 1 chạy bằng số mặc định, không ai báo gì.
+## ⚠ KHOÁ bên trái (_rules["max_customers"]...) là khoá của bảng RULES_D1 trong
+## GameData. Hai chỗ này PHẢI đổi cùng một lúc: `.has()` không khớp thì trả về
+## false và TOÀN BỘ luật màn lặng lẽ không được áp — Ngày 1 chạy bằng số mặc
+## định mà không có một dòng cảnh báo nào. Lỗi đó đã xảy ra thật ngày 19/9.
 func _apply_static() -> void:
-	if _rules.has("toi_da"):
-		_customers.max_customers = int(_rules["toi_da"])
-	if _rules.has("ban_toi_da"):
-		_customers.max_tables = int(_rules["ban_toi_da"])
-	if _rules.has("o_hang_toi_da"):
-		_customers.max_queue = int(_rules["o_hang_toi_da"])
-	if _rules.has("cho_dau"):
-		_customers.first_wait = float(_rules["cho_dau"])
-	if _rules.has("thuc_don"):
+	if _rules.has("max_customers"):
+		_customers.max_customers = int(_rules["max_customers"])
+	if _rules.has("max_tables"):
+		_customers.max_tables = int(_rules["max_tables"])
+	if _rules.has("max_queue"):
+		_customers.max_queue = int(_rules["max_queue"])
+	if _rules.has("first_wait"):
+		_customers.first_wait = float(_rules["first_wait"])
+	if _rules.has("menu"):
 		# Ép về Array[String]: ô @export bên quan_ly_khach khai kiểu chặt, mà
 		# mảng đọc ra từ Dictionary là mảng trần (phần tử kiểu Variant). Gán
 		# thẳng thì Godot báo lỗi kiểu lúc chạy.
 		var td: Array[String] = []
-		for m in _rules["thuc_don"]:
+		for m in _rules["menu"]:
 			td.append(String(m))
 		_customers.menu = td
-	if _rules.has("trong_so"):
-		_customers.weights = _rules["trong_so"]
+	if _rules.has("weights"):
+		_customers.weights = _rules["weights"]
 
-	if _clock != null and _rules.has("thoi_luong"):
-		var t := float(_rules["thoi_luong"])
+	if _clock != null and _rules.has("duration"):
+		var t := float(_rules["duration"])
 		_clock.duration = t
 		# Gán CẢ `con_lai`, không chỉ `thoi_luong`. Bảng thời gian chép
 		# thoi_luong sang con_lai trong _ready() của nó, mà _ready() đã chạy
@@ -134,19 +130,19 @@ func _process(_delta: float) -> void:
 	if _customers == null or _clock == null:
 		return
 
-	var da_troi: float = float(_clock.duration) - float(_clock.time_left)
+	var elapsed: float = float(_clock.duration) - float(_clock.time_left)
 
 	# Nhạc cao điểm. Đặt theo GIÂY CÒN LẠI chứ không theo giây đã trôi, vì bài
 	# hát phải kết thúc đúng lúc hết giờ — mốc của nó là cái đích, không phải
 	# vạch xuất phát.
-	if not _music_switched and _rules.has("moc_nhac"):
-		if float(_clock.time_left) <= float(_rules["moc_nhac"]):
+	if not _music_switched and _rules.has("music_cue"):
+		if float(_clock.time_left) <= float(_rules["music_cue"]):
 			_music_switched = true
-			AmThanh.play_random_music(NHOM_CAO_DIEM)
+			AmThanh.play_random_music(PEAK_GROUP)
 
 	for i in _stages.size():
 		var c: Dictionary = _stages[i]
-		if da_troi < float(c.get("den", 0.0)):
+		if elapsed < float(c.get("until", 0.0)):
 			if i != _index:
 				_go_to_stage(i)
 			return
@@ -160,7 +156,7 @@ func _go_to_stage(i: int) -> void:
 		return
 	_index = i
 	var c: Dictionary = _stages[i]
-	if c.has("nhip"):
-		_customers.spawn_interval = float(c["nhip"])
-	if c.has("toi_da"):
-		_customers.max_customers = int(c["toi_da"])
+	if c.has("interval"):
+		_customers.spawn_interval = float(c["interval"])
+	if c.has("max_customers"):
+		_customers.max_customers = int(c["max_customers"])

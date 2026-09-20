@@ -52,7 +52,7 @@ func show_results(money: int, xong: int, hoan_hao: int, bo_di: int,
 
 	var row := ep_hang
 	if row.is_empty():
-		row = GameData.xep_hang(level_id, money) if not level_id.is_empty() else ""
+		row = GameData.rank_for(level_id, money) if not level_id.is_empty() else ""
 
 	var old_record := 0
 	var place := not row.is_empty()
@@ -76,7 +76,7 @@ func show_results(money: int, xong: int, hoan_hao: int, bo_di: int,
 		# MAN_XEP_HANG nên có hai lớp chặn — cố ý, vì lớp thứ hai là thứ còn
 		# đúng khi sau này thêm màn mới.)
 		if ep_hang.is_empty():
-			GameData.ghi_xep_hang(level_id, money, row)
+			GameData.record_rank(level_id, money, row)
 
 	_build_ui(money, xong, hoan_hao, bo_di, row, old_record, place)
 
@@ -211,14 +211,14 @@ func _build_ui(money: int, xong: int, hoan_hao: int, bo_di: int,
 	# Chưa đạt thì nói rõ còn thiếu bao nhiêu. Chỉ hiện "CHƯA ĐẠT" mà không nói
 	# thiếu gì thì người chơi không biết lần sau phải cố thêm bao nhiêu.
 	if not place and get_node_or_null("/root/GameData") != null:
-		var mark: Dictionary = GameData.moc_xep_hang(String(GameData.current_level))
+		var mark: Dictionary = GameData.rank_thresholds_for(String(GameData.current_level))
 		var missing := int(mark.get("C", 0)) - money
-		var play_music := Label.new()
-		play_music.text = "Cần thêm %d nữa để đạt hạng C." % maxi(missing, 0)
-		play_music.add_theme_font_size_override("font_size", 17)
-		play_music.add_theme_color_override("font_color", COLOR_GRADE["C"])
-		play_music.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-		col.add_child(play_music)
+		var note := Label.new()
+		note.text = "Cần thêm %d nữa để đạt hạng C." % maxi(missing, 0)
+		note.add_theme_font_size_override("font_size", 17)
+		note.add_theme_color_override("font_color", COLOR_GRADE["C"])
+		note.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		col.add_child(note)
 
 	# --- nút ---
 	var button_row := HBoxContainer.new()

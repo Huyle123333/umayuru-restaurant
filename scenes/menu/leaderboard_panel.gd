@@ -60,10 +60,10 @@ func _ready() -> void:
 ## thứ năm là thêm một dòng trong GameData, màn hình này tự có thêm tab —
 ## không phải mở .tscn ra kéo node rồi nối tín hiệu.
 func _dung_tab() -> void:
-	for id in GameData.MAN_XEP_HANG:
+	for id in GameData.RANKED_LEVELS:
 		var ma := String(id)
 		var nut := Button.new()
-		nut.text = String(GameData.TEN_MAN_XEP_HANG.get(ma, ma))
+		nut.text = String(GameData.RANKED_LEVEL_NAMES.get(ma, ma))
 		nut.toggle_mode = true
 		nut.button_group = _nhom
 		nut.size_flags_horizontal = Control.SIZE_EXPAND_FILL
@@ -78,7 +78,7 @@ func open(focus_on_close: Control = null) -> void:
 	show()
 	# Luôn mở ở tab đầu tiên: người mở bảng đang muốn xem, không đang tiếp tục
 	# một việc dở — nhớ tab cũ chỉ làm họ phải kiểm tra xem mình đang ở đâu.
-	var dau := String(GameData.MAN_XEP_HANG[0])
+	var dau := String(GameData.RANKED_LEVELS[0])
 	var nut_dau := _tabs.get_child(0) as Button
 	nut_dau.button_pressed = true
 	_chon_man(dau)
@@ -112,7 +112,7 @@ func _ve_bang() -> void:
 		_bang.remove_child(con)
 		con.queue_free()
 
-	var ds := GameData.xep_hang_cua_man(_man_dang_xem)
+	var ds := GameData.level_leaderboard(_man_dang_xem)
 	if ds.is_empty():
 		_lbl_trong.show()
 		# Endless chưa làm nên nói rõ là "chưa có chế độ", chứ không nói
@@ -147,16 +147,16 @@ func _hang_du_lieu(chi_so: int, ban_ghi: Dictionary) -> Control:
 		else str(chi_so + 1)
 	h.add_child(_o(thu_tu, 46, MAU_CHU, 20, HORIZONTAL_ALIGNMENT_CENTER))
 
-	var ten := GameData.ten_nhan_vat(String(ban_ghi.get("nv", "")))
+	var ten := GameData.character_name(String(ban_ghi.get("character", ban_ghi.get("nv", ""))))
 	# Ba dòng đầu tô vàng: mắt phải bắt được "ai đang dẫn đầu" trước khi đọc
 	# tới cột tiền.
 	var mau_ten: Color = MAU_VANG if chi_so == 0 else MAU_CHU
 	h.add_child(_o(ten, 0, mau_ten, 20))
 
-	h.add_child(_o(str(int(ban_ghi.get("tien", 0))), 130, MAU_CHU, 20,
+	h.add_child(_o(str(int(ban_ghi.get("money", ban_ghi.get("tien", 0)))), 130, MAU_CHU, 20,
 		HORIZONTAL_ALIGNMENT_RIGHT))
 
-	var hang := String(ban_ghi.get("hang", ""))
+	var hang := String(ban_ghi.get("rank", ban_ghi.get("hang", "")))
 	var o_hang: Label = _o(hang if not hang.is_empty() else "—", 60,
 		Color(MAU_HANG.get(hang, MAU_HANG[""])), 20, HORIZONTAL_ALIGNMENT_CENTER)
 	h.add_child(o_hang)

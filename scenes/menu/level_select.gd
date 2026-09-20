@@ -69,7 +69,7 @@ func _ready() -> void:
 	# màn hình thì chỉ cần bấm qua lại vài lần là nhạc giật liên tục.
 	AmThanh.play_random_music("menu", true)
 
-	if not GameData.HIEN_MAN_TOI:
+	if not GameData.SHOW_EVENING:
 		_rut_gon_theo_ngay()
 
 	for id in _buttons:

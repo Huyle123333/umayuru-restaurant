@@ -82,12 +82,12 @@ const LEVEL_TRACKS: Array[String] = [
 
 const TRACK_GROUPS := {
 	"menu": LEVEL_TRACKS,
-	"man": LEVEL_TRACKS,
+	"level": LEVEL_TRACKS,
 	# Hashire Umamusume — RIÊNG cho đoạn cuối màn chơi, dài đúng 212 giây.
 	# Không nằm trong LEVEL_TRACKS: nếu nó có thể bốc trúng ngay từ đầu màn thì
 	# lúc còn 3 phút rưỡi nó sẽ phải tự cắt chính mình để nhường chỗ cho...
 	# chính nó, và cái khoảnh khắc "đổi nhạc = sắp hết giờ" mất sạch ý nghĩa.
-	"cao_diem": ["hashire_umamusume"],
+	"peak": ["hashire_umamusume"],
 	# Prologue dùng bài cố định: đoạn kể chuyện có nhịp riêng, bốc ngẫu nhiên
 	# thì mỗi lần chơi lại một không khí khác nhau.
 	"prologue": ["bgm2_ura"],

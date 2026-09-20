@@ -76,7 +76,7 @@ func _scene_nhan_vat_dang_chon() -> PackedScene:
 		id = str(GameData.selected_character)
 
 	if not id.is_empty():
-		var duong_dan := GameData.duong_dan_nhan_vat(id)
+		var duong_dan := GameData.character_scene_path(id)
 		if duong_dan.is_empty():
 			push_warning("Nhân vật '%s' chưa có scene điều khiển — dùng nhân vật dự phòng." % id)
 		elif not ResourceLoader.exists(duong_dan):
@@ -326,7 +326,7 @@ func _gan_hud_don_hang() -> void:
 func _ap_dung_luat_man(bang_gio: Node) -> void:
 	if quan_ly_khach == null or get_node_or_null("/root/GameData") == null:
 		return
-	var luat: Dictionary = GameData.luat_man(String(GameData.current_level))
+	var luat: Dictionary = GameData.rules_for_level(String(GameData.current_level))
 	if luat.is_empty():
 		return
 
@@ -432,7 +432,7 @@ func _khi_xong_tutorial(tong_ket: bool) -> void:
 ## Dùng _unhandled_key_input chứ không _input: menu Pause hay ô nhập liệu nào
 ## đang mở thì chúng ăn phím trước, và cheat không cướp phím của giao diện.
 func _unhandled_key_input(event: InputEvent) -> void:
-	if get_node_or_null("/root/GameData") == null or not GameData.cheat_tua_gio:
+	if get_node_or_null("/root/GameData") == null or not GameData.cheat_time_skip:
 		return
 	var phim := event as InputEventKey
 	if phim == null or not phim.pressed or phim.echo:
@@ -511,7 +511,7 @@ func _gan_mo_man(bang_gio: Node) -> void:
 
 	var ten := "BẮT ĐẦU"
 	if get_node_or_null("/root/GameData") != null:
-		var t := GameData.ten_man(String(GameData.current_level))
+		var t := GameData.level_name(String(GameData.current_level))
 		if not t.is_empty():
 			ten = t
 
@@ -533,5 +533,5 @@ func _gan_mo_man(bang_gio: Node) -> void:
 		# Bốc ngẫu nhiên trong sáu bài, KHÔNG giữ liền mạch: vào một ca làm
 		# việc mới thì phải nghe như một ca mới, chứ không phải như đoạn giữa
 		# của bài nhạc đang chạy ở menu.
-		AmThanh.play_random_music("man"))
+		AmThanh.play_random_music("level"))
 	mo.start_countdown(ten)

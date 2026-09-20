@@ -19,7 +19,7 @@ const EVENING_ENABLED := false
 ## Ba ngày khác nhau ở thực đơn, tốc độ khách vào và số bàn được mở — chứ
 ## không khác nhau ở hình dạng cái quán. Nên chỉ cần MỘT file map; đổi một
 ## dòng ở đây là đổi cả ba màn, thay vì phải sửa ba file .tscn giống hệt nhau.
-const MAP_QUAN := "res://restaurant_map_planb.tscn"
+const MAP_RESTAURANT := "res://restaurant_map_planb.tscn"
 
 ## Scene kể chuyện mở đầu. Không phải map 3D mà là một màn hội thoại 1 chạm:
 ## bấm chuột để chạy chữ, kể xong thì TỰ chuyển sang Tutorial. Tách thành một
@@ -53,7 +53,7 @@ const SCENE_PROLOGUE := "res://scenes/story/intro_prologue.tscn"
 ##
 ## Ba đoạn ĐỘC LẬP với nhau — không đoạn nào nhắc tới hai đoạn kia, vì người
 ## chơi mở khoá theo thứ tự bất kỳ và có thể chỉ mở đúng một người.
-const SCENE_GIOI_THIEU := {
+const INTRO_SCENES := {
 	"hachimi": "res://scenes/story/teio_intro.tscn",
 	"chiyo": "res://scenes/story/chiyono_intro.tscn",
 	"golshi": "res://scenes/story/golshi_intro.tscn",
@@ -66,7 +66,7 @@ const SCENE_GIOI_THIEU := {
 ## id cũ sẽ lệch, và lúc quay lại làm buổi tối phải dựng lại từ đầu. Bật lại
 ## chỉ là đổi false thành true — bố cục, luật mở khoá và bản dịch đều còn
 ## nguyên.
-const HIEN_MAN_TOI := false
+const SHOW_EVENING := false
 
 ## ─────────────────────────────── LUẬT RIÊNG CỦA TỪNG MÀN ──────────────────
 ##
@@ -122,27 +122,27 @@ const HIEN_MAN_TOI := false
 ## lượt chơi khá ≈ 16 đơn, chừng 60% đạt hoàn hảo (+35%) → khoảng 1.230. Từ đó
 ## đặt S 1200 / A 950 / B 700 / C 450. Bốn con số này THẤP hơn hẳn mốc mặc
 ## định 1650/1300/950/600 vì thực đơn Ngày 1 không có món nào trên 95 tiền.
-const LUAT_D1 := {
-	"thoi_luong": 420.0,
-	"toi_da": 6,
-	"ban_toi_da": 3,
-	"o_hang_toi_da": 2,
-	"cho_dau": 4.0,
-	"thuc_don": [
+const RULES_D1 := {
+	"duration": 420.0,
+	"max_customers": 6,
+	"max_tables": 3,
+	"max_queue": 2,
+	"first_wait": 4.0,
+	"menu": [
 		"icecream_vani", "icecream_chocolate", "icecream_strawberry",
 		"mon_ham", "mon_steak", "hambuger",
 	],
-	"trong_so": {
+	"weights": {
 		"icecream_vani": 1, "icecream_chocolate": 1, "icecream_strawberry": 1,
 		"mon_ham": 3, "mon_steak": 4, "hambuger": 3,
 	},
-	"chang": [
-		{"den": 120.0, "nhip": 18.0},
-		{"den": 300.0, "nhip": 12.0},
-		{"den": 420.0, "nhip": 8.0},
+	"stages": [
+		{"until": 120.0, "interval": 18.0},
+		{"until": 300.0, "interval": 12.0},
+		{"until": 420.0, "interval": 8.0},
 	],
-	"moc_nhac": 212.0,
-	"moc": {"S": 1200, "A": 950, "B": 700, "C": 450},
+	"music_cue": 212.0,
+	"rank_thresholds": {"S": 1200, "A": 950, "B": 700, "C": 450},
 }
 
 ## Toàn bộ màn chơi của game.
@@ -154,13 +154,13 @@ const LEVELS := {
 	# ke_chuyen — màn này chỉ kể chuyện, không có bếp và không có nhân vật
 	# điều khiển được. Cần phân biệt vì mấy đoạn cắt cảnh "nhân vật bước vào
 	# quán" không được phép chen vào trước một màn như thế.
-	"prologue": {"label": "Prologue", "needs": "", "scene": SCENE_PROLOGUE, "ke_chuyen": true},
-	"tutorial": {"label": "Tutorial", "needs": "prologue", "scene": MAP_QUAN},
-	"d1_sang": {"label": "Sáng", "needs": "tutorial", "scene": MAP_QUAN, "luat": LUAT_D1},
+	"prologue": {"label": "Prologue", "needs": "", "scene": SCENE_PROLOGUE, "story_only": true},
+	"tutorial": {"label": "Tutorial", "needs": "prologue", "scene": MAP_RESTAURANT},
+	"d1_sang": {"label": "Sáng", "needs": "tutorial", "scene": MAP_RESTAURANT, "rules": RULES_D1},
 	"d1_toi": {"label": "Tối", "needs": "d1_sang", "evening": true, "scene": ""},
-	"d2_sang": {"label": "Sáng", "needs": "d1_sang", "scene": MAP_QUAN},
+	"d2_sang": {"label": "Sáng", "needs": "d1_sang", "scene": MAP_RESTAURANT},
 	"d2_toi": {"label": "Tối", "needs": "d2_sang", "evening": true, "scene": ""},
-	"d3_sang": {"label": "Sáng", "needs": "d2_sang", "scene": MAP_QUAN},
+	"d3_sang": {"label": "Sáng", "needs": "d2_sang", "scene": MAP_RESTAURANT},
 	"d3_toi": {"label": "Tối", "needs": "d3_sang", "evening": true, "scene": ""},
 }
 
@@ -407,7 +407,7 @@ const CHARACTERS := {
 }
 
 ## Chuỗi dùng để che mọi thông tin của nhân vật chưa mở khoá.
-const CHUOI_CHE := "????????????"
+const MASK_STRING := "????????????"
 
 ## Những nhân vật BỊ GIẤU cho tới khi mở khoá bằng bảng CODE No.7.
 ##
@@ -419,7 +419,7 @@ const CHUOI_CHE := "????????????"
 ## hình chơi được phải khớp với intro — Oguri Cap và Special Week thế chỗ.
 ## Hai người kia không biến mất khỏi game, họ thành phần thưởng ẩn giống
 ## Gold Ship.
-const NHAN_VAT_AN := {
+const HIDDEN_CHARACTERS := {
 	"hachimi": "thidden",
 	"chiyo": "chidden",
 	"golshi": "ghidden",
@@ -438,14 +438,14 @@ const CHARACTER_ORDER := ["kitamoi", "hachimi", "chiyo", "mambo",
 ## game đã gọi hàm này rồi nên chỉ cần sửa đúng một chỗ là cả màn chọn nhân
 ## vật, nút Chơi và hàm set_selected_character() cùng hiểu luật mới.
 func is_character_locked(id: String) -> bool:
-	if NHAN_VAT_AN.has(id):
-		return not da_mo_nhan_vat(id)
+	if HIDDEN_CHARACTERS.has(id):
+		return not is_character_unlocked(id)
 	return bool(CHARACTERS.get(id, {}).get("locked", false))
 
 
 ## Nhân vật ẩn này đã được mở khoá chưa.
-func da_mo_nhan_vat(id: String) -> bool:
-	return bool(nhan_vat_mo.get(id, false))
+func is_character_unlocked(id: String) -> bool:
+	return bool(unlocked_characters.get(id, false))
 
 
 ## Ảnh thẻ hiện trên màn chọn nhân vật.
@@ -454,9 +454,9 @@ func da_mo_nhan_vat(id: String) -> bool:
 ## thật. Lý do không phủ màu: ảnh gốc vẫn nằm trong bộ nhớ và vẫn lộ dáng
 ## nhân vật qua viền — người chơi tinh ý là đoán ra ngay, mất hết bất ngờ.
 ## Đổi hẳn file thì thẻ khoá không mang một pixel nào của ảnh thật.
-func anh_the(id: String) -> String:
-	if NHAN_VAT_AN.has(id) and not da_mo_nhan_vat(id):
-		return "res://assets/ui/characters/%s.png" % NHAN_VAT_AN[id]
+func card_image(id: String) -> String:
+	if HIDDEN_CHARACTERS.has(id) and not is_character_unlocked(id):
+		return "res://assets/ui/characters/%s.png" % HIDDEN_CHARACTERS[id]
 	return "res://assets/ui/characters/%s.png" % id
 
 
@@ -468,7 +468,7 @@ func anh_the(id: String) -> String:
 ## sửa một bên quên bên kia, và bản khoá lại chính là bản người chơi nhìn
 ## thấy đầu tiên. Một nguồn dữ liệu duy nhất, phần trình bày tự quyết định
 ## che hay không — sai sót kiểu đó không xảy ra được.
-func thong_tin_the(id: String) -> Dictionary:
+func card_info(id: String) -> Dictionary:
 	var info: Dictionary = CHARACTERS.get(id, {})
 	# Che khi: đang khoá VÀ (nằm trong danh sách nhân vật ẩn HOẶC có cờ
 	# an_khi_khoa). Điều kiện NHAN_VAT_AN được thêm vào để giấu thêm một
@@ -476,32 +476,32 @@ func thong_tin_the(id: String) -> Dictionary:
 	# CHARACTERS — quên bật cờ là lộ nguyên tên thật ra bảng bên phải.
 	if not is_character_locked(id):
 		return info
-	if not (NHAN_VAT_AN.has(id) or bool(info.get("an_khi_khoa", false))):
+	if not (HIDDEN_CHARACTERS.has(id) or bool(info.get("an_khi_khoa", false))):
 		return info
 
-	var che := info.duplicate(true)
-	che["label"] = CHUOI_CHE
-	che["desc"] = CHUOI_CHE
-	che["tagline"] = CHUOI_CHE
-	che["intro"] = " ".join([CHUOI_CHE, CHUOI_CHE, CHUOI_CHE, CHUOI_CHE])
+	var masked := info.duplicate(true)
+	masked["label"] = MASK_STRING
+	masked["desc"] = MASK_STRING
+	masked["tagline"] = MASK_STRING
+	masked["intro"] = " ".join([MASK_STRING, MASK_STRING, MASK_STRING, MASK_STRING])
 	# Che GIÁ TRỊ nhưng GIỮ NGUYÊN NHÃN. Nếu che luôn cả nhãn thì bảng info
 	# của nhân vật ẩn co lại thành một khối "????" vô nghĩa, người chơi không
 	# đoán được là còn bao nhiêu thông tin đang bị giấu — mà chính cái cảm
 	# giác "có gì đó ở đây mình chưa mở được" mới là thứ giữ họ đi tìm code.
-	for ten_bang in ["measure", "profile"]:
-		var bang: Dictionary = che.get(ten_bang, {})
-		for nhan in bang:
-			bang[nhan] = CHUOI_CHE
-	var bi_mat: Array = che.get("secrets", [])
-	for i in bi_mat.size():
-		bi_mat[i] = CHUOI_CHE
-	che["sizes"] = ["??", "??", "??"]
-	for o in che["skills"]:
-		o["name"] = CHUOI_CHE
+	for board_name in ["measure", "profile"]:
+		var board: Dictionary = masked.get(board_name, {})
+		for label in board:
+			board[label] = MASK_STRING
+	var secrets: Array = masked.get("secrets", [])
+	for i in secrets.size():
+		secrets[i] = MASK_STRING
+	masked["sizes"] = ["??", "??", "??"]
+	for o in masked["skills"]:
+		o["name"] = MASK_STRING
 		o["level"] = 0
-		o["desc"] = CHUOI_CHE
+		o["desc"] = MASK_STRING
 		o["icon"] = ""
-	return che
+	return masked
 
 
 ## Màn đã hoàn thành. Khóa là id màn (chuỗi), giá trị true.
@@ -549,7 +549,7 @@ var third_person_active: bool = false
 ## Dùng TỪ ĐIỂN chứ không phải ba cờ bool riêng: số nhân vật ẩn còn tăng, và
 ## mỗi cờ mới lại kéo theo một dòng trong reset(), to_dict(), from_dict() và
 ## một nhánh trong cheat_panel. Từ điển thì cả bốn chỗ đó viết một lần xong.
-var nhan_vat_mo: Dictionary = {}
+var unlocked_characters: Dictionary = {}
 
 ## Cheat CODE No.7: dùng kĩ năng chủ động mà KHÔNG cần điều kiện, không giới
 ## hạn số lần. Lưu vào file save.
@@ -560,7 +560,7 @@ var nhan_vat_mo: Dictionary = {}
 ## không có cách nào xem được. Về sau khi đã có điều kiện thật, cheat này vẫn
 ## còn ích: xem lại cut-in để kiểm tra âm thanh, độ dài, thời điểm cắt mà
 ## không phải chơi đủ một màn cho mỗi lần thử.
-var ki_nang_vo_han: bool = false
+var infinite_skill: bool = false
 
 ## Đã xem màn ra mắt của Gold Ship chưa. Lưu vào save.
 ##
@@ -574,7 +574,7 @@ var ki_nang_vo_han: bool = false
 ## nhân vật ẩn — ba biến bool là ba chỗ phải nhớ khai báo, nhớ lưu, nhớ xoá
 ## trong reset(). from_dict() bên dưới tự chuyển cờ cũ sang để người đang chơi
 ## dở không bị chiếu lại đoạn Gold Ship họ đã xem.
-var da_gioi_thieu: Dictionary = {}
+var intro_seen: Dictionary = {}
 
 ## Cheat CODE No.7: bật phím 0 để TUA GIỜ trong màn chơi. Lưu vào file save.
 ##
@@ -586,7 +586,7 @@ var da_gioi_thieu: Dictionary = {}
 ## nằm ngay trên hàng số, cạnh dãy phím người chơi thật sự dùng. Để nó luôn bật
 ## thì một cú bấm nhầm là mất cả lượt chơi, và người chơi không hiểu vì sao
 ## đồng hồ vừa nhảy. Giấu sau CODE No.7 thì chỉ ai cố ý mới bật được.
-var cheat_tua_gio: bool = false
+var cheat_time_skip: bool = false
 
 ## ───────────────────────────── BẢNG XẾP HẠNG ──────────────────────────────
 ##
@@ -602,14 +602,14 @@ var cheat_tua_gio: bool = false
 ## luật mở khoá và dòng "kỷ lục cũ" ở bảng tổng kết. Bảng xếp hạng cần NHIỀU
 ## lượt và cần biết ai chơi lượt đó — nhét thêm vào best_money thì hàm
 ## get_best_money() đang trả int sẽ phải trả về thứ khác, kéo theo mọi nơi gọi.
-var bang_xep_hang: Dictionary = {}
+var leaderboard: Dictionary = {}
 
 ## Các màn có bảng xếp hạng, đúng thứ tự tab trên giao diện.
-const MAN_XEP_HANG := ["d1_sang", "d2_sang", "d3_sang", "endless"]
+const RANKED_LEVELS := ["d1_sang", "d2_sang", "d3_sang", "endless"]
 
 ## Nhãn tab. "endless" chưa phải một màn thật trong LEVELS — nó là chỗ đã dành
 ## sẵn, để lúc làm chế độ Vô tận không phải đụng lại vào giao diện này.
-const TEN_MAN_XEP_HANG := {
+const RANKED_LEVEL_NAMES := {
 	"d1_sang": "Màn 1",
 	"d2_sang": "Màn 2",
 	"d3_sang": "Màn 3",
@@ -619,7 +619,7 @@ const TEN_MAN_XEP_HANG := {
 ## Giữ bao nhiêu dòng mỗi màn. Cắt bớt chứ không giữ hết: file save là JSON
 ## đọc lại toàn bộ lúc khởi động, mà một bảng xếp hạng không ai đọc tới dòng
 ## thứ hai mươi.
-const SO_DONG_XEP_HANG := 10
+const LEADERBOARD_ROWS := 10
 
 
 ## Ghi một lượt chơi vào bảng xếp hạng.
@@ -628,30 +628,32 @@ const SO_DONG_XEP_HANG := 10
 ## "ai kiếm được bao nhiêu", không phải "ai qua màn". Một lượt 300 đồng vẫn là
 ## dữ liệu thật, và nếu lọc đi thì người mới chơi sẽ thấy một cái bảng trống
 ## trơn sau khi vừa chơi xong một màn.
-func ghi_xep_hang(id_man: String, tien: int, hang: String) -> void:
-	if not MAN_XEP_HANG.has(id_man):
+func record_rank(level_id: String, money: int, rank: String) -> void:
+	if not RANKED_LEVELS.has(level_id):
 		return
-	var ds: Array = bang_xep_hang.get(id_man, [])
-	ds.append({
-		"nv": selected_character,
-		"tien": tien,
-		"hang": hang,
+	var list_: Array = leaderboard.get(level_id, [])
+	list_.append({
+		"character": selected_character,
+		"money": money,
+		"rank": rank,
 	})
 	# Sắp lại NGAY lúc ghi chứ không sắp lúc hiện: bảng được đọc nhiều lần
 	# hơn số lần được ghi, và sắp sẵn thì mọi nơi đọc đều thấy cùng một thứ tự.
-	ds.sort_custom(func(a: Dictionary, b: Dictionary) -> bool:
-		return int(a.get("tien", 0)) > int(b.get("tien", 0)))
-	if ds.size() > SO_DONG_XEP_HANG:
-		ds.resize(SO_DONG_XEP_HANG)
-	bang_xep_hang[id_man] = ds
+	list_.sort_custom(func(a: Dictionary, b: Dictionary) -> bool:
+		# Bản ghi cũ dùng khoá "tien"; đọc lùi để bảng đã lưu vẫn sắp đúng.
+		return int(a.get("money", a.get("tien", 0))) \
+			> int(b.get("money", b.get("tien", 0))))
+	if list_.size() > LEADERBOARD_ROWS:
+		list_.resize(LEADERBOARD_ROWS)
+	leaderboard[level_id] = list_
 	progress_changed.emit()
 	SaveSystem.save_game()
 
 
 ## Bảng xếp hạng của một màn — mảng bản ghi đã sắp sẵn, có thể rỗng.
-func xep_hang_cua_man(id_man: String) -> Array:
-	var ds: Variant = bang_xep_hang.get(id_man, [])
-	return ds if ds is Array else []
+func level_leaderboard(level_id: String) -> Array:
+	var list_: Variant = leaderboard.get(level_id, [])
+	return list_ if list_ is Array else []
 
 
 ## Tên hiển thị của nhân vật trong một bản ghi xếp hạng.
@@ -659,15 +661,15 @@ func xep_hang_cua_man(id_man: String) -> Array:
 ## Bản ghi cũ có thể mang id rỗng (chạy thẳng map bằng F6 thì chưa qua màn
 ## chọn nhân vật) hoặc một id đã bị xoá khỏi CHARACTERS. Cả hai đều không được
 ## phép làm hỏng cái bảng, nên trả về một chỗ trống có nghĩa.
-func ten_nhan_vat(id: String) -> String:
+func character_name(id: String) -> String:
 	if id.is_empty():
 		return "—"
 	return String(CHARACTERS.get(id, {}).get("label", id))
 
 
 ## Bật/tắt cheat tua giờ.
-func set_cheat_tua_gio(value: bool) -> void:
-	cheat_tua_gio = value
+func set_cheat_time_skip(value: bool) -> void:
+	cheat_time_skip = value
 	progress_changed.emit()
 	SaveSystem.save_game()
 
@@ -700,7 +702,7 @@ func is_unlocked(id: String) -> bool:
 ## mặc định ở đây: GameData chỉ giữ dữ liệu, còn quyết định "chưa có thì đi
 ## đâu" là việc của màn hình điều hướng. Trộn hai việc vào một chỗ thì sau
 ## này muốn đổi hành vi phải sửa đúng cái file lẽ ra không liên quan.
-func duong_dan_scene(id: String) -> String:
+func scene_path(id: String) -> String:
 	var info: Dictionary = LEVELS.get(id, {})
 	return str(info.get("scene", ""))
 
@@ -711,7 +713,7 @@ func duong_dan_scene(id: String) -> String:
 ## duong_dan_scene() ở trên: GameData chỉ trả lời "có hay không", còn xử lý khi
 ## thiếu là việc của nơi gọi — ở đây là level_base, nó sẽ lùi về nhân vật gán
 ## sẵn trong Inspector thay vì để màn chơi trống trơn.
-func duong_dan_nhan_vat(id: String) -> String:
+func character_scene_path(id: String) -> String:
 	var info: Dictionary = CHARACTERS.get(id, {})
 	return str(info.get("player", ""))
 
@@ -735,29 +737,29 @@ func duong_dan_nhan_vat(id: String) -> String:
 ## Bữa tối, do nhóm món nồi đang khoá) nên trần doanh thu đã tụt. Phải playtest
 ## rồi chỉnh lại — mốc quá cao thì hạng S thành thứ không ai với tới, mốc quá
 ## thấp thì mọi lượt chơi đều S và cái hạng mất hết ý nghĩa.
-const MOC_MAC_DINH := {"S": 1650, "A": 1300, "B": 950, "C": 600}
+const DEFAULT_THRESHOLDS := {"S": 1650, "A": 1300, "B": 950, "C": 600}
 
 ## Thứ tự xét, cao xuống thấp. Không lấy MOC_MAC_DINH.keys() vì thứ tự khoá
 ## Dictionary là thứ tự khai báo — đúng lúc này nhưng sẽ sai lặng lẽ nếu ai đó
 ## sắp lại bảng trên, mà lỗi đó rất khó nhìn ra.
-const THU_TU_HANG := ["S", "A", "B", "C"]
+const RANK_ORDER := ["S", "A", "B", "C"]
 
 ## Hạng thấp nhất coi là qua màn.
-const HANG_TOI_THIEU := "C"
+const MIN_RANK := "C"
 
 
 ## Xếp hạng một lượt chơi. Trả về "S"/"A"/"B"/"C", hoặc "" nếu chưa đạt.
-func xep_hang(id_man: String, tien: int) -> String:
-	var moc := moc_xep_hang(id_man)
-	for hang in THU_TU_HANG:
-		if tien >= int(moc.get(hang, MOC_MAC_DINH[hang])):
-			return hang
+func rank_for(level_id: String, money: int) -> String:
+	var marks := rank_thresholds_for(level_id)
+	for rank in RANK_ORDER:
+		if money >= int(marks.get(rank, DEFAULT_THRESHOLDS[rank])):
+			return rank
 	return ""
 
 
 ## Mốc điểm của một màn, để bảng kết quả hiện "còn thiếu bao nhiêu nữa".
-func moc_xep_hang(id_man: String) -> Dictionary:
-	return luat_man(id_man).get("moc", MOC_MAC_DINH)
+func rank_thresholds_for(level_id: String) -> Dictionary:
+	return rules_for_level(level_id).get("rank_thresholds", DEFAULT_THRESHOLDS)
 
 
 ## Luật riêng của một màn, hoặc Dictionary rỗng nếu màn đó chưa có luật.
@@ -765,8 +767,8 @@ func moc_xep_hang(id_man: String) -> Dictionary:
 ## Rỗng là hợp lệ, không phải lỗi: màn hướng dẫn có bộ dẫn dắt riêng đặt luật
 ## của nó, và chạy thẳng map bằng F6 thì current_level rỗng. Cả hai trường hợp
 ## đều muốn dùng số mặc định trong quan_ly_khach.gd.
-func luat_man(id_man: String) -> Dictionary:
-	return LEVELS.get(id_man, {}).get("luat", {})
+func rules_for_level(level_id: String) -> Dictionary:
+	return LEVELS.get(level_id, {}).get("rules", {})
 
 
 ## Tên màn hiện ở màn hình mở đầu, ví dụ "NGÀY 1".
@@ -777,21 +779,21 @@ func luat_man(id_man: String) -> Dictionary:
 ##
 ## Khi bật HIEN_MAN_TOI thì mới cần phân biệt buổi, nên lúc đó mới ghép thêm
 ## nhãn của màn vào sau.
-const TEN_NGAY := {
+const DAY_NAMES := {
 	"d1_sang": "NGÀY 1", "d1_toi": "NGÀY 1",
 	"d2_sang": "NGÀY 2", "d2_toi": "NGÀY 2",
 	"d3_sang": "NGÀY 3", "d3_toi": "NGÀY 3",
 }
 
-func ten_man(id: String) -> String:
+func level_name(id: String) -> String:
 	if id == "tutorial":
 		return "HƯỚNG DẪN"
-	if not TEN_NGAY.has(id):
+	if not DAY_NAMES.has(id):
 		return String(LEVELS.get(id, {}).get("label", "")).to_upper()
-	var ngay: String = TEN_NGAY[id]
-	if not HIEN_MAN_TOI:
-		return ngay
-	return "%s · %s" % [ngay, String(LEVELS[id].get("label", "")).to_upper()]
+	var day: String = DAY_NAMES[id]
+	if not SHOW_EVENING:
+		return day
+	return "%s · %s" % [day, String(LEVELS[id].get("label", "")).to_upper()]
 
 
 func get_best_money(id: String) -> int:
@@ -827,8 +829,8 @@ func set_unlock_all(value: bool) -> void:
 
 
 ## Bật/tắt cheat dùng kĩ năng không cần điều kiện.
-func set_ki_nang_vo_han(value: bool) -> void:
-	ki_nang_vo_han = value
+func set_infinite_skill(value: bool) -> void:
+	infinite_skill = value
 	progress_changed.emit()
 	SaveSystem.save_game()
 
@@ -842,7 +844,7 @@ func set_ki_nang_vo_han(value: bool) -> void:
 ##
 ## Godot KHÔNG phát được .mp4 (H.264 vướng bằng sáng chế) — chỉ đọc Ogg
 ## Theora. Mọi file trong thư mục này đều đã chuyển sang .ogv bằng ffmpeg.
-func duong_dan_cutscene_ki_nang(id: String) -> String:
+func skill_cutscene_path(id: String) -> String:
 	if id.is_empty():
 		return ""
 	return "res://assets/video/ki_nang/%s.ogv" % id
@@ -858,15 +860,15 @@ func duong_dan_cutscene_ki_nang(id: String) -> String:
 ## trong CHARACTERS, còn HUD đoán theo tên file. Điền một chỗ thì chỗ kia
 ## không đổi, và không có lỗi nào chỉ ra vì sao. Giờ cả hai cùng đọc trường
 ## "icon" — điền một lần, hiện cả hai nơi.
-func duong_dan_anh_ki_nang(id: String) -> String:
-	var ds: Array = CHARACTERS.get(id, {}).get("skills", [])
-	if not ds.is_empty():
-		var ten := str((ds[0] as Dictionary).get("icon", ""))
-		if not ten.is_empty():
-			var duong_dan := "res://assets/ui/ki_nang/%s.png" % ten
-			if ResourceLoader.exists(duong_dan):
-				return duong_dan
-			push_warning("Thiếu ảnh kĩ năng: %s" % duong_dan)
+func skill_icon_path(id: String) -> String:
+	var list_: Array = CHARACTERS.get(id, {}).get("skills", [])
+	if not list_.is_empty():
+		var name_ := str((list_[0] as Dictionary).get("icon", ""))
+		if not name_.is_empty():
+			var path := "res://assets/ui/ki_nang/%s.png" % name_
+			if ResourceLoader.exists(path):
+				return path
+			push_warning("Thiếu ảnh kĩ năng: %s" % path)
 	return "res://assets/ui/ki_nang/mac_dinh.png"
 
 
@@ -882,10 +884,10 @@ func set_third_person_unlocked(value: bool) -> void:
 
 
 ## Bật/tắt một nhân vật ẩn.
-func set_mo_nhan_vat(id: String, value: bool) -> void:
-	if not NHAN_VAT_AN.has(id):
+func set_character_unlocked(id: String, value: bool) -> void:
+	if not HIDDEN_CHARACTERS.has(id):
 		return
-	nhan_vat_mo[id] = value
+	unlocked_characters[id] = value
 	# Tắt lại trong khi nhân vật đó đang được chọn thì phải bỏ chọn, nếu
 	# không người chơi vào màn với một nhân vật lẽ ra chưa mở khoá.
 	if not value and selected_character == id:
@@ -894,14 +896,14 @@ func set_mo_nhan_vat(id: String, value: bool) -> void:
 	# lại lần sau còn xem lại được từ đầu. Không có dòng này thì thử một
 	# lần là mất, muốn xem lại phải xoá cả file save.
 	if not value:
-		da_gioi_thieu.erase(id)
+		intro_seen.erase(id)
 	progress_changed.emit()
 	SaveSystem.save_game()
 
 
 ## Giữ tên cũ cho bảng CODE No.7 khỏi phải đổi.
 func set_golshi_unlocked(value: bool) -> void:
-	set_mo_nhan_vat("golshi", value)
+	set_character_unlocked("golshi", value)
 
 
 ## Đổi góc nhìn. Không có quyền thì không làm gì — kiểm tra ở đây một lần
@@ -924,8 +926,8 @@ func set_third_person_active(value: bool) -> void:
 ## chỉ hỏi một câu, nên sau này đổi luật — ví dụ cho xem lại mỗi chương —
 ## thì sửa đúng ở đây.
 ## Màn này có phải chỉ để kể chuyện không (không có gameplay).
-func la_man_ke_chuyen(id: String) -> bool:
-	return bool(LEVELS.get(id, {}).get("ke_chuyen", false))
+func is_story_level(id: String) -> bool:
+	return bool(LEVELS.get(id, {}).get("story_only", false))
 
 
 ## Scene cần nạp để VÀO màn `id` — tự chen đoạn cắt cảnh nếu tới lượt.
@@ -942,9 +944,9 @@ func la_man_ke_chuyen(id: String) -> bool:
 ## hỏi suông — đặt tên là "vao_man" chứ không phải "duong_dan_scene" để chỗ
 ## gọi thấy rõ điều đó. Nhờ việc đánh dấu ngay tại đây mà chính scene cắt
 ## cảnh gọi lại hàm này cũng không bị lặp vô hạn.
-func vao_man(id: String) -> String:
-	var dich := duong_dan_scene(id)
-	if dich.is_empty():
+func enter_level(id: String) -> String:
+	var target := scene_path(id)
+	if target.is_empty():
 		return ""
 
 	# Bốn điều kiện chen đoạn ra mắt, xét cho ĐÚNG nhân vật đang được chọn:
@@ -954,16 +956,16 @@ func vao_man(id: String) -> String:
 	#   4. màn sắp vào là màn chơi THẬT, không phải một màn kể chuyện —
 	#      nếu không thì "nhân vật bước vào quán" chen được vào trước cả đoạn
 	#      cả team nghe tin về cái quán.
-	var ai := String(selected_character)
-	if SCENE_GIOI_THIEU.has(ai) \
-			and da_mo_nhan_vat(ai) \
-			and not bool(da_gioi_thieu.get(ai, false)) \
-			and not la_man_ke_chuyen(id):
-		da_gioi_thieu[ai] = true
+	var who := String(selected_character)
+	if INTRO_SCENES.has(who) \
+			and is_character_unlocked(who) \
+			and not bool(intro_seen.get(who, false)) \
+			and not is_story_level(id):
+		intro_seen[who] = true
 		SaveSystem.save_game()
-		return String(SCENE_GIOI_THIEU[ai])
+		return String(INTRO_SCENES[who])
 
-	return dich
+	return target
 
 
 ## Xóa sạch tiến trình, quay về trạng thái mới cài.
@@ -975,11 +977,11 @@ func reset() -> void:
 	unlock_all = false
 	third_person_unlocked = false
 	third_person_active = false
-	ki_nang_vo_han = false
-	nhan_vat_mo.clear()
-	da_gioi_thieu.clear()
-	bang_xep_hang.clear()
-	cheat_tua_gio = false
+	infinite_skill = false
+	unlocked_characters.clear()
+	intro_seen.clear()
+	leaderboard.clear()
+	cheat_time_skip = false
 	progress_changed.emit()
 
 
@@ -990,14 +992,21 @@ func to_dict() -> Dictionary:
 		"selected_character": selected_character,
 		"unlock_all": unlock_all,
 		"third_person_unlocked": third_person_unlocked,
-		"ki_nang_vo_han": ki_nang_vo_han,
-		"nhan_vat_mo": nhan_vat_mo,
-		"da_gioi_thieu": da_gioi_thieu,
-		"bang_xep_hang": bang_xep_hang,
-		"cheat_tua_gio": cheat_tua_gio,
+		"infinite_skill": infinite_skill,
+		"unlocked_characters": unlocked_characters,
+		"intro_seen": intro_seen,
+		"leaderboard": leaderboard,
+		"cheat_time_skip": cheat_time_skip,
 	}
 
 
+## Đọc khoá TIẾNG ANH trước, nếu không có thì đọc khoá TIẾNG VIỆT cũ.
+##
+## File save nằm ở user:// trên máy người chơi, không nằm trong repo — đổi tên
+## khoá mà không đọc lùi thì mọi tiến độ đã có biến mất im lặng: game vẫn chạy,
+## chỉ là màn nào cũng khoá lại và nhân vật đã mở thì đóng. Lần ghi tiếp theo
+## tự động ghi bằng khoá mới, nên nhánh cũ này chỉ chạy đúng một lần cho mỗi
+## file save. Cùng cách đã dùng cho `golshi_unlocked` bên dưới.
 func from_dict(data: Dictionary) -> void:
 	var c: Variant = data.get("completed", {})
 	completed = c if c is Dictionary else {}
@@ -1006,22 +1015,22 @@ func from_dict(data: Dictionary) -> void:
 	selected_character = str(data.get("selected_character", ""))
 	unlock_all = bool(data.get("unlock_all", false))
 	third_person_unlocked = bool(data.get("third_person_unlocked", false))
-	ki_nang_vo_han = bool(data.get("ki_nang_vo_han", false))
-	var nv: Variant = data.get("nhan_vat_mo", {})
-	nhan_vat_mo = nv if nv is Dictionary else {}
+	infinite_skill = bool(data.get("infinite_skill", data.get("ki_nang_vo_han", false)))
+	var unlocked_raw: Variant = data.get("unlocked_characters", data.get("nhan_vat_mo", {}))
+	unlocked_characters = unlocked_raw if unlocked_raw is Dictionary else {}
 	# Save cũ chỉ có một cờ bool cho Gold Ship — chuyển sang dạng từ điển để
 	# người đang chơi dở không mất phần thưởng đã mở.
 	if bool(data.get("golshi_unlocked", false)):
-		nhan_vat_mo["golshi"] = true
-	var dg: Variant = data.get("da_gioi_thieu", {})
-	da_gioi_thieu = dg if dg is Dictionary else {}
-	var xh: Variant = data.get("bang_xep_hang", {})
-	bang_xep_hang = xh if xh is Dictionary else {}
-	cheat_tua_gio = bool(data.get("cheat_tua_gio", false))
+		unlocked_characters["golshi"] = true
+	var seen_raw: Variant = data.get("intro_seen", data.get("da_gioi_thieu", {}))
+	intro_seen = seen_raw if seen_raw is Dictionary else {}
+	var board_raw: Variant = data.get("leaderboard", data.get("bang_xep_hang", {}))
+	leaderboard = board_raw if board_raw is Dictionary else {}
+	cheat_time_skip = bool(data.get("cheat_time_skip", data.get("cheat_tua_gio", false)))
 	# Save cũ chỉ có một cờ bool cho Gold Ship — chuyển sang từ điển để người
 	# đang chơi dở không bị chiếu lại đoạn họ đã xem.
 	if bool(data.get("golshi_da_gioi_thieu", false)):
-		da_gioi_thieu["golshi"] = true
+		intro_seen["golshi"] = true
 	# Save cũ có thể còn ghi id "locked_1" (tên cũ của thẻ này). Bỏ đi để
 	# không vào màn với một id không còn tồn tại trong CHARACTERS.
 	if selected_character == "locked_1":

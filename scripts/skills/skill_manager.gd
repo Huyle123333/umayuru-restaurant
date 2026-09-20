@@ -105,7 +105,7 @@ func can_use() -> bool:
 	# đã cài xong.
 	if _active.is_empty() and not ignore_condition:
 		return false
-	if GameData.ki_nang_vo_han:
+	if GameData.infinite_skill:
 		return true
 	if _uses_left <= 0:
 		return false
@@ -332,7 +332,7 @@ func activate() -> void:
 		return
 
 	# Chỉ trừ lượt khi cheat TẮT, để cheat đúng nghĩa "không giới hạn".
-	if not GameData.ki_nang_vo_han:
+	if not GameData.infinite_skill:
 		_uses_left -= 1
 	_playing = true
 	_lock_character(true)
@@ -376,7 +376,7 @@ func _progress_label(usable: bool) -> String:
 	# Hết lượt: phân biệt với "chưa đủ điều kiện", vì hai thứ đó đòi người chơi
 	# làm hai việc khác nhau — một cái là cố thêm, một cái là thôi đừng chờ.
 	# Cheat bật thì không bao giờ hết lượt nên không rơi vào nhánh này.
-	if _uses_left <= 0 and not GameData.ki_nang_vo_han:
+	if _uses_left <= 0 and not GameData.infinite_skill:
 		return "Đã dùng"
 	var text := progress_text()
 	return text if not text.is_empty() else "..."

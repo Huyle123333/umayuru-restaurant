@@ -192,7 +192,7 @@ func _load_cutscene() -> void:
 ## bản dịch là chuyện bình thường trong lúc làm dở, không phải lỗi chí mạng.
 func _cutscene_for_locale(path: String) -> String:
 	var lang := TranslationServer.get_locale().substr(0, 2)
-	if lang == SettingsManager.NGON_NGU_MAC_DINH:
+	if lang == SettingsManager.DEFAULT_LANGUAGE:
 		return path
 	var translated := path.get_basename() + "_" + lang + ".gd"
 	if ResourceLoader.exists(translated):
@@ -534,7 +534,7 @@ func _finish() -> void:
 	if not next_level.is_empty():
 		GameData.current_level = next_level
 
-	var path := GameData.vao_man(GameData.current_level)
+	var path := GameData.enter_level(GameData.current_level)
 	if path.is_empty():
 		push_error("Màn '%s' chưa khai báo scene trong GameData.LEVELS." % GameData.current_level)
 		get_tree().change_scene_to_file("res://scenes/menu/main_menu.tscn")

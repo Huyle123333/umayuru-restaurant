@@ -61,10 +61,10 @@ func _ready() -> void:
 ## là file cài đặt cũ của người chơi trỏ sang ngôn ngữ khác.
 func _dung_danh_sach_ngon_ngu() -> void:
 	_opt_ngon_ngu.clear()
-	for i in SettingsManager.NGON_NGU.size():
-		var muc: Dictionary = SettingsManager.NGON_NGU[i]
-		_opt_ngon_ngu.add_item(String(muc["ten"]))
-		_opt_ngon_ngu.set_item_metadata(i, String(muc["ma"]))
+	for i in SettingsManager.LANGUAGES.size():
+		var entry: Dictionary = SettingsManager.LANGUAGES[i]
+		_opt_ngon_ngu.add_item(String(entry["name"]))
+		_opt_ngon_ngu.set_item_metadata(i, String(entry["code"]))
 
 
 func _chon_muc_theo_ma(ma: String) -> void:
@@ -75,7 +75,7 @@ func _chon_muc_theo_ma(ma: String) -> void:
 
 
 func _on_ngon_ngu_selected(index: int) -> void:
-	SettingsManager.set_ngon_ngu(String(_opt_ngon_ngu.get_item_metadata(index)))
+	SettingsManager.set_language(String(_opt_ngon_ngu.get_item_metadata(index)))
 
 
 func open(focus_on_close: Control = null) -> void:
@@ -109,7 +109,7 @@ func _pull_from_settings() -> void:
 	_sld_bright.set_value_no_signal(SettingsManager.brightness)
 	_sld_mouse.set_value_no_signal(SettingsManager.mouse_sensitivity)
 	_chk_fullscreen.set_pressed_no_signal(SettingsManager.fullscreen)
-	_chon_muc_theo_ma(SettingsManager.ngon_ngu)
+	_chon_muc_theo_ma(SettingsManager.language)
 	_refresh_labels()
 
 

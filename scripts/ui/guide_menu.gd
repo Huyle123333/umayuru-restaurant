@@ -408,7 +408,7 @@ func _marker(chu: String) -> Control:
 func _add_grade_marks() -> void:
 	if get_node_or_null("/root/GameData") == null:
 		return
-	var mark: Dictionary = GameData.MOC_MAC_DINH
+	var mark: Dictionary = GameData.DEFAULT_THRESHOLDS
 	var color := {
 		"S": Color("f2c230"), "A": Color("e8823f"),
 		"B": Color("e27ba0"), "C": Color("4f9d5d"),
@@ -417,7 +417,7 @@ func _add_grade_marks() -> void:
 	grid.columns = 2
 	grid.add_theme_constant_override("h_separation", 20)
 	grid.add_theme_constant_override("v_separation", 6)
-	for row in GameData.THU_TU_HANG:
+	for row in GameData.RANK_ORDER:
 		var a := Label.new()
 		a.text = String(row)
 		a.add_theme_font_size_override("font_size", 26)

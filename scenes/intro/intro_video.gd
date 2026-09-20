@@ -24,19 +24,19 @@ extends Control
 
 ## File video. Để ở @export chứ không preload cứng: đổi intro sau này chỉ
 ## cần kéo file mới vào ô này trong Inspector, không phải sửa code.
-@export_file("*.ogv") var duong_dan_video: String = "res://assets/video/intro.ogv"
+@export_file("*.ogv") var video_path: String = "res://assets/video/intro.ogv"
 
 ## Menu sẽ vào sau khi chiếu xong.
-@export_file("*.tscn") var scene_tiep_theo: String = "res://scenes/menu/main_menu.tscn"
+@export_file("*.tscn") var next_scene: String = "res://scenes/menu/main_menu.tscn"
 
 ## Chặn bỏ qua trong khoảng đầu (giây). Chống việc người chơi đang bấm chuột
 ## dở từ màn trước làm mất luôn intro ngay khi nó vừa hiện ra.
-@export var khoa_bo_qua_giay: float = 0.4
+@export var skip_lock_seconds: float = 0.4
 
 @onready var _video: VideoStreamPlayer = %Video
 
-var _da_chuyen := false
-var _cho_phep_bo_qua := false
+var _switched := false
+var _skip_allowed := false
 
 
 func _ready() -> void:
@@ -45,10 +45,10 @@ func _ready() -> void:
 	# chứ không đứng hình vĩnh viễn.
 	process_mode = Node.PROCESS_MODE_ALWAYS
 
-	var stream := load(duong_dan_video) as VideoStream
+	var stream := load(video_path) as VideoStream
 	if stream == null:
-		push_error("Không nạp được video intro: %s — vào thẳng menu." % duong_dan_video)
-		_di_tiep()
+		push_error("Không nạp được video intro: %s — vào thẳng menu." % video_path)
+		_go_next()
 		return
 
 	# TẮT NHẠC NỀN trước khi chiếu.
@@ -64,39 +64,39 @@ func _ready() -> void:
 		AmThanh.stop_music()
 
 	_video.stream = stream
-	_video.finished.connect(_di_tiep)
+	_video.finished.connect(_go_next)
 	_video.play()
 
 	# Godot không báo lỗi ngay khi play() thất bại, nên kiểm lại ở khung hình
 	# sau: đã gọi play() mà vẫn không chạy thì coi như hỏng và đi tiếp.
 	await get_tree().process_frame
 	if not _video.is_playing():
-		push_error("Video intro không phát được (%s) — vào thẳng menu." % duong_dan_video)
-		_di_tiep()
+		push_error("Video intro không phát được (%s) — vào thẳng menu." % video_path)
+		_go_next()
 		return
 
-	await get_tree().create_timer(khoa_bo_qua_giay).timeout
-	_cho_phep_bo_qua = true
+	await get_tree().create_timer(skip_lock_seconds).timeout
+	_skip_allowed = true
 
 
 ## _input chứ không _unhandled_input: scene này không có nút nào để bấm, nên
 ## bắt sự kiện sớm nhất là được, không sợ cướp mất thao tác của ai.
 func _input(event: InputEvent) -> void:
-	if not _cho_phep_bo_qua or _da_chuyen:
+	if not _skip_allowed or _switched:
 		return
 	# echo = phím giữ lâu tự lặp lại; chỉ tính cú bấm xuống đầu tiên.
-	var la_phim := event is InputEventKey and event.is_pressed() and not event.is_echo()
-	var la_chuot := event is InputEventMouseButton and event.is_pressed()
-	var la_tay_cam := event is InputEventJoypadButton and event.is_pressed()
-	if la_phim or la_chuot or la_tay_cam:
+	var is_key := event is InputEventKey and event.is_pressed() and not event.is_echo()
+	var is_mouse := event is InputEventMouseButton and event.is_pressed()
+	var is_pad := event is InputEventJoypadButton and event.is_pressed()
+	if is_key or is_mouse or is_pad:
 		get_viewport().set_input_as_handled()
-		_di_tiep()
+		_go_next()
 
 
-func _di_tiep() -> void:
-	if _da_chuyen:
+func _go_next() -> void:
+	if _switched:
 		return
-	_da_chuyen = true
+	_switched = true
 	if is_instance_valid(_video):
 		_video.stop()
-	get_tree().change_scene_to_file(scene_tiep_theo)
+	get_tree().change_scene_to_file(next_scene)

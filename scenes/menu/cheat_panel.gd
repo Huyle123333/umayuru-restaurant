@@ -103,7 +103,7 @@ func _ready() -> void:
 		"BtnTuaGio", "Tua giờ trong màn (phím 0)", _on_tua_gio_pressed)
 	_btn_ki_nang = _nhan_ban_nut(
 		"BtnKiNang", "Kĩ năng không cần điều kiện", _on_ki_nang_pressed)
-	for id in GameData.NHAN_VAT_AN:
+	for id in GameData.HIDDEN_CHARACTERS:
 		var ma := String(id)
 		var ten := String(GameData.CHARACTERS.get(ma, {}).get("label", ma))
 		_nut_nhan_vat[ma] = _nhan_ban_nut(
@@ -196,7 +196,7 @@ func _on_third_person_pressed() -> void:
 ## bao giờ mở khoá được ai — và đó là lý do sâu xa khiến đoạn ra mắt Gold Ship
 ## không chạy: nó đòi "đã mở khoá", mà không có cách nào mở.
 func _on_nhan_vat_pressed(id: String) -> void:
-	GameData.set_mo_nhan_vat(id, not GameData.da_mo_nhan_vat(id))
+	GameData.set_character_unlocked(id, not GameData.is_character_unlocked(id))
 	_ve_lai()
 
 
@@ -207,7 +207,7 @@ func _on_nhan_vat_pressed(id: String) -> void:
 ## nằm ở cuối. Bật lên rồi bấm 0 một lần là nhảy tới 3:30, bấm lần nữa là
 ## tổng kết.
 func _on_tua_gio_pressed() -> void:
-	GameData.set_cheat_tua_gio(not GameData.cheat_tua_gio)
+	GameData.set_cheat_time_skip(not GameData.cheat_time_skip)
 	_ve_lai()
 
 
@@ -217,7 +217,7 @@ func _on_tua_gio_pressed() -> void:
 ## phút chơi giỏi mới xem được một lần. Bật cheat này thì bấm Space là chạy
 ## ngay, đủ để kiểm tra hiệu ứng và để quay lại đoạn cut-in.
 func _on_ki_nang_pressed() -> void:
-	GameData.set_ki_nang_vo_han(not GameData.ki_nang_vo_han)
+	GameData.set_infinite_skill(not GameData.infinite_skill)
 	_ve_lai()
 
 
@@ -235,8 +235,8 @@ func _on_unlock_pressed() -> void:
 func _ve_lai() -> void:
 	_dat_tick(_btn_unlock, GameData.unlock_all)
 	_dat_tick(_btn_view, GameData.third_person_unlocked)
-	_dat_tick(_btn_tua, GameData.cheat_tua_gio)
-	_dat_tick(_btn_ki_nang, GameData.ki_nang_vo_han)
+	_dat_tick(_btn_tua, GameData.cheat_time_skip)
+	_dat_tick(_btn_ki_nang, GameData.infinite_skill)
 	for id in _nut_nhan_vat:
 		var ma := String(id)
-		_dat_tick(_nut_nhan_vat[ma] as Button, GameData.da_mo_nhan_vat(ma))
+		_dat_tick(_nut_nhan_vat[ma] as Button, GameData.is_character_unlocked(ma))

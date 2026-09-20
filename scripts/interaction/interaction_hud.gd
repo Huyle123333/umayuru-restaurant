@@ -207,7 +207,7 @@ void fragment() {
 	_skill_material.set_shader_parameter("muc_xam", 1.0)
 	_skill_icon.material = _skill_material
 
-	var path := GameData.duong_dan_anh_ki_nang(str(GameData.selected_character))
+	var path := GameData.skill_icon_path(str(GameData.selected_character))
 	if ResourceLoader.exists(path):
 		_skill_icon.texture = load(path)
 	else:

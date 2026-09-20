@@ -243,7 +243,7 @@ void fragment() {
 ## dùng kĩ năng khi đoạn phim không tồn tại. Special Week hiện chưa có file,
 ## nên trường hợp này là có thật chứ không phải phòng xa.
 func play(character_id: String) -> bool:
-	var path := GameData.duong_dan_cutscene_ki_nang(character_id)
+	var path := GameData.skill_cutscene_path(character_id)
 	if path.is_empty() or not ResourceLoader.exists(path):
 		push_warning("Chưa có cut-in kĩ năng cho '%s' (%s)." % [character_id, path])
 		return false

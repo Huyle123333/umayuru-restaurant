@@ -40,14 +40,14 @@ var fullscreen := false
 ## Danh sách ngôn ngữ game hỗ trợ. Tên hiển thị CỐ Ý viết bằng chính ngôn
 ## ngữ đó ("Tiếng Việt", "English") và KHÔNG cho dịch: người lỡ chọn nhầm
 ## ngôn ngữ mình không đọc được vẫn nhận ra dòng của mình mà quay lại.
-const NGON_NGU := [
-	{"ma": "vi", "ten": "Tiếng Việt"},
-	{"ma": "en", "ten": "English"},
+const LANGUAGES := [
+	{"code": "vi", "name": "Tiếng Việt"},
+	{"code": "en", "name": "English"},
 ]
-const NGON_NGU_MAC_DINH := "vi"
+const DEFAULT_LANGUAGE := "vi"
 
 ## Mã ngôn ngữ đang dùng ("vi" / "en").
-var ngon_ngu := NGON_NGU_MAC_DINH
+var language := DEFAULT_LANGUAGE
 
 var _brightness_rect: ColorRect
 
@@ -81,11 +81,11 @@ void fragment() {
 	COLOR = vec4(c * brightness, 1.0);
 }
 """
-	var mat := ShaderMaterial.new()
-	mat.shader = shader
+	var material_ := ShaderMaterial.new()
+	material_.shader = shader
 
 	_brightness_rect = ColorRect.new()
-	_brightness_rect.material = mat
+	_brightness_rect.material = material_
 	_brightness_rect.set_anchors_preset(Control.PRESET_FULL_RECT)
 	# Bắt buộc: nếu không Ignore thì tấm phủ này nuốt hết chuột của cả game.
 	_brightness_rect.mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -124,18 +124,18 @@ func set_volume(bus_name: String, value: float) -> void:
 
 ## --- Ngôn ngữ ------------------------------------------------------------
 
-func co_ngon_ngu(ma: String) -> bool:
-	for muc in NGON_NGU:
-		if muc["ma"] == ma:
+func has_language(code_: String) -> bool:
+	for entry in LANGUAGES:
+		if entry["code"] == code_:
 			return true
 	return false
 
 
-func ten_ngon_ngu(ma: String) -> String:
-	for muc in NGON_NGU:
-		if muc["ma"] == ma:
-			return String(muc["ten"])
-	return ma
+func language_name(code_: String) -> String:
+	for entry in LANGUAGES:
+		if entry["code"] == code_:
+			return String(entry["name"])
+	return code_
 
 
 ## Đổi ngôn ngữ hiển thị của toàn game.
@@ -146,12 +146,12 @@ func ten_ngon_ngu(ma: String) -> String:
 ## text của nó. Nghĩa là các nhãn/nút đặt sẵn trong file .tscn đổi ngay lập
 ## tức mà không cần chạy lại scene — chỉ những chuỗi do CODE gán vào .text
 ## mới phải tự vẽ lại, và đó là lý do vẫn phát signal settings_changed.
-func set_ngon_ngu(ma: String) -> void:
-	if not co_ngon_ngu(ma):
-		push_warning("Không có ngôn ngữ '%s', giữ nguyên '%s'." % [ma, ngon_ngu])
+func set_language(code_: String) -> void:
+	if not has_language(code_):
+		push_warning("Không có ngôn ngữ '%s', giữ nguyên '%s'." % [code_, language])
 		return
-	ngon_ngu = ma
-	TranslationServer.set_locale(ma)
+	language = code_
+	TranslationServer.set_locale(code_)
 	settings_changed.emit()
 
 
@@ -196,7 +196,7 @@ func save_settings() -> void:
 	cfg.set_value("video", "brightness", brightness)
 	cfg.set_value("video", "fullscreen", fullscreen)
 	cfg.set_value("input", "mouse_sensitivity", mouse_sensitivity)
-	cfg.set_value("locale", "ngon_ngu", ngon_ngu)
+	cfg.set_value("locale", "language", language)
 	cfg.save(CONFIG_PATH)
 
 
@@ -212,7 +212,9 @@ func load_settings() -> void:
 	brightness = float(cfg.get_value("video", "brightness", 1.0))
 	fullscreen = bool(cfg.get_value("video", "fullscreen", false))
 	mouse_sensitivity = float(cfg.get_value("input", "mouse_sensitivity", 1.0))
-	ngon_ngu = String(cfg.get_value("locale", "ngon_ngu", NGON_NGU_MAC_DINH))
+	# Khoá cũ "ngon_ngu" vẫn đọc được để không mất lựa chọn ngôn ngữ đã lưu.
+	language = String(cfg.get_value("locale", "language",
+		cfg.get_value("locale", "ngon_ngu", DEFAULT_LANGUAGE)))
 	_apply_all()
 
 
@@ -222,4 +224,4 @@ func _apply_all() -> void:
 	set_brightness(brightness)
 	set_mouse_sensitivity(mouse_sensitivity)
 	set_fullscreen(fullscreen)
-	set_ngon_ngu(ngon_ngu)
+	set_language(language)
