@@ -9,7 +9,7 @@ extends RefCounted
 ## không qua bộ nhớ đệm nào cả — luôn đúng, kể cả ở lần chạy đầu tiên.
 ##
 ## Vì sao là một lớp riêng chứ không phải vài `set_meta()` gắn lên người khách:
-## cái vé trên HUD và luật trong customer_manager.gd phải nhìn thấy CÙNG MỘT patience_left
+## cái vé trên HUD và luật trong customer_manager.gd phải nhìn thấy CÙNG MỘT con
 ## số kiên nhẫn. Nếu mỗi bên giữ một bản sao thì sớm muộn thanh trên màn hình
 ## và luật tính điểm lệch nhau, mà lệch kiểu đó không báo lỗi — chỉ làm người
 ## chơi thấy "rõ ràng còn thanh mà khách vẫn bỏ đi".
@@ -37,7 +37,7 @@ var table: Node
 var dish: String = ""
 var price: int = 0
 
-var patience_max: float = 0.0     ## kiên nhẫn table đầu của GIAI ĐOẠN hiện tại, giây
+var patience_max: float = 0.0     ## kiên nhẫn ban đầu của GIAI ĐOẠN hiện tại, giây
 var patience_left: float = 0.0        ## kiên nhẫn còn lại, giây
 
 ## Nhân vào ngân sách kiên nhẫn của CẢ HAI giai đoạn. 1,0 = không đổi.
@@ -45,7 +45,7 @@ var patience_left: float = 0.0        ## kiên nhẫn còn lại, giây
 ## Đây là chỗ kĩ năng "Kiên nhẫn là một đức tính" của Kita cắm vào (1,30).
 ## quan_ly_khach gán giá trị này ngay sau khi tạo đơn, TRƯỚC wait_in_queue().
 ##
-## Vì sao để ở đơn chứ không nhân sẵn vào hai patience_left số gốc bên quan_ly_khach:
+## Vì sao để ở đơn chứ không nhân sẵn vào hai con số gốc bên quan_ly_khach:
 ## ngân sách lúc ngồi bàn tính từ DanhMuc.patience(dish), tức nó được tính
 ## LẠI ở thời điểm khách ngồi xuống chứ không phải lúc tạo đơn. Nhân sẵn ở
 ## ngoài thì phải nhớ nhân ở hai chỗ, và chỗ thứ hai rất dễ quên vì nó nằm
@@ -88,7 +88,7 @@ func _init(nguoi: Node, id_mon: String) -> void:
 ##
 ## Ngân sách này CỐ ĐỊNH, không suy từ món như lúc ngồi bàn. Lý do: đứng xếp
 ## hàng thì khách chưa được phục vụ gì cả, nên thời gian chờ dài ngắn theo món
-## là thứ người chơi không đoán được và cũng không tác động được. Một patience_left số
+## là thứ người chơi không đoán được và cũng không tác động được. Một con số
 ## cố định thì thành một luật học một lần là thuộc.
 func wait_in_queue(giay: float) -> void:
 	in_queue = true

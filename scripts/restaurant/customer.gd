@@ -147,7 +147,7 @@ static func snap_to_navmesh(ban_do: RID, diem: Vector3) -> Vector3:
 
 ## Khai báo mặt navmesh cao hơn chân nhân vật bao nhiêu.
 ##
-## NavigationAgent3D trừ patience_left số này khỏi trục Y ở CẢ điểm đường trả về LẪN phép
+## NavigationAgent3D trừ con số này khỏi trục Y ở CẢ điểm đường trả về LẪN phép
 ## đo "đã tới điểm giữa chưa". Không khai thì agent thấy mỗi điểm đường luôn
 ## cách nó ít nhất 0,5 theo trục đứng, không bao giờ nhích sang điểm kế tiếp,
 ## và người khách đi mãi về phía một cái mốc ngay dưới chân mình.

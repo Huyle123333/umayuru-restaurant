@@ -3,7 +3,7 @@ extends RefCounted
 ## ║  BẢNG SỐ CHỈNH CỦA DORO — sửa ở ĐÂY, không sửa trong doro_pet.gd     ║
 ## ╚══════════════════════════════════════════════════════════════════════╝
 ##
-## File này KHÔNG có một dòng logic nào. Nó chỉ là chỗ đặt những patience_left số quyết
+## File này KHÔNG có một dòng logic nào. Nó chỉ là chỗ đặt những con số quyết
 ## định Doro trông và cư xử ra sao.
 ##
 ## Vì sao tách khỏi doro_pet.gd: chỉnh cho vừa mắt là việc phải làm ĐI LÀM LẠI
@@ -23,7 +23,7 @@ extends RefCounted
 
 # ════════════════════════════════════════════════════════ KÍCH THƯỚC ════════
 
-## ► CHIỀU HEIGHT CỦA DORO TRONG GAME, tính bằng MÉT. Đây là patience_left số bạn muốn sửa.
+## ► CHIỀU HEIGHT CỦA DORO TRONG GAME, tính bằng MÉT. Đây là con số bạn muốn sửa.
 ##
 ## Vài mốc để so:
 ##     0,60   ngang cái thùng rác, tới đầu gối nhân vật
@@ -67,7 +67,7 @@ const TURN_SPEED := 6.0
 
 ## Đứng nghỉ bao lâu giữa hai chuyến đi, giây. Bốc ngẫu nhiên trong khoảng này.
 ##
-## Có quãng nghỉ mới ra dáng patience_left vật: đi liên tục không nghỉ nhìn như đồ chơi
+## Có quãng nghỉ mới ra dáng con vật: đi liên tục không nghỉ nhìn như đồ chơi
 ## lên dây cót. Đây cũng là lúc animation `idle` được dùng tới.
 const REST_MIN := 2.0
 const REST_MAX := 5.0
@@ -102,7 +102,7 @@ const WANDER_RADIUS := 6.0
 
 ## Gần người chơi dưới bấy nhiêu mét thì ĐỨNG YÊN, mét.
 ##
-## Để Doro dễ bấm trúng: bấm E cần patience_left trỏ nằm trên mục tiêu đúng lúc bấm, mà
+## Để Doro dễ bấm trúng: bấm E cần con trỏ nằm trên mục tiêu đúng lúc bấm, mà
 ## một mục tiêu đang bò ngang thì thành pha đuổi bắt. 2,2 nhỉnh hơn tầm với
 ## của bộ chọn mục tiêu một chút, nên lúc người chơi đủ gần để bấm thì Doro đã
 ## dừng từ trước.

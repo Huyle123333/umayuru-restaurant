@@ -205,7 +205,7 @@ func _gan_he_tuong_tac() -> void:
 	# giữ nguyên liệu, và người chơi cần thấy trong đó đang có gì y như với
 	# cái bàn — nhất là cái lò, nơi họ phải nhớ đã bỏ đủ topping chưa.
 	for n in get_tree().get_nodes_in_group("tram"):
-		if n.get("loai") in ["ban_che_tao", "ban_de_tam"]:
+		if n.get("kind") in ["ban_che_tao", "ban_de_tam"]:
 			hud.listen_to_table(n)
 
 

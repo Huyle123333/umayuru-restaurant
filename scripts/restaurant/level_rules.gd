@@ -116,7 +116,7 @@ func _apply_static() -> void:
 		# Gán CẢ `con_lai`, không chỉ `thoi_luong`. Bảng thời gian chép
 		# thoi_luong sang con_lai trong _ready() của nó, mà _ready() đã chạy
 		# xong từ lúc add_child — sửa mỗi thoi_luong thì đồng hồ vẫn đếm từ
-		# patience_left số cũ và chỉ có cái thanh tiến trình là sai lệch.
+		# con số cũ và chỉ có cái thanh tiến trình là sai lệch.
 		_clock.time_left = t
 
 

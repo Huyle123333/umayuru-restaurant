@@ -23,7 +23,7 @@ const COIN_ICON := "res://assets/ui/tien/carrot_tien.png"
 
 const MARGIN := 28.0
 const TICKET_WIDTH := 330.0
-const COUNTER_SIZE := 12.0            # đệm empty lòng bảng
+const COUNTER_SIZE := 12.0            # đệm trong lòng bảng
 const WIDTH := TICKET_WIDTH + COUNTER_SIZE * 2.0
 const HEIGHT := 820.0           # tới sát khối "sức · tay · kĩ năng" ở y=850
 const GAP := 8

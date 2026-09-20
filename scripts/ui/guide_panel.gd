@@ -61,7 +61,7 @@ func _build_ui() -> void:
 	# nên nó đánh nhau với tween, và cái rect phình thêm sau mỗi frame hình.
 	_box.size = Vector2(WIDTH, 0.0)
 	_box.position = Vector2(_x_hidden(), TOP)
-	_box.mouse_filter = Control.MOUSE_FILTER_STOP   # nút bên empty cần bấm được
+	_box.mouse_filter = Control.MOUSE_FILTER_STOP   # nút bên trong cần bấm được
 	if ResourceLoader.exists(THEME):
 		_box.theme = load(THEME)
 	else:

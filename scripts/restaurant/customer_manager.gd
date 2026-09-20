@@ -54,7 +54,7 @@ const COIN_ICON := "res://assets/ui/tien/carrot_tien.png"
 
 ## Số ô hàng đợi được dùng. 0 = dùng hết số Marker HangDoi có trong map.
 ##
-## Tách khỏi `max_tables` vì hai patience_left số điều khiển hai áp lực khác nhau: trần
+## Tách khỏi `max_tables` vì hai con số điều khiển hai áp lực khác nhau: trần
 ## bàn quyết định "phải nấu mấy món cùng lúc", trần hàng đợi quyết định "có
 ## bao nhiêu người đang giận dần ở cửa". Ngày 1 hạ cả hai xuống 3.
 @export var max_queue: int = 0
@@ -78,7 +78,7 @@ const COIN_ICON := "res://assets/ui/tien/carrot_tien.png"
 ## từ 15 (kem) tới 95 (hamburger). Bốc đều thì ba loại kem chiếm đúng một nửa
 ## số đơn, doanh thu trần tụt gần một nửa, và điểm cuối màn phụ thuộc vào việc
 ## người chơi GẶP MAY được mấy đơn đắt — chứ không phụ thuộc họ nấu nhanh cỡ
-## nào. Có trọng số thì "trung bình một khách đáng bao nhiêu tiền" là patience_left số
+## nào. Có trọng số thì "trung bình một khách đáng bao nhiêu tiền" là con số
 ## người thiết kế đặt ra, và bốn mốc S/A/B/C mới có cơ sở để tính.
 ##
 ## Kem vẫn giữ trọng số thấp chứ không bỏ hẳn: một đơn 4 giây xen giữa hai đơn
@@ -104,7 +104,7 @@ const COIN_ICON := "res://assets/ui/tien/carrot_tien.png"
 ## Kiên nhẫn lúc đứng XẾP HÀNG (chưa có bàn), giây. CỐ ĐỊNH, không theo món.
 ##
 ## 45 giây: đủ để người chơi dọn xong một bàn và đón người tiếp theo, nhưng
-## không đủ để mặc kệ hàng đợi cả màn. Xem thêm lý do vì sao là patience_left số cố định
+## không đủ để mặc kệ hàng đợi cả màn. Xem thêm lý do vì sao là con số cố định
 ## ở Order.wait_in_queue().
 @export var queue_patience: float = 45.0
 
@@ -116,7 +116,7 @@ const COIN_ICON := "res://assets/ui/tien/carrot_tien.png"
 ## đơ ở khung cuối vì clip này KHÔNG lặp — và không lặp là cố ý, cáu là một
 ## cử chỉ diễn một lần chứ không phải một trạng thái.
 ##
-## Đổi model khách khác thì phải đo lại patience_left số này theo clip của model đó.
+## Đổi model khách khác thì phải đo lại con số này theo clip của model đó.
 @export var beg_seconds: float = 2.0
 
 ## Thưởng thêm khi giao lúc kiên nhẫn còn trên 50%. 0,35 = +35%.
@@ -128,7 +128,7 @@ const COIN_ICON := "res://assets/ui/tien/carrot_tien.png"
 ## nhất đúng, và điểm giữa người chơi giỏi với người chơi thường tách gấp đôi.
 ##
 ## Bốn kĩ năng bị động (Victory Cheer, Conguamoidaden, Aura farming, Fan tê
-## liệt) quy đổi giá trị theo đúng patience_left số này — đổi ở đây là phải tính lại
+## liệt) quy đổi giá trị theo đúng con số này — đổi ở đây là phải tính lại
 ## bảng kĩ năng trong Bang can bang.xlsx.
 @export var perfect_bonus: float = 0.35
 
@@ -247,7 +247,7 @@ const BLOCKERS := [
 
 var _nav_region: Array[NavigationRegion3D] = []
 ## Mặt navmesh nằm cao hơn mặt sàn bấy nhiêu. ĐO lúc chạy chứ không gõ tay:
-## patience_left số này do Recast quyết theo cell_height và chiều dày hình va chạm sàn,
+## con số này do Recast quyết theo cell_height và chiều dày hình va chạm sàn,
 ## đổi một trong hai là nó đổi theo.
 var _height_offset := 0.0
 
@@ -258,7 +258,7 @@ func _bake_navmesh() -> void:
 	_build_blockers()
 
 	var luoi := NavigationMesh.new()
-	# Ba patience_left số này phải là BỘI SỐ của ô lưới, và ô lưới phải TRÙNG với ô lưới
+	# Ba con số này phải là BỘI SỐ của ô lưới, và ô lưới phải TRÙNG với ô lưới
 	# của bản đồ điều hướng (mặc định project là 0,25). Lệch thì Godot cảnh báo
 	# "cell_size mismatch" và mép navmesh bị rasterize sai; còn agent_radius /
 	# agent_max_climb không tròn ô thì bị làm tròn và giá trị thật khác hẳn giá
@@ -354,7 +354,7 @@ func is_ready() -> void:
 ## Số đa giác của từng vùng — dùng để kiểm nhanh navmesh có nướng ra gì không.
 ## Mặt navmesh cao hơn mặt sàn bao nhiêu — ĐO được lúc nướng.
 ##
-## Mở hàm đọc thay vì để nơi khác chọc thẳng vào `_height_offset`: patience_left số này chỉ
+## Mở hàm đọc thay vì để nơi khác chọc thẳng vào `_height_offset`: con số này chỉ
 ## có nghĩa SAU khi navmesh nướng xong, và một hàm công khai là chỗ để ghi
 ## đúng điều đó. Hiện có hai nơi cần: khách hàng và Doro.
 func navmesh_height_offset() -> float:
@@ -402,7 +402,7 @@ func spawn_customer() -> Node:
 ## Ô hàng đợi trống gần đầu hàng nhất, hoặc -1 nếu hết chỗ.
 ##
 ## Chỉ xét `max_queue` ô ĐẦU TIÊN chứ không cắt bớt mảng `_in_queue`: các ô
-## sau vẫn tồn tại và vẫn đúng vị trí, nên Ngày 2 chỉ cần nâng patience_left số lên là
+## sau vẫn tồn tại và vẫn đúng vị trí, nên Ngày 2 chỉ cần nâng con số lên là
 ## hàng đợi dài ra ngay, không phải dựng lại gì.
 func _free_seat() -> int:
 	var het: int = _in_queue.size()
@@ -832,7 +832,7 @@ func _leave_angry(don: Order) -> void:
 ##
 ## Đặt trong không gian 3D chứ không ở góc HUD: phần thưởng phải hiện ra ĐÚNG
 ## CHỖ vừa xảy ra việc tốt, nếu không người chơi phải tự nối "tôi vừa làm gì"
-## với "patience_left số ở góc màn hình vừa nhảy". Ở góc còn có ví tiền nảy lên một cái
+## với "con số ở góc màn hình vừa nhảy". Ở góc còn có ví tiền nảy lên một cái
 ## nữa — hai phản hồi, một ngay tại chỗ, một ở nơi lưu tổng.
 func _money_popup(cho: Vector3, so: int, is_perfect: bool) -> void:
 	if _map == null:
@@ -863,7 +863,7 @@ func _money_popup(cho: Vector3, so: int, is_perfect: bool) -> void:
 	goc.add_child(chu)
 
 	# Bay lên 0,9 đơn vị rồi mờ dần. Mờ CHẬM HƠN lúc bay: biến mất cùng lúc
-	# với lúc dừng thì patience_left số như bị cắt ngang, còn mờ nốt ở đỉnh thì mắt kịp
+	# với lúc dừng thì con số như bị cắt ngang, còn mờ nốt ở đỉnh thì mắt kịp
 	# đọc xong rồi mới mất.
 	var tw := create_tween().set_parallel(true)
 	tw.tween_property(goc, "position:y", goc.position.y + 0.9, 1.2) \
@@ -877,7 +877,7 @@ func _money_popup(cho: Vector3, so: int, is_perfect: bool) -> void:
 ## Đóng cửa: ngừng sinh khách và ngừng đếm kiên nhẫn.
 ##
 ## Gọi lúc hết giờ, TRƯỚC khi hiện bảng kết quả. Không có bước này thì trong
-## lúc người chơi đang đọc bảng, đồng hồ kiên nhẫn vẫn chạy ngầm và patience_left số
+## lúc người chơi đang đọc bảng, đồng hồ kiên nhẫn vẫn chạy ngầm và con số
 ## "khách bỏ đi" trên bảng cứ tăng lên trước mắt họ.
 ##
 ## Không đụng tới người khách đang có mặt: họ cứ đứng đó cho tới khi đổi màn.

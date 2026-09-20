@@ -23,7 +23,7 @@ extends "res://scripts/interaction/workstation.gd"
 ##
 ## Lớp đó vốn được nghĩ ra cho đồ ăn rơi dưới đất, và yêu cầu của nó giống hệt
 ## yêu cầu ở đây: bộ chọn mục tiêu PHẢI nhìn thấy (để bấm E được), nhưng nhân
-## vật KHÔNG được bị chặn. Một patience_left thú chạy loăng quăng giữa bếp mà đẩy được
+## vật KHÔNG được bị chặn. Một con thú chạy loăng quăng giữa bếp mà đẩy được
 ## người chơi thì đúng lúc cao điểm nó sẽ chèn người chơi vào góc tường — một
 ## thứ trang trí không bao giờ được phép làm hỏng lượt chơi.
 ##
@@ -33,7 +33,7 @@ extends "res://scripts/interaction/workstation.gd"
 ##
 ## ═════════════════════════════════════════════════ VÌ SAO ĐỨNG YÊN KHI GẦN
 ##
-## Tới gần người chơi thì Doro dừng hẳn. Lý do là thao tác: bấm E cần patience_left trỏ
+## Tới gần người chơi thì Doro dừng hẳn. Lý do là thao tác: bấm E cần con trỏ
 ## nằm trên mục tiêu trong đúng khoảnh khắc bấm, mà một mục tiêu đang bò ngang
 ## thì người chơi phải rượt theo nó. Đứng yên biến việc "cho Doro ăn rác"
 ## từ một pha đuổi bắt thành một cái bấm nút.
@@ -159,7 +159,7 @@ func _build_agent(lech_cao: float) -> void:
 # ------------------------------------------------------------------ đi lại ---
 
 func _physics_process(delta: float) -> void:
-	# @tool ở dòng đầu CHỈ để tắt cảnh báo "lớp cha có @tool mà lớp patience_left thì
+	# @tool ở dòng đầu CHỈ để tắt cảnh báo "lớp cha có @tool mà lớp con thì
 	# không" — TrạmTươngTác phải là @tool vì lớp con DiningTable cần hiện số bàn lúc
 	# đang kê map. Doro thì ngược lại: nó chỉ được dựng lúc chạy, không bao giờ
 	# nằm sẵn trong file map, nên không có việc gì để làm trong trình soạn thảo.
@@ -325,7 +325,7 @@ func _on_fed(_station: Node, _index: int) -> void:
 	# có đồ bị vứt. Phát thêm ở đây thì tiếng kêu hai lần chồng nhau.
 	#
 	# Và vì thế, bấm E lúc tay TRỐNG chỉ có cú nảy mà không có tiếng — hoá ra
-	# lại đúng: đó thành ra thao tác VUỐT VE patience_left thú, không phải vứt rác.
+	# lại đúng: đó thành ra thao tác VUỐT VE con thú, không phải vứt rác.
 	var ti := Config.HEIGHT / Config.BASE_HEIGHT
 	var tw := create_tween().set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
 	tw.tween_property(_body, "scale", Vector3(ti * 1.2, ti * 0.8, ti * 1.2), 0.09)
