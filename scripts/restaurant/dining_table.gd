@@ -5,7 +5,7 @@ extends Workstation
 ##
 ## Kế thừa TramTuongTac chứ không phải Node3D, vì người chơi MANG MÓN TỚI BÀN
 ## chứ không giao ở cửa sổ bếp. Kế thừa thì cái bàn tự động có mọi thứ một
-## trạm cần và đã chạy đúng ở 18 trạm khác: nằm trong nhóm "tram" để bộ chọn
+## trạm cần và đã chạy đúng ở 18 trạm khác: nằm trong nhóm "station" để bộ chọn
 ## mục tiêu thấy, có `chua` để giữ món đang đặt trên mặt bàn, có
 ## `hien_mo_hinh()` để bày model món đó, và có va chạm vì TramTuongTac vốn là
 ## StaticBody3D. Viết một lớp trạm riêng cho bàn ăn thì bốn thứ đó phải làm
@@ -100,10 +100,10 @@ func seat_marker(i: int) -> Marker3D:
 	return ds[i]
 
 
-## Tìm bàn theo số. Dùng nhóm "ban_an" nên không phụ thuộc đường dẫn node —
+## Tìm bàn theo số. Dùng nhóm "dining_table" nên không phụ thuộc đường dẫn node —
 ## đổi chỗ bàn trong cây scene vẫn tìm ra.
 static func tim(cay: SceneTree, so: int) -> DiningTable:
-	for n in cay.get_nodes_in_group("ban_an"):
+	for n in cay.get_nodes_in_group("dining_table"):
 		var b := n as DiningTable
 		if b != null and b.table_number == so:
 			return b
@@ -113,7 +113,7 @@ static func tim(cay: SceneTree, so: int) -> DiningTable:
 ## Danh sách mọi bàn, đã sắp theo số bàn tăng dần.
 static func all_nodes(cay: SceneTree) -> Array[DiningTable]:
 	var ds: Array[DiningTable] = []
-	for n in cay.get_nodes_in_group("ban_an"):
+	for n in cay.get_nodes_in_group("dining_table"):
 		var b := n as DiningTable
 		if b != null:
 			ds.append(b)

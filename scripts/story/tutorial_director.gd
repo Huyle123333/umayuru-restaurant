@@ -146,10 +146,10 @@ func _connect_signals() -> void:
 		_customers.order_finished.connect(_on_order_finished)
 
 	# Bàn chế tạo: nghe nội dung đổi để biết người chơi đã đặt được thứ cần đặt.
-	# Duyệt nhóm "tram" chứ không đi theo đường dẫn node, vì bàn chế tạo có thể
+	# Duyệt nhóm "station" chứ không đi theo đường dẫn node, vì bàn chế tạo có thể
 	# được kê lại chỗ khác trong map bất cứ lúc nào.
-	for n in get_tree().get_nodes_in_group("tram"):
-		if String(n.kind) == "ban_che_tao" and n.has_signal("contents_changed"):
+	for n in get_tree().get_nodes_in_group("station"):
+		if String(n.kind) == "crafting_table" and n.has_signal("contents_changed"):
 			n.contents_changed.connect(_on_table_changed)
 
 
@@ -164,9 +164,9 @@ func _on_cook_finished(station: Node, _dish: String, success: bool) -> void:
 	# `loai` van la ten thuoc tinh cua TramTuongTac — lop do thuoc lo 6, chua doi.
 	# Doc bang ten CU o day la dung; bien cuc bo thi da la tieng Anh.
 	var kind := String(station.kind)
-	if _wait_for == "chop" and kind == "thot":
+	if _wait_for == "chop" and kind == "cutting_board":
 		_finish_step()
-	elif _wait_for == "cook" and kind == "bep":
+	elif _wait_for == "cook" and kind == "stove":
 		_finish_step()
 
 

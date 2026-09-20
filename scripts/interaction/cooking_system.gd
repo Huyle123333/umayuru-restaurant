@@ -95,9 +95,9 @@ signal burn_warning(cooker: Node, con_lai: float)
 ## duy nhất phải sửa nếu sau này có thêm một trạm mượn kho của vật khác.
 ##
 ## "kieu" quyết định tra bảng nào lúc kết thúc:
-##   "lo"   — nướng pizza        -> CONG_THUC_LO
-##   "don"  — nấu một món lẻ     -> DanhMuc.cook_step()
-##   "thot" — thái một món lẻ    -> DanhMuc.prep_step()
+##   "bake"   — nướng pizza        -> CONG_THUC_LO
+##   "cook"  — nấu một món lẻ     -> DanhMuc.cook_step()
+##   "chop" — thái một món lẻ    -> DanhMuc.prep_step()
 var _running: Dictionary = {}
 
 
@@ -135,7 +135,7 @@ func _process(delta: float) -> void:
 			_finish(station, store, mode)
 			# Món lẻ nấu xong vẫn nằm trên bếp và VẪN ĐẾM TIẾP, để quá lâu
 			# thì cháy. Các kiểu khác dừng hẳn ở đây.
-			if mode != "don" or ItemCatalog.burnt_state(String(m["source_id"])).is_empty():
+			if mode != "cook" or ItemCatalog.burnt_state(String(m["source_id"])).is_empty():
 				_running.erase(station)
 				# Phát 0 Ở ĐÂY chứ không ở _ket_thuc: chỉ khi mẻ thật sự kết
 				# thúc mới được ẩn thanh. Phát trong _ket_thuc thì món còn
@@ -164,8 +164,8 @@ func _burn_mark(limit: float) -> float:
 
 func _duration_for(mode: String) -> float:
 	match mode:
-		"lo": return bake_seconds
-		"thot": return chop_seconds
+		"bake": return bake_seconds
+		"chop": return chop_seconds
 		_: return cook_seconds
 
 
@@ -176,7 +176,7 @@ func start_oven(oven: Workstation) -> bool:
 	if oven == null or _running.has(oven) or not oven.contents.is_empty():
 		return false
 	oven.add_item(ItemCatalog.PIZZA_BASE)
-	_running[oven] = {"store": oven, "elapsed": 0.0, "mode": "lo", "source_id": ""}
+	_running[oven] = {"store": oven, "elapsed": 0.0, "mode": "bake", "source_id": ""}
 	progress_changed.emit(oven, 0.0)
 	return true
 
@@ -204,7 +204,7 @@ func is_burning(station: Workstation) -> bool:
 func put_item(station: Workstation, id: String, mode: String) -> bool:
 	if station == null or _running.has(station) or not station.contents.is_empty():
 		return false
-	var out: String = ItemCatalog.prep_step(id) if mode == "thot" else ItemCatalog.cook_step(id)
+	var out: String = ItemCatalog.prep_step(id) if mode == "chop" else ItemCatalog.cook_step(id)
 	if out.is_empty():
 		return false
 	station.add_item(id)
@@ -235,8 +235,8 @@ func _cancel(cooker: Node) -> void:
 func _finish(station: Node, store: Workstation, mode: String) -> void:
 	var dish: String = ""
 	match mode:
-		"lo": dish = ItemCatalog.bake_in_oven(store.contents)
-		"thot": dish = ItemCatalog.prep_step(String(store.contents[0]))
+		"bake": dish = ItemCatalog.bake_in_oven(store.contents)
+		"chop": dish = ItemCatalog.prep_step(String(store.contents[0]))
 		_: dish = ItemCatalog.cook_step(String(store.contents[0]))
 
 	var success := not dish.is_empty()

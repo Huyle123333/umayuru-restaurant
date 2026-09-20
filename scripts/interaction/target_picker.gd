@@ -48,7 +48,7 @@ signal candidates_changed(candidates: Array, selected_index: int)
 ## Sau khi bấm Tab, khoá lựa chọn bằng tay trong bao lâu (giây).
 @export var hand_lock_time: float = 2.0
 
-## Mỗi phần tử: { "tram": TramTuongTac, "chi_so": int, "nhan": String }
+## Mỗi phần tử: { "station": Workstation, "index": int, "label": String }
 var _candidates: Array[Dictionary] = []
 var _selected: int = -1
 var _hand_lock: float = 0.0

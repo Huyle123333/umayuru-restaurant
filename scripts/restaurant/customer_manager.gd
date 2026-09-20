@@ -195,7 +195,7 @@ func setup(map: Node3D) -> void:
 	_in_queue.resize(_queue.size())
 	_in_queue.fill(null)
 
-	_tables = get_tree().get_nodes_in_group("ban_an")
+	_tables = get_tree().get_nodes_in_group("dining_table")
 	_tables.sort_custom(func(a, b): return int(a.table_number) < int(b.table_number))
 	for b in _tables:
 		if b.has_signal("dish_delivered"):

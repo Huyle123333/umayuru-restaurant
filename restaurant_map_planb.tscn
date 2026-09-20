@@ -578,11 +578,11 @@ environment = SubResource("Env_Quan")
 
 [node name="NoiThatBep" type="Node3D" parent="."]
 
-[node name="bocchi bin" type="StaticBody3D" parent="NoiThatBep" groups=["tram"]]
+[node name="bocchi bin" type="StaticBody3D" parent="NoiThatBep" groups=["station"]]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.8055229, 0.0073019266, 10.833491)
 script = ExtResource("30_tram")
 display_name = "Mang bo do"
-kind = "mang_bo_do"
+kind = "bin"
 options = PackedStringArray()
 
 [node name="Mesh" parent="NoiThatBep/bocchi bin" instance=ExtResource("14_ek3jt")]
@@ -591,11 +591,11 @@ options = PackedStringArray()
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.683, 0)
 shape = SubResource("Shape_ThungRac")
 
-[node name="crate_buns2" type="StaticBody3D" parent="NoiThatBep" groups=["tram"]]
+[node name="crate_buns2" type="StaticBody3D" parent="NoiThatBep" groups=["station"]]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.3, 0, 1.25)
 script = ExtResource("30_tram")
 display_name = "Banh mi"
-kind = "ke_nguyen_lieu"
+kind = "ingredient_shelf"
 options = PackedStringArray()
 item_id = "bun"
 
@@ -605,11 +605,11 @@ item_id = "bun"
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.45, 0)
 shape = SubResource("Shape_Thung")
 
-[node name="crate_dough2" type="StaticBody3D" parent="NoiThatBep" groups=["tram"]]
+[node name="crate_dough2" type="StaticBody3D" parent="NoiThatBep" groups=["station"]]
 transform = Transform3D(1, 0, 0, 0, 0.81915206, -0.57357645, 0, 0.57357645, 0.81915206, 1.3, 2, 1.25)
 script = ExtResource("30_tram")
 display_name = "Bot"
-kind = "ke_nguyen_lieu"
+kind = "ingredient_shelf"
 options = PackedStringArray()
 item_id = "dough"
 
@@ -619,11 +619,11 @@ item_id = "dough"
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.45, 0)
 shape = SubResource("Shape_Thung")
 
-[node name="crate_lettuce2" type="StaticBody3D" parent="NoiThatBep" groups=["tram"]]
+[node name="crate_lettuce2" type="StaticBody3D" parent="NoiThatBep" groups=["station"]]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 5.3, 0, 1.25)
 script = ExtResource("30_tram")
 display_name = "Xa lach"
-kind = "ke_nguyen_lieu"
+kind = "ingredient_shelf"
 options = PackedStringArray()
 item_id = "lettuce"
 
@@ -633,11 +633,11 @@ item_id = "lettuce"
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.45, 0)
 shape = SubResource("Shape_Thung")
 
-[node name="crate_carrots2" type="StaticBody3D" parent="NoiThatBep" groups=["tram"]]
+[node name="crate_carrots2" type="StaticBody3D" parent="NoiThatBep" groups=["station"]]
 transform = Transform3D(1, 0, 0, 0, 0.81915206, -0.57357645, 0, 0.57357645, 0.81915206, 5.3, 2, 1.25)
 script = ExtResource("30_tram")
 display_name = "Ca rot"
-kind = "ke_nguyen_lieu"
+kind = "ingredient_shelf"
 options = PackedStringArray()
 item_id = "carrot"
 
@@ -647,11 +647,11 @@ item_id = "carrot"
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.45, 0)
 shape = SubResource("Shape_Thung")
 
-[node name="crate_potatoes2" type="StaticBody3D" parent="NoiThatBep" groups=["tram"]]
+[node name="crate_potatoes2" type="StaticBody3D" parent="NoiThatBep" groups=["station"]]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 9.3, 0, 1.25)
 script = ExtResource("30_tram")
 display_name = "Khoai tay"
-kind = "ke_nguyen_lieu"
+kind = "ingredient_shelf"
 options = PackedStringArray()
 item_id = "potato"
 
@@ -661,11 +661,11 @@ item_id = "potato"
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.45, 0)
 shape = SubResource("Shape_Thung")
 
-[node name="crate_tomatoes2" type="StaticBody3D" parent="NoiThatBep" groups=["tram"]]
+[node name="crate_tomatoes2" type="StaticBody3D" parent="NoiThatBep" groups=["station"]]
 transform = Transform3D(1, 0, 0, 0, 0.81915206, -0.57357645, 0, 0.57357645, 0.81915206, 9.3, 2, 1.25)
 script = ExtResource("30_tram")
 display_name = "Ca chua"
-kind = "ke_nguyen_lieu"
+kind = "ingredient_shelf"
 options = PackedStringArray()
 item_id = "tomato"
 
@@ -675,11 +675,11 @@ item_id = "tomato"
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.45, 0)
 shape = SubResource("Shape_Thung")
 
-[node name="crate_onions2" type="StaticBody3D" parent="NoiThatBep" groups=["tram"]]
+[node name="crate_onions2" type="StaticBody3D" parent="NoiThatBep" groups=["station"]]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 13.3, 0, 1.25)
 script = ExtResource("30_tram")
 display_name = "Hanh tay"
-kind = "ke_nguyen_lieu"
+kind = "ingredient_shelf"
 options = PackedStringArray()
 item_id = "onion"
 
@@ -689,11 +689,11 @@ item_id = "onion"
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.45, 0)
 shape = SubResource("Shape_Thung")
 
-[node name="crate_mushrooms2" type="StaticBody3D" parent="NoiThatBep" groups=["tram"]]
+[node name="crate_mushrooms2" type="StaticBody3D" parent="NoiThatBep" groups=["station"]]
 transform = Transform3D(1, 0, 0, 0, 0.81915206, -0.57357645, 0, 0.57357645, 0.81915206, 13.3, 2, 1.25)
 script = ExtResource("30_tram")
 display_name = "Nam"
-kind = "ke_nguyen_lieu"
+kind = "ingredient_shelf"
 options = PackedStringArray()
 item_id = "mushroom"
 
@@ -703,11 +703,11 @@ item_id = "mushroom"
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.45, 0)
 shape = SubResource("Shape_Thung")
 
-[node name="fridge_A2" type="StaticBody3D" parent="NoiThatBep" groups=["tram"]]
+[node name="fridge_A2" type="StaticBody3D" parent="NoiThatBep" groups=["station"]]
 transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, 1.2, 0.026, 5.246)
 script = ExtResource("30_tram")
 display_name = "Tu lanh"
-kind = "tu_lanh"
+kind = "fridge"
 options = PackedStringArray("ham", "steak", "cheese", "peperoni", "cookiestick")
 use_picker = true
 
@@ -717,11 +717,11 @@ use_picker = true
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.25, 0.12)
 shape = SubResource("Shape_TuLanh")
 
-[node name="stove_single2" type="StaticBody3D" parent="NoiThatBep" groups=["tram"]]
+[node name="stove_single2" type="StaticBody3D" parent="NoiThatBep" groups=["station"]]
 transform = Transform3D(-1, 0, -8.742278e-08, 0, 1, 0, 8.742278e-08, 0, -1, 8.277, 0, 10.6)
 script = ExtResource("30_tram")
 display_name = "Bep 1"
-kind = "bep"
+kind = "stove"
 options = PackedStringArray()
 
 [node name="Mesh" parent="NoiThatBep/stove_single2" instance=ExtResource("17_ddgsb")]
@@ -730,11 +730,11 @@ options = PackedStringArray()
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.605, 0.11)
 shape = SubResource("Shape_Bep")
 
-[node name="stove_single3" type="StaticBody3D" parent="NoiThatBep" groups=["tram"]]
+[node name="stove_single3" type="StaticBody3D" parent="NoiThatBep" groups=["station"]]
 transform = Transform3D(-1, 0, -8.742278e-08, 0, 1, 0, 8.742278e-08, 0, -1, 5.943, 0, 10.6)
 script = ExtResource("30_tram")
 display_name = "Bep 2"
-kind = "bep"
+kind = "stove"
 options = PackedStringArray()
 
 [node name="Mesh" parent="NoiThatBep/stove_single3" instance=ExtResource("17_ddgsb")]
@@ -743,11 +743,11 @@ options = PackedStringArray()
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.605, 0.11)
 shape = SubResource("Shape_Bep")
 
-[node name="pizza_oven2" type="StaticBody3D" parent="NoiThatBep" groups=["tram"]]
+[node name="pizza_oven2" type="StaticBody3D" parent="NoiThatBep" groups=["station"]]
 transform = Transform3D(-0.7, 0, -6.119594e-08, 0, 0.7, 0, 6.119594e-08, 0, -0.7, 10.484, 0, 10.9)
 script = ExtResource("30_tram")
 display_name = "Lo nuong"
-kind = "lo_nuong"
+kind = "oven"
 options = PackedStringArray()
 
 [node name="Mesh" parent="NoiThatBep/pizza_oven2" instance=ExtResource("18_va5r0")]
@@ -756,11 +756,11 @@ options = PackedStringArray()
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.035, 0.14)
 shape = SubResource("Shape_LoPizza")
 
-[node name="kitchentable_A_large2" type="StaticBody3D" parent="NoiThatBep" groups=["tram"]]
+[node name="kitchentable_A_large2" type="StaticBody3D" parent="NoiThatBep" groups=["station"]]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 7.071475, 0.0037517548, 6.1255193)
 script = ExtResource("30_tram")
 display_name = "Thot"
-kind = "thot"
+kind = "cutting_board"
 options = PackedStringArray()
 
 [node name="Mesh" parent="NoiThatBep/kitchentable_A_large2" instance=ExtResource("19_17y88")]
@@ -778,11 +778,11 @@ transform = Transform3D(1.25, 0, 0, 0, 1.25, 0, 0, 0, 1.25, 1.6114826, 0.2485927
 [node name="knife2" parent="NoiThatBep/kitchentable_A_large2/cuttingboard2" instance=ExtResource("22_lh7gy")]
 transform = Transform3D(0.75, 0, 0, 0, -3.2783543e-08, 0.75, 0, -0.75, -3.2783543e-08, 0.5988903, 0.3253882, 0.36463928)
 
-[node name="kitchencounter_straight_A_decorated_styleB2" type="StaticBody3D" parent="NoiThatBep" groups=["tram"]]
+[node name="kitchencounter_straight_A_decorated_styleB2" type="StaticBody3D" parent="NoiThatBep" groups=["station"]]
 transform = Transform3D(-1, 0, -8.742278e-08, 0, 1, 0, 8.742278e-08, 0, -1, 12.589, 0, 10.9)
 script = ExtResource("30_tram")
 display_name = "Chong dia"
-kind = "chong_dia"
+kind = "plate_stack"
 options = PackedStringArray()
 
 [node name="Mesh" parent="NoiThatBep/kitchencounter_straight_A_decorated_styleB2" instance=ExtResource("23_sv34q")]
@@ -791,11 +791,11 @@ options = PackedStringArray()
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.05, 0.13)
 shape = SubResource("Shape_QuayTT")
 
-[node name="crafting_table" type="StaticBody3D" parent="NoiThatBep" groups=["tram"]]
+[node name="crafting_table" type="StaticBody3D" parent="NoiThatBep" groups=["station"]]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 9.671643, 0, 6.101334)
 script = ExtResource("30_tram")
 display_name = "Ban che tao"
-kind = "ban_che_tao"
+kind = "crafting_table"
 options = PackedStringArray()
 
 [node name="Mesh" parent="NoiThatBep/crafting_table" instance=ExtResource("24_k37c3")]
@@ -804,11 +804,11 @@ options = PackedStringArray()
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.5, 0)
 shape = SubResource("Shape_QuayGoc")
 
-[node name="icecream_machine2" type="StaticBody3D" parent="NoiThatBep" groups=["tram"]]
+[node name="icecream_machine2" type="StaticBody3D" parent="NoiThatBep" groups=["station"]]
 transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, 1.2, 0, 7.344)
 script = ExtResource("30_tram")
 display_name = "May kem"
-kind = "may_kem"
+kind = "ice_cream_machine"
 options = PackedStringArray("icecream_vani", "icecream_chocolate", "icecream_strawberry")
 use_picker = true
 
@@ -818,13 +818,13 @@ use_picker = true
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.2, -0.02)
 shape = SubResource("Shape_MayKem")
 
-[node name="Noi" type="StaticBody3D" parent="NoiThatBep" groups=["tram"]]
+[node name="Noi" type="StaticBody3D" parent="NoiThatBep" groups=["station"]]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 14.748105, 0, 10.700212)
 collision_layer = 4
 collision_mask = 0
 script = ExtResource("30_tram")
 display_name = "Chong noi"
-kind = "chong_noi"
+kind = "pot_stack"
 options = PackedStringArray()
 
 [node name="Mesh" parent="NoiThatBep/Noi" instance=ExtResource("27_enn6r")]
@@ -838,11 +838,11 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.3, 0)
 
 [node name="BanAn" type="Node3D" parent="."]
 
-[node name="Ban1" type="StaticBody3D" parent="BanAn" groups=["ban_an", "tram"]]
+[node name="Ban1" type="StaticBody3D" parent="BanAn" groups=["dining_table", "station"]]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 6, 0, 19)
 script = ExtResource("31_ban")
 display_name = "Bàn 1"
-kind = "ban_khach"
+kind = "guest_table"
 options = PackedStringArray()
 aim_point = NodePath("DiemNham")
 place_height = 1.05
@@ -873,12 +873,12 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 2.15)
 [node name="ChoDung2" type="Marker3D" parent="BanAn/Ban1"]
 transform = Transform3D(-1, 0, 0, 0, 1, 0, 0, 0, -1, 0, 0, -2.15)
 
-[node name="Ban2" type="StaticBody3D" parent="BanAn" groups=["ban_an", "tram"]]
+[node name="Ban2" type="StaticBody3D" parent="BanAn" groups=["dining_table", "station"]]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 12, 0, 19)
 script = ExtResource("31_ban")
 table_number = 2
 display_name = "Bàn 2"
-kind = "ban_khach"
+kind = "guest_table"
 options = PackedStringArray()
 aim_point = NodePath("DiemNham")
 place_height = 1.05
@@ -909,12 +909,12 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 2.15)
 [node name="ChoDung2" type="Marker3D" parent="BanAn/Ban2"]
 transform = Transform3D(-1, 0, 0, 0, 1, 0, 0, 0, -1, 0, 0, -2.15)
 
-[node name="Ban3" type="StaticBody3D" parent="BanAn" groups=["ban_an", "tram"]]
+[node name="Ban3" type="StaticBody3D" parent="BanAn" groups=["dining_table", "station"]]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 18, 0, 19)
 script = ExtResource("31_ban")
 table_number = 3
 display_name = "Bàn 3"
-kind = "ban_khach"
+kind = "guest_table"
 options = PackedStringArray()
 aim_point = NodePath("DiemNham")
 place_height = 1.05
@@ -945,12 +945,12 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 2.15)
 [node name="ChoDung2" type="Marker3D" parent="BanAn/Ban3"]
 transform = Transform3D(-1, 0, 0, 0, 1, 0, 0, 0, -1, 0, 0, -2.15)
 
-[node name="Ban4" type="StaticBody3D" parent="BanAn" groups=["ban_an", "tram"]]
+[node name="Ban4" type="StaticBody3D" parent="BanAn" groups=["dining_table", "station"]]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 24, 0, 19)
 script = ExtResource("31_ban")
 table_number = 4
 display_name = "Bàn 4"
-kind = "ban_khach"
+kind = "guest_table"
 options = PackedStringArray()
 aim_point = NodePath("DiemNham")
 place_height = 1.05
@@ -981,12 +981,12 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 2.15)
 [node name="ChoDung2" type="Marker3D" parent="BanAn/Ban4"]
 transform = Transform3D(-1, 0, 0, 0, 1, 0, 0, 0, -1, 0, 0, -2.15)
 
-[node name="Ban5" type="StaticBody3D" parent="BanAn" groups=["ban_an", "tram"]]
+[node name="Ban5" type="StaticBody3D" parent="BanAn" groups=["dining_table", "station"]]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 20, 0, 12)
 script = ExtResource("31_ban")
 table_number = 5
 display_name = "Bàn 5"
-kind = "ban_khach"
+kind = "guest_table"
 options = PackedStringArray()
 aim_point = NodePath("DiemNham")
 place_height = 1.05
@@ -1017,12 +1017,12 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 2.15)
 [node name="ChoDung2" type="Marker3D" parent="BanAn/Ban5"]
 transform = Transform3D(-1, 0, 0, 0, 1, 0, 0, 0, -1, 0, 0, -2.15)
 
-[node name="Ban6" type="StaticBody3D" parent="BanAn" groups=["ban_an", "tram"]]
+[node name="Ban6" type="StaticBody3D" parent="BanAn" groups=["dining_table", "station"]]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 28, 0, 12)
 script = ExtResource("31_ban")
 table_number = 6
 display_name = "Bàn 6"
-kind = "ban_khach"
+kind = "guest_table"
 options = PackedStringArray()
 aim_point = NodePath("DiemNham")
 place_height = 1.05

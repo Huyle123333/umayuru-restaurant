@@ -120,9 +120,9 @@ func _ready() -> void:
 
 	await get_tree().process_frame
 	_world = _body.get_parent()
-	# Nối vào MỌI trạm qua nhóm "tram" thay vì đi tìm từng node theo đường
+	# Nối vào MỌI trạm qua nhóm "station" thay vì đi tìm từng node theo đường
 	# dẫn. Thêm trạm mới vào map chỉ cần gắn đúng nhóm là tự chạy.
-	for n in get_tree().get_nodes_in_group("tram"):
+	for n in get_tree().get_nodes_in_group("station"):
 		_listen_station(n as Workstation)
 
 	# ... VÀ nghe tiếp những trạm SINH RA SAU nhân vật.
@@ -134,7 +134,7 @@ func _ready() -> void:
 	# không chỉ về phía cái vòng lặp này chút nào.
 	#
 	# Nối vào node_added thì bất kì thứ gì vào cây sau này cũng được xét, nên
-	# quy tắc trở lại đúng một câu: VÀO NHÓM "tram" LÀ CHẠY, không kèm thêm
+	# quy tắc trở lại đúng một câu: VÀO NHÓM "station" LÀ CHẠY, không kèm thêm
 	# điều kiện phải-có-mặt-trước-nhân-vật.
 	get_tree().node_added.connect(_on_node_added)
 
@@ -203,7 +203,7 @@ func _on_interact(station: Node, _index: int) -> void:
 		return
 
 	match t.kind:
-		"vat_cam":
+		"carriable":
 			# Vật thể đang bị khoá (hiện tại là cái nồi) thì bấm vào không ăn
 			# thua gì cả. Chặn ngay từ lúc CẦM chứ không chặn lúc dùng: cầm
 			# được rồi mới báo "không dùng được" thì người chơi đã đi nửa bếp.
@@ -212,7 +212,7 @@ func _on_interact(station: Node, _index: int) -> void:
 				return
 			if _held == null:
 				_pick_up(t)
-		"ke_nguyen_lieu":
+		"ingredient_shelf":
 			if t.item_id.is_empty():
 				return
 			# (Đã bỏ 14/9/2026) Lối tắt "đang bê nồi thì nguyên liệu rơi
@@ -226,17 +226,17 @@ func _on_interact(station: Node, _index: int) -> void:
 			# nguyên liệu là vô hạn, đúng như đã chốt khi bỏ cơ chế rửa đĩa.
 			if _held == null:
 				_pick_up(_spawn_item(t.item_id))
-		"thot":
-			_use_single_station(t, "thot")
-		"bep":
+		"cutting_board":
+			_use_single_station(t, "chop")
+		"stove":
 			_use_cooker(t)
-		"lo_nuong":
+		"oven":
 			_use_oven(t)
-		"chong_dia":
+		"plate_stack":
 			# Đĩa lấy vô hạn, đúng luật đã chốt khi bỏ cơ chế rửa đĩa.
 			if _held == null:
 				_pick_up(_spawn_item("bowl"))
-		"chong_noi":
+		"pot_stack":
 			# Nồi cũng lấy vô hạn, cùng một luật với đĩa. Hai nhánh riêng chứ
 			# không gộp thành một nhánh đọc `t.vat_pham`: hai trạm này KHÔNG
 			# phải kệ nguyên liệu — chúng phát ra ĐỒ ĐỰNG, thứ duy nhất trong
@@ -247,11 +247,11 @@ func _on_interact(station: Node, _index: int) -> void:
 			# người chơi cầm một thứ không nấu được thành gì.
 			if _held == null and not ItemCatalog.is_locked("noi"):
 				_pick_up(_spawn_item("noi"))
-		"mang_bo_do":
+		"bin":
 			_discard(t)
-		"ban_che_tao", "ban_de_tam":
+		"crafting_table", "prep_table":
 			_put_on_table(t)
-		"ban_khach":
+		"guest_table":
 			_deliver_dish(t)
 		_:
 			# Bếp, lò, thớt... do hệ thống nấu ăn lo. Ở đây KHÔNG phát tín
@@ -265,7 +265,7 @@ func _on_interact_alt(station: Node, _index: int) -> void:
 	var t := station as Workstation
 	if t == null:
 		return
-	if t.kind == "ban_che_tao":
+	if t.kind == "crafting_table":
 		_assemble_table(t)
 
 
@@ -329,9 +329,9 @@ func _spawn_item(id: String) -> Workstation:
 	var item := Workstation.new()
 	item.name = "VatPham_" + id
 	item.display_name = ItemCatalog.display_name(id)
-	item.kind = "vat_cam"
+	item.kind = "carriable"
 	item.item_id = id
-	item.add_to_group("tram")
+	item.add_to_group("station")
 	# Vật phẩm nằm ở lớp riêng để không chặn đường nhân vật; xem giải thích
 	# ở TramTuongTac.LOP_VAT_PHAM.
 	item.collision_layer = Workstation.LAYER_ITEM
@@ -424,7 +424,7 @@ func _set_collision(t: Node3D, on: bool) -> void:
 ## trạm dễ có thêm luật nhất (nồi áp suất, hai ngăn...), và khi đó đây là chỗ
 ## để viết mà không phải tách lại hàm.
 func _use_cooker(cooker: Workstation) -> void:
-	_use_single_station(cooker, "don")
+	_use_single_station(cooker, "cook")
 
 
 ## Thớt và bếp-nấu-món-lẻ dùng chung một luật: bỏ vào, chờ, lấy ra.

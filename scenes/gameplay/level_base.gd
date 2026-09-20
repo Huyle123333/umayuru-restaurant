@@ -194,7 +194,7 @@ func _gan_he_tuong_tac() -> void:
 		quan_ly_khach.name = "QuanLyKhach"
 		add_child(quan_ly_khach)
 		# chuan_bi() phải gọi SAU add_child: nó dùng get_tree() để tìm nhóm
-		# "ban_an" và gắn vùng navmesh vào cây scene.
+		# "dining_table" và gắn vùng navmesh vào cây scene.
 		quan_ly_khach.setup(self)
 		_gan_hud_don_hang()
 	else:
@@ -204,8 +204,8 @@ func _gan_he_tuong_tac() -> void:
 	# ghi chú. Nối tất cả thay vì chỉ bàn chế tạo: thớt, bếp và lò giờ cũng
 	# giữ nguyên liệu, và người chơi cần thấy trong đó đang có gì y như với
 	# cái bàn — nhất là cái lò, nơi họ phải nhớ đã bỏ đủ topping chưa.
-	for n in get_tree().get_nodes_in_group("tram"):
-		if n.get("kind") in ["ban_che_tao", "ban_de_tam"]:
+	for n in get_tree().get_nodes_in_group("station"):
+		if n.get("kind") in ["crafting_table", "prep_table"]:
 			hud.listen_to_table(n)
 
 
@@ -238,12 +238,12 @@ func _lo_vat_cam_trong_map() -> void:
 		# Chồng nồi không phải vật cầm được, nhưng nó là NGUỒN của cái nồi —
 		# công tắc NOI_MO tắt thì nó phải biến mất cùng cả nhóm món nồi, nếu
 		# không người chơi vẫn lấy được một cái nồi vô dụng.
-		if station.kind == "chong_noi" and item_catalog.is_locked("noi"):
+		if station.kind == "pot_stack" and item_catalog.is_locked("noi"):
 			station.hide()
 			station.collision_layer = 0
 			station.collision_mask = 0
 			continue
-		if station.kind != "vat_cam":
+		if station.kind != "carriable":
 			continue
 		if item_catalog.is_locked(station.item_id):
 			station.hide()

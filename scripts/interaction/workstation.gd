@@ -64,22 +64,22 @@ signal interacted_alt(station: Node, index: int)
 ## chỉnh scene: thêm một loại mới chỉ cần gõ tên vào ô Inspector, không phải
 ## sửa script rồi build lại. Đổi lại là gõ sai chính tả thì không ai báo —
 ## nên danh sách hợp lệ nằm ngay đây:
-##   "ke_nguyen_lieu" — thùng/kệ để lấy một nguyên liệu
-##   "tu_lanh"        — nhiều lựa chọn, chọn bằng Tab (xem lua_chon)
-##   "thot"           — thái
-##   "bep"            — nấu trên bếp
-##   "lo_nuong"       — lò pizza / lò nướng
-##   "may_kem"        — máy kem, nhiều vị
-##   "chong_dia"      — lấy đĩa sạch (vô hạn)
-##   "chong_noi"      — lấy nồi rỗng (vô hạn)
-##   "ban_che_tao"    — bàn chế tạo: gom nguyên liệu + đĩa thành món
-##   "vat_cam"        — vật thể cầm lên mang đi được, đặt sẵn trong file map.
+##   "ingredient_shelf"   — thùng/kệ để lấy một nguyên liệu
+##   "fridge"             — nhiều lựa chọn, chọn bằng Tab (xem options)
+##   "cutting_board"      — thái
+##   "stove"              — nấu trên bếp
+##   "oven"               — lò pizza / lò nướng
+##   "ice_cream_machine"  — máy kem, nhiều vị
+##   "plate_stack"        — lấy đĩa sạch (vô hạn)
+##   "pot_stack"          — lấy nồi rỗng (vô hạn)
+##   "crafting_table"     — bàn chế tạo: gom nguyên liệu + đĩa thành món
+##   "carriable"          — vật thể cầm lên mang đi được, đặt sẵn trong file map.
 ##                      Từ 14/9/2026 KHÔNG map nào còn dùng tới: cái nồi —
 ##                      thứ duy nhất từng thuộc loại này — đã thành một vật
 ##                      phẩm vô hạn lấy ở chồng nồi. Giữ lại loại này và hàm
-##                      dung_vat_cam() bên dưới vì nó vẫn là cách duy nhất
+##                      build_carriable() bên dưới vì nó vẫn là cách duy nhất
 ##                      đặt sẵn một vật cầm được vào map lúc kê bố cục.
-##   "mang_bo_do"     — vứt đồ hỏng
+##   "bin"                — vứt đồ hỏng
 @export var kind: String = ""
 
 ## Danh sách lựa chọn hiện ra khi người chơi đứng trong tầm.
@@ -253,7 +253,7 @@ const ITEM_SIZE := 0.55
 ## _ready cũng chạy trong trình soạn thảo, và thêm node ngầm vào lúc đang kê
 ## map là thứ gây nhầm lẫn hơn là giúp.
 func build_carriable() -> void:
-	if kind != "vat_cam" or item_id.is_empty():
+	if kind != "carriable" or item_id.is_empty():
 		return
 
 	if get_node_or_null("Mesh") == null:

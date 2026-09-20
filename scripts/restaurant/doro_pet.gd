@@ -6,7 +6,7 @@ extends "res://scripts/interaction/workstation.gd"
 ##
 ## Doro làm đúng việc của cái thùng rác: bấm E khi đang cầm đồ thì đồ biến
 ## mất. Toàn bộ luật đó đã nằm trong `tay_cam._bo_di()`, và nó được gọi dựa
-## trên MỘT thứ duy nhất — `loai == "mang_bo_do"`.
+## trên MỘT thứ duy nhất — `loai == "bin"`.
 ##
 ## Nên Doro không cần một hệ thống mới nào cả. Nó chỉ cần LÀ một trạm mang
 ## loại đó, rồi tự lo phần đi lại. Viết một cơ chế "cho đồ cho thú cưng"
@@ -78,15 +78,15 @@ func setup(seat_marker: Vector3, lech_cao: float, nguoi_choi: Node3D) -> void:
 	global_position = seat_marker
 
 	display_name = "Doro"
-	kind = "mang_bo_do"
+	kind = "bin"
 
-	# NHÓM "tram": đây là thứ duy nhất khiến tay_cam nối được tín hiệu
+	# NHÓM "station": đây là thứ duy nhất khiến tay_cam nối được tín hiệu
 	# `da_tuong_tac` của Doro vào hàm xử lý của nó. Thiếu dòng này thì bộ chọn
 	# vẫn ngắm được Doro (bo_chon_muc_tieu lọc theo LỚP va chạm, không theo
 	# nhóm), Doro vẫn nảy lên khi bị bấm E — nhưng đồ trên tay không mất đi,
-	# vì nhánh "mang_bo_do" trong tay_cam không bao giờ được gọi. Đúng triệu
+	# vì nhánh "bin" trong tay_cam không bao giờ được gọi. Đúng triệu
 	# chứng "Doro không làm được chức năng thùng rác".
-	add_to_group("tram")
+	add_to_group("station")
 	# Lớp VẬT PHẨM: bộ chọn nhìn thấy, nhân vật đi xuyên qua. Mặt nạ 0 vì Doro
 	# không cần phát hiện va chạm với bất cứ thứ gì — navmesh lo phần đó.
 	collision_layer = LAYER_ITEM
