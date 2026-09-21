@@ -54,7 +54,7 @@ const GRAVITY := 24.0
 
 @onready var _agent: NavigationAgent3D = $Agent
 @onready var _hoat_hinh: AnimationPlayer = $Model/AnimationPlayer
-@onready var _bong: Node3D = $Bong
+@onready var _bubble: Node3D = $Bubble
 
 var _task := ""
 var _moving := false
@@ -67,7 +67,7 @@ func _ready() -> void:
 	_apply_scale()
 	if Engine.is_editor_hint():
 		return
-	_bong.visible = false
+	_bubble.visible = false
 	_build_bubble()
 	_set_anim("idle")
 
@@ -75,7 +75,7 @@ func _ready() -> void:
 ## Áp tỉ lệ cho model, hộp va chạm, agent và bong bóng.
 ##
 ## is_node_ready() chặn lần gọi đầu: setter của @export chạy NGAY LÚC NẠP
-## SCENE, sớm hơn @onready, nên lúc đó _agent và _bong còn là null. _ready()
+## SCENE, sớm hơn @onready, nên lúc đó _agent và _bubble còn là null. _ready()
 ## gọi lại một lần nữa nên không mất giá trị nào.
 func _apply_scale() -> void:
 	if not is_node_ready():
@@ -96,8 +96,8 @@ func _apply_scale() -> void:
 	if _agent != null:
 		_agent.radius = BASE_AGENT_RADIUS * patience_ratio
 		_agent.height = BASE_HEIGHT * patience_ratio
-	if _bong != null:
-		_bong.position.y = BASE_BUBBLE_HEIGHT * patience_ratio
+	if _bubble != null:
+		_bubble.position.y = BASE_BUBBLE_HEIGHT * patience_ratio
 
 
 ## Ra lệnh đi tới một vị trí.
@@ -180,7 +180,7 @@ func beg() -> void:
 
 ## Bong bóng trên đầu (đơn hàng). Nội dung do hệ đơn hàng đổ vào sau.
 func bubble() -> Node3D:
-	return _bong
+	return _bubble
 
 
 # ---------------------------------------------------------- bong bóng đơn ---
@@ -220,12 +220,12 @@ var _last_col := -1
 
 
 func _build_bubble() -> void:
-	if _bong == null:
+	if _bubble == null:
 		return
-	_dish_icon = _bong.get_node_or_null("Anh") as Sprite3D
+	_dish_icon = _bubble.get_node_or_null("DishIcon") as Sprite3D
 
 	_bar = Sprite3D.new()
-	_bar.name = "ThanhCho"
+	_bar.name = "PatienceBar"
 	_bar.billboard = BaseMaterial3D.BILLBOARD_ENABLED
 	_bar.shaded = false
 	_bar.no_depth_test = true
@@ -234,7 +234,7 @@ func _build_bubble() -> void:
 	_bar.texture_filter = BaseMaterial3D.TEXTURE_FILTER_NEAREST
 	_bar.pixel_size = 0.6 / float(BAR_WIDTH)
 	_bar.position.y = -DISH_ICON_HEIGHT * 0.5 - 0.08
-	_bong.add_child(_bar)
+	_bubble.add_child(_bar)
 
 	_bar_sprite = Image.create(BAR_WIDTH, BAR_HEIGHT, false, Image.FORMAT_RGBA8)
 	_bar_tex = ImageTexture.create_from_image(_bar_sprite)
@@ -244,7 +244,7 @@ func _build_bubble() -> void:
 
 ## Hiện bong bóng với ảnh món. Gọi lúc khách vào hàng đợi.
 func show_order(anh: Texture2D) -> void:
-	if _bong == null:
+	if _bubble == null:
 		return
 	if _dish_icon != null and anh != null:
 		_dish_icon.texture = anh
@@ -252,12 +252,12 @@ func show_order(anh: Texture2D) -> void:
 		_dish_icon.pixel_size = DISH_ICON_HEIGHT / float(icon_height)
 	_last_col = -1
 	_draw_bar(1.0)
-	_bong.visible = true
+	_bubble.visible = true
 
 
 func hide_order() -> void:
-	if _bong != null:
-		_bong.visible = false
+	if _bubble != null:
+		_bubble.visible = false
 
 
 ## Cập nhật thanh chờ. `ti` là phần kiên nhẫn còn lại, 0…1.
@@ -266,7 +266,7 @@ func hide_order() -> void:
 ## người khách), trùng tên thì tham số che mất biến thành viên — Godot cảnh
 ## báo, và kiểu nhầm đó rất khó thấy khi đọc lại.
 func set_patience_bar(ti: float) -> void:
-	if _bong == null or not _bong.visible:
+	if _bubble == null or not _bubble.visible:
 		return
 	_draw_bar(ti)
 

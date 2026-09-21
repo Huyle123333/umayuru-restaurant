@@ -174,7 +174,7 @@ func _find_character() -> Node3D:
 # ---------------------------------------------------------- đổi góc nhìn ---
 
 func _unhandled_input(event: InputEvent) -> void:
-	if not event.is_action_pressed("doi_goc_nhin"):
+	if not event.is_action_pressed("toggle_view"):
 		return
 	# Chưa mở khoá thì phím P không làm gì cả — và cũng KHÔNG nuốt sự kiện,
 	# để sau này nếu P được dùng vào việc khác thì không bị chặn ngầm ở đây.

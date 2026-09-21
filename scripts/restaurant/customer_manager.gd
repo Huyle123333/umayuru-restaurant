@@ -182,12 +182,12 @@ var _customer_at: Dictionary = {}       # DiningTable -> customer
 
 func setup(map: Node3D) -> void:
 	_map = map
-	_spawn_points = map.get_node_or_null("Moc")
-	_door = _pick_spawn("CuaVao")
+	_spawn_points = map.get_node_or_null("Markers")
+	_door = _pick_spawn("Entrance")
 
 	var i := 1
 	while true:
-		var m := _pick_spawn("HangDoi%d" % i)
+		var m := _pick_spawn("Queue%d" % i)
 		if m == null:
 			break
 		_queue.append(m)
@@ -280,7 +280,7 @@ func _bake_navmesh() -> void:
 	mesh_.geometry_source_group_name = SOURCE_GROUP
 
 	var region := NavigationRegion3D.new()
-	region.name = "VungKhach"
+	region.name = "CustomerNavRegion"
 	region.navigation_mesh = mesh_
 	_map.add_child(region)
 	_nav_region.append(region)
@@ -305,7 +305,7 @@ func _bake_navmesh() -> void:
 func _build_blockers() -> void:
 	for c in BLOCKERS:
 		var than := StaticBody3D.new()
-		than.name = "ChanNav"
+		than.name = "NavBlocker"
 		than.collision_layer = NAV_BLOCK_LAYER
 		than.collision_mask = 0
 		var shape := CollisionShape3D.new()
@@ -372,7 +372,7 @@ func nav_stats() -> Array:
 
 func spawn_customer() -> Node:
 	if _door == null or _queue.is_empty():
-		push_warning("Map thiếu Moc/CuaVao hoặc Moc/HangDoi1 — không sinh khách được.")
+		push_warning("Map thiếu Markers/Entrance hoặc Markers/Queue1 — không sinh khách được.")
 		return null
 	var slot := _free_seat()
 	if slot == -1:

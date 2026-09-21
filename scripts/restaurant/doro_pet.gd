@@ -136,10 +136,10 @@ func _build_collision() -> void:
 	add_child(shape)
 
 	var marker := Marker3D.new()
-	marker.name = "DiemNham"
+	marker.name = "AimPoint"
 	marker.position = Vector3(0.0, Config.HEIGHT + 0.12, 0.0)
 	add_child(marker)
-	aim_point = NodePath("DiemNham")
+	aim_point = NodePath("AimPoint")
 
 
 func _build_agent(lech_cao: float) -> void:

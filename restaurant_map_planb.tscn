@@ -522,30 +522,30 @@ cast_shadow = 0
 mesh = SubResource("Mesh_TuongKinh")
 surface_material_override/0 = SubResource("Mat_TuongKinh")
 
-[node name="Moc" type="Node3D" parent="."]
+[node name="Markers" type="Node3D" parent="."]
 
-[node name="DiemDatDon" type="Marker3D" parent="Moc"]
+[node name="OrderDrop" type="Marker3D" parent="Markers"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 17.2, 0, 2)
 
-[node name="LoiNguoiChoi" type="Marker3D" parent="Moc"]
+[node name="PlayerPath" type="Marker3D" parent="Markers"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 16, 0, 6)
 
-[node name="CuaVao" type="Marker3D" parent="Moc"]
+[node name="Entrance" type="Marker3D" parent="Markers"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 31.5, 0, 2)
 
-[node name="HangDoi1" type="Marker3D" parent="Moc"]
+[node name="Queue1" type="Marker3D" parent="Markers"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 18.6, 0, 2)
 
-[node name="HangDoi2" type="Marker3D" parent="Moc"]
+[node name="Queue2" type="Marker3D" parent="Markers"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 21.2, 0, 2)
 
-[node name="HangDoi3" type="Marker3D" parent="Moc"]
+[node name="Queue3" type="Marker3D" parent="Markers"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 23.8, 0, 2)
 
-[node name="HangDoi4" type="Marker3D" parent="Moc"]
+[node name="Queue4" type="Marker3D" parent="Markers"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 26.4, 0, 2)
 
-[node name="HangDoi5" type="Marker3D" parent="Moc"]
+[node name="Queue5" type="Marker3D" parent="Markers"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 29, 0, 2)
 
 [node name="PlayerSpawn" type="Marker3D" parent="."]
@@ -833,7 +833,7 @@ options = PackedStringArray()
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.275, 0)
 shape = SubResource("Shape_Noi")
 
-[node name="DiemNham" type="Marker3D" parent="NoiThatBep/Noi"]
+[node name="AimPoint" type="Marker3D" parent="NoiThatBep/Noi"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.3, 0)
 
 [node name="BanAn" type="Node3D" parent="."]
@@ -844,7 +844,7 @@ script = ExtResource("31_ban")
 display_name = "Bàn 1"
 kind = "guest_table"
 options = PackedStringArray()
-aim_point = NodePath("DiemNham")
+aim_point = NodePath("AimPoint")
 place_height = 1.05
 
 [node name="Mesh" parent="BanAn/Ban1" instance=ExtResource("29_nu63k")]
@@ -853,10 +853,10 @@ place_height = 1.05
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.5, 0)
 shape = SubResource("Shape_BanTron")
 
-[node name="DiemNham" type="Marker3D" parent="BanAn/Ban1"]
+[node name="AimPoint" type="Marker3D" parent="BanAn/Ban1"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.1, 0)
 
-[node name="So" type="Label3D" parent="BanAn/Ban1"]
+[node name="NumberLabel" type="Label3D" parent="BanAn/Ban1"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.75, 0)
 pixel_size = 0.006
 billboard = 1
@@ -880,7 +880,7 @@ table_number = 2
 display_name = "Bàn 2"
 kind = "guest_table"
 options = PackedStringArray()
-aim_point = NodePath("DiemNham")
+aim_point = NodePath("AimPoint")
 place_height = 1.05
 
 [node name="Mesh" parent="BanAn/Ban2" instance=ExtResource("29_nu63k")]
@@ -889,10 +889,10 @@ place_height = 1.05
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.5, 0)
 shape = SubResource("Shape_BanTron")
 
-[node name="DiemNham" type="Marker3D" parent="BanAn/Ban2"]
+[node name="AimPoint" type="Marker3D" parent="BanAn/Ban2"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.1, 0)
 
-[node name="So" type="Label3D" parent="BanAn/Ban2"]
+[node name="NumberLabel" type="Label3D" parent="BanAn/Ban2"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.75, 0)
 pixel_size = 0.006
 billboard = 1
@@ -916,7 +916,7 @@ table_number = 3
 display_name = "Bàn 3"
 kind = "guest_table"
 options = PackedStringArray()
-aim_point = NodePath("DiemNham")
+aim_point = NodePath("AimPoint")
 place_height = 1.05
 
 [node name="Mesh" parent="BanAn/Ban3" instance=ExtResource("29_nu63k")]
@@ -925,10 +925,10 @@ place_height = 1.05
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.5, 0)
 shape = SubResource("Shape_BanTron")
 
-[node name="DiemNham" type="Marker3D" parent="BanAn/Ban3"]
+[node name="AimPoint" type="Marker3D" parent="BanAn/Ban3"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.1, 0)
 
-[node name="So" type="Label3D" parent="BanAn/Ban3"]
+[node name="NumberLabel" type="Label3D" parent="BanAn/Ban3"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.75, 0)
 pixel_size = 0.006
 billboard = 1
@@ -952,7 +952,7 @@ table_number = 4
 display_name = "Bàn 4"
 kind = "guest_table"
 options = PackedStringArray()
-aim_point = NodePath("DiemNham")
+aim_point = NodePath("AimPoint")
 place_height = 1.05
 
 [node name="Mesh" parent="BanAn/Ban4" instance=ExtResource("29_nu63k")]
@@ -961,10 +961,10 @@ place_height = 1.05
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.5, 0)
 shape = SubResource("Shape_BanTron")
 
-[node name="DiemNham" type="Marker3D" parent="BanAn/Ban4"]
+[node name="AimPoint" type="Marker3D" parent="BanAn/Ban4"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.1, 0)
 
-[node name="So" type="Label3D" parent="BanAn/Ban4"]
+[node name="NumberLabel" type="Label3D" parent="BanAn/Ban4"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.75, 0)
 pixel_size = 0.006
 billboard = 1
@@ -988,7 +988,7 @@ table_number = 5
 display_name = "Bàn 5"
 kind = "guest_table"
 options = PackedStringArray()
-aim_point = NodePath("DiemNham")
+aim_point = NodePath("AimPoint")
 place_height = 1.05
 
 [node name="Mesh" parent="BanAn/Ban5" instance=ExtResource("29_nu63k")]
@@ -997,10 +997,10 @@ place_height = 1.05
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.5, 0)
 shape = SubResource("Shape_BanTron")
 
-[node name="DiemNham" type="Marker3D" parent="BanAn/Ban5"]
+[node name="AimPoint" type="Marker3D" parent="BanAn/Ban5"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.1, 0)
 
-[node name="So" type="Label3D" parent="BanAn/Ban5"]
+[node name="NumberLabel" type="Label3D" parent="BanAn/Ban5"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.75, 0)
 pixel_size = 0.006
 billboard = 1
@@ -1024,7 +1024,7 @@ table_number = 6
 display_name = "Bàn 6"
 kind = "guest_table"
 options = PackedStringArray()
-aim_point = NodePath("DiemNham")
+aim_point = NodePath("AimPoint")
 place_height = 1.05
 
 [node name="Mesh" parent="BanAn/Ban6" instance=ExtResource("29_nu63k")]
@@ -1033,10 +1033,10 @@ place_height = 1.05
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.5, 0)
 shape = SubResource("Shape_BanTron")
 
-[node name="DiemNham" type="Marker3D" parent="BanAn/Ban6"]
+[node name="AimPoint" type="Marker3D" parent="BanAn/Ban6"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.1, 0)
 
-[node name="So" type="Label3D" parent="BanAn/Ban6"]
+[node name="NumberLabel" type="Label3D" parent="BanAn/Ban6"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.75, 0)
 pixel_size = 0.006
 billboard = 1

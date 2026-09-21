@@ -122,7 +122,7 @@ func _input(event: InputEvent) -> void:
 	if not visible:
 		return
 
-	if event.is_action_pressed("huy_bang"):
+	if event.is_action_pressed("cancel_menu"):
 		close()
 		get_viewport().set_input_as_handled()
 		return

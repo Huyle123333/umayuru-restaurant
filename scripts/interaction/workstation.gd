@@ -167,7 +167,7 @@ func show_model(id: String) -> void:
 	var m: Node3D = _ItemCatalog.make_model(id)
 	if m == null:
 		return
-	m.name = "MoHinhTren"
+	m.name = "TopModel"
 	# Không cấp va chạm cho model bày trên bàn: nó chỉ để nhìn. Cấp va chạm
 	# thì nó chắn mất chính cái bàn, và người chơi hết bấm được vào trạm.
 	add_child(m)
@@ -188,7 +188,7 @@ func show_stack(list_: Array[String]) -> void:
 	var m: Node3D = _ItemCatalog.make_stack(list_)
 	if m == null:
 		return
-	m.name = "MoHinhTren"
+	m.name = "TopModel"
 	add_child(m)
 	m.position = Vector3(0.0, place_height, 0.0)
 	_model_node = m
@@ -268,12 +268,12 @@ func build_carriable() -> void:
 		shape.position = Vector3(0.0, ITEM_SIZE * 0.5, 0.0)
 		add_child(shape)
 
-	if get_node_or_null("DiemNham") == null:
+	if get_node_or_null("AimPoint") == null:
 		var mark := Marker3D.new()
-		mark.name = "DiemNham"
+		mark.name = "AimPoint"
 		mark.position = Vector3(0.0, 0.25, 0.0)
 		add_child(mark)
-		aim_point = NodePath("DiemNham")
+		aim_point = NodePath("AimPoint")
 
 	# Ruột đổi thì hình đổi theo (nồi rỗng ↔ nồi có đồ). Nối MỘT lần ở đây
 	# thay vì bắt mọi chỗ gọi them_vao/bo_cuoi/don_sach nhớ vẽ lại — bốn chỗ

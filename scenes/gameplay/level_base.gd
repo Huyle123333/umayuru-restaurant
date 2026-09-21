@@ -117,11 +117,11 @@ func _build_interaction() -> void:
 		return
 
 	var target_picker: Node = cls_target.new()
-	target_picker.name = "BoChonMucTieu"
+	target_picker.name = "TargetPicker"
 	player.add_child(target_picker)
 
 	var hud: Node = cls_hud.new()
-	hud.name = "HudTuongTac"
+	hud.name = "InteractionHUD"
 	add_child(hud)
 	hud.listen_to_picker(target_picker)
 	hud.follow_character(player)
@@ -132,7 +132,7 @@ func _build_interaction() -> void:
 	var cls_picker := load("res://scripts/interaction/picker_menu.gd") as GDScript
 	if cls_hands != null:
 		var hands: Node = cls_hands.new()
-		hands.name = "TayCam"
+		hands.name = "Hands"
 		player.add_child(hands)
 		hud.listen_to_hands(hands)
 
@@ -140,7 +140,7 @@ func _build_interaction() -> void:
 		var cls_cooking := load("res://scripts/interaction/cooking_system.gd") as GDScript
 		if cls_cooking != null:
 			var cooking: Node = cls_cooking.new()
-			cooking.name = "HeBep"
+			cooking.name = "CookingSystem"
 			add_child(cooking)
 			hands.cooking = cooking
 			hud.listen_to_cooking(cooking)
@@ -155,7 +155,7 @@ func _build_interaction() -> void:
 			var cls_bars := load("res://scripts/ui/station_bars.gd") as GDScript
 			if cls_bars != null:
 				var bars: Node = cls_bars.new()
-				bars.name = "ThanhTram"
+				bars.name = "StationBars"
 				add_child(bars)
 				bars.listen_to_cooking(cooking)
 			else:
@@ -163,7 +163,7 @@ func _build_interaction() -> void:
 
 		if cls_picker != null:
 			var picker: Node = cls_picker.new()
-			picker.name = "BangChon"
+			picker.name = "PickerMenu"
 			add_child(picker)
 			# Ba mối nối, mỗi cái một việc: tay xin mở bảng, bảng báo đã
 			# chọn xong, và bảng báo mở/đóng để khoá di chuyển nhân vật.
@@ -191,7 +191,7 @@ func _build_interaction() -> void:
 	var cls_customers := load("res://scripts/restaurant/customer_manager.gd") as GDScript
 	if cls_customers != null:
 		customers = cls_customers.new()
-		customers.name = "QuanLyKhach"
+		customers.name = "CustomerManager"
 		add_child(customers)
 		# chuan_bi() phải gọi SAU add_child: nó dùng get_tree() để tìm nhóm
 		# "dining_table" và gắn vùng navmesh vào cây scene.
@@ -275,7 +275,7 @@ func _build_order_hud() -> void:
 	var cls_intro := load("res://scripts/ui/order_board.gd") as GDScript
 	if cls_intro != null:
 		var picker: Node = cls_intro.new()
-		picker.name = "BangDonHang"
+		picker.name = "OrderBoard"
 		add_child(picker)
 		picker.listen_to_orders(customers)
 	else:
@@ -285,7 +285,7 @@ func _build_order_hud() -> void:
 	var clock: Node = null
 	if cls_clock != null:
 		clock = cls_clock.new()
-		clock.name = "BangThoiGian"
+		clock.name = "HudClock"
 		add_child(clock)
 		clock.listen_to_orders(customers)
 		clock.time_up.connect(_end_level.bind(""))
@@ -305,7 +305,7 @@ func _build_order_hud() -> void:
 	# phải là lớp đè lên luật màn, không phải ngược lại.
 	var skills_node := get_node_or_null("SkillManager")
 	if skills_node != null:
-		skills_node.setup(customers, get_node_or_null("HeBep"), clock)
+		skills_node.setup(customers, get_node_or_null("CookingSystem"), clock)
 
 	_apply_level_rules(clock)
 	_build_level_intro(clock)
@@ -336,7 +336,7 @@ func _apply_level_rules(clock: Node) -> void:
 		return
 
 	var rules_node: Node = cls.new()
-	rules_node.name = "LuatMan"
+	rules_node.name = "LevelRules"
 	add_child(rules_node)
 	if not rules_node.setup(customers, clock, rules):
 		rules_node.queue_free()
@@ -394,8 +394,8 @@ func _attach_tutorial(clock: Node) -> void:
 		push_warning("Không nạp được bộ dẫn dắt hướng dẫn — màn vẫn chơi được như màn thường.")
 		return
 
-	var hands := player.get_node_or_null("TayCam")
-	var cooking := get_node_or_null("HeBep")
+	var hands := player.get_node_or_null("Hands")
+	var cooking := get_node_or_null("CookingSystem")
 	var director: Node = cls.new()
 	director.name = "TutorialDirector"
 	add_child(director)
@@ -447,9 +447,9 @@ func _unhandled_key_input(event: InputEvent) -> void:
 
 func _skip_time() -> void:
 	# Bảng kết quả đã hiện thì không còn gì để tua.
-	if get_node_or_null("BangKetQua") != null:
+	if get_node_or_null("ResultsPanel") != null:
 		return
-	var clock_node := get_node_or_null("BangThoiGian")
+	var clock_node := get_node_or_null("HudClock")
 	if clock_node == null:
 		# Màn không có đồng hồ (hướng dẫn): bấm một cái là tổng kết luôn.
 		_end_level("")
@@ -466,7 +466,7 @@ func _skip_time() -> void:
 func _end_level(rank: String) -> void:
 	# Chặn gọi hai lần: hết giờ và hướng dẫn xong về lý thuyết có thể trùng
 	# nhau, và hai tấm bảng chồng lên nhau thì cái dưới không bao giờ đóng.
-	if get_node_or_null("BangKetQua") != null:
+	if get_node_or_null("ResultsPanel") != null:
 		return
 
 	var cls := load("res://scripts/ui/results_panel.gd") as GDScript
@@ -486,7 +486,7 @@ func _end_level(rank: String) -> void:
 		leaving = int(customers.customers_lost)
 
 	var results: Node = cls.new()
-	results.name = "BangKetQua"
+	results.name = "ResultsPanel"
 	add_child(results)
 	results.show_results(money, done, perfect, leaving, rank)
 
@@ -523,7 +523,7 @@ func _build_level_intro(clock: Node) -> void:
 		customers.auto_spawn = false
 
 	var intro: Node = cls.new()
-	intro.name = "MoMan"
+	intro.name = "LevelIntro"
 	add_child(intro)
 	intro.started.connect(func() -> void:
 		if clock != null:

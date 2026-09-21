@@ -98,11 +98,11 @@ func _ready() -> void:
 	_model = _body.get_node_or_null("Model") as Node3D
 
 	_hand_point = Node3D.new()
-	_hand_point.name = "DiemTay"
+	_hand_point.name = "HandPoint"
 	_body.add_child(_hand_point)
 
 	_sign = Sprite3D.new()
-	_sign.name = "BienDoTrenTay"
+	_sign.name = "HeldSign"
 	_sign.position = Vector3(0.0, sign_height, 0.0)
 	# BILLBOARD_ENABLED: tấm ảnh tự xoay theo camera mỗi frame.
 	_sign.billboard = BaseMaterial3D.BILLBOARD_ENABLED
@@ -182,7 +182,7 @@ func _unhandled_input(event: InputEvent) -> void:
 	# đoán trước được, mà trong bếp chật thì họ đứng cạnh thứ gì đó liên tục.
 	if _held == null:
 		return
-	if event.is_action_pressed("bo_do"):
+	if event.is_action_pressed("drop_item"):
 		_throw_out()
 		get_viewport().set_input_as_handled()
 
@@ -327,7 +327,7 @@ func receive_ingredient(_station: Node, id: String) -> void:
 ## ba chục file.
 func _spawn_item(id: String) -> Workstation:
 	var item := Workstation.new()
-	item.name = "VatPham_" + id
+	item.name = "Item_" + id
 	item.display_name = ItemCatalog.display_name(id)
 	item.kind = "carriable"
 	item.item_id = id
@@ -362,7 +362,7 @@ func _spawn_item(id: String) -> Workstation:
 	# Điểm nhắm nhô lên trên một chút để bộ chọn đo hướng cho đúng khi vật
 	# nằm sát chân người chơi.
 	var mark := Marker3D.new()
-	mark.name = "DiemNham"
+	mark.name = "AimPoint"
 	mark.position = Vector3(0.0, 0.25, 0.0)
 	item.add_child(mark)
 

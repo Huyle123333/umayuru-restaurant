@@ -68,7 +68,7 @@ func dish_on_table() -> String:
 
 func _update_sign() -> void:
 	if _sign == null or not is_instance_valid(_sign):
-		_sign = get_node_or_null("So") as Label3D
+		_sign = get_node_or_null("NumberLabel") as Label3D
 	if _sign == null:
 		return
 	_sign.text = str(table_number)

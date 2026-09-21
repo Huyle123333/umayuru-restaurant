@@ -208,7 +208,7 @@ func _unhandled_input(event: InputEvent) -> void:
 	if _candidates.is_empty():
 		return
 
-	if event.is_action_pressed("chon_muc_tieu"):
+	if event.is_action_pressed("cycle_target"):
 		_selected = (_selected + 1) % _candidates.size()
 		_lock_choice()
 		get_viewport().set_input_as_handled()
@@ -225,7 +225,7 @@ func _unhandled_input(event: InputEvent) -> void:
 	# chọn được bằng Tab, chọn được bằng tâm ngắm ở góc nhìn thứ ba. Cho F một
 	# đường bắt phím riêng trong tay_cam thì hai phím sẽ nhắm vào hai thứ khác
 	# nhau đúng lúc trong bếp có nhiều trạm sát nhau.
-	if event.is_action_pressed("rap_mon"):
+	if event.is_action_pressed("assemble"):
 		_activate_alt()
 		get_viewport().set_input_as_handled()
 		return
