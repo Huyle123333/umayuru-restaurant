@@ -39,8 +39,8 @@ const COLOR_RANK := {
 const MEDALS: Array[String] = ["🥇", "🥈", "🥉"]
 
 @onready var _tabs: HBoxContainer = %Tabs
-@onready var _table: VBoxContainer = %Bang
-@onready var _lbl_empty: Label = %LblTrong
+@onready var _table: VBoxContainer = %Table
+@onready var _lbl_empty: Label = %LblEmpty
 @onready var _btn_close: Button = %BtnClose
 
 var _focus_on_close: Control = null

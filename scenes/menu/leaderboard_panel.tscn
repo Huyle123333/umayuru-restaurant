@@ -52,13 +52,13 @@ theme_override_constants/separation = 8
 [node name="Sep" type="HSeparator" parent="Center/Panel/VBox"]
 layout_mode = 2
 
-[node name="Bang" type="VBoxContainer" parent="Center/Panel/VBox"]
+[node name="Table" type="VBoxContainer" parent="Center/Panel/VBox"]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(0, 300)
 layout_mode = 2
 theme_override_constants/separation = 6
 
-[node name="LblTrong" type="Label" parent="Center/Panel/VBox"]
+[node name="LblEmpty" type="Label" parent="Center/Panel/VBox"]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(0, 300)
 layout_mode = 2

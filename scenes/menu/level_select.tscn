@@ -134,12 +134,12 @@ theme_override_font_sizes/font_size = 30
 text = "LEVEL_DAY_1"
 horizontal_alignment = 1
 
-[node name="BtnD1Sang" type="Button" parent="Content/VBox/Scroll/Columns/ColDay1"]
+[node name="BtnD1Morning" type="Button" parent="Content/VBox/Scroll/Columns/ColDay1"]
 unique_name_in_owner = true
 layout_mode = 2
 text = "COMMON_MORNING"
 
-[node name="BtnD1Toi" type="Button" parent="Content/VBox/Scroll/Columns/ColDay1"]
+[node name="BtnD1Evening" type="Button" parent="Content/VBox/Scroll/Columns/ColDay1"]
 unique_name_in_owner = true
 layout_mode = 2
 text = "COMMON_EVENING"
@@ -166,12 +166,12 @@ theme_override_font_sizes/font_size = 30
 text = "LEVEL_DAY_2"
 horizontal_alignment = 1
 
-[node name="BtnD2Sang" type="Button" parent="Content/VBox/Scroll/Columns/ColDay2"]
+[node name="BtnD2Morning" type="Button" parent="Content/VBox/Scroll/Columns/ColDay2"]
 unique_name_in_owner = true
 layout_mode = 2
 text = "COMMON_MORNING"
 
-[node name="BtnD2Toi" type="Button" parent="Content/VBox/Scroll/Columns/ColDay2"]
+[node name="BtnD2Evening" type="Button" parent="Content/VBox/Scroll/Columns/ColDay2"]
 unique_name_in_owner = true
 layout_mode = 2
 text = "COMMON_EVENING"
@@ -198,12 +198,12 @@ theme_override_font_sizes/font_size = 30
 text = "LEVEL_DAY_3"
 horizontal_alignment = 1
 
-[node name="BtnD3Sang" type="Button" parent="Content/VBox/Scroll/Columns/ColDay3"]
+[node name="BtnD3Morning" type="Button" parent="Content/VBox/Scroll/Columns/ColDay3"]
 unique_name_in_owner = true
 layout_mode = 2
 text = "COMMON_MORNING"
 
-[node name="BtnD3Toi" type="Button" parent="Content/VBox/Scroll/Columns/ColDay3"]
+[node name="BtnD3Evening" type="Button" parent="Content/VBox/Scroll/Columns/ColDay3"]
 unique_name_in_owner = true
 layout_mode = 2
 text = "COMMON_EVENING"

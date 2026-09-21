@@ -97,24 +97,24 @@ const PORTRAITS := {
 ## đoạn cắt cảnh thì không, vì nó không phải một màn chơi.
 @export var mark_completed: String = ""
 
-@onready var _background: TextureRect = %Nen
-@onready var _tint: ColorRect = %PhuMau
-@onready var _portrait: TextureRect = %Anh
+@onready var _background: TextureRect = %Background
+@onready var _tint: ColorRect = %Tint
+@onready var _portrait: TextureRect = %Portrait
 ## Khung xếp NHIỀU chân dung cạnh nhau, dùng cho câu đồng thanh.
 ##
-## Một node riêng chứ không biến %Anh thành container: 39 trong 41 câu của
-## prologue chỉ có MỘT người nói, và %Anh đang được canh sẵn ở góc trái với
-## kích thước cố định. Đổi %Anh thành container thì một chân dung sẽ bị căn
+## Một node riêng chứ không biến %Portrait thành container: 39 trong 41 câu của
+## prologue chỉ có MỘT người nói, và %Portrait đang được canh sẵn ở góc trái với
+## kích thước cố định. Đổi %Portrait thành container thì một chân dung sẽ bị căn
 ## giữa lại — tức là sửa một câu đặc biệt mà làm xê dịch bốn mươi câu bình
 ## thường. Hai node, mỗi node một việc, không câu nào ảnh hưởng câu nào.
-@onready var _group_box: HBoxContainer = %AnhNhom
+@onready var _group_box: HBoxContainer = %GroupPortrait
 
 ## Chân dung trong khung nhóm không được cao hơn bấy nhiêu pixel.
 const MAX_GROUP_HEIGHT := 620.0
-@onready var _lbl_name: Label = %LblTen
-@onready var _lbl_line: RichTextLabel = %LblLoi
-@onready var _arrow: Label = %MuiTen
-@onready var _btn_skip: Button = %BtnBoQua
+@onready var _lbl_name: Label = %LblSpeaker
+@onready var _lbl_line: RichTextLabel = %LblLine
+@onready var _arrow: Label = %Arrow
+@onready var _btn_skip: Button = %BtnSkip
 
 ## Nội dung kịch bản đã nạp.
 var _scenes: Array = []

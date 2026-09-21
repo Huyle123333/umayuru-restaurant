@@ -485,7 +485,7 @@ theme_override_styles/panel = SubResource("BioBox")
 layout_mode = 2
 theme_override_constants/separation = 5
 
-[node name="Cap" type="Label" parent="Content/VBox/PanelWrap/InfoPanel/Box/Top/Left/IntroWrap/V"]
+[node name="Caption" type="Label" parent="Content/VBox/PanelWrap/InfoPanel/Box/Top/Left/IntroWrap/V"]
 layout_mode = 2
 theme_override_colors/font_color = Color(0.827451, 0.639216, 0.407843, 1)
 theme_override_font_sizes/font_size = 15
@@ -514,7 +514,7 @@ theme_override_styles/panel = SubResource("BioBox")
 layout_mode = 2
 theme_override_constants/separation = 5
 
-[node name="Cap" type="Label" parent="Content/VBox/PanelWrap/InfoPanel/Box/Top/Left/Cols/MeasWrap/V"]
+[node name="Caption" type="Label" parent="Content/VBox/PanelWrap/InfoPanel/Box/Top/Left/Cols/MeasWrap/V"]
 layout_mode = 2
 theme_override_colors/font_color = Color(0.827451, 0.639216, 0.407843, 1)
 theme_override_font_sizes/font_size = 15
@@ -531,7 +531,7 @@ columns = 2
 layout_mode = 2
 theme_override_constants/separation = 10
 
-[node name="Cap" type="Label" parent="Content/VBox/PanelWrap/InfoPanel/Box/Top/Left/Cols/MeasWrap/V/RowSize"]
+[node name="Caption" type="Label" parent="Content/VBox/PanelWrap/InfoPanel/Box/Top/Left/Cols/MeasWrap/V/RowSize"]
 custom_minimum_size = Vector2(104, 0)
 layout_mode = 2
 theme_override_colors/font_color = Color(0.827451, 0.639216, 0.407843, 1)
@@ -598,7 +598,7 @@ theme_override_styles/panel = SubResource("BioBox")
 layout_mode = 2
 theme_override_constants/separation = 5
 
-[node name="Cap" type="Label" parent="Content/VBox/PanelWrap/InfoPanel/Box/Top/Left/Cols/ProfWrap/V"]
+[node name="Caption" type="Label" parent="Content/VBox/PanelWrap/InfoPanel/Box/Top/Left/Cols/ProfWrap/V"]
 layout_mode = 2
 theme_override_colors/font_color = Color(0.827451, 0.639216, 0.407843, 1)
 theme_override_font_sizes/font_size = 15
@@ -770,7 +770,7 @@ theme_override_styles/panel = SubResource("BioBox")
 layout_mode = 2
 theme_override_constants/separation = 5
 
-[node name="Cap" type="Label" parent="Content/VBox/PanelWrap/InfoPanel/Box/Top/Right/SecretWrap/V"]
+[node name="Caption" type="Label" parent="Content/VBox/PanelWrap/InfoPanel/Box/Top/Right/SecretWrap/V"]
 layout_mode = 2
 theme_override_colors/font_color = Color(0.827451, 0.639216, 0.407843, 1)
 theme_override_font_sizes/font_size = 15

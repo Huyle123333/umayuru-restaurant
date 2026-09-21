@@ -244,13 +244,13 @@ theme_override_constants/h_separation = 24
 theme_override_constants/v_separation = 10
 columns = 3
 
-[node name="LNgonNgu" type="Label" parent="Center/Panel/VBox/Grid4"]
+[node name="LblLanguage" type="Label" parent="Center/Panel/VBox/Grid4"]
 custom_minimum_size = Vector2(230, 0)
 layout_mode = 2
 size_flags_vertical = 4
 text = "SETTINGS_LANGUAGE"
 
-[node name="OptNgonNgu" type="OptionButton" parent="Center/Panel/VBox/Grid4"]
+[node name="OptLanguage" type="OptionButton" parent="Center/Panel/VBox/Grid4"]
 unique_name_in_owner = true
 auto_translate_mode = 2
 custom_minimum_size = Vector2(260, 0)
@@ -258,7 +258,7 @@ layout_mode = 2
 size_flags_horizontal = 0
 size_flags_vertical = 4
 
-[node name="SpacerNgonNgu" type="Control" parent="Center/Panel/VBox/Grid4"]
+[node name="SpacerLanguage" type="Control" parent="Center/Panel/VBox/Grid4"]
 layout_mode = 2
 mouse_filter = 2
 

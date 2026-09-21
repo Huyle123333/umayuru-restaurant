@@ -24,7 +24,7 @@ const ROW := {
 @onready var _lbl_mouse: Label = %LblMouse
 
 @onready var _chk_fullscreen: CheckButton = %ChkFullscreen
-@onready var _opt_language: OptionButton = %OptNgonNgu
+@onready var _opt_language: OptionButton = %OptLanguage
 @onready var _btn_default: Button = %BtnDefault
 @onready var _btn_close: Button = %BtnClose
 

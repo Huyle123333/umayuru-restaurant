@@ -33,7 +33,7 @@ corner_radius_top_right = 8
 corner_radius_bottom_right = 8
 corner_radius_bottom_left = 8
 
-[node name="GolshiXuatHien" type="Control"]
+[node name="GolshiIntro" type="Control"]
 layout_mode = 3
 anchors_preset = 15
 anchor_right = 1.0
@@ -46,7 +46,7 @@ cutscene_path = "res://scripts/story/cutscene_golshi.gd"
 next_level = ""
 mark_completed = ""
 
-[node name="Nen" type="TextureRect" parent="."]
+[node name="Background" type="TextureRect" parent="."]
 unique_name_in_owner = true
 layout_mode = 1
 anchors_preset = 15
@@ -59,7 +59,7 @@ texture = ExtResource("3_nen")
 expand_mode = 1
 stretch_mode = 6
 
-[node name="Anh" type="TextureRect" parent="."]
+[node name="Portrait" type="TextureRect" parent="."]
 unique_name_in_owner = true
 layout_mode = 1
 anchors_preset = 2
@@ -74,7 +74,7 @@ mouse_filter = 2
 expand_mode = 1
 stretch_mode = 5
 
-[node name="AnhNhom" type="HBoxContainer" parent="."]
+[node name="GroupPortrait" type="HBoxContainer" parent="."]
 unique_name_in_owner = true
 visible = false
 layout_mode = 1
@@ -92,7 +92,7 @@ mouse_filter = 2
 alignment = 1
 theme_override_constants/separation = 20
 
-[node name="PhuMau" type="ColorRect" parent="."]
+[node name="Tint" type="ColorRect" parent="."]
 unique_name_in_owner = true
 layout_mode = 1
 anchors_preset = 15
@@ -103,7 +103,7 @@ grow_vertical = 2
 mouse_filter = 2
 color = Color(0, 0, 0, 1)
 
-[node name="Hop" type="PanelContainer" parent="."]
+[node name="Box" type="PanelContainer" parent="."]
 unique_name_in_owner = true
 layout_mode = 1
 anchors_preset = 12
@@ -119,16 +119,16 @@ grow_vertical = 0
 mouse_filter = 2
 theme_override_styles/panel = SubResource("Hop_Style")
 
-[node name="Cot" type="VBoxContainer" parent="Hop"]
+[node name="Column" type="VBoxContainer" parent="Box"]
 layout_mode = 2
 mouse_filter = 2
 theme_override_constants/separation = 14
 
-[node name="HangTen" type="HBoxContainer" parent="Hop/Cot"]
+[node name="SpeakerRow" type="HBoxContainer" parent="Box/Column"]
 layout_mode = 2
 mouse_filter = 2
 
-[node name="LblTen" type="Label" parent="Hop/Cot/HangTen"]
+[node name="LblSpeaker" type="Label" parent="Box/Column/SpeakerRow"]
 unique_name_in_owner = true
 layout_mode = 2
 size_flags_horizontal = 0
@@ -138,7 +138,7 @@ theme_override_font_sizes/font_size = 24
 theme_override_styles/normal = SubResource("Ten_Style")
 text = "Tên"
 
-[node name="LblLoi" type="RichTextLabel" parent="Hop/Cot"]
+[node name="LblLine" type="RichTextLabel" parent="Box/Column"]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(0, 118)
 layout_mode = 2
@@ -151,7 +151,7 @@ theme_override_font_sizes/normal_font_size = 26
 bbcode_enabled = true
 scroll_active = false
 
-[node name="MuiTen" type="Label" parent="Hop"]
+[node name="Arrow" type="Label" parent="Box"]
 unique_name_in_owner = true
 layout_mode = 2
 size_flags_horizontal = 8
@@ -161,7 +161,7 @@ theme_override_colors/font_color = Color(0.898039, 0.678431, 0.352941, 1)
 theme_override_font_sizes/font_size = 22
 text = "▼"
 
-[node name="BtnBoQua" type="Button" parent="."]
+[node name="BtnSkip" type="Button" parent="."]
 unique_name_in_owner = true
 layout_mode = 1
 anchors_preset = 1

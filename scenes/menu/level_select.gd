@@ -13,12 +13,12 @@ extends Control
 @onready var _buttons: Dictionary = {
 	"prologue": %BtnPrologue,
 	"tutorial": %BtnTutorial,
-	"d1_sang": %BtnD1Sang,
-	"d1_toi": %BtnD1Toi,
-	"d2_sang": %BtnD2Sang,
-	"d2_toi": %BtnD2Toi,
-	"d3_sang": %BtnD3Sang,
-	"d3_toi": %BtnD3Toi,
+	"d1_sang": %BtnD1Morning,
+	"d1_toi": %BtnD1Evening,
+	"d2_sang": %BtnD2Morning,
+	"d2_toi": %BtnD2Evening,
+	"d3_sang": %BtnD3Morning,
+	"d3_toi": %BtnD3Evening,
 }
 
 ## Khoá dịch cho nút gộp của từng ngày, khi giai đoạn buổi tối đang tắt.
