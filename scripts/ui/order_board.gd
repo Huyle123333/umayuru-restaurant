@@ -220,7 +220,7 @@ func add_order(order: RefCounted) -> void:
 	_update_label()
 
 
-func _on_order_finished(order: RefCounted, _ly_do: String) -> void:
+func _on_order_finished(order: RefCounted, _reason: String) -> void:
 	remove_order(order)
 
 

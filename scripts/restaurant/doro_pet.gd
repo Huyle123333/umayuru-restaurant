@@ -111,10 +111,10 @@ func _build_body() -> void:
 	if not ResourceLoader.exists(MODEL):
 		push_warning("Thiếu model Doro: %s — pet sẽ vô hình." % MODEL)
 		return
-	var goi := load(MODEL) as PackedScene
-	if goi == null:
+	var packed := load(MODEL) as PackedScene
+	if packed == null:
 		return
-	_body = goi.instantiate() as Node3D
+	_body = packed.instantiate() as Node3D
 	_body.name = "Mesh"
 	# Co theo TỈ LỆ ĐO ĐƯỢC chứ không gõ sẵn 0,28: đổi Config.HEIGHT là xong,
 	# không phải bấm máy tính.
@@ -127,18 +127,18 @@ func _build_body() -> void:
 
 
 func _build_collision() -> void:
-	var hinh := CollisionShape3D.new()
-	var hop := BoxShape3D.new()
-	var canh := Config.HEIGHT * Config.BOX_WIDTH
-	hop.size = Vector3(canh, Config.HEIGHT, canh)
-	hinh.shape = hop
-	hinh.position = Vector3(0.0, Config.HEIGHT * 0.5, 0.0)
-	add_child(hinh)
+	var shape := CollisionShape3D.new()
+	var box := BoxShape3D.new()
+	var edge := Config.HEIGHT * Config.BOX_WIDTH
+	box.size = Vector3(edge, Config.HEIGHT, edge)
+	shape.shape = box
+	shape.position = Vector3(0.0, Config.HEIGHT * 0.5, 0.0)
+	add_child(shape)
 
-	var moc := Marker3D.new()
-	moc.name = "DiemNham"
-	moc.position = Vector3(0.0, Config.HEIGHT + 0.12, 0.0)
-	add_child(moc)
+	var marker := Marker3D.new()
+	marker.name = "DiemNham"
+	marker.position = Vector3(0.0, Config.HEIGHT + 0.12, 0.0)
+	add_child(marker)
 	aim_point = NodePath("DiemNham")
 
 
@@ -174,9 +174,9 @@ func _physics_process(delta: float) -> void:
 		if _moving:
 			_moving = false
 		_set_anim("idle")
-		var ve := _player.global_position - global_position
-		ve.y = 0.0
-		_turn_towards(ve, delta)
+		var back := _player.global_position - global_position
+		back.y = 0.0
+		_turn_towards(back, delta)
 		return
 
 	# 2. Đang nghỉ -> đếm ngược rồi chọn chỗ mới.
@@ -193,19 +193,19 @@ func _physics_process(delta: float) -> void:
 		_set_anim("idle")
 		return
 
-	var toi := _agent.get_next_path_position()
-	var huong := toi - global_position
-	huong.y = 0.0
-	if huong.length_squared() < 0.0001:
+	var to_pos := _agent.get_next_path_position()
+	var dir_ := to_pos - global_position
+	dir_.y = 0.0
+	if dir_.length_squared() < 0.0001:
 		return
-	huong = huong.normalized()
+	dir_ = dir_.normalized()
 	# Cộng thẳng vào vị trí: Doro là StaticBody3D nên không có move_and_slide,
 	# và cũng không cần — nó không va vào gì cả.
-	global_position += huong * Config.SPEED * delta
+	global_position += dir_ * Config.SPEED * delta
 	# Khoá độ cao về mặt sàn. Điểm đường của agent nằm trên mặt navmesh, cao
 	# hơn sàn một chút; đi theo cả trục Y thì Doro trôi dần lên trên.
 	global_position.y = _floor_y
-	_turn_towards(huong, delta)
+	_turn_towards(dir_, delta)
 
 
 func _near_player() -> bool:
@@ -228,31 +228,31 @@ func _near_player() -> bool:
 ## lại — rẻ hơn nhiều so với việc thử lặp cho tới khi trúng, và Doro đứng
 ## nghỉ thêm một nhịp thì không ai nhận ra.
 func _wander() -> void:
-	var ban_do := get_world_3d().navigation_map
-	if not ban_do.is_valid():
+	var nav_map := get_world_3d().navigation_map
+	if not nav_map.is_valid():
 		return
 
-	var goc := randf() * TAU
-	var xa := randf_range(1.5, Config.WANDER_RADIUS)
-	var dich := global_position + Vector3(cos(goc) * xa, 0.0, sin(goc) * xa)
-	dich = _clamp_to_area(dich)
-	dich = NavigationServer3D.map_get_closest_point(ban_do, dich)
+	var angle := randf() * TAU
+	var dist := randf_range(1.5, Config.WANDER_RADIUS)
+	var target_yaw := global_position + Vector3(cos(angle) * dist, 0.0, sin(angle) * dist)
+	target_yaw = _clamp_to_area(target_yaw)
+	target_yaw = NavigationServer3D.map_get_closest_point(nav_map, target_yaw)
 
-	if dich.is_equal_approx(Vector3.ZERO) or not _inside_area(dich):
+	if target_yaw.is_equal_approx(Vector3.ZERO) or not _inside_area(target_yaw):
 		_rest_left = randf_range(Config.REST_MIN, Config.REST_MAX)
 		return
 
-	_agent.target_position = dich
+	_agent.target_position = target_yaw
 	_moving = true
 	_set_anim("walk")
 
 
 ## Kéo một điểm vào trong hình chữ nhật cho phép (giữ nguyên độ cao).
-static func _clamp_to_area(diem: Vector3) -> Vector3:
+static func _clamp_to_area(point: Vector3) -> Vector3:
 	return Vector3(
-		clampf(diem.x, Config.AREA_MIN.x, Config.AREA_MAX.x),
-		diem.y,
-		clampf(diem.z, Config.AREA_MIN.y, Config.AREA_MAX.y))
+		clampf(point.x, Config.AREA_MIN.x, Config.AREA_MAX.x),
+		point.y,
+		clampf(point.z, Config.AREA_MIN.y, Config.AREA_MAX.y))
 
 
 ## Điểm có nằm trong vùng cho phép không.
@@ -262,19 +262,19 @@ static func _clamp_to_area(diem: Vector3) -> Vector3:
 ## nới thì Doro bỏ gần hết số lượt bốc và đứng nghỉ gần như suốt màn.
 const AREA_MARGIN := 0.6
 
-static func _inside_area(diem: Vector3) -> bool:
-	return diem.x >= Config.AREA_MIN.x - AREA_MARGIN \
-		and diem.x <= Config.AREA_MAX.x + AREA_MARGIN \
-		and diem.z >= Config.AREA_MIN.y - AREA_MARGIN \
-		and diem.z <= Config.AREA_MAX.y + AREA_MARGIN
+static func _inside_area(point: Vector3) -> bool:
+	return point.x >= Config.AREA_MIN.x - AREA_MARGIN \
+		and point.x <= Config.AREA_MAX.x + AREA_MARGIN \
+		and point.z >= Config.AREA_MIN.y - AREA_MARGIN \
+		and point.z <= Config.AREA_MAX.y + AREA_MARGIN
 
 
 ## Chỗ Doro đứng lúc màn bắt đầu: GIỮA vùng cho phép, nắn về navmesh.
 ##
 ## Hàm static để level_base hỏi được mà không phải dựng node trước — chỗ đứng
 ## phải biết TRƯỚC khi gọi setup().
-static func first_stand_point(ban_do: RID, cao_san: float) -> Vector3:
-	var giua := Vector3(
+static func first_stand_point(nav_map: RID, cao_san: float) -> Vector3:
+	var center := Vector3(
 		(Config.AREA_MIN.x + Config.AREA_MAX.x) * 0.5,
 		cao_san,
 		(Config.AREA_MIN.y + Config.AREA_MAX.y) * 0.5)
@@ -286,31 +286,31 @@ static func first_stand_point(ban_do: RID, cao_san: float) -> Vector3:
 	#
 	# Chưa sẵn sàng thì lấy thẳng tâm vùng: nó nằm giữa khu khách nên gần như
 	# chắc chắn đi được, và ngay nhịp đi đầu tiên Doro sẽ tự nắn về navmesh.
-	if not ban_do.is_valid() or NavigationServer3D.map_get_iteration_id(ban_do) == 0:
-		return giua
-	var nan := NavigationServer3D.map_get_closest_point(ban_do, giua)
-	if nan.is_equal_approx(Vector3.ZERO):
-		return giua
-	nan.y = cao_san
-	return nan
+	if not nav_map.is_valid() or NavigationServer3D.map_get_iteration_id(nav_map) == 0:
+		return center
+	var snapped_ := NavigationServer3D.map_get_closest_point(nav_map, center)
+	if snapped_.is_equal_approx(Vector3.ZERO):
+		return center
+	snapped_.y = cao_san
+	return snapped_
 
 
-func _turn_towards(huong: Vector3, delta: float) -> void:
-	if huong.length_squared() < 0.0001:
+func _turn_towards(dir_: Vector3, delta: float) -> void:
+	if dir_.length_squared() < 0.0001:
 		return
-	var dich := atan2(huong.x, huong.z)
-	rotation.y = rotate_toward(rotation.y, dich, Config.TURN_SPEED * delta)
+	var target_yaw := atan2(dir_.x, dir_.z)
+	rotation.y = rotate_toward(rotation.y, target_yaw, Config.TURN_SPEED * delta)
 
 
 # ------------------------------------------------------------------ diễn ---
 
-func _set_anim(ten: String) -> void:
-	if _anim_now == ten:
+func _set_anim(anim_name: String) -> void:
+	if _anim_now == anim_name:
 		return
-	if _hoat_hinh == null or not _hoat_hinh.has_animation(ten):
+	if _hoat_hinh == null or not _hoat_hinh.has_animation(anim_name):
 		return
-	_anim_now = ten
-	_hoat_hinh.play(ten)
+	_anim_now = anim_name
+	_hoat_hinh.play(anim_name)
 
 
 ## Nảy một cái khi người chơi bấm E vào Doro.

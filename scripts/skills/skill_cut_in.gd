@@ -222,7 +222,7 @@ func _build_dim() -> void:
 	shader.code = """
 shader_type canvas_item;
 uniform sampler2D man_hinh : hint_screen_texture, repeat_disable, filter_linear_mipmap;
-// Mức mipmap dùng để làm mờ. Càng cao càng nhoè.
+// Mức mipmap dùng để làm mờ. Càng height_ càng nhoè.
 uniform float do_mo : hint_range(0.0, 6.0) = 3.0;
 // Tối thêm bao nhiêu sau khi đã làm mờ.
 uniform float do_toi : hint_range(0.0, 1.0) = 0.45;

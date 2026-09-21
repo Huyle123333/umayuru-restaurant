@@ -270,10 +270,10 @@ func _on_skill_progress(ratio: float, text: String) -> void:
 	# nhưng GIỮ cái ảnh xám: ảnh nói "có một ô kĩ năng ở đây", còn một thanh
 	# tiến trình đứng im ở 0 suốt màn thì nói dối rằng người chơi đang không
 	# tiến bộ.
-	var co := not text.is_empty()
-	_skill_bar.visible = co
-	_skill_label.visible = co
-	if not co:
+	var has_text := not text.is_empty()
+	_skill_bar.visible = has_text
+	_skill_label.visible = has_text
+	if not has_text:
 		return
 
 	_skill_bar.value = ratio
@@ -357,11 +357,11 @@ func _follow_table() -> void:
 	_table_frame.show()
 	var screen := cam.unproject_position(point)
 	# Kẹp trong khung hình để bảng không trôi ra ngoài khi bàn ở sát mép.
-	var co := _table_frame.size
+	var box_size := _table_frame.size
 	var area := get_viewport().get_visible_rect().size
 	_table_frame.position = Vector2(
-		clampf(screen.x + table_note_margin, 8.0, area.x - co.x - 8.0),
-		clampf(screen.y - co.y * 0.5, 8.0, area.y - co.y - 8.0))
+		clampf(screen.x + table_note_margin, 8.0, area.x - box_size.x - 8.0),
+		clampf(screen.y - box_size.y * 0.5, 8.0, area.y - box_size.y - 8.0))
 
 
 ## (Đã bỏ 17/9/2026) Thanh tiến trình chung neo giữa-trên màn hình.

@@ -166,10 +166,10 @@ func _data_row(index: int, record: Dictionary) -> Control:
 ## Một ô chữ trong bảng. `rong` = 0 nghĩa là ô co giãn chiếm hết chỗ trống —
 ## đúng một ô như thế mỗi hàng (cột tên), nhờ vậy ba cột còn lại có bề rộng
 ## cố định và các hàng thẳng cột với nhau mà không cần GridContainer.
-func _cell(chu: String, width: int, color_: Color, size_: int,
+func _cell(text_: String, width: int, color_: Color, size_: int,
 		can: HorizontalAlignment = HORIZONTAL_ALIGNMENT_LEFT) -> Label:
 	var l := Label.new()
-	l.text = chu
+	l.text = text_
 	l.add_theme_font_size_override("font_size", size_)
 	l.add_theme_color_override("font_color", color_)
 	l.horizontal_alignment = can

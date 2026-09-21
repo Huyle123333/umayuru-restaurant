@@ -91,31 +91,31 @@ func seat_count() -> int:
 ## không thôi thì mỗi chỗ gọi lại phải tự tính hướng quay về phía bàn, và bốn
 ## chỗ tính ra bốn kiểu.
 func seat_marker(i: int) -> Marker3D:
-	var ds: Array[Marker3D] = []
+	var list_: Array[Marker3D] = []
 	for c in get_children():
 		if c is Marker3D and String(c.name).begins_with("ChoDung"):
-			ds.append(c)
-	if i < 0 or i >= ds.size():
+			list_.append(c)
+	if i < 0 or i >= list_.size():
 		return null
-	return ds[i]
+	return list_[i]
 
 
 ## Tìm bàn theo số. Dùng nhóm "dining_table" nên không phụ thuộc đường dẫn node —
 ## đổi chỗ bàn trong cây scene vẫn tìm ra.
-static func tim(cay: SceneTree, so: int) -> DiningTable:
-	for n in cay.get_nodes_in_group("dining_table"):
+static func find_by_number(tree: SceneTree, number: int) -> DiningTable:
+	for n in tree.get_nodes_in_group("dining_table"):
 		var b := n as DiningTable
-		if b != null and b.table_number == so:
+		if b != null and b.table_number == number:
 			return b
 	return null
 
 
 ## Danh sách mọi bàn, đã sắp theo số bàn tăng dần.
-static func all_nodes(cay: SceneTree) -> Array[DiningTable]:
-	var ds: Array[DiningTable] = []
-	for n in cay.get_nodes_in_group("dining_table"):
+static func all_nodes(tree: SceneTree) -> Array[DiningTable]:
+	var list_: Array[DiningTable] = []
+	for n in tree.get_nodes_in_group("dining_table"):
 		var b := n as DiningTable
 		if b != null:
-			ds.append(b)
-	ds.sort_custom(func(a: DiningTable, b: DiningTable) -> bool: return a.table_number < b.table_number)
-	return ds
+			list_.append(b)
+	list_.sort_custom(func(a: DiningTable, b: DiningTable) -> bool: return a.table_number < b.table_number)
+	return list_

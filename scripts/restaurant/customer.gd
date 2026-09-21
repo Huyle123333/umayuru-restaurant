@@ -86,9 +86,9 @@ func _apply_scale() -> void:
 
 	var col := get_node_or_null("Col") as CollisionShape3D
 	if col != null and col.shape is CapsuleShape3D:
-		var hinh := col.shape as CapsuleShape3D
-		hinh.radius = BASE_RADIUS * patience_ratio
-		hinh.height = BASE_HEIGHT * patience_ratio
+		var shape := col.shape as CapsuleShape3D
+		shape.radius = BASE_RADIUS * patience_ratio
+		shape.height = BASE_HEIGHT * patience_ratio
 		# Capsule lấy gốc ở TÂM, nên phải nâng lên nửa chiều cao thì chân mới
 		# chạm sàn. Quên bước này là nhân vật lún nửa người xuống đất.
 		col.position.y = BASE_HEIGHT * 0.5 * patience_ratio
@@ -107,11 +107,11 @@ func _apply_scale() -> void:
 ## x=31,5 trong khi tường ở x=32) nên rơi ra NGOÀI vùng đi được sau khi navmesh
 ## co vào theo bán kính agent. Giao thẳng điểm ngoài mesh thì agent tìm đường
 ## tới chỗ gần nhất rồi loay hoay không bao giờ báo "đã tới".
-func go_to(dich: Vector3, viec: String, huong_cuoi: Vector3 = Vector3.ZERO) -> void:
+func go_to(target_yaw: Vector3, viec: String, huong_cuoi: Vector3 = Vector3.ZERO) -> void:
 	_task = viec
 	_face_dir = huong_cuoi
-	dich = snap_to_navmesh(get_world_3d().navigation_map, dich)
-	_agent.target_position = dich
+	target_yaw = snap_to_navmesh(get_world_3d().navigation_map, target_yaw)
+	_agent.target_position = target_yaw
 	_moving = true
 	_set_anim("walk")
 
@@ -127,10 +127,10 @@ func go_to(dich: Vector3, viec: String, huong_cuoi: Vector3 = Vector3.ZERO) -> v
 ##     vì thế nhận đích là gốc toạ độ, đứng chết ngay cửa, và hai người sinh
 ##     sau chồng lên rồi kẹt cả đám. Nên phải coi (0,0,0) là "hỏng" và giữ
 ##     nguyên điểm gốc — trừ khi bản thân điểm cần nắn vốn đã là gốc toạ độ.
-static func snap_to_navmesh(ban_do: RID, diem: Vector3) -> Vector3:
-	if not ban_do.is_valid() or NavigationServer3D.map_get_iteration_id(ban_do) == 0:
+static func snap_to_navmesh(nav_map: RID, diem: Vector3) -> Vector3:
+	if not nav_map.is_valid() or NavigationServer3D.map_get_iteration_id(nav_map) == 0:
 		return diem
-	var gan := NavigationServer3D.map_get_closest_point(ban_do, diem)
+	var gan := NavigationServer3D.map_get_closest_point(nav_map, diem)
 	if gan.is_equal_approx(Vector3.ZERO) and not diem.is_equal_approx(Vector3.ZERO):
 		return diem
 	# Chỉ lấy phần NGANG, giữ nguyên độ cao gốc.
@@ -151,8 +151,8 @@ static func snap_to_navmesh(ban_do: RID, diem: Vector3) -> Vector3:
 ## đo "đã tới điểm giữa chưa". Không khai thì agent thấy mỗi điểm đường luôn
 ## cách nó ít nhất 0,5 theo trục đứng, không bao giờ nhích sang điểm kế tiếp,
 ## và người khách đi mãi về phía một cái mốc ngay dưới chân mình.
-func set_height_offset(cao: float) -> void:
-	_agent.path_height_offset = cao
+func set_height_offset(icon_height: float) -> void:
+	_agent.path_height_offset = icon_height
 
 
 func stop_moving(huong_cuoi: Vector3 = Vector3.ZERO) -> void:
@@ -248,8 +248,8 @@ func show_order(anh: Texture2D) -> void:
 		return
 	if _dish_icon != null and anh != null:
 		_dish_icon.texture = anh
-		var cao := maxi(anh.get_height(), 1)
-		_dish_icon.pixel_size = DISH_ICON_HEIGHT / float(cao)
+		var icon_height := maxi(anh.get_height(), 1)
+		_dish_icon.pixel_size = DISH_ICON_HEIGHT / float(icon_height)
 	_last_col = -1
 	_draw_bar(1.0)
 	_bong.visible = true
@@ -274,22 +274,22 @@ func set_patience_bar(ti: float) -> void:
 func _draw_bar(ti: float) -> void:
 	if _bar_sprite == null:
 		return
-	var cot := int(round(clampf(ti, 0.0, 1.0) * BAR_WIDTH))
-	if cot == _last_col:
+	var filled_px := int(round(clampf(ti, 0.0, 1.0) * BAR_WIDTH))
+	if filled_px == _last_col:
 		return
-	_last_col = cot
+	_last_col = filled_px
 
 	# Ba bậc màu theo ngưỡng, khớp đúng ba bậc trên tấm vé ở HUD. Cùng một
 	# thông tin thì phải cùng một mã màu, dù vẽ ở hai chỗ khác nhau.
-	var mau := COLOR_GREEN
+	var color_ := COLOR_GREEN
 	if ti <= 0.2:
-		mau = COLOR_RED
+		color_ = COLOR_RED
 	elif ti <= 0.5:
-		mau = COLOR_YELLOW
+		color_ = COLOR_YELLOW
 
 	_bar_sprite.fill(BAR_BG)
-	if cot > 0:
-		_bar_sprite.fill_rect(Rect2i(0, 0, cot, BAR_HEIGHT), mau)
+	if filled_px > 0:
+		_bar_sprite.fill_rect(Rect2i(0, 0, filled_px, BAR_HEIGHT), color_)
 	_bar_tex.update(_bar_sprite)
 
 
@@ -311,13 +311,13 @@ func _physics_process(delta: float) -> void:
 			_set_anim("idle")
 			arrived.emit(self, _task)
 		else:
-			var toi := _agent.get_next_path_position()
-			var huong := (toi - global_position)
-			huong.y = 0.0
-			huong = huong.normalized()
-			velocity.x = huong.x * SPEED
-			velocity.z = huong.z * SPEED
-			_turn_towards(huong, delta)
+			var to_pos := _agent.get_next_path_position()
+			var dir_ := (to_pos - global_position)
+			dir_.y = 0.0
+			dir_ = dir_.normalized()
+			velocity.x = dir_.x * SPEED
+			velocity.z = dir_.z * SPEED
+			_turn_towards(dir_, delta)
 	elif _face_dir != Vector3.ZERO:
 		_turn_towards(_face_dir, delta)
 
@@ -329,12 +329,12 @@ func _physics_process(delta: float) -> void:
 ## Xoay CẢ CharacterBody3D chứ không xoay riêng node Model như bên nhân vật
 ## người chơi: khách không có camera gắn vào nên không có lý do gì phải tách
 ## thân và model, mà xoay thẳng thân thì hướng nhìn và hướng va chạm luôn khớp.
-func _turn_towards(huong: Vector3, delta: float) -> void:
-	if huong.length_squared() < 0.0001:
+func _turn_towards(dir_: Vector3, delta: float) -> void:
+	if dir_.length_squared() < 0.0001:
 		return
 	# Model nhìn về −Z, đúng quy ước của Godot, nên atan2 lấy thẳng góc.
-	var dich := atan2(huong.x, huong.z)
-	rotation.y = rotate_toward(rotation.y, dich, TURN_SPEED * delta)
+	var target_yaw := atan2(dir_.x, dir_.z)
+	rotation.y = rotate_toward(rotation.y, target_yaw, TURN_SPEED * delta)
 
 
 ## Đổi animation, bỏ qua nếu đang chạy đúng cái đó.
@@ -342,10 +342,10 @@ func _turn_towards(huong: Vector3, delta: float) -> void:
 ## Kiểm trùng chứ không gọi play() vô tư: play() cùng tên vẫn khởi động lại
 ## từ đầu, nên gọi mỗi khung hình thì animation đứng mãi ở khung 0 — đúng kiểu
 ## lỗi nhìn như "model bị đơ" mà không có dòng lỗi nào.
-func _set_anim(ten: String) -> void:
-	if _anim_now == ten:
+func _set_anim(anim_name: String) -> void:
+	if _anim_now == anim_name:
 		return
-	if _hoat_hinh == null or not _hoat_hinh.has_animation(ten):
+	if _hoat_hinh == null or not _hoat_hinh.has_animation(anim_name):
 		return
-	_anim_now = ten
-	_hoat_hinh.play(ten)
+	_anim_now = anim_name
+	_hoat_hinh.play(anim_name)

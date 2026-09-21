@@ -114,7 +114,7 @@ func _build_ui() -> void:
 	col.add_child(_lbl_counter)
 
 
-func _text(noi_dung: String, yes_text: int, color: Color, vien: int) -> Label:
+func _text(noi_dung: String, yes_text: int, color: Color, border: int) -> Label:
 	var l := Label.new()
 	l.text = noi_dung
 	l.add_theme_font_size_override("font_size", yes_text)
@@ -122,7 +122,7 @@ func _text(noi_dung: String, yes_text: int, color: Color, vien: int) -> Label:
 	# Viền đậm quanh chữ: chữ nằm đè lên cái bếp nhiều màu, không có viền thì
 	# đúng chỗ nào trùng màu là chỗ đó biến mất.
 	l.add_theme_color_override("font_outline_color", COLOR_OUTLINE)
-	l.add_theme_constant_override("outline_size", vien)
+	l.add_theme_constant_override("outline_size", border)
 	l.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	l.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	return l

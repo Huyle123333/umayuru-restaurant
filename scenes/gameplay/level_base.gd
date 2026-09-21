@@ -253,9 +253,9 @@ func _reveal_map_items() -> void:
 		station.build_carriable()
 
 
-func _find_stations(goc: Node) -> Array[Workstation]:
+func _find_stations(root: Node) -> Array[Workstation]:
 	var out: Array[Workstation] = []
-	for child in goc.get_children():
+	for child in root.get_children():
 		var t := child as Workstation
 		if t != null:
 			out.append(t)
@@ -463,7 +463,7 @@ func _skip_time() -> void:
 		_end_level("")
 
 
-func _end_level(ep_hang: String) -> void:
+func _end_level(rank: String) -> void:
 	# Chặn gọi hai lần: hết giờ và hướng dẫn xong về lý thuyết có thể trùng
 	# nhau, và hai tấm bảng chồng lên nhau thì cái dưới không bao giờ đóng.
 	if get_node_or_null("BangKetQua") != null:
@@ -485,10 +485,10 @@ func _end_level(ep_hang: String) -> void:
 		perfect = int(customers.perfect_orders)
 		leaving = int(customers.customers_lost)
 
-	var picker: Node = cls.new()
-	picker.name = "BangKetQua"
-	add_child(picker)
-	picker.show_results(money, done, perfect, leaving, ep_hang)
+	var results: Node = cls.new()
+	results.name = "BangKetQua"
+	add_child(results)
+	results.show_results(money, done, perfect, leaving, rank)
 
 
 ## Màn hình mở đầu: hiện tên màn, đếm ngược, rồi mới thả đồng hồ và khách vào.

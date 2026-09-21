@@ -144,16 +144,16 @@ func _build_ui() -> void:
 	image_col.add_child(label)
 
 	if ResourceLoader.exists(RIBBON_LABEL):
-		var vien := NinePatchRect.new()
-		vien.texture = load(RIBBON_LABEL)
+		var border := NinePatchRect.new()
+		border.texture = load(RIBBON_LABEL)
 		# Ảnh gốc 34×11: chừa 6 px hai đầu làm mép, phần giữa kéo dài ra.
-		vien.patch_margin_left = 6
-		vien.patch_margin_right = 6
-		vien.patch_margin_top = 3
-		vien.patch_margin_bottom = 3
-		vien.set_anchors_preset(Control.PRESET_FULL_RECT)
-		vien.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		label.add_child(vien)
+		border.patch_margin_left = 6
+		border.patch_margin_right = 6
+		border.patch_margin_top = 3
+		border.patch_margin_bottom = 3
+		border.set_anchors_preset(Control.PRESET_FULL_RECT)
+		border.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		label.add_child(border)
 
 	var label_text := Label.new()
 	label_text.text = "HƯỚNG DẪN"
@@ -192,16 +192,16 @@ func close() -> void:
 	_slide_to(_x_hidden())
 
 
-func _slide_to(dich: float) -> void:
+func _slide_to(dest: float) -> void:
 	var tween := create_tween().set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
-	tween.tween_property(_box, "position:x", dich, SLIDE_SECONDS)
+	tween.tween_property(_box, "position:x", dest, SLIDE_SECONDS)
 
 
 # -------------------------------------------------------------- nội build ---
 
 ## Đặt nội build một bước. `num` và `tong` để hiện "BƯỚC 3 / 10".
-func set_step(loi: String, num: int, tong: int) -> void:
-	_lbl_step.text = "BƯỚC %d / %d" % [num, tong]
+func set_step(loi: String, num: int, total: int) -> void:
+	_lbl_step.text = "BƯỚC %d / %d" % [num, total]
 	_lbl_line.text = loi
 	_hide_buttons()
 

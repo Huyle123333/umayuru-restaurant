@@ -76,13 +76,13 @@ var _learned_all := false
 ## Gắn vào màn chơi. Truyền thẳng các node cần nghe thay vì tự đi tìm trong
 ## cây scene: tìm bằng đường dẫn thì đổi tên một node là hỏng lặng lẽ, mà lỗi
 ## kiểu đó chỉ lộ ra khi chơi tới đúng bước dùng nó.
-func setup(nguoi_choi: Node3D, hands_node: Node, cooking: Node,
-		quan_ly_khach: Node, bang_gio: Node) -> void:
-	_player = nguoi_choi
-	_hands = hands_node
+func setup(player_node: Node3D, hands: Node, cooking: Node,
+		customers: Node, clock: Node) -> void:
+	_player = player_node
+	_hands = hands
 	_cooking = cooking
-	_customers = quan_ly_khach
-	_clock = bang_gio
+	_customers = customers
+	_clock = clock
 
 	_panel = GuidePanel.new()
 	_panel.name = "GuidePanel"
@@ -177,8 +177,8 @@ func _on_table_changed(table: Node) -> void:
 		_finish_step()
 
 
-func _on_order_finished(_don: RefCounted, ly_do: String) -> void:
-	if _wait_for == "serve" and ly_do == "xong":
+func _on_order_finished(_orders: RefCounted, reason: String) -> void:
+	if _wait_for == "serve" and reason == "served":
 		_finish_step()
 
 

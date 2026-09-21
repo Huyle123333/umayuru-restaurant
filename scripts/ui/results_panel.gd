@@ -44,7 +44,7 @@ func _ready() -> void:
 ##   money        — doanh thu lượt này
 ##   xong, hoan_hao, bo_di — thống kê
 ##   ep_hang     — ép cứng một hạng (màn hướng dẫn luôn là "S"). Rỗng = tự xếp.
-func show_results(money: int, xong: int, hoan_hao: int, bo_di: int,
+func show_results(money: int, served: int, perfect: int, left_angry: int,
 		ep_hang: String = "") -> void:
 	var level_id := ""
 	if get_node_or_null("/root/GameData") != null:
@@ -78,7 +78,7 @@ func show_results(money: int, xong: int, hoan_hao: int, bo_di: int,
 		if ep_hang.is_empty():
 			GameData.record_rank(level_id, money, row)
 
-	_build_ui(money, xong, hoan_hao, bo_di, row, old_record, place)
+	_build_ui(money, served, perfect, left_angry, row, old_record, place)
 
 	get_tree().paused = true
 	Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
@@ -107,7 +107,7 @@ func show_results(money: int, xong: int, hoan_hao: int, bo_di: int,
 
 # ------------------------------------------------------------ dựng hình ---
 
-func _build_ui(money: int, xong: int, hoan_hao: int, bo_di: int,
+func _build_ui(money: int, served: int, perfect: int, left_angry: int,
 		row: String, old_record: int, place: bool) -> void:
 	var bg := ColorRect.new()
 	bg.color = Color(0, 0, 0, 0.55)
@@ -202,11 +202,11 @@ func _build_ui(money: int, xong: int, hoan_hao: int, bo_di: int,
 	col.add_child(_divider())
 
 	# --- thống kê ---
-	col.add_child(_dong("Đơn đã phục vụ", str(xong)))
+	col.add_child(_row("Đơn đã phục vụ", str(served)))
 	# Chỉ hiện SỐ, không kèm "+35%": tỉ lệ thưởng nằm ở quan_ly_khach và có thể
 	# đổi, gõ lại ở đây là dựng thêm một nguồn sự thật thứ hai để sau này lệch.
-	col.add_child(_dong("Trong đó hoàn hảo", str(hoan_hao)))
-	col.add_child(_dong("Khách bỏ đi", str(bo_di)))
+	col.add_child(_row("Trong đó hoàn hảo", str(perfect)))
+	col.add_child(_row("Khách bỏ đi", str(left_angry)))
 
 	# Chưa đạt thì nói rõ còn thiếu bao nhiêu. Chỉ hiện "CHƯA ĐẠT" mà không nói
 	# thiếu gì thì người chơi không biết lần sau phải cố thêm bao nhiêu.
@@ -239,7 +239,7 @@ func _build_ui(money: int, xong: int, hoan_hao: int, bo_di: int,
 	again.grab_focus()
 
 
-func _dong(label: String, gia_tri: String) -> HBoxContainer:
+func _row(label: String, gia_tri: String) -> HBoxContainer:
 	var h := HBoxContainer.new()
 	var a := Label.new()
 	a.text = label

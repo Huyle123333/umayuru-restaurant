@@ -181,9 +181,9 @@ func _draw_table_no() -> void:
 	if order == null or _lbl_number == null:
 		return
 	var num := int(order.table_number())
-	var chu := NO_TABLE_YET if num <= 0 else str(num)
-	if _lbl_number.text != chu:
-		_lbl_number.text = chu
+	var text_ := NO_TABLE_YET if num <= 0 else str(num)
+	if _lbl_number.text != text_:
+		_lbl_number.text = text_
 
 
 ## Thanh kiên nhẫn.

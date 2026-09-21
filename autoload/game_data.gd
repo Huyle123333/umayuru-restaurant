@@ -194,7 +194,7 @@ const CHARACTERS := {
 		"player": "res://scenes/characters/player_kitamoi.tscn",
 		"skills": [
 			{"name": "Victory Cheer!", "level": 18, "desc": "Điều kiện: Hoàn thành 5 đơn hoàn hảo.
-			Trong thời gian còn lại của màn chơi, mọi đơn giao ra đều được tính là hoàn hảo bất kể thanh kiên nhẫn.", "icon": "mac_dinh"},
+			Trong thời gian còn lại của màn chơi, mọi đơn giao out đều được tính là hoàn hảo bất kể thanh kiên nhẫn.", "icon": "mac_dinh"},
 			{"name": "Kiên nhẫn là một đức tính", "level": 0, "desc": "Thời gian kiên nhẫn của khách hàng +30%.", "icon": "skill2"},
 			{"name": "Dòng tiền mờ ám", "level": 0, "desc": "Tiền thưởng từ đơn hoàn hảo +20% (35% → 55%). Đổi lại: món ăn trên bếp hỏng sớm hơn 2 giây.", "icon": "skill3"},
 		],
@@ -496,11 +496,11 @@ func card_info(id: String) -> Dictionary:
 	for i in secrets.size():
 		secrets[i] = MASK_STRING
 	masked["sizes"] = ["??", "??", "??"]
-	for o in masked["skills"]:
-		o["name"] = MASK_STRING
-		o["level"] = 0
-		o["desc"] = MASK_STRING
-		o["icon"] = ""
+	for slot in masked["skills"]:
+		slot["name"] = MASK_STRING
+		slot["level"] = 0
+		slot["desc"] = MASK_STRING
+		slot["icon"] = ""
 	return masked
 
 
@@ -790,10 +790,10 @@ func level_name(id: String) -> String:
 		return "HƯỚNG DẪN"
 	if not DAY_NAMES.has(id):
 		return String(LEVELS.get(id, {}).get("label", "")).to_upper()
-	var day: String = DAY_NAMES[id]
+	var day_label: String = DAY_NAMES[id]
 	if not SHOW_EVENING:
-		return day
-	return "%s · %s" % [day, String(LEVELS[id].get("label", "")).to_upper()]
+		return day_label
+	return "%s · %s" % [day_label, String(LEVELS[id].get("label", "")).to_upper()]
 
 
 func get_best_money(id: String) -> int:

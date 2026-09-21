@@ -14,11 +14,11 @@ signal customer_ate(customer: Node, table: Node, id_mon: String)
 signal customer_left(customer: Node)
 
 ## Một đơn vừa sinh ra (khách đã ngồi vào bàn và gọi món).
-signal order_created(don: Order)
+signal order_created(order_: Order)
 ## Một đơn kết thúc. ly_do: "xong" (giao đúng) hoặc "bo_di" (hết kiên nhẫn).
-signal order_finished(don: Order, ly_do: String)
+signal order_finished(order_: Order, reason: String)
 ## Ví thay đổi. `cho` là chỗ vừa xảy ra việc, để bắn hiệu ứng tiền bay lên.
-signal money_changed(tong: int, them: int, cho: Vector3)
+signal money_changed(total: int, them: int, spot: Vector3)
 
 const CUSTOMER_SCENE := preload("res://scenes/nha_hang/khach.tscn")
 const ItemCatalog := preload("res://scripts/interaction/item_catalog.gd")
@@ -167,7 +167,7 @@ var orders_done: int = 0
 var perfect_orders: int = 0
 var customers_lost: int = 0
 
-var _don: Dictionary = {}       # customer -> Order
+var _orders: Dictionary = {}       # customer -> Order
 var _spawn_timer: float = 0.0
 
 var _map: Node3D
@@ -205,10 +205,10 @@ func setup(map: Node3D) -> void:
 	_spawn_timer = first_wait
 
 
-func _pick_spawn(ten: String) -> Marker3D:
+func _pick_spawn(marker_name: String) -> Marker3D:
 	if _spawn_points == null:
 		return null
-	return _spawn_points.get_node_or_null(ten) as Marker3D
+	return _spawn_points.get_node_or_null(marker_name) as Marker3D
 
 
 # ------------------------------------------------------- vùng đi lại (navmesh)
@@ -257,37 +257,37 @@ func _bake_navmesh() -> void:
 		_map.add_to_group(SOURCE_GROUP)
 	_build_blockers()
 
-	var luoi := NavigationMesh.new()
+	var mesh_ := NavigationMesh.new()
 	# Ba con số này phải là BỘI SỐ của ô lưới, và ô lưới phải TRÙNG với ô lưới
 	# của bản đồ điều hướng (mặc định project là 0,25). Lệch thì Godot cảnh báo
 	# "cell_size mismatch" và mép navmesh bị rasterize sai; còn agent_radius /
 	# agent_max_climb không tròn ô thì bị làm tròn và giá trị thật khác hẳn giá
 	# trị mình gõ.
-	luoi.cell_size = 0.25
-	luoi.cell_height = 0.25
+	mesh_.cell_size = 0.25
+	mesh_.cell_height = 0.25
 	# 0,5 = đúng 2 ô, và vẫn lớn hơn bán kính người khách 0,45 nên navmesh co
 	# khỏi mọi vật cản đủ để khách không cọ vào mép bàn rồi kẹt.
-	luoi.agent_radius = 0.5
-	luoi.agent_height = 1.5
-	luoi.agent_max_climb = 0.25
-	luoi.agent_max_slope = 45.0
+	mesh_.agent_radius = 0.5
+	mesh_.agent_height = 1.5
+	mesh_.agent_max_climb = 0.25
+	mesh_.agent_max_slope = 45.0
 	# Đọc HÌNH VA CHẠM chứ không đọc mesh hiển thị: trong map này bàn ghế tường
 	# đều là StaticBody3D + CollisionShape3D, còn mesh gltf chỉ để nhìn. Đọc
 	# mesh thì mấy thứ trang trí không có va chạm cũng chắn đường.
-	luoi.geometry_parsed_geometry_type = NavigationMesh.PARSED_GEOMETRY_STATIC_COLLIDERS
-	luoi.geometry_collision_mask = 1 | NAV_BLOCK_LAYER
-	luoi.geometry_source_geometry_mode = NavigationMesh.SOURCE_GEOMETRY_GROUPS_WITH_CHILDREN
-	luoi.geometry_source_group_name = SOURCE_GROUP
+	mesh_.geometry_parsed_geometry_type = NavigationMesh.PARSED_GEOMETRY_STATIC_COLLIDERS
+	mesh_.geometry_collision_mask = 1 | NAV_BLOCK_LAYER
+	mesh_.geometry_source_geometry_mode = NavigationMesh.SOURCE_GEOMETRY_GROUPS_WITH_CHILDREN
+	mesh_.geometry_source_group_name = SOURCE_GROUP
 
-	var vung := NavigationRegion3D.new()
-	vung.name = "VungKhach"
-	vung.navigation_mesh = luoi
-	_map.add_child(vung)
-	_nav_region.append(vung)
+	var region := NavigationRegion3D.new()
+	region.name = "VungKhach"
+	region.navigation_mesh = mesh_
+	_map.add_child(region)
+	_nav_region.append(region)
 	# Nướng đồng bộ: màn chơi chưa bắt đầu nên một nhịp khựng ở đây không ai
 	# thấy, đổi lại khách đầu tiên chắc chắn có đường để đi.
-	vung.bake_navigation_mesh(false)
-	_measure_height_offset(luoi)
+	region.bake_navigation_mesh(false)
+	_measure_height_offset(mesh_)
 
 
 ## Tấm chắn vô hình bịt hai lối vào bếp.
@@ -308,11 +308,11 @@ func _build_blockers() -> void:
 		than.name = "ChanNav"
 		than.collision_layer = NAV_BLOCK_LAYER
 		than.collision_mask = 0
-		var hinh := CollisionShape3D.new()
-		var hop := BoxShape3D.new()
-		hop.size = (c[1] as Vector3) * 2.0
-		hinh.shape = hop
-		than.add_child(hinh)
+		var shape := CollisionShape3D.new()
+		var box := BoxShape3D.new()
+		box.size = (c[1] as Vector3) * 2.0
+		shape.shape = box
+		than.add_child(shape)
 		_map.add_child(than)
 		than.global_position = c[0]
 
@@ -327,12 +327,12 @@ func _build_blockers() -> void:
 ##
 ## Đọc đỉnh của chính cái NavigationMesh thì không phụ thuộc server, không phụ
 ## thuộc thời điểm, và là dữ liệu gốc chứ không phải kết quả suy ra.
-func _measure_height_offset(luoi: NavigationMesh) -> void:
-	var dinh := luoi.get_vertices()
-	if dinh.is_empty():
+func _measure_height_offset(mesh_: NavigationMesh) -> void:
+	var verts := mesh_.get_vertices()
+	if verts.is_empty():
 		return
 	# Sàn phẳng nên mọi đỉnh cùng cao độ; lấy đỉnh đầu là đủ.
-	_height_offset = dinh[0].y
+	_height_offset = verts[0].y
 
 
 ## Chờ NavigationServer đồng bộ xong bản đồ.
@@ -346,8 +346,8 @@ func _measure_height_offset(luoi: NavigationMesh) -> void:
 ## cần đợi phụ thuộc thời điểm gọi trong khung hình, đoán bao nhiêu cũng có
 ## ngày trượt.
 func is_ready() -> void:
-	var ban_do := _map.get_world_3d().navigation_map
-	while NavigationServer3D.map_get_iteration_id(ban_do) == 0:
+	var nav_map := _map.get_world_3d().navigation_map
+	while NavigationServer3D.map_get_iteration_id(nav_map) == 0:
 		await get_tree().physics_frame
 
 
@@ -362,10 +362,10 @@ func navmesh_height_offset() -> float:
 
 
 func nav_stats() -> Array:
-	var ra := []
+	var out := []
 	for v in _nav_region:
-		ra.append({"ten": v.name, "da_giac": v.navigation_mesh.get_polygon_count()})
-	return ra
+		out.append({"ten": v.name, "da_giac": v.navigation_mesh.get_polygon_count()})
+	return out
 
 
 # --------------------------------------------------------------- vòng đời khách
@@ -374,8 +374,8 @@ func spawn_customer() -> Node:
 	if _door == null or _queue.is_empty():
 		push_warning("Map thiếu Moc/CuaVao hoặc Moc/HangDoi1 — không sinh khách được.")
 		return null
-	var o := _free_seat()
-	if o == -1:
+	var slot := _free_seat()
+	if slot == -1:
 		return null
 
 	var k := CUSTOMER_SCENE.instantiate()
@@ -392,10 +392,10 @@ func spawn_customer() -> Node:
 	k.arrived.connect(_on_arrived)
 	k.ate.connect(_on_ate)
 
-	_in_queue[o] = k
-	k.set_meta("in_queue", o)
+	_in_queue[slot] = k
+	k.set_meta("in_queue", slot)
 	AmThanh.play_sfx("customer_in")
-	k.go_to(_queue[o].global_position, "hang")
+	k.go_to(_queue[slot].global_position, "hang")
 	return k
 
 
@@ -438,16 +438,16 @@ func _process(delta: float) -> void:
 		return
 	# Duyệt trên BẢN SAO danh sách: _leave_angry() xoá phần tử khỏi _don ngay
 	# trong vòng lặp, mà sửa Dictionary đang duyệt thì Godot bỏ sót phần tử.
-	for don in _don.values().duplicate():
+	for order_ in _orders.values().duplicate():
 		# Khai kiểu tường minh: `don` lấy từ Dictionary nên kiểu tĩnh là Variant,
 		# `:=` không suy được kiểu trả về và Godot báo lỗi biên dịch.
-		var het: bool = don.tick(delta)
+		var het: bool = order_.tick(delta)
 		# Vẽ thanh chờ trên đầu người đang xếp hàng. Chỉ giai đoạn hàng đợi mới
 		# vẽ ở đây; ngồi vào bàn rồi thì tấm vé trên HUD lo phần đó.
-		if don.in_queue and is_instance_valid(don.customer):
-			don.customer.set_patience_bar(don.patience_ratio())
+		if order_.in_queue and is_instance_valid(order_.customer):
+			order_.customer.set_patience_bar(order_.patience_ratio())
 		if het:
-			_leave_angry(don)
+			_leave_angry(order_)
 
 
 func _on_arrived(customer: Node, viec: String) -> void:
@@ -472,9 +472,9 @@ func _on_arrived(customer: Node, viec: String) -> void:
 			# Quay mặt vào tâm bàn.
 			# Khai kiểu tường minh: `table` lấy từ Dictionary nên kiểu tĩnh là
 			# Variant, `:=` không suy được kiểu và Godot báo lỗi biên dịch.
-			var huong: Vector3 = table.global_position - customer.global_position
-			huong.y = 0.0
-			customer.stop_moving(huong.normalized())
+			var dir_: Vector3 = table.global_position - customer.global_position
+			dir_.y = 0.0
+			customer.stop_moving(dir_.normalized())
 			customer_seated.emit(customer, table)
 			_seat_at_table(customer, table)
 		"ve":
@@ -492,9 +492,9 @@ func _try_seat(customer: Node) -> void:
 	if table == null:
 		return
 
-	var o: int = int(customer.get_meta("in_queue", -1))
-	if o >= 0:
-		_in_queue[o] = null
+	var slot: int = int(customer.get_meta("in_queue", -1))
+	if slot >= 0:
+		_in_queue[slot] = null
 	customer.remove_meta("in_queue")
 
 	_table_of[customer] = table
@@ -504,9 +504,9 @@ func _try_seat(customer: Node) -> void:
 	# Quãng đường từ cửa tới bàn xa nhất là 33 đơn vị, đi mất hơn mười giây —
 	# để đồng hồ chạy tiếp thì có khách đã được xếp bàn vẫn bỏ đi giữa đường,
 	# và người chơi không hiểu vì sao vì họ đã thấy khách được gọi vào rồi.
-	var don: Order = _don.get(customer)
-	if don != null:
-		don.draining = false
+	var order_: Order = _orders.get(customer)
+	if order_ != null:
+		order_.draining = false
 
 	customer.go_to((table.seat_marker(0) as Marker3D).global_position, "table")
 	_shift_queue()
@@ -518,18 +518,18 @@ func _shift_queue() -> void:
 		var k = _in_queue[i]
 		if k == null:
 			continue
-		var truoc := i - 1
-		if _in_queue[truoc] != null:
+		var before := i - 1
+		if _in_queue[before] != null:
 			continue
-		_in_queue[truoc] = k
+		_in_queue[before] = k
 		_in_queue[i] = null
-		k.set_meta("in_queue", truoc)
+		k.set_meta("in_queue", before)
 		# Vừa nhích lên đầu hàng -> đơn lên bảng NGAY, không đợi đi tới nơi.
 		# Người chơi nhìn bảng chứ không nhìn chân khách, nên sớm vài giây ở
 		# đây chính là vài giây họ dùng để bắc nồi trước.
-		if truoc == 0:
+		if before == 0:
 			_push_to_board(k)
-		k.go_to(_queue[truoc].global_position, "hang")
+		k.go_to(_queue[before].global_position, "hang")
 
 
 func _empty_table():
@@ -543,13 +543,13 @@ func _empty_table():
 			if int(b.table_number) == force_table and not _customer_at.has(b):
 				return b
 		return null
-	var rong := []
+	var free := []
 	for b in _tables:
 		if not _customer_at.has(b):
-			rong.append(b)
-	if rong.is_empty():
+			free.append(b)
+	if free.is_empty():
 		return null
-	return rong.pick_random()
+	return free.pick_random()
 
 
 ## Bàn nhận được món. Chỉ người đang ngồi ở CHÍNH bàn đó mới ăn.
@@ -557,8 +557,8 @@ func _on_dish_delivered(table: Node, id_mon: String) -> void:
 	var customer = _customer_at.get(table)
 	if customer == null:
 		return
-	var don: Order = _don.get(customer)
-	if don == null:
+	var order_: Order = _orders.get(customer)
+	if order_ == null:
 		return
 
 	# GIAO NHẦM MÓN: không làm gì cả.
@@ -569,7 +569,7 @@ func _on_dish_delivered(table: Node, id_mon: String) -> void:
 	# tiền đắt nhất. Tịch thu cả món lẫn đơn thì một lần bấm nhầm lúc vội đủ
 	# làm hỏng cả màn, và người chơi học được điều sai: "đừng vội" thay vì
 	# "nhìn vé trước khi bê".
-	if id_mon != don.dish:
+	if id_mon != order_.dish:
 		return
 
 	# Chốt tiền NGAY LÚC GIAO, trả vào ví lúc khách ăn xong.
@@ -577,14 +577,14 @@ func _on_dish_delivered(table: Node, id_mon: String) -> void:
 	# Phải chốt ở đây vì "hoàn hảo" đo bằng kiên nhẫn còn lại, mà trong 5 giây
 	# ngồi ăn thì thanh đó vẫn đang chạy. Tính lúc ăn xong thì mọi đơn đều
 	# thành không hoàn hảo, và cái thưởng 20% coi như không tồn tại.
-	don.draining = false
-	don.was_perfect = force_perfect or don.is_perfect()
-	don.payout = don.price
-	if don.was_perfect:
-		don.payout = int(round(don.price * (1.0 + perfect_bonus)))
+	order_.draining = false
+	order_.was_perfect = force_perfect or order_.is_perfect()
+	order_.payout = order_.price
+	if order_.was_perfect:
+		order_.payout = int(round(order_.price * (1.0 + perfect_bonus)))
 
 	orders_done += 1
-	if don.was_perfect:
+	if order_.was_perfect:
 		perfect_orders += 1
 		# Chồng LÊN TRÊN tiếng giao món, không thay thế: người chơi vẫn nghe
 		# tiếng giao quen thuộc, cộng thêm một tiếng nữa báo "lần này hoàn hảo".
@@ -592,7 +592,7 @@ func _on_dish_delivered(table: Node, id_mon: String) -> void:
 
 	customer.set_meta("dish", id_mon)
 	customer.eat(eat_seconds)
-	order_finished.emit(don, "xong")
+	order_finished.emit(order_, "served")
 
 
 func _on_ate(customer: Node) -> void:
@@ -601,16 +601,16 @@ func _on_ate(customer: Node) -> void:
 	if table != null:
 		table.clear_all()
 		table.clear_model()
-	var don: Order = _don.get(customer)
-	if don != null:
-		_don.erase(customer)
-		if don.payout > 0:
-			money += don.payout
-			var cho: Vector3 = table.global_position if table != null \
+	var order_: Order = _orders.get(customer)
+	if order_ != null:
+		_orders.erase(customer)
+		if order_.payout > 0:
+			money += order_.payout
+			var spot: Vector3 = table.global_position if table != null \
 				else customer.global_position
-			money_changed.emit(money, don.payout, cho)
+			money_changed.emit(money, order_.payout, spot)
 			AmThanh.play_sfx("coin")
-			_money_popup(cho, don.payout, don.was_perfect)
+			_money_popup(spot, order_.payout, order_.was_perfect)
 
 	customer_ate.emit(customer, table, id_mon)
 	if _door != null:
@@ -623,17 +623,17 @@ func _clear_customer(customer: Node) -> void:
 	if table != null:
 		_customer_at.erase(table)
 		_table_of.erase(customer)
-	var o: int = int(customer.get_meta("in_queue", -1))
-	if o >= 0 and o < _in_queue.size() and _in_queue[o] == customer:
-		_in_queue[o] = null
+	var slot: int = int(customer.get_meta("in_queue", -1))
+	if slot >= 0 and slot < _in_queue.size() and _in_queue[slot] == customer:
+		_in_queue[slot] = null
 		_shift_queue()
 	# Lưới eat toàn: nếu vì lý do nào đó người khách biến mất khi đơn còn treo
 	# (đổi màn, gọi don_khach thẳng tay), cái vé phải đi theo. Đơn mồ côi thì
 	# vé nằm lại trên HUD vĩnh viễn và trỏ vào một node đã bị xoá.
-	var don: Order = _don.get(customer)
-	if don != null:
-		_don.erase(customer)
-		order_finished.emit(don, "bo_di")
+	var order_: Order = _orders.get(customer)
+	if order_ != null:
+		_orders.erase(customer)
+		order_finished.emit(order_, "left")
 
 	customer_left.emit(customer)
 	customer.queue_free()
@@ -651,29 +651,29 @@ func _clear_customer(customer: Node) -> void:
 ## thực đơn, còn khoá một món (như cả nhóm món nồi hiện giờ) là khách tự động
 ## thôi gọi — không có chỗ thứ hai để quên cập nhật.
 func _place_order(customer: Node) -> void:
-	if _don.has(customer):
+	if _orders.has(customer):
 		return
 	var mon_co_the := _actual_menu()
 	if mon_co_the.is_empty():
 		push_warning("Thực đơn rỗng — không món nào có giá trong DanhMuc.")
 		return
 
-	var chon := _pick_dish(mon_co_the)
+	var picked := _pick_dish(mon_co_the)
 	# Chỉ ép khi món đó THẬT SỰ bán được. Gõ nhầm tên món vào ô ép thì quay về
 	# ngẫu nhiên chứ không sinh ra một đơn không bao giờ giao được.
 	if not force_dish.is_empty() and mon_co_the.has(force_dish):
-		chon = force_dish
+		picked = force_dish
 
-	var don := Order.new(customer, chon)
+	var order_ := Order.new(customer, picked)
 	# Gán hệ số TRƯỚC wait_in_queue(): hàm đó chốt ngân sách kiên nhẫn ngay tại chỗ.
-	don.patience_factor = patience_factor
-	don.wait_in_queue(queue_patience)
-	don.draining = drain_patience
-	_don[customer] = don
+	order_.patience_factor = patience_factor
+	order_.wait_in_queue(queue_patience)
+	order_.draining = drain_patience
+	_orders[customer] = order_
 
 	# Bong bóng trên đầu. Vé ở HUD do `_push_to_board()` lo, và chỉ cho
 	# người ĐỨNG ĐẦU HÀNG — xem giải thích ở hàm đó.
-	customer.show_order(_dish_icon(don.dish))
+	customer.show_order(_dish_icon(order_.dish))
 
 
 ## Đẩy đơn của một người lên BẢNG ĐƠN HÀNG (phím 1), nếu chưa có.
@@ -690,9 +690,9 @@ func _place_order(customer: Node) -> void:
 ## (`them()` kiểm tra `_ve.has(don)`), nên lúc người này ngồi vào bàn và
 ## `_seat_at_table()` phát lần nữa thì không sinh vé thứ hai.
 func _push_to_board(customer: Node) -> void:
-	var don: Order = _don.get(customer)
-	if don != null:
-		order_created.emit(don)
+	var order_: Order = _orders.get(customer)
+	if order_ != null:
+		order_created.emit(order_)
 
 
 ## Thực đơn thật sự dùng để bốc món.
@@ -703,22 +703,22 @@ func _push_to_board(customer: Node) -> void:
 ## khi hết kiên nhẫn. Lỗi kiểu này không có thông báo nào và rất khó nhìn ra
 ## khi đang chơi — nên chặn ngay ở đây, kèm cảnh báo chỉ đúng tên món sai.
 func _actual_menu() -> Array[String]:
-	var day_du := ItemCatalog.sellable_dishes()
+	var full := ItemCatalog.sellable_dishes()
 	if menu.is_empty():
-		return day_du
+		return full
 
-	var ra: Array[String] = []
+	var out: Array[String] = []
 	for m in menu:
 		var id := String(m)
-		if day_du.has(id):
-			ra.append(id)
+		if full.has(id):
+			out.append(id)
 		else:
 			push_warning("Thực đơn màn có món '%s' không bán được — bỏ qua." % id)
 
-	if ra.is_empty():
+	if out.is_empty():
 		push_warning("Thực đơn màn lọc xong thành rỗng — dùng cả danh mục.")
-		return day_du
-	return ra
+		return full
+	return out
 
 
 ## Bốc một món theo trọng số.
@@ -728,40 +728,40 @@ func _actual_menu() -> Array[String]:
 ## theo trọng số, và quan trọng hơn là nhận được trọng số THẬP PHÂN — sau này
 ## muốn chỉnh "hamburger hiếm hơn steak một chút" thì đổi 3 thành 2.5, không
 ## phải nhân cả bảng lên mười lần.
-func _pick_dish(ds: Array[String]) -> String:
-	var tong := 0.0
-	for id in ds:
-		tong += maxf(0.0, float(weights.get(id, 1)))
+func _pick_dish(list_: Array[String]) -> String:
+	var total := 0.0
+	for id in list_:
+		total += maxf(0.0, float(weights.get(id, 1)))
 	# Không có trọng số nào (hoặc toàn số 0): quay về bốc đều.
-	if tong <= 0.0:
-		return String(ds.pick_random())
+	if total <= 0.0:
+		return String(list_.pick_random())
 
-	var moc := randf() * tong
-	for id in ds:
-		moc -= maxf(0.0, float(weights.get(id, 1)))
-		if moc <= 0.0:
+	var pick := randf() * total
+	for id in list_:
+		pick -= maxf(0.0, float(weights.get(id, 1)))
+		if pick <= 0.0:
 			return id
 	# Lưới eat toàn cho sai số dấu phẩy động: randf() trả về gần đúng 1.0 thì
 	# vòng trên có thể chạy hết mà chưa chạm 0.
-	return ds[ds.size() - 1]
+	return list_[list_.size() - 1]
 
 
 ## Khách đã tới bàn: tắt bong bóng, nạp đầy kiên nhẫn, bật vé trên HUD.
 func _seat_at_table(customer: Node, table: Node) -> void:
-	var don: Order = _don.get(customer)
-	if don == null:
+	var order_: Order = _orders.get(customer)
+	if order_ == null:
 		# Lưới eat toàn: nếu vì lý do nào đó khách tới bàn mà chưa có đơn (bị
 		# gọi thẳng spawn_customer rồi ép ngồi trong lúc thử), vẫn tạo đơn để bàn
 		# không kẹt vĩnh viễn với một người không bao giờ gọi món.
 		_place_order(customer)
-		don = _don.get(customer)
-		if don == null:
+		order_ = _orders.get(customer)
+		if order_ == null:
 			return
 
 	customer.hide_order()
-	don.sit_at_table(table)
-	don.draining = drain_patience
-	order_created.emit(don)
+	order_.sit_at_table(table)
+	order_.draining = drain_patience
+	order_created.emit(order_)
 
 
 ## Ảnh 2D của một món, hoặc null nếu thiếu file.
@@ -770,11 +770,11 @@ func _seat_at_table(customer: Node, table: Node) -> void:
 ## chỉ mất cái hình trong bong bóng, còn cả màn chơi vẫn chạy. Ảnh món là thứ
 ## đang được vẽ dần, nên thiếu là chuyện bình thường trong lúc làm.
 func _dish_icon(id: String) -> Texture2D:
-	var dd := ItemCatalog.icon_path(id)
-	if not ResourceLoader.exists(dd):
-		push_warning("Bong bóng đơn: thiếu ảnh %s" % dd)
+	var icon_file := ItemCatalog.icon_path(id)
+	if not ResourceLoader.exists(icon_file):
+		push_warning("Bong bóng đơn: thiếu ảnh %s" % icon_file)
 		return null
-	return load(dd) as Texture2D
+	return load(icon_file) as Texture2D
 
 
 ## Hết kiên nhẫn: cáu, bỏ đơn, ĐỢI DIỄN XONG rồi mới đi ra cửa.
@@ -793,12 +793,12 @@ func _dish_icon(id: String) -> Texture2D:
 ## nó chạy tới chỗ await rồi trả quyền về ngay, nên vòng đếm kiên nhẫn không
 ## bị khựng lại 2 giây. Đơn đã bị xoá khỏi `_don` TRƯỚC khi chờ, nên trong lúc
 ## chờ không có nguy cơ hàm này bị gọi lần hai cho cùng một người.
-func _leave_angry(don: Order) -> void:
-	var customer: Node = don.customer
-	_don.erase(customer)
+func _leave_angry(order_: Order) -> void:
+	var customer: Node = order_.customer
+	_orders.erase(customer)
 	customers_lost += 1
 	AmThanh.play_sfx("customer_out")
-	order_finished.emit(don, "bo_di")
+	order_finished.emit(order_, "left")
 	if not is_instance_valid(customer):
 		return
 
@@ -809,9 +809,9 @@ func _leave_angry(don: Order) -> void:
 	# lại gọi chính họ vào bàn — một người đã cáu bỏ đi bỗng quay lại ngồi
 	# xuống và gọi món mới. Dòng meta này chỉ có ở người đang xếp hàng, nên
 	# khách đang ngồi bàn không bị đụng tới.
-	var o: int = int(customer.get_meta("in_queue", -1))
-	if o >= 0 and o < _in_queue.size() and _in_queue[o] == customer:
-		_in_queue[o] = null
+	var slot: int = int(customer.get_meta("in_queue", -1))
+	if slot >= 0 and slot < _in_queue.size() and _in_queue[slot] == customer:
+		_in_queue[slot] = null
 		customer.remove_meta("in_queue")
 		_shift_queue()
 
@@ -834,12 +834,12 @@ func _leave_angry(don: Order) -> void:
 ## CHỖ vừa xảy ra việc tốt, nếu không người chơi phải tự nối "tôi vừa làm gì"
 ## với "con số ở góc màn hình vừa nhảy". Ở góc còn có ví tiền nảy lên một cái
 ## nữa — hai phản hồi, một ngay tại chỗ, một ở nơi lưu tổng.
-func _money_popup(cho: Vector3, so: int, is_perfect: bool) -> void:
+func _money_popup(spot: Vector3, amount: int, is_perfect: bool) -> void:
 	if _map == null:
 		return
-	var goc := Node3D.new()
-	goc.position = cho + Vector3(0.0, 1.9, 0.0)
-	_map.add_child(goc)
+	var anchor := Node3D.new()
+	anchor.position = spot + Vector3(0.0, 1.9, 0.0)
+	_map.add_child(anchor)
 
 	var icon: Sprite3D = null
 	if ResourceLoader.exists(COIN_ICON):
@@ -849,29 +849,29 @@ func _money_popup(cho: Vector3, so: int, is_perfect: bool) -> void:
 		icon.billboard = BaseMaterial3D.BILLBOARD_ENABLED
 		icon.no_depth_test = true
 		icon.position.x = -0.28
-		goc.add_child(icon)
+		anchor.add_child(icon)
 
-	var chu := Label3D.new()
-	chu.text = "+%d" % so
-	chu.font_size = 128
-	chu.pixel_size = 0.0028
-	chu.billboard = BaseMaterial3D.BILLBOARD_ENABLED
-	chu.no_depth_test = true
-	chu.outline_size = 28
-	chu.modulate = Color("ffd76a") if is_perfect else Color("d8f0c8")
-	chu.position.x = 0.22
-	goc.add_child(chu)
+	var text_ := Label3D.new()
+	text_.text = "+%d" % amount
+	text_.font_size = 128
+	text_.pixel_size = 0.0028
+	text_.billboard = BaseMaterial3D.BILLBOARD_ENABLED
+	text_.no_depth_test = true
+	text_.outline_size = 28
+	text_.modulate = Color("ffd76a") if is_perfect else Color("d8f0c8")
+	text_.position.x = 0.22
+	anchor.add_child(text_)
 
 	# Bay lên 0,9 đơn vị rồi mờ dần. Mờ CHẬM HƠN lúc bay: biến mất cùng lúc
 	# với lúc dừng thì con số như bị cắt ngang, còn mờ nốt ở đỉnh thì mắt kịp
 	# đọc xong rồi mới mất.
 	var tw := create_tween().set_parallel(true)
-	tw.tween_property(goc, "position:y", goc.position.y + 0.9, 1.2) \
+	tw.tween_property(anchor, "position:y", anchor.position.y + 0.9, 1.2) \
 		.set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
-	tw.tween_property(chu, "modulate:a", 0.0, 0.5).set_delay(0.7)
+	tw.tween_property(text_, "modulate:a", 0.0, 0.5).set_delay(0.7)
 	if icon != null:
 		tw.tween_property(icon, "modulate:a", 0.0, 0.5).set_delay(0.7)
-	tw.finished.connect(goc.queue_free)
+	tw.finished.connect(anchor.queue_free)
 
 
 ## Đóng cửa: ngừng sinh khách và ngừng đếm kiên nhẫn.
@@ -885,5 +885,5 @@ func _money_popup(cho: Vector3, so: int, is_perfect: bool) -> void:
 func close_shop() -> void:
 	auto_spawn = false
 	drain_patience = false
-	for don in _don.values():
-		don.draining = false
+	for order_ in _orders.values():
+		order_.draining = false

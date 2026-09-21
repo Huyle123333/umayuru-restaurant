@@ -171,8 +171,8 @@ func listen_to_orders(ql: Node) -> void:
 		ql.money_changed.connect(_on_money_changed)
 
 
-func _on_money_changed(tong: int, _them: int, _cho: Vector3) -> void:
-	money = tong
+func _on_money_changed(total: int, _them: int, _cho: Vector3) -> void:
+	money = total
 	_draw_money()
 	# Nảy nhẹ con số: phần thưởng phải có phản hồi, nhưng ở góc màn hình thì
 	# một cú nảy 1,15 lần trong 0,18 giây là đủ thấy mà không kéo mắt khỏi bếp.

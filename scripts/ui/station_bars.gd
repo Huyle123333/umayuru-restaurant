@@ -81,11 +81,11 @@ func listen_to_cooking(he: Node) -> void:
 	he.burn_warning.connect(_on_burn_warning)
 
 
-func _on_cooking(station: Node, ti_le: float) -> void:
-	if ti_le <= 0.0:
+func _on_cooking(station: Node, ratio: float) -> void:
+	if ratio <= 0.0:
 		_drop_bar(station)
 		return
-	_set_bar(station, ti_le, false)
+	_set_bar(station, ratio, false)
 
 
 func _on_burn_warning(station: Node, time_left: float) -> void:
@@ -95,19 +95,19 @@ func _on_burn_warning(station: Node, time_left: float) -> void:
 	_set_bar(station, time_left, true)
 
 
-func _set_bar(station: Node, ti_le: float, dang_cho_chay: bool) -> void:
+func _set_bar(station: Node, ratio: float, burn_warning_: bool) -> void:
 	var entry: Dictionary = _cells.get(station, {})
 	if entry.is_empty():
 		entry = _make_bar()
 		_cells[station] = entry
 	var bar: ProgressBar = entry["bar"]
-	bar.value = ti_le
-	if bool(entry["chay"]) != dang_cho_chay:
-		entry["chay"] = dang_cho_chay
-		(entry["day"] as StyleBoxFlat).bg_color = COLOR_BURN if dang_cho_chay else COLOR_COOK
+	bar.value = ratio
+	if bool(entry["chay"]) != burn_warning_:
+		entry["chay"] = burn_warning_
+		(entry["day"] as StyleBoxFlat).bg_color = COLOR_BURN if burn_warning_ else COLOR_COOK
 	# Nhấp nháy khi sắp cháy. Chỉ ở giai đoạn cháy, và chỉ khi đã gần hết —
 	# nhấp nháy suốt thì mắt quen và thôi để ý, đúng lúc cần để ý nhất.
-	if dang_cho_chay and ti_le < BLINK_THRESHOLD:
+	if burn_warning_ and ratio < BLINK_THRESHOLD:
 		bar.modulate.a = 0.45 + 0.55 * absf(sin(Time.get_ticks_msec() * 0.008))
 	else:
 		bar.modulate.a = 1.0
@@ -132,13 +132,13 @@ func _make_bar() -> Dictionary:
 	var bg := StyleBoxFlat.new()
 	bg.bg_color = COLOR_BG
 	bg.set_corner_radius_all(5)
-	var day := StyleBoxFlat.new()
-	day.bg_color = COLOR_COOK
-	day.set_corner_radius_all(5)
+	var fill := StyleBoxFlat.new()
+	fill.bg_color = COLOR_COOK
+	fill.set_corner_radius_all(5)
 	t.add_theme_stylebox_override("background", bg)
-	t.add_theme_stylebox_override("fill", day)
+	t.add_theme_stylebox_override("fill", fill)
 	add_child(t)
-	return {"bar": t, "day": day, "chay": false}
+	return {"bar": t, "day": fill, "chay": false}
 
 
 ## Đặt lại vị trí mọi bar theo vị trí trạm trên màn hình.
@@ -161,12 +161,12 @@ func _process(_delta: float) -> void:
 		var entry: Dictionary = _cells[station]
 		var bar: ProgressBar = entry["bar"]
 		var point: Vector3 = (station as Node3D).global_position + Vector3(0.0, ANCHOR_HEIGHT, 0.0)
-		var man := orange.unproject_position(point)
+		var screen := orange.unproject_position(point)
 		# Trạm nằm SAU LƯNG camera: unproject trả về toạ độ lộn ngược, chiếu
 		# thẳng là bar nhảy sang phía đối diện màn hình. Lấy đối xứng qua tâm
 		# rồi mới kẹp, để nó bị đẩy về đúng mép mà trạm thật sự đang nằm.
 		if orange.is_position_behind(point):
-			man = viewport_size - man
+			screen = viewport_size - screen
 		bar.position = Vector2(
-			clampf(man.x - WIDTH * 0.5, MARGIN, viewport_size.x - WIDTH - MARGIN),
-			clampf(man.y - HEIGHT * 0.5, MARGIN, viewport_size.y - HEIGHT - MARGIN))
+			clampf(screen.x - WIDTH * 0.5, MARGIN, viewport_size.x - WIDTH - MARGIN),
+			clampf(screen.y - HEIGHT * 0.5, MARGIN, viewport_size.y - HEIGHT - MARGIN))

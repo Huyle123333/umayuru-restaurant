@@ -178,9 +178,9 @@ func _build_left_col() -> Control:
 		_buttons.append(b)
 
 	# Đẩy nút Đóng xuống đáy cột.
-	var day := Control.new()
-	day.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	col.add_child(day)
+	var spacer := Control.new()
+	spacer.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	col.add_child(spacer)
 
 	var button_rows := Button.new()
 	button_rows.text = "Đóng"
@@ -251,15 +251,15 @@ func _build_block(khoi: Dictionary) -> void:
 		_add_grade_marks()
 
 
-func _small_title(chu: String) -> Control:
+func _small_title(text_: String) -> Control:
 	var l := Label.new()
-	l.text = chu
+	l.text = text_
 	l.add_theme_font_size_override("font_size", 22)
 	l.add_theme_color_override("font_color", COLOR_TITLE)
 	return l
 
 
-func _paragraph(chu: String) -> Control:
+func _paragraph(text_: String) -> Control:
 	var t := RichTextLabel.new()
 	t.bbcode_enabled = true
 	t.fit_content = true
@@ -272,7 +272,7 @@ func _paragraph(chu: String) -> Control:
 	# có nó thì Godot tính chiều cao ở bề rộng 0 — mỗi chữ một dòng — và value
 	# một chiều cao khổng lồ kéo cả trang dài value vô tận.
 	t.custom_minimum_size = Vector2(FRAME_WIDTH - LEFT_COL_WIDTH - 160.0, 0)
-	t.text = chu
+	t.text = text_
 	return t
 
 
@@ -303,10 +303,10 @@ func _key_hint(list: Array) -> Control:
 ## Ảnh minh hoạ là thứ bổ sung dần: khai sẵn đường dẫn trong bảng nội build rồi
 ## chụp ảnh sau lúc nào cũng được, và trang hướng dẫn vẫn đọc được ngay từ bây
 ## giờ. Nếu để một ô trống hay một dòng "thiếu ảnh" thì trang trông như hỏng.
-func _add_image(duong_dan: String, chu: String) -> void:
-	if not ResourceLoader.exists(duong_dan):
+func _add_image(path: String, text_: String) -> void:
+	if not ResourceLoader.exists(path):
 		return
-	var texture := load(duong_dan) as Texture2D
+	var texture := load(path) as Texture2D
 	if texture == null:
 		return
 
@@ -317,9 +317,9 @@ func _add_image(duong_dan: String, chu: String) -> void:
 	img.custom_minimum_size = Vector2(0, 0)
 	_content_col.add_child(img)
 
-	if not chu.is_empty():
+	if not text_.is_empty():
 		var l := Label.new()
-		l.text = chu
+		l.text = text_
 		l.add_theme_font_size_override("font_size", 15)
 		l.add_theme_color_override("font_color", COLOR_DIM)
 		l.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
@@ -350,14 +350,14 @@ func _add_recipe(kind: String) -> void:
 		_content_col.add_child(_recipe_row(String(key_).split("+"), value))
 
 
-func _recipe_row(nguyen_lieu: PackedStringArray, value: String) -> Control:
+func _recipe_row(ingredients: PackedStringArray, value: String) -> Control:
 	var row := HBoxContainer.new()
 	row.add_theme_constant_override("separation", 6)
 
-	for i in nguyen_lieu.size():
+	for i in ingredients.size():
 		if i > 0:
 			row.add_child(_marker("+"))
-		row.add_child(_item_cells(String(nguyen_lieu[i])))
+		row.add_child(_item_cells(String(ingredients[i])))
 
 	row.add_child(_marker("→"))
 	row.add_child(_item_cells(value))
@@ -395,9 +395,9 @@ func _item_cells(id: String) -> Control:
 	return l
 
 
-func _marker(chu: String) -> Control:
+func _marker(text_: String) -> Control:
 	var l := Label.new()
-	l.text = chu
+	l.text = text_
 	l.add_theme_font_size_override("font_size", 18)
 	l.add_theme_color_override("font_color", COLOR_DIM)
 	l.size_flags_vertical = Control.SIZE_SHRINK_CENTER
@@ -434,7 +434,7 @@ func _add_grade_marks() -> void:
 	_content_col.add_child(grid)
 
 
-func _spacing(cao: float) -> Control:
+func _spacing(height_: float) -> Control:
 	var c := Control.new()
-	c.custom_minimum_size = Vector2(0, cao)
+	c.custom_minimum_size = Vector2(0, height_)
 	return c
