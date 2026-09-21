@@ -44,10 +44,10 @@ const PASSWORD := "777"
 ## chắc chắn có trong font đang dùng (thẻ màn đã khoá trong màn chọn màn dùng
 ## chính hai kí tự này), còn "✕" thì chưa nơi nào thử — mà một kí tự thiếu
 ## trong font hiện ra thành ô vuông rỗng, đúng chỗ cần rõ ràng nhất.
-const DAU_BAT := "✔  "
-const DAU_TAT := "—  "
-const MAU_BAT := Color("5ea35a")
-const MAU_TAT := Color(0.55, 0.50, 0.44)
+const MARK_ON := "✔  "
+const MARK_OFF := "—  "
+const COLOR_ON := Color("5ea35a")
+const COLOR_OFF := Color(0.55, 0.50, 0.44)
 
 @onready var _login_box: Control = %LoginBox
 @onready var _cheat_box: Control = %CheatBox
@@ -62,15 +62,15 @@ var _focus_on_close: Control = null
 ## Nút bật góc nhìn thứ 3 — tạo bằng code, xem _nhan_ban_nut().
 var _btn_view: Button = null
 ## Nút bật cheat tua giờ bằng phím 0 — cũng tạo bằng code.
-var _btn_tua: Button = null
+var _btn_time_skip: Button = null
 ## Nút cho phép bấm kĩ năng chủ động mà không cần đủ điều kiện.
-var _btn_ki_nang: Button = null
+var _btn_skill: Button = null
 
 ## Nhãn GỐC của từng nút, tức phần chữ KHÔNG kể dấu tích: Button -> String.
 ##
 ## Phải nhớ riêng chứ không đọc lại từ nut.text, vì nut.text đã bị gắn dấu ở
 ## lần vẽ trước — đọc rồi gắn tiếp sẽ ra "✔  ✔  Tua giờ" sau vài lần bấm.
-var _nhan_goc: Dictionary = {}
+var _base_labels: Dictionary = {}
 
 ## Nút mở khoá của TỪNG nhân vật ẩn: id -> Button. Dựng bằng vòng lặp trên
 ## GameData.NHAN_VAT_AN.
@@ -82,7 +82,7 @@ var _nhan_goc: Dictionary = {}
 ##
 ## Dựng từ bảng thì thêm nhân vật ẩn thứ tư là thêm một dòng trong GameData,
 ## bảng cheat tự có thêm nút.
-var _nut_nhan_vat: Dictionary = {}
+var _character_buttons: Dictionary = {}
 
 
 func _ready() -> void:
@@ -94,20 +94,20 @@ func _ready() -> void:
 	# Nhãn của nút này nằm trong scene dưới dạng KHOÁ dịch ("CODE7_UNLOCK_LEVELS").
 	# Dịch ra ngay bây giờ rồi cất đi: khi đã tự gắn dấu vào text thì chuỗi
 	# không còn là khoá nữa nên Godot thôi dịch hộ.
-	_nhan_goc[_btn_unlock] = tr(_btn_unlock.text)
+	_base_labels[_btn_unlock] = tr(_btn_unlock.text)
 
 	# Thứ tự thêm quyết định thứ tự hiện trên bảng.
-	_btn_view = _nhan_ban_nut(
+	_btn_view = _make_button(
 		"BtnThirdPerson", "Góc nhìn thứ 3 (phím P)", _on_third_person_pressed)
-	_btn_tua = _nhan_ban_nut(
-		"BtnTuaGio", "Tua giờ trong màn (phím 0)", _on_tua_gio_pressed)
-	_btn_ki_nang = _nhan_ban_nut(
-		"BtnKiNang", "Kĩ năng không cần điều kiện", _on_ki_nang_pressed)
+	_btn_time_skip = _make_button(
+		"BtnTuaGio", "Tua giờ trong màn (phím 0)", _on_time_skip_pressed)
+	_btn_skill = _make_button(
+		"BtnKiNang", "Kĩ năng không cần điều kiện", _on_skill_pressed)
 	for id in GameData.HIDDEN_CHARACTERS:
-		var ma := String(id)
-		var ten := String(GameData.CHARACTERS.get(ma, {}).get("label", ma))
-		_nut_nhan_vat[ma] = _nhan_ban_nut(
-			"BtnNV_" + ma, "Mở khoá %s" % ten, _on_nhan_vat_pressed.bind(ma))
+		var code_ := String(id)
+		var label_ := String(GameData.CHARACTERS.get(code_, {}).get("label", code_))
+		_character_buttons[code_] = _make_button(
+			"BtnNV_" + code_, "Mở khoá %s" % label_, _on_character_pressed.bind(code_))
 	# Gõ mật khẩu xong bấm Enter cũng vào được, không bắt phải rê chuột.
 	_input.text_submitted.connect(_on_text_submitted)
 
@@ -145,7 +145,7 @@ func _try_login() -> void:
 	if _input.text.strip_edges() == PASSWORD:
 		_login_box.hide()
 		_cheat_box.show()
-		_ve_lai()
+		_redraw()
 		_btn_unlock.grab_focus()
 	else:
 		_lbl_error.show()
@@ -162,13 +162,13 @@ func _try_login() -> void:
 ## đổi giao diện bảng cheat thì cả danh sách cùng đổi theo. Cờ DUPLICATE_GROUPS
 ## được truyền vào để KHÔNG sao chép các tín hiệu đã nối — nếu không, bấm nút
 ## mới sẽ chạy luôn hàm của nút cũ.
-func _nhan_ban_nut(ten: String, nhan: String, ham: Callable) -> Button:
-	var nut := _btn_unlock.duplicate(Node.DUPLICATE_GROUPS) as Button
-	nut.name = ten
-	nut.pressed.connect(ham)
-	_nhan_goc[nut] = nhan
-	_btn_unlock.get_parent().add_child(nut)
-	return nut
+func _make_button(label_: String, base_label: String, callback: Callable) -> Button:
+	var btn := _btn_unlock.duplicate(Node.DUPLICATE_GROUPS) as Button
+	btn.name = label_
+	btn.pressed.connect(callback)
+	_base_labels[btn] = base_label
+	_btn_unlock.get_parent().add_child(btn)
+	return btn
 
 
 ## Gắn dấu trạng thái vào một nút.
@@ -176,16 +176,16 @@ func _nhan_ban_nut(ten: String, nhan: String, ham: Callable) -> Button:
 ## Đổi CẢ dấu lẫn màu chữ chứ không chỉ một trong hai: dấu nói cho người đọc
 ## kĩ, màu nói cho người chỉ liếc qua — nhìn cả bảng một cái là thấy ngay có
 ## mấy dòng xanh.
-func _dat_tick(nut: Button, dang_bat: bool) -> void:
-	if nut == null:
+func _set_tick(btn: Button, dang_bat: bool) -> void:
+	if btn == null:
 		return
-	nut.text = (DAU_BAT if dang_bat else DAU_TAT) + String(_nhan_goc.get(nut, ""))
-	nut.add_theme_color_override("font_color", MAU_BAT if dang_bat else MAU_TAT)
+	btn.text = (MARK_ON if dang_bat else MARK_OFF) + String(_base_labels.get(btn, ""))
+	btn.add_theme_color_override("font_color", COLOR_ON if dang_bat else COLOR_OFF)
 
 
 func _on_third_person_pressed() -> void:
 	GameData.set_third_person_unlocked(not GameData.third_person_unlocked)
-	_ve_lai()
+	_redraw()
 
 
 ## Bật/tắt một nhân vật ẩn.
@@ -195,9 +195,9 @@ func _on_third_person_pressed() -> void:
 ## Đọc thuộc tính không có trên một Node là lỗi lúc chạy, nên bấm nút này chưa
 ## bao giờ mở khoá được ai — và đó là lý do sâu xa khiến đoạn ra mắt Gold Ship
 ## không chạy: nó đòi "đã mở khoá", mà không có cách nào mở.
-func _on_nhan_vat_pressed(id: String) -> void:
+func _on_character_pressed(id: String) -> void:
 	GameData.set_character_unlocked(id, not GameData.is_character_unlocked(id))
-	_ve_lai()
+	_redraw()
 
 
 ## Bật/tắt cheat tua giờ bằng phím 0 trong màn chơi.
@@ -206,9 +206,9 @@ func _on_nhan_vat_pressed(id: String) -> void:
 ## mà nhạc cao điểm (còn 3:32) và bảng tổng kết — hai thứ đáng xem nhất — đều
 ## nằm ở cuối. Bật lên rồi bấm 0 một lần là nhảy tới 3:30, bấm lần nữa là
 ## tổng kết.
-func _on_tua_gio_pressed() -> void:
+func _on_time_skip_pressed() -> void:
 	GameData.set_cheat_time_skip(not GameData.cheat_time_skip)
-	_ve_lai()
+	_redraw()
 
 
 ## Bật/tắt việc bỏ qua điều kiện của kĩ năng chủ động.
@@ -216,15 +216,15 @@ func _on_tua_gio_pressed() -> void:
 ## Cùng lý do với tua giờ: kĩ năng của Kita đòi 5 đơn hoàn hảo, tức khoảng hai
 ## phút chơi giỏi mới xem được một lần. Bật cheat này thì bấm Space là chạy
 ## ngay, đủ để kiểm tra hiệu ứng và để quay lại đoạn cut-in.
-func _on_ki_nang_pressed() -> void:
+func _on_skill_pressed() -> void:
 	GameData.set_infinite_skill(not GameData.infinite_skill)
-	_ve_lai()
+	_redraw()
 
 
 func _on_unlock_pressed() -> void:
 	# Đảo trạng thái: bấm lần nữa là tắt cheat đi.
 	GameData.set_unlock_all(not GameData.unlock_all)
-	_ve_lai()
+	_redraw()
 
 
 ## Vẽ lại dấu tích của MỌI nút theo trạng thái thật trong GameData.
@@ -232,11 +232,11 @@ func _on_unlock_pressed() -> void:
 ## Vẽ lại tất cả sau mỗi lần bấm, chứ không chỉ sửa cái nút vừa bấm: rẻ (bảy
 ## phép gán chuỗi) và loại hẳn một lớp lỗi — cheat nào sau này ảnh hưởng tới
 ## cheat khác thì bảng vẫn luôn khớp với sự thật.
-func _ve_lai() -> void:
-	_dat_tick(_btn_unlock, GameData.unlock_all)
-	_dat_tick(_btn_view, GameData.third_person_unlocked)
-	_dat_tick(_btn_tua, GameData.cheat_time_skip)
-	_dat_tick(_btn_ki_nang, GameData.infinite_skill)
-	for id in _nut_nhan_vat:
-		var ma := String(id)
-		_dat_tick(_nut_nhan_vat[ma] as Button, GameData.is_character_unlocked(ma))
+func _redraw() -> void:
+	_set_tick(_btn_unlock, GameData.unlock_all)
+	_set_tick(_btn_view, GameData.third_person_unlocked)
+	_set_tick(_btn_time_skip, GameData.cheat_time_skip)
+	_set_tick(_btn_skill, GameData.infinite_skill)
+	for id in _character_buttons:
+		var code_ := String(id)
+		_set_tick(_character_buttons[code_] as Button, GameData.is_character_unlocked(code_))

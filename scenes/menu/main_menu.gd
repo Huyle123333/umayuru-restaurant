@@ -39,9 +39,9 @@ func _ready() -> void:
 
 	# Ba mục trong bảng Tuỳ chọn báo NGƯỢC lên đây bằng tín hiệu. Bảng đó
 	# không biết Cài đặt hay Credits nằm ở node nào — xem options_panel.gd.
-	_options.chon_huong_dan.connect(_on_guide_pressed)
-	_options.chon_cai_dat.connect(_on_settings_pressed)
-	_options.chon_credits.connect(_on_credits_pressed)
+	_options.guide_chosen.connect(_on_guide_pressed)
+	_options.settings_chosen.connect(_on_settings_pressed)
+	_options.credits_chosen.connect(_on_credits_pressed)
 
 	for btn in [_btn_new, _btn_levels, _btn_options, _btn_quit]:
 		_setup_hover(btn)

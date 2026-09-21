@@ -24,7 +24,7 @@ const ROW := {
 @onready var _lbl_mouse: Label = %LblMouse
 
 @onready var _chk_fullscreen: CheckButton = %ChkFullscreen
-@onready var _opt_ngon_ngu: OptionButton = %OptNgonNgu
+@onready var _opt_language: OptionButton = %OptNgonNgu
 @onready var _btn_default: Button = %BtnDefault
 @onready var _btn_close: Button = %BtnClose
 
@@ -43,8 +43,8 @@ func _ready() -> void:
 	_sld_mouse.value_changed.connect(_on_mouse_changed)
 	_chk_fullscreen.toggled.connect(_on_fullscreen_toggled)
 
-	_dung_danh_sach_ngon_ngu()
-	_opt_ngon_ngu.item_selected.connect(_on_ngon_ngu_selected)
+	_build_language_list()
+	_opt_language.item_selected.connect(_on_language_selected)
 
 	_btn_default.pressed.connect(_on_default_pressed)
 	_btn_close.pressed.connect(close)
@@ -59,23 +59,23 @@ func _ready() -> void:
 ## set_item_metadata: nhét mã ngôn ngữ ("vi"/"en") vào từng mục thay vì dựa
 ## vào thứ tự index. Nếu dựa vào index, chỉ cần đảo thứ tự trong danh sách
 ## là file cài đặt cũ của người chơi trỏ sang ngôn ngữ khác.
-func _dung_danh_sach_ngon_ngu() -> void:
-	_opt_ngon_ngu.clear()
+func _build_language_list() -> void:
+	_opt_language.clear()
 	for i in SettingsManager.LANGUAGES.size():
 		var entry: Dictionary = SettingsManager.LANGUAGES[i]
-		_opt_ngon_ngu.add_item(String(entry["name"]))
-		_opt_ngon_ngu.set_item_metadata(i, String(entry["code"]))
+		_opt_language.add_item(String(entry["name"]))
+		_opt_language.set_item_metadata(i, String(entry["code"]))
 
 
-func _chon_muc_theo_ma(ma: String) -> void:
-	for i in _opt_ngon_ngu.item_count:
-		if String(_opt_ngon_ngu.get_item_metadata(i)) == ma:
-			_opt_ngon_ngu.select(i)
+func _select_by_code(code_: String) -> void:
+	for i in _opt_language.item_count:
+		if String(_opt_language.get_item_metadata(i)) == code_:
+			_opt_language.select(i)
 			return
 
 
-func _on_ngon_ngu_selected(index: int) -> void:
-	SettingsManager.set_language(String(_opt_ngon_ngu.get_item_metadata(index)))
+func _on_language_selected(index: int) -> void:
+	SettingsManager.set_language(String(_opt_language.get_item_metadata(index)))
 
 
 func open(focus_on_close: Control = null) -> void:
@@ -109,7 +109,7 @@ func _pull_from_settings() -> void:
 	_sld_bright.set_value_no_signal(SettingsManager.brightness)
 	_sld_mouse.set_value_no_signal(SettingsManager.mouse_sensitivity)
 	_chk_fullscreen.set_pressed_no_signal(SettingsManager.fullscreen)
-	_chon_muc_theo_ma(SettingsManager.language)
+	_select_by_code(SettingsManager.language)
 	_refresh_labels()
 
 

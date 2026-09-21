@@ -443,10 +443,10 @@ var _character: Node = null
 func _process(_delta: float) -> void:
 	if _character == null or _stamina_bar == null:
 		return
-	_stamina_bar.value = _character.ti_le_stamina()
+	_stamina_bar.value = _character.stamina_ratio()
 	# Thanh đầy và không chạy thì mờ đi cho đỡ chiếm mắt; chỉ sáng lên khi
 	# đang thật sự tiêu hoặc chưa hồi xong.
-	var needs_attention: bool = _character.dang_nuoc_rut() or _stamina_bar.value < 0.999
+	var needs_attention: bool = _character.is_sprinting() or _stamina_bar.value < 0.999
 	_stamina_bar.modulate.a = 1.0 if needs_attention else 0.35
 	_follow_table()
 

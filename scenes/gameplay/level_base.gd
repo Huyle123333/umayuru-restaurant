@@ -25,13 +25,13 @@ const PAUSE_MENU := preload("res://scenes/menu/pause_menu.tscn")
 ## có thể vẫn còn 212,0 chằn và nhạc chưa đổi. Đặt 210 là ĐÃ VƯỢT mốc, nên
 ## nhạc chắc chắn đổi ngay khung hình kế tiếp. Ba chữ số trên đồng hồ hiện
 ## 3:30, vừa đẹp.
-const GIAY_TUA := 210.0
+const SKIP_SECONDS := 210.0
 
 ## Tham chiếu tới nhân vật đang chơi, để các hệ thống khác (HUD, đơn hàng,
 ## kỹ năng...) lấy dùng sau này.
 var player: CharacterBody3D
 ## Hệ khách hàng của màn này. Các hệ khác (đơn hàng, tính tiền) sẽ hỏi qua đây.
-var quan_ly_khach: Node
+var customers: Node
 
 
 func _ready() -> void:
@@ -44,12 +44,12 @@ func _spawn_player() -> void:
 	if spawn == null:
 		push_error("Màn chơi thiếu node PlayerSpawn (hoặc sai spawn_path).")
 		return
-	var scene_nhan_vat := _scene_nhan_vat_dang_chon()
-	if scene_nhan_vat == null:
+	var character_scene := _selected_character_scene()
+	if character_scene == null:
 		push_error("Không có scene nhân vật nào để sinh (cả GameData lẫn Inspector đều trống).")
 		return
 
-	player = scene_nhan_vat.instantiate() as CharacterBody3D
+	player = character_scene.instantiate() as CharacterBody3D
 	# Thêm vào cây scene TRƯỚC, gán vị trí SAU. Làm ngược lại thì toạ độ
 	# toàn cục được tính khi node còn chưa nằm trong cây, kết quả sai.
 	add_child(player)
@@ -57,7 +57,7 @@ func _spawn_player() -> void:
 	# nhân vật xuất hiện quay đúng hướng đó.
 	player.global_transform = spawn.global_transform
 
-	_gan_he_tuong_tac()
+	_build_interaction()
 
 
 ## Chọn scene nhân vật để sinh ra.
@@ -70,28 +70,28 @@ func _spawn_player() -> void:
 ## Dùng ResourceLoader.exists() trước khi load: nếu một nhân vật bị đổi tên file
 ## hay xoá nhầm thì ta muốn màn chơi vẫn mở lên với nhân vật dự phòng và console
 ## in rõ file nào thiếu, chứ không phải màn hình đen không rõ lý do.
-func _scene_nhan_vat_dang_chon() -> PackedScene:
+func _selected_character_scene() -> PackedScene:
 	var id := ""
 	if Engine.has_singleton("GameData") or get_node_or_null("/root/GameData") != null:
 		id = str(GameData.selected_character)
 
 	if not id.is_empty():
-		var duong_dan := GameData.character_scene_path(id)
-		if duong_dan.is_empty():
+		var path := GameData.character_scene_path(id)
+		if path.is_empty():
 			push_warning("Nhân vật '%s' chưa có scene điều khiển — dùng nhân vật dự phòng." % id)
-		elif not ResourceLoader.exists(duong_dan):
-			push_warning("Không tìm thấy '%s' — dùng nhân vật dự phòng." % duong_dan)
+		elif not ResourceLoader.exists(path):
+			push_warning("Không tìm thấy '%s' — dùng nhân vật dự phòng." % path)
 		else:
-			var res := load(duong_dan) as PackedScene
+			var res := load(path) as PackedScene
 			if res != null:
 				return res
 
 	return player_scene
 
 
-func _khoa_nhan_vat(is_open: bool) -> void:
+func _lock_player(is_open: bool) -> void:
 	if player != null:
-		player.khoa_di_chuyen = is_open
+		player.movement_locked = is_open
 
 
 ## Gắn bộ chọn mục tiêu vào nhân vật và bật HUD tương tác.
@@ -109,40 +109,40 @@ func _khoa_nhan_vat(is_open: bool) -> void:
 ## không load và màn hình trắng trơn, không có gì để lần ra nguyên nhân.
 ## Với load() thì lỗi ở hệ tương tác chỉ làm mất HUD, map vẫn chạy và console
 ## in ra đúng file hỏng.
-func _gan_he_tuong_tac() -> void:
-	var lop_bo_chon := load("res://scripts/interaction/target_picker.gd") as GDScript
-	var lop_hud := load("res://scripts/interaction/interaction_hud.gd") as GDScript
-	if lop_bo_chon == null or lop_hud == null:
+func _build_interaction() -> void:
+	var cls_target := load("res://scripts/interaction/target_picker.gd") as GDScript
+	var cls_hud := load("res://scripts/interaction/interaction_hud.gd") as GDScript
+	if cls_target == null or cls_hud == null:
 		push_warning("Hệ tương tác không nạp được — màn chơi vẫn chạy nhưng không có HUD chọn mục tiêu.")
 		return
 
-	var bo_chon: Node = lop_bo_chon.new()
-	bo_chon.name = "BoChonMucTieu"
-	player.add_child(bo_chon)
+	var target_picker: Node = cls_target.new()
+	target_picker.name = "BoChonMucTieu"
+	player.add_child(target_picker)
 
-	var hud: Node = lop_hud.new()
+	var hud: Node = cls_hud.new()
 	hud.name = "HudTuongTac"
 	add_child(hud)
-	hud.listen_to_picker(bo_chon)
+	hud.listen_to_picker(target_picker)
 	hud.follow_character(player)
 
 	# Đôi tay: cầm/đặt/thả vật thể. Cũng nạp lúc chạy vì cùng lý do với hai
 	# script trên — lỗi ở đây không được phép làm cả màn chơi không mở lên.
-	var lop_tay := load("res://scripts/interaction/hands.gd") as GDScript
-	var lop_bang := load("res://scripts/interaction/picker_menu.gd") as GDScript
-	if lop_tay != null:
-		var tay: Node = lop_tay.new()
-		tay.name = "TayCam"
-		player.add_child(tay)
-		hud.listen_to_hands(tay)
+	var cls_hands := load("res://scripts/interaction/hands.gd") as GDScript
+	var cls_picker := load("res://scripts/interaction/picker_menu.gd") as GDScript
+	if cls_hands != null:
+		var hands: Node = cls_hands.new()
+		hands.name = "TayCam"
+		player.add_child(hands)
+		hud.listen_to_hands(hands)
 
 		# Hệ thống bếp: một node quản lý chung cho mọi cái bếp trong màn.
-		var lop_bep := load("res://scripts/interaction/cooking_system.gd") as GDScript
-		if lop_bep != null:
-			var cooking: Node = lop_bep.new()
+		var cls_cooking := load("res://scripts/interaction/cooking_system.gd") as GDScript
+		if cls_cooking != null:
+			var cooking: Node = cls_cooking.new()
 			cooking.name = "HeBep"
 			add_child(cooking)
-			tay.cooking = cooking
+			hands.cooking = cooking
 			hud.listen_to_cooking(cooking)
 
 			# Thanh tiến trình RIÊNG cho từng trạm, nổi trên đầu trạm đó.
@@ -152,51 +152,51 @@ func _gan_he_tuong_tac() -> void:
 			# lực, ô kĩ năng, bảng bàn chế tạo). Thanh trạm thì chỉ cần biết
 			# hệ bếp và cái camera — không đụng gì tới bốn thứ đó, nên tách ra
 			# là tách được sạch.
-			var lop_thanh := load("res://scripts/ui/station_bars.gd") as GDScript
-			if lop_thanh != null:
-				var tt: Node = lop_thanh.new()
-				tt.name = "ThanhTram"
-				add_child(tt)
-				tt.listen_to_cooking(cooking)
+			var cls_bars := load("res://scripts/ui/station_bars.gd") as GDScript
+			if cls_bars != null:
+				var bars: Node = cls_bars.new()
+				bars.name = "ThanhTram"
+				add_child(bars)
+				bars.listen_to_cooking(cooking)
 			else:
 				push_warning("Không nạp được thanh tiến trình của trạm.")
 
-		if lop_bang != null:
-			var bang: Node = lop_bang.new()
-			bang.name = "BangChon"
-			add_child(bang)
+		if cls_picker != null:
+			var picker: Node = cls_picker.new()
+			picker.name = "BangChon"
+			add_child(picker)
 			# Ba mối nối, mỗi cái một việc: tay xin mở bảng, bảng báo đã
 			# chọn xong, và bảng báo mở/đóng để khoá di chuyển nhân vật.
-			tay.request_picker.connect(bang.open)
-			bang.item_chosen.connect(tay.receive_ingredient)
-			bang.open_state_changed.connect(_khoa_nhan_vat)
+			hands.request_picker.connect(picker.open)
+			picker.item_chosen.connect(hands.receive_ingredient)
+			picker.open_state_changed.connect(_lock_player)
 
 	# Hệ kĩ năng chủ động (phím Space). Hiện mới lo phần cut-in; hiệu ứng thật
 	# cắm vào sau. Đặt ở màn chơi chứ không trong scene nhân vật, cùng lý do
 	# với bộ chọn mục tiêu: bảy nhân vật thì bảy chỗ phải sửa.
-	_lo_vat_cam_trong_map()
+	_reveal_map_items()
 
-	var lop_ki_nang := load("res://scripts/skills/skill_manager.gd") as GDScript
-	if lop_ki_nang != null:
-		var ki_nang: Node = lop_ki_nang.new()
-		ki_nang.name = "SkillManager"
-		add_child(ki_nang)
-		ki_nang.track_character(player)
-		hud.listen_to_skills(ki_nang)
+	var cls_skills := load("res://scripts/skills/skill_manager.gd") as GDScript
+	if cls_skills != null:
+		var skills: Node = cls_skills.new()
+		skills.name = "SkillManager"
+		add_child(skills)
+		skills.track_character(player)
+		hud.listen_to_skills(skills)
 	else:
 		push_warning("Không nạp được hệ kĩ năng — màn chơi vẫn chạy, chỉ thiếu cut-in.")
 
 	# Hệ khách hàng: sinh khách, xếp hàng, chia bàn, và nướng vùng đi lại.
 	# Cùng lý do đặt ở màn chơi với mọi hệ thống trên.
-	var lop_khach := load("res://scripts/restaurant/customer_manager.gd") as GDScript
-	if lop_khach != null:
-		quan_ly_khach = lop_khach.new()
-		quan_ly_khach.name = "QuanLyKhach"
-		add_child(quan_ly_khach)
+	var cls_customers := load("res://scripts/restaurant/customer_manager.gd") as GDScript
+	if cls_customers != null:
+		customers = cls_customers.new()
+		customers.name = "QuanLyKhach"
+		add_child(customers)
 		# chuan_bi() phải gọi SAU add_child: nó dùng get_tree() để tìm nhóm
 		# "dining_table" và gắn vùng navmesh vào cây scene.
-		quan_ly_khach.setup(self)
-		_gan_hud_don_hang()
+		customers.setup(self)
+		_build_order_hud()
 	else:
 		push_warning("Không nạp được hệ khách hàng — màn chơi vẫn chạy, chỉ không có khách.")
 
@@ -230,11 +230,11 @@ func _gan_he_tuong_tac() -> void:
 ## Làm lúc CHẠY chứ không sửa vào file map: mở/khoá một nhóm vật phẩm sau này
 ## chỉ cần đổi một công tắc trong DanhMuc, không phải dựng lại node vào đúng
 ## chỗ cũ trong map.
-func _lo_vat_cam_trong_map() -> void:
+func _reveal_map_items() -> void:
 	var item_catalog := load("res://scripts/interaction/item_catalog.gd") as GDScript
 	if item_catalog == null:
 		return
-	for station in _tim_tram(self):
+	for station in _find_stations(self):
 		# Chồng nồi không phải vật cầm được, nhưng nó là NGUỒN của cái nồi —
 		# công tắc NOI_MO tắt thì nó phải biến mất cùng cả nhóm món nồi, nếu
 		# không người chơi vẫn lấy được một cái nồi vô dụng.
@@ -253,14 +253,14 @@ func _lo_vat_cam_trong_map() -> void:
 		station.build_carriable()
 
 
-func _tim_tram(goc: Node) -> Array[Workstation]:
-	var ra: Array[Workstation] = []
-	for con in goc.get_children():
-		var t := con as Workstation
+func _find_stations(goc: Node) -> Array[Workstation]:
+	var out: Array[Workstation] = []
+	for child in goc.get_children():
+		var t := child as Workstation
 		if t != null:
-			ra.append(t)
-		ra.append_array(_tim_tram(con))
-	return ra
+			out.append(t)
+		out.append_array(_find_stations(child))
+	return out
 
 
 ## Hai bảng HUD của hệ đơn hàng: cột vé bên trái, đồng hồ & ví bên phải.
@@ -271,28 +271,28 @@ func _tim_tram(goc: Node) -> Array[Workstation]:
 ##
 ## Cả hai chỉ NGHE tín hiệu. Chúng không đọc trạng thái khách, không tự đếm
 ## kiên nhẫn, không tự cộng tiền — luật nằm trọn trong quan_ly_khach.gd.
-func _gan_hud_don_hang() -> void:
-	var lop_ve := load("res://scripts/ui/order_board.gd") as GDScript
-	if lop_ve != null:
-		var bang: Node = lop_ve.new()
-		bang.name = "BangDonHang"
-		add_child(bang)
-		bang.listen_to_orders(quan_ly_khach)
+func _build_order_hud() -> void:
+	var cls_intro := load("res://scripts/ui/order_board.gd") as GDScript
+	if cls_intro != null:
+		var picker: Node = cls_intro.new()
+		picker.name = "BangDonHang"
+		add_child(picker)
+		picker.listen_to_orders(customers)
 	else:
 		push_warning("Không nạp được cột vé đơn hàng.")
 
-	var lop_gio := load("res://scripts/ui/hud_clock.gd") as GDScript
-	var bang_gio: Node = null
-	if lop_gio != null:
-		bang_gio = lop_gio.new()
-		bang_gio.name = "BangThoiGian"
-		add_child(bang_gio)
-		bang_gio.listen_to_orders(quan_ly_khach)
-		bang_gio.time_up.connect(_ket_thuc_man.bind(""))
+	var cls_clock := load("res://scripts/ui/hud_clock.gd") as GDScript
+	var clock: Node = null
+	if cls_clock != null:
+		clock = cls_clock.new()
+		clock.name = "BangThoiGian"
+		add_child(clock)
+		clock.listen_to_orders(customers)
+		clock.time_up.connect(_end_level.bind(""))
 	else:
 		push_warning("Không nạp được bảng thời gian.")
 
-	_gan_doro()
+	_attach_doro()
 
 	# Hệ kĩ năng phải chờ tới ĐÂY mới gắn được: nó vặn núm của hệ khách hàng,
 	# hệ bếp và đồng hồ màn, nên cả ba phải tồn tại trước. Node SkillManager
@@ -303,13 +303,13 @@ func _gan_hud_don_hang() -> void:
 	# Đặt TRƯỚC _ap_dung_luat_man: luật màn đặt thời lượng và nhịp khách của
 	# riêng màn đó, và nếu sau này có kĩ năng đụng tới hai thứ ấy thì kĩ năng
 	# phải là lớp đè lên luật màn, không phải ngược lại.
-	var kn := get_node_or_null("SkillManager")
-	if kn != null:
-		kn.setup(quan_ly_khach, get_node_or_null("HeBep"), bang_gio)
+	var skills_node := get_node_or_null("SkillManager")
+	if skills_node != null:
+		skills_node.setup(customers, get_node_or_null("HeBep"), clock)
 
-	_ap_dung_luat_man(bang_gio)
-	_gan_mo_man(bang_gio)
-	_gan_tutorial(bang_gio)
+	_apply_level_rules(clock)
+	_build_level_intro(clock)
+	_attach_tutorial(clock)
 
 
 ## Áp luật riêng của màn đang chơi (thực đơn, nhịp khách, thời lượng).
@@ -323,23 +323,23 @@ func _gan_hud_don_hang() -> void:
 ## thay vì để nó nằm im: một node "đạo diễn" không đạo diễn gì cả vẫn chạy
 ## _process mỗi khung hình, và tệ hơn là nó khiến cây scene nói dối về việc
 ## màn này có luật riêng.
-func _ap_dung_luat_man(bang_gio: Node) -> void:
-	if quan_ly_khach == null or get_node_or_null("/root/GameData") == null:
+func _apply_level_rules(clock: Node) -> void:
+	if customers == null or get_node_or_null("/root/GameData") == null:
 		return
-	var luat: Dictionary = GameData.rules_for_level(String(GameData.current_level))
-	if luat.is_empty():
+	var rules: Dictionary = GameData.rules_for_level(String(GameData.current_level))
+	if rules.is_empty():
 		return
 
-	var lop := load("res://scripts/restaurant/level_rules.gd") as GDScript
-	if lop == null:
+	var cls := load("res://scripts/restaurant/level_rules.gd") as GDScript
+	if cls == null:
 		push_warning("Không nạp được luật màn — màn chơi dùng số mặc định.")
 		return
 
-	var lm: Node = lop.new()
-	lm.name = "LuatMan"
-	add_child(lm)
-	if not lm.setup(quan_ly_khach, bang_gio, luat):
-		lm.queue_free()
+	var rules_node: Node = cls.new()
+	rules_node.name = "LuatMan"
+	add_child(rules_node)
+	if not rules_node.setup(customers, clock, rules):
+		rules_node.queue_free()
 
 
 ## Doro — thú cưng đi lang thang, kiêm thùng rác thứ hai.
@@ -360,19 +360,19 @@ func _ap_dung_luat_man(bang_gio: Node) -> void:
 ## thùng rác nằm TRONG BẾP. Mà navmesh của khu bếp là một hòn đảo tách rời
 ## (hai tấm chắn vô hình ngắt đường nối), nên Doro sinh ra ở đó là mắc kẹt
 ## trong bếp cả màn — đúng chỗ nó gây vướng nhất.
-func _gan_doro() -> void:
-	if quan_ly_khach == null or player == null:
+func _attach_doro() -> void:
+	if customers == null or player == null:
 		return
-	var lop := load("res://scripts/restaurant/doro_pet.gd") as GDScript
-	if lop == null:
+	var cls := load("res://scripts/restaurant/doro_pet.gd") as GDScript
+	if cls == null:
 		push_warning("Không nạp được Doro — màn chơi vẫn chạy, chỉ thiếu pet.")
 		return
 
-	var cho: Vector3 = lop.first_stand_point(get_world_3d().navigation_map, 0.0)
-	var pet: Node3D = lop.new()
+	var seat: Vector3 = cls.first_stand_point(get_world_3d().navigation_map, 0.0)
+	var pet: Node3D = cls.new()
 	pet.name = "Doro"
 	add_child(pet)
-	pet.setup(cho, float(quan_ly_khach.navmesh_height_offset()), player)
+	pet.setup(seat, float(customers.navmesh_height_offset()), player)
 
 
 ## Bộ dẫn dắt màn hướng dẫn — CHỈ dựng khi màn đang chơi là "tutorial".
@@ -383,24 +383,24 @@ func _gan_doro() -> void:
 ##
 ## Chạy thẳng map bằng F6 từ editor thì current_level rỗng và không có hướng
 ## dẫn — đúng ý: lúc đó đang thử bếp, không ai muốn bị giảng bài.
-func _gan_tutorial(bang_gio: Node) -> void:
+func _attach_tutorial(clock: Node) -> void:
 	if get_node_or_null("/root/GameData") == null:
 		return
 	if String(GameData.current_level) != "tutorial":
 		return
 
-	var lop := load("res://scripts/story/tutorial_director.gd") as GDScript
-	if lop == null:
+	var cls := load("res://scripts/story/tutorial_director.gd") as GDScript
+	if cls == null:
 		push_warning("Không nạp được bộ dẫn dắt hướng dẫn — màn vẫn chơi được như màn thường.")
 		return
 
-	var tay := player.get_node_or_null("TayCam")
+	var hands := player.get_node_or_null("TayCam")
 	var cooking := get_node_or_null("HeBep")
-	var dd: Node = lop.new()
-	dd.name = "TutorialDirector"
-	add_child(dd)
-	dd.tutorial_finished.connect(_khi_xong_tutorial)
-	dd.setup(player, tay, cooking, quan_ly_khach, bang_gio)
+	var director: Node = cls.new()
+	director.name = "TutorialDirector"
+	add_child(director)
+	director.tutorial_finished.connect(_on_tutorial_done)
+	director.setup(player, hands, cooking, customers, clock)
 
 
 ## Hướng dẫn kết thúc.
@@ -413,9 +413,9 @@ func _gan_tutorial(bang_gio: Node) -> void:
 ##
 ## Bấm "Tự làm" thì KHÔNG tổng kết: bộ dẫn dắt đã trả màn về luật bình thường,
 ## đồng hồ chạy, và màn kết thúc bằng đường hết giờ như mọi màn khác.
-func _khi_xong_tutorial(tong_ket: bool) -> void:
+func _on_tutorial_done(tong_ket: bool) -> void:
 	if tong_ket:
-		_ket_thuc_man("S")
+		_end_level("S")
 
 
 ## Kết thúc màn: đóng cửa quán rồi hiện bảng tổng kết.
@@ -434,61 +434,61 @@ func _khi_xong_tutorial(tong_ket: bool) -> void:
 func _unhandled_key_input(event: InputEvent) -> void:
 	if get_node_or_null("/root/GameData") == null or not GameData.cheat_time_skip:
 		return
-	var phim := event as InputEventKey
-	if phim == null or not phim.pressed or phim.echo:
+	var key := event as InputEventKey
+	if key == null or not key.pressed or key.echo:
 		return
 	# Nhận cả phím 0 hàng số lẫn phím 0 bàn phím số. Dùng physical_keycode nên
 	# bố cục bàn phím nào cũng đúng.
-	if phim.physical_keycode != KEY_0 and phim.physical_keycode != KEY_KP_0:
+	if key.physical_keycode != KEY_0 and key.physical_keycode != KEY_KP_0:
 		return
 	get_viewport().set_input_as_handled()
-	_tua_gio()
+	_skip_time()
 
 
-func _tua_gio() -> void:
+func _skip_time() -> void:
 	# Bảng kết quả đã hiện thì không còn gì để tua.
 	if get_node_or_null("BangKetQua") != null:
 		return
-	var gio := get_node_or_null("BangThoiGian")
-	if gio == null:
+	var clock_node := get_node_or_null("BangThoiGian")
+	if clock_node == null:
 		# Màn không có đồng hồ (hướng dẫn): bấm một cái là tổng kết luôn.
-		_ket_thuc_man("")
+		_end_level("")
 		return
-	if float(gio.time_left) > GIAY_TUA:
+	if float(clock_node.time_left) > SKIP_SECONDS:
 		# Gán thẳng con_lai thay vì gọi một hàm riêng: _process của đồng hồ đọc
 		# biến này mỗi khung hình và tự so trước-sau để bắn tín hiệu mốc, nên
 		# đổi giá trị là mọi thứ ăn theo đúng như thời gian trôi tự nhiên.
-		gio.time_left = GIAY_TUA
+		clock_node.time_left = SKIP_SECONDS
 	else:
-		_ket_thuc_man("")
+		_end_level("")
 
 
-func _ket_thuc_man(ep_hang: String) -> void:
+func _end_level(ep_hang: String) -> void:
 	# Chặn gọi hai lần: hết giờ và hướng dẫn xong về lý thuyết có thể trùng
 	# nhau, và hai tấm bảng chồng lên nhau thì cái dưới không bao giờ đóng.
 	if get_node_or_null("BangKetQua") != null:
 		return
 
-	var lop := load("res://scripts/ui/results_panel.gd") as GDScript
-	if lop == null:
+	var cls := load("res://scripts/ui/results_panel.gd") as GDScript
+	if cls == null:
 		push_warning("Không nạp được bảng kết quả — màn chơi kết thúc mà không tổng kết.")
 		return
 
-	var tien := 0
-	var xong := 0
-	var hoan_hao := 0
-	var bo_di := 0
-	if quan_ly_khach != null:
-		quan_ly_khach.close_shop()
-		tien = int(quan_ly_khach.money)
-		xong = int(quan_ly_khach.orders_done)
-		hoan_hao = int(quan_ly_khach.perfect_orders)
-		bo_di = int(quan_ly_khach.customers_lost)
+	var money := 0
+	var done := 0
+	var perfect := 0
+	var leaving := 0
+	if customers != null:
+		customers.close_shop()
+		money = int(customers.money)
+		done = int(customers.orders_done)
+		perfect = int(customers.perfect_orders)
+		leaving = int(customers.customers_lost)
 
-	var bang: Node = lop.new()
-	bang.name = "BangKetQua"
-	add_child(bang)
-	bang.show_results(tien, xong, hoan_hao, bo_di, ep_hang)
+	var picker: Node = cls.new()
+	picker.name = "BangKetQua"
+	add_child(picker)
+	picker.show_results(money, done, perfect, leaving, ep_hang)
 
 
 ## Màn hình mở đầu: hiện tên màn, đếm ngược, rồi mới thả đồng hồ và khách vào.
@@ -500,38 +500,38 @@ func _ket_thuc_man(ep_hang: String) -> void:
 ##
 ## Màn hướng dẫn KHÔNG có màn mở đầu: ở đó trainer đã dẫn từng bước, chèn thêm
 ## một lớp chữ nữa chỉ làm loãng.
-func _gan_mo_man(bang_gio: Node) -> void:
+func _build_level_intro(clock: Node) -> void:
 	if get_node_or_null("/root/GameData") != null \
 			and String(GameData.current_level) == "tutorial":
 		return
 
-	var lop := load("res://scripts/ui/level_intro.gd") as GDScript
-	if lop == null:
+	var cls := load("res://scripts/ui/level_intro.gd") as GDScript
+	if cls == null:
 		return
 
-	var ten := "BẮT ĐẦU"
+	var label_ := "BẮT ĐẦU"
 	if get_node_or_null("/root/GameData") != null:
 		var t := GameData.level_name(String(GameData.current_level))
 		if not t.is_empty():
-			ten = t
+			label_ = t
 
 	# Đóng băng TRƯỚC khi hiện chữ, không phải sau: giữa hai việc đó có ít nhất
 	# một khung hình, và một khung hình đủ để đồng hồ trừ mất thời gian.
-	if bang_gio != null:
-		bang_gio.counting_down = false
-	if quan_ly_khach != null:
-		quan_ly_khach.auto_spawn = false
+	if clock != null:
+		clock.counting_down = false
+	if customers != null:
+		customers.auto_spawn = false
 
-	var mo: Node = lop.new()
-	mo.name = "MoMan"
-	add_child(mo)
-	mo.started.connect(func() -> void:
-		if bang_gio != null:
-			bang_gio.counting_down = true
-		if quan_ly_khach != null:
-			quan_ly_khach.auto_spawn = true
+	var intro: Node = cls.new()
+	intro.name = "MoMan"
+	add_child(intro)
+	intro.started.connect(func() -> void:
+		if clock != null:
+			clock.counting_down = true
+		if customers != null:
+			customers.auto_spawn = true
 		# Bốc ngẫu nhiên trong sáu bài, KHÔNG giữ liền mạch: vào một ca làm
 		# việc mới thì phải nghe như một ca mới, chứ không phải như đoạn giữa
 		# của bài nhạc đang chạy ở menu.
 		AmThanh.play_random_music("level"))
-	mo.start_countdown(ten)
+	intro.start_countdown(label_)

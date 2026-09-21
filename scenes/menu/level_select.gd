@@ -24,13 +24,13 @@ extends Control
 ## Khoá dịch cho nút gộp của từng ngày, khi giai đoạn buổi tối đang tắt.
 ## Dùng KHOÁ chứ không gõ thẳng "Ngày 1": cả màn hình này chạy qua bảng dịch
 ## trong locale/translations.csv, gõ chữ Việt vào đây thì bản tiếng Anh mất.
-const KHOA_NGAY := {
+const DAY_LABELS := {
 	"d1_sang": "LEVEL_DAY_1",
 	"d2_sang": "LEVEL_DAY_2",
 	"d3_sang": "LEVEL_DAY_3",
 }
 
-const MAN_TOI := ["d1_toi", "d2_toi", "d3_toi"]
+const EVENING_LEVELS := ["d1_toi", "d2_toi", "d3_toi"]
 
 ## Chế độ Vô tận — nút đã có chỗ, nội dung làm sau.
 ##
@@ -70,7 +70,7 @@ func _ready() -> void:
 	AmThanh.play_random_music("menu", true)
 
 	if not GameData.SHOW_EVENING:
-		_rut_gon_theo_ngay()
+		_group_by_day()
 
 	for id in _buttons:
 		var btn: Button = _buttons[id]
@@ -101,16 +101,16 @@ func _ready() -> void:
 ## hide() chứ không queue_free(): nút Tối vẫn nằm trong _buttons và vẫn nhận
 ## đủ trạng thái khoá/mở như cũ. Bật GameData.HIEN_MAN_TOI lên là chúng hiện
 ## lại nguyên vẹn, không phải dựng lại node nào.
-func _rut_gon_theo_ngay() -> void:
-	for id in MAN_TOI:
+func _group_by_day() -> void:
+	for id in EVENING_LEVELS:
 		(_buttons[id] as Button).hide()
 
-	for id in KHOA_NGAY:
+	for id in DAY_LABELS:
 		var btn: Button = _buttons[id]
-		btn.text = String(KHOA_NGAY[id])
-		var tieu_de := btn.get_parent().get_node_or_null("Header") as Control
-		if tieu_de != null:
-			tieu_de.hide()
+		btn.text = String(DAY_LABELS[id])
+		var title := btn.get_parent().get_node_or_null("Header") as Control
+		if title != null:
+			title.hide()
 
 
 func _refresh() -> void:

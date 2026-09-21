@@ -22,7 +22,7 @@ extends CharacterBody3D
 @export var acceleration := 14.0
 @export var turn_speed := 14.0
 
-@export_group("Chay nuoc rut (Shift)")
+@export_group("Sprint (Shift)")
 ## Nhân thêm bấy nhiêu vào tốc độ khi giữ Shift. 2,0 = chạy nhanh GẤP ĐÔI
 ## (6,4 -> 12,8 m/s).
 ##
@@ -36,17 +36,17 @@ extends CharacterBody3D
 ## THỂ LỰC: 5 giây chạy, 8 giây hồi đầy, và chỉ tiêu khi thật sự đang di
 ## chuyển. Giữ Shift suốt là không giữ được. Nên hệ số cứ để đủ lớn để người
 ## chơi CẢM THẤY, còn việc phanh lại đã có chỗ khác lo.
-@export var he_so_nuoc_rut := 2.0
+@export var sprint_factor := 2.0
 ## Giữ Shift được tối đa bao nhiêu giây khi thanh đầy.
-@export var stamina_toi_da := 5.0
+@export var stamina_max := 5.0
 ## Hồi lại hết thanh mất bao nhiêu giây.
 ##
 ## Hồi CHẬM HƠN lúc tiêu (8 s so với 5 s) để nước rút là một quyết định có
 ## giá. Hồi nhanh bằng lúc tiêu thì cứ chạy - nghỉ - chạy là được dùng gần
 ## như liên tục, và cơ chế mất hết ý nghĩa.
-@export var stamina_hoi_day := 8.0
+@export var stamina_regen := 8.0
 ## Phải chờ bao lâu sau khi nhả Shift mới bắt đầu hồi.
-@export var tre_truoc_khi_hoi := 0.6
+@export var regen_delay := 0.6
 
 @export_group("Camera")
 @export var mouse_sensitivity := 0.0035
@@ -84,13 +84,13 @@ var carrying := false : set = set_carrying
 ## cả hai cùng nhận thì mỗi lần đổi món nhân vật lại nhích lên nhích xuống.
 ## Chỉ khoá NHÂN VẬT, không dừng game — thanh kiên nhẫn của khách vẫn chạy,
 ## nên đứng mở tủ lạnh vẫn là quyết định tốn thời gian thật.
-var khoa_di_chuyen := false
+var movement_locked := false
 
 ## Thanh thể lực, tính bằng GIÂY còn lại chứ không phải phần trăm — nhờ vậy
 ## trừ đi mỗi frame chỉ là `_stamina -= delta`, không phải quy đổi gì.
 var _stamina := 0.0
-var _tre_hoi := 0.0
-var _dang_rut := false
+var _regen_timer := 0.0
+var _sprinting := false
 
 var _model: Node3D
 var _anim: AnimationPlayer
@@ -106,7 +106,7 @@ var _pitch := 0.35
 
 
 func _ready() -> void:
-	_stamina = stamina_toi_da
+	_stamina = stamina_max
 	_model = $Model
 	_pivot = $CameraPivot
 	_arm = $CameraPivot/SpringArm3D
@@ -173,7 +173,7 @@ func _physics_process(delta: float) -> void:
 		velocity += get_gravity() * delta
 
 	var input_dir := Vector2.ZERO
-	if not khoa_di_chuyen:
+	if not movement_locked:
 		input_dir = Input.get_vector("move_left", "move_right", "move_up", "move_down")
 	# Ở góc nhìn thứ 3, hướng đi tính theo góc xoay của camera (_yaw).
 	# Ở top-down camera đứng yên và chỉ nghiêng quanh trục X, nên "lên màn
@@ -181,7 +181,7 @@ func _physics_process(delta: float) -> void:
 	var yaw := _yaw if GameData.third_person_active else 0.0
 	var dir := (Basis(Vector3.UP, yaw) * Vector3(input_dir.x, 0.0, input_dir.y)).normalized()
 	var speed := carry_speed if carrying else walk_speed
-	speed *= _cap_nhat_nuoc_rut(delta, dir.length() > 0.01)
+	speed *= _update_sprint(delta, dir.length() > 0.01)
 
 	if dir.length() > 0.01:
 		velocity.x = move_toward(velocity.x, dir.x * speed, acceleration * delta)
@@ -206,29 +206,29 @@ func _physics_process(delta: float) -> void:
 ## cạn thanh thì người chơi bị phạt vì một thao tác không đem lại gì —
 ## kiểu lỗi khiến họ phải nhớ nhả phím mỗi lần dừng, thêm việc vặt chứ
 ## không thêm chiều sâu.
-func _cap_nhat_nuoc_rut(delta: float, dang_di: bool) -> float:
-	var muon_rut: bool = Input.is_action_pressed("dash") and dang_di and _stamina > 0.0
-	_dang_rut = muon_rut
+func _update_sprint(delta: float, dang_di: bool) -> float:
+	var want_sprint: bool = Input.is_action_pressed("dash") and dang_di and _stamina > 0.0
+	_sprinting = want_sprint
 
-	if muon_rut:
+	if want_sprint:
 		_stamina = maxf(_stamina - delta, 0.0)
-		_tre_hoi = tre_truoc_khi_hoi
-		return he_so_nuoc_rut
+		_regen_timer = regen_delay
+		return sprint_factor
 
-	if _tre_hoi > 0.0:
-		_tre_hoi -= delta
+	if _regen_timer > 0.0:
+		_regen_timer -= delta
 	else:
-		_stamina = minf(_stamina + delta * (stamina_toi_da / stamina_hoi_day), stamina_toi_da)
+		_stamina = minf(_stamina + delta * (stamina_max / stamina_regen), stamina_max)
 	return 1.0
 
 
 ## Tỉ lệ thể lực còn lại (0..1) — HUD đọc giá trị này để vẽ thanh.
-func ti_le_stamina() -> float:
-	return _stamina / stamina_toi_da if stamina_toi_da > 0.0 else 0.0
+func stamina_ratio() -> float:
+	return _stamina / stamina_max if stamina_max > 0.0 else 0.0
 
 
-func dang_nuoc_rut() -> bool:
-	return _dang_rut
+func is_sprinting() -> bool:
+	return _sprinting
 
 
 ## Đổi góc nhìn: khoá chuột khi vào góc nhìn thứ 3, nhả ra khi về top-down.

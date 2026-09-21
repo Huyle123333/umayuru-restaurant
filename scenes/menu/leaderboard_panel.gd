@@ -19,13 +19,13 @@ extends Control
 ## thì cái kia nhả ra". Tự viết bằng tay là bốn dòng set_pressed_no_signal
 ## rải rác, và chỉ cần thêm tab thứ năm là quên một dòng.
 
-const MAU_CHU := Color(0.29, 0.153, 0.071)
-const MAU_MO := Color(0.52, 0.38, 0.22)
-const MAU_VANG := Color("f2c230")
+const COLOR_TEXT := Color(0.29, 0.153, 0.071)
+const COLOR_DIM := Color(0.52, 0.38, 0.22)
+const COLOR_GOLD := Color("f2c230")
 
 ## Màu của từng hạng — GIỮ ĐÚNG bảng màu của bang_ket_qua.gd để người chơi
 ## thấy chữ "S" vàng ở đây và chữ "S" vàng ở bảng tổng kết là cùng một thứ.
-const MAU_HANG := {
+const COLOR_RANK := {
 	"S": Color("f2c230"),
 	"A": Color("e8823f"),
 	"B": Color("e27ba0"),
@@ -36,22 +36,22 @@ const MAU_HANG := {
 ## Ba huy chương cho ba dòng đầu. Không dùng ảnh: ba ký tự này có sẵn trong
 ## font, không phải nạp thêm tài nguyên nào, và ở cỡ chữ 20 thì nhìn rõ hơn
 ## một cái icon 20×20 bị thu nhỏ.
-const HUY_CHUONG: Array[String] = ["🥇", "🥈", "🥉"]
+const MEDALS: Array[String] = ["🥇", "🥈", "🥉"]
 
 @onready var _tabs: HBoxContainer = %Tabs
-@onready var _bang: VBoxContainer = %Bang
-@onready var _lbl_trong: Label = %LblTrong
+@onready var _table: VBoxContainer = %Bang
+@onready var _lbl_empty: Label = %LblTrong
 @onready var _btn_close: Button = %BtnClose
 
 var _focus_on_close: Control = null
-var _nhom := ButtonGroup.new()
-var _man_dang_xem: String = ""
+var _group := ButtonGroup.new()
+var _level_shown: String = ""
 
 
 func _ready() -> void:
 	hide()
 	_btn_close.pressed.connect(close)
-	_dung_tab()
+	_build_tabs()
 
 
 ## Dựng bốn nút tab từ GameData.MAN_XEP_HANG.
@@ -59,16 +59,16 @@ func _ready() -> void:
 ## Vòng lặp trên bảng dữ liệu chứ không viết tay bốn nút: thêm chế độ chơi
 ## thứ năm là thêm một dòng trong GameData, màn hình này tự có thêm tab —
 ## không phải mở .tscn ra kéo node rồi nối tín hiệu.
-func _dung_tab() -> void:
+func _build_tabs() -> void:
 	for id in GameData.RANKED_LEVELS:
-		var ma := String(id)
-		var nut := Button.new()
-		nut.text = String(GameData.RANKED_LEVEL_NAMES.get(ma, ma))
-		nut.toggle_mode = true
-		nut.button_group = _nhom
-		nut.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		nut.pressed.connect(_chon_man.bind(ma))
-		_tabs.add_child(nut)
+		var code_ := String(id)
+		var btn := Button.new()
+		btn.text = String(GameData.RANKED_LEVEL_NAMES.get(code_, code_))
+		btn.toggle_mode = true
+		btn.button_group = _group
+		btn.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		btn.pressed.connect(_select_level.bind(code_))
+		_tabs.add_child(btn)
 
 
 ## Mở bảng. `focus_on_close` là nút sẽ được trả lại focus lúc đóng, để chơi
@@ -78,11 +78,11 @@ func open(focus_on_close: Control = null) -> void:
 	show()
 	# Luôn mở ở tab đầu tiên: người mở bảng đang muốn xem, không đang tiếp tục
 	# một việc dở — nhớ tab cũ chỉ làm họ phải kiểm tra xem mình đang ở đâu.
-	var dau := String(GameData.RANKED_LEVELS[0])
-	var nut_dau := _tabs.get_child(0) as Button
-	nut_dau.button_pressed = true
-	_chon_man(dau)
-	nut_dau.grab_focus()
+	var first := String(GameData.RANKED_LEVELS[0])
+	var first_btn := _tabs.get_child(0) as Button
+	first_btn.button_pressed = true
+	_select_level(first)
+	first_btn.grab_focus()
 
 
 func close() -> void:
@@ -99,82 +99,82 @@ func _unhandled_input(event: InputEvent) -> void:
 
 # --------------------------------------------------------------- nội dung ---
 
-func _chon_man(id_man: String) -> void:
-	_man_dang_xem = id_man
-	_ve_bang()
+func _select_level(level_id: String) -> void:
+	_level_shown = level_id
+	_draw_table()
 
 
-func _ve_bang() -> void:
+func _draw_table() -> void:
 	# Xoá sạch rồi dựng lại. queue_free() KHÔNG xoá ngay trong khung hình này
 	# — node vẫn còn trong cây tới cuối khung — nên phải remove_child() trước,
 	# nếu không mấy dòng cũ vẫn kịp hiện chồng lên dòng mới một nhịp.
-	for con in _bang.get_children():
-		_bang.remove_child(con)
-		con.queue_free()
+	for child in _table.get_children():
+		_table.remove_child(child)
+		child.queue_free()
 
-	var ds := GameData.level_leaderboard(_man_dang_xem)
-	if ds.is_empty():
-		_lbl_trong.show()
+	var list_ := GameData.level_leaderboard(_level_shown)
+	if list_.is_empty():
+		_lbl_empty.show()
 		# Endless chưa làm nên nói rõ là "chưa có chế độ", chứ không nói
 		# "chưa ai chơi" — hai câu đó dẫn người đọc đi hai hướng khác nhau.
-		_lbl_trong.text = tr("RANK_ENDLESS_SOON") if _man_dang_xem == "endless" else tr("RANK_EMPTY")
+		_lbl_empty.text = tr("RANK_ENDLESS_SOON") if _level_shown == "endless" else tr("RANK_EMPTY")
 		return
 
-	_lbl_trong.hide()
-	_bang.add_child(_hang_tieu_de())
-	for i in ds.size():
-		var ban_ghi: Dictionary = ds[i]
-		_bang.add_child(_hang_du_lieu(i, ban_ghi))
+	_lbl_empty.hide()
+	_table.add_child(_header_row())
+	for i in list_.size():
+		var record: Dictionary = list_[i]
+		_table.add_child(_data_row(i, record))
 
 
-func _hang_tieu_de() -> Control:
+func _header_row() -> Control:
 	var h := HBoxContainer.new()
 	h.add_theme_constant_override("separation", 12)
-	h.add_child(_o("#", 46, MAU_MO, 17, HORIZONTAL_ALIGNMENT_CENTER))
-	h.add_child(_o(tr("RANK_COL_CHARACTER"), 0, MAU_MO, 17))
-	h.add_child(_o(tr("RANK_COL_MONEY"), 130, MAU_MO, 17, HORIZONTAL_ALIGNMENT_RIGHT))
-	h.add_child(_o(tr("RANK_COL_PLACE"), 60, MAU_MO, 17, HORIZONTAL_ALIGNMENT_CENTER))
+	h.add_child(_cell("#", 46, COLOR_DIM, 17, HORIZONTAL_ALIGNMENT_CENTER))
+	h.add_child(_cell(tr("RANK_COL_CHARACTER"), 0, COLOR_DIM, 17))
+	h.add_child(_cell(tr("RANK_COL_MONEY"), 130, COLOR_DIM, 17, HORIZONTAL_ALIGNMENT_RIGHT))
+	h.add_child(_cell(tr("RANK_COL_PLACE"), 60, COLOR_DIM, 17, HORIZONTAL_ALIGNMENT_CENTER))
 	return h
 
 
-func _hang_du_lieu(chi_so: int, ban_ghi: Dictionary) -> Control:
+func _data_row(index: int, record: Dictionary) -> Control:
 	var h := HBoxContainer.new()
 	h.add_theme_constant_override("separation", 12)
 
 	# Kiểu ghi rõ ràng, không dùng ":=": HUY_CHUONG là hằng mảng, và giá trị
 	# lấy ra từ mảng hằng bị GDScript coi là Variant nên không suy ra được kiểu.
-	var thu_tu: String = HUY_CHUONG[chi_so] if chi_so < HUY_CHUONG.size() \
-		else str(chi_so + 1)
-	h.add_child(_o(thu_tu, 46, MAU_CHU, 20, HORIZONTAL_ALIGNMENT_CENTER))
+	var place: String = MEDALS[index] if index < MEDALS.size() \
+		else str(index + 1)
+	h.add_child(_cell(place, 46, COLOR_TEXT, 20, HORIZONTAL_ALIGNMENT_CENTER))
 
-	var ten := GameData.character_name(String(ban_ghi.get("character", ban_ghi.get("nv", ""))))
+	var name_ := GameData.character_name(String(record.get("character", record.get("nv", ""))))
 	# Ba dòng đầu tô vàng: mắt phải bắt được "ai đang dẫn đầu" trước khi đọc
 	# tới cột tiền.
-	var mau_ten: Color = MAU_VANG if chi_so == 0 else MAU_CHU
-	h.add_child(_o(ten, 0, mau_ten, 20))
+	var name_color: Color = COLOR_GOLD if index == 0 else COLOR_TEXT
+	h.add_child(_cell(name_, 0, name_color, 20))
 
-	h.add_child(_o(str(int(ban_ghi.get("money", ban_ghi.get("tien", 0)))), 130, MAU_CHU, 20,
+	h.add_child(_cell(str(int(record.get("money", record.get("tien", 0)))), 130, COLOR_TEXT, 20,
 		HORIZONTAL_ALIGNMENT_RIGHT))
 
-	var hang := String(ban_ghi.get("rank", ban_ghi.get("hang", "")))
-	var o_hang: Label = _o(hang if not hang.is_empty() else "—", 60,
-		Color(MAU_HANG.get(hang, MAU_HANG[""])), 20, HORIZONTAL_ALIGNMENT_CENTER)
-	h.add_child(o_hang)
+	var rank := String(record.get("rank", record.get("hang", "")))
+	var rank_cell: Label = _cell(rank if not rank.is_empty() else "—", 60,
+		Color(COLOR_RANK.get(rank, COLOR_RANK[""])), 20, HORIZONTAL_ALIGNMENT_CENTER)
+	h.add_child(rank_cell)
 	return h
 
 
 ## Một ô chữ trong bảng. `rong` = 0 nghĩa là ô co giãn chiếm hết chỗ trống —
 ## đúng một ô như thế mỗi hàng (cột tên), nhờ vậy ba cột còn lại có bề rộng
 ## cố định và các hàng thẳng cột với nhau mà không cần GridContainer.
-func _o(chu: String, rong: int, mau: Color, co: int,
+func _cell(chu: String, width: int, color_: Color, size_: int,
 		can: HorizontalAlignment = HORIZONTAL_ALIGNMENT_LEFT) -> Label:
 	var l := Label.new()
 	l.text = chu
-	l.add_theme_font_size_override("font_size", co)
-	l.add_theme_color_override("font_color", mau)
+	l.add_theme_font_size_override("font_size", size_)
+	l.add_theme_color_override("font_color", color_)
 	l.horizontal_alignment = can
-	if rong > 0:
-		l.custom_minimum_size = Vector2(rong, 0)
+	if width > 0:
+		l.custom_minimum_size = Vector2(width, 0)
 	else:
 		l.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	return l

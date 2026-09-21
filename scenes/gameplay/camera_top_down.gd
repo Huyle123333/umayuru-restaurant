@@ -20,17 +20,17 @@ extends Camera3D
 
 ## Kích thước bản đồ theo trục X và Z, tính từ gốc (0, 0).
 ## Dùng để chặn camera không trôi ra ngoài tường, xem _chan_trong_map().
-@export var kich_thuoc_map := Vector2(32.0, 24.0)
+@export var map_size := Vector2(32.0, 24.0)
 
 ## Độ mượt khi bám. Càng lớn càng bám sát, càng nhỏ càng "trôi" theo sau.
 ##
 ## 6.0 là mức camera theo kịp nhịp đi bộ mà vẫn còn một chút trễ — chút trễ
 ## đó chính là thứ khiến chuyển động đọc được là "camera đang đuổi theo"
 ## chứ không phải "cả thế giới đang giật".
-@export var do_muot: float = 6.0
+@export var smoothing: float = 6.0
 
 ## Có chặn camera ở mép bản đồ không. Tắt đi khi cần quay phim demo.
-@export var chan_o_mep: bool = true
+@export var clamp_at_edge: bool = true
 
 ## Nới thêm bấy nhiêu đơn vị ở MÉP TRÊN của khung hình (phía z nhỏ).
 ##
@@ -51,10 +51,10 @@ extends Camera3D
 ##
 ## Chỉ nới mép TRÊN: mép dưới không có vấn đề này (vật cao bị đẩy RA XA mép
 ## dưới chứ không lại gần), nới cả hai chỉ tổ để lộ thêm khoảng trống vô ích.
-@export var no_them_mep_tren: float = 2.0
+@export var extra_top: float = 2.0
 
 var _player_camera: Camera3D = null
-var _nhan_vat: Node3D = null
+var _character: Node3D = null
 ## Vector từ điểm camera nhìn xuống (trên mặt sàn) tới chỗ camera đứng.
 ##
 ## Vì sao ĐO ra chứ không viết cứng: góc nghiêng và độ cao của camera do
@@ -62,7 +62,7 @@ var _nhan_vat: Node3D = null
 ## lần chỉnh góc trong Godot lại phải sửa cả script cho khớp — và quên một
 ## lần là camera nhìn sai chỗ. Đo một lần lúc khởi động thì script giữ
 ## nguyên đúng bố cục người dựng đã đặt, dù đó là góc nào.
-var _lech := Vector3.ZERO
+var _offset := Vector3.ZERO
 
 
 func _ready() -> void:
@@ -71,22 +71,22 @@ func _ready() -> void:
 	GameData.third_person_active = false
 	GameData.view_mode_changed.connect(_apply_view)
 
-	_lech = global_position - _diem_nhin_xuong()
+	_offset = global_position - _ground_point()
 
 	# Đợi hết một frame trước khi tìm nhân vật: nhân vật KHÔNG nằm sẵn trong
 	# file map mà được level_base.gd add_child() lúc chạy, nên nó vào cây
 	# scene SAU camera này. Godot cũng luôn lấy camera được kích hoạt sau
 	# cùng — không đợi rồi giành lại thì chạy map ra vẫn là góc nhìn thứ 3.
 	await get_tree().process_frame
-	_nhan_vat = _tim_nhan_vat()
+	_character = _find_character()
 	_player_camera = _find_player_camera()
 	_apply_view(false)
 
 	# Nhảy thẳng tới vị trí đúng ở frame đầu. Không có dòng này thì vào màn
 	# sẽ thấy camera trượt từ chỗ đặt sẵn trong file map về chỗ nhân vật —
 	# nhìn như lỗi chứ không như hiệu ứng.
-	if _nhan_vat != null:
-		global_position = _dich_den()
+	if _character != null:
+		global_position = _target_pos()
 
 
 ## Bám trong _physics_process chứ không phải _process, vì nhân vật là
@@ -94,25 +94,25 @@ func _ready() -> void:
 ## mục tiêu thì mỗi frame camera đọc được một vị trí hơi cũ hoặc hơi mới,
 ## kết quả là hình rung lăn tăn dù cả hai đều chạy đúng.
 func _physics_process(delta: float) -> void:
-	if _nhan_vat == null or not current:
+	if _character == null or not current:
 		return
 	# Làm mượt theo hàm mũ chứ không lerp thẳng với hệ số cố định: cách này
 	# cho ra cùng một tốc độ bám ở mọi khung hình/giây. Dùng lerp(_, 0.1)
 	# kiểu hay gặp thì máy chạy 144 fps camera sẽ bám nhanh gấp đôi máy chạy
 	# 72 fps — cân bằng thử ở máy này sang máy khác là sai.
-	var he_so := 1.0 - exp(-do_muot * delta)
-	global_position = global_position.lerp(_dich_den(), he_so)
+	var factor := 1.0 - exp(-smoothing * delta)
+	global_position = global_position.lerp(_target_pos(), factor)
 
 
 # ------------------------------------------------------------- bám theo ---
 
 ## Chỗ camera cần đứng để nhân vật nằm giữa khung hình.
-func _dich_den() -> Vector3:
-	var tam := _nhan_vat.global_position
-	tam.y = 0.0
-	if chan_o_mep:
-		tam = _chan_trong_map(tam)
-	return tam + _lech
+func _target_pos() -> Vector3:
+	var center := _character.global_position
+	center.y = 0.0
+	if clamp_at_edge:
+		center = _clamp_to_map(center)
+	return center + _offset
 
 
 ## Kéo tâm khung hình vào trong lòng bản đồ.
@@ -121,50 +121,50 @@ func _dich_den() -> Vector3:
 ## quán — vừa xấu vừa làm người chơi tưởng còn phòng khác ở đó. Chặn theo
 ## đúng NỬA KHUNG HÌNH nên khi nhân vật đi vào góc, camera dừng lại còn
 ## nhân vật tiếp tục đi lệch ra khỏi tâm — đúng cách mọi game top-down làm.
-func _chan_trong_map(tam: Vector3) -> Vector3:
+func _clamp_to_map(center: Vector3) -> Vector3:
 	# Camera trực giao: `size` là chiều CAO khung hình tính bằng đơn vị thế
 	# giới. Chiều ngang suy ra từ tỉ lệ khung hình. Chiều sâu nhìn thấy trên
 	# mặt sàn thì lớn hơn `size` vì camera nhìn xiên — chia cho sin của góc
 	# nghiêng để quy về mặt phẳng ngang.
-	var ti_le := float(get_viewport().get_visible_rect().size.aspect())
-	var nua_ngang := size * ti_le * 0.5
-	var sin_goc := absf((-global_transform.basis.z).y)
-	var nua_sau := (size / maxf(sin_goc, 0.05)) * 0.5
+	var aspect := float(get_viewport().get_visible_rect().size.aspect())
+	var half_width := size * aspect * 0.5
+	var sin_angle := absf((-global_transform.basis.z).y)
+	var half_depth := (size / maxf(sin_angle, 0.05)) * 0.5
 
 	# Bản đồ nhỏ hơn khung hình theo chiều nào thì khoá cứng vào giữa chiều
 	# đó — nếu không, hai cận trên/dưới đảo nhau và clamp() trả về giá trị vô
 	# nghĩa.
-	if nua_ngang * 2.0 >= kich_thuoc_map.x:
-		tam.x = kich_thuoc_map.x * 0.5
+	if half_width * 2.0 >= map_size.x:
+		center.x = map_size.x * 0.5
 	else:
-		tam.x = clampf(tam.x, nua_ngang, kich_thuoc_map.x - nua_ngang)
+		center.x = clampf(center.x, half_width, map_size.x - half_width)
 
 	# Cận trên (phía z nhỏ) lùi thêm `no_them_mep_tren` — xem chú thích của ô
 	# đó để biết vì sao chỉ một phía.
-	var can_tren := nua_sau - no_them_mep_tren
-	var can_duoi := kich_thuoc_map.y - nua_sau
-	if can_tren >= can_duoi:
+	var top_limit := half_depth - extra_top
+	var bottom_limit := map_size.y - half_depth
+	if top_limit >= bottom_limit:
 		# Khung hình sâu hơn bản đồ: khoá cứng vào giữa. Không có nhánh này
 		# thì hai cận đảo nhau và clampf() trả về giá trị vô nghĩa.
-		tam.z = (can_tren + can_duoi) * 0.5
+		center.z = (top_limit + bottom_limit) * 0.5
 	else:
-		tam.z = clampf(tam.z, can_tren, can_duoi)
-	return tam
+		center.z = clampf(center.z, top_limit, bottom_limit)
+	return center
 
 
 ## Điểm camera đang nhìn tới trên mặt sàn (y = 0), tính bằng giao tuyến của
 ## tia nhìn với mặt phẳng sàn.
-func _diem_nhin_xuong() -> Vector3:
-	var huong := -global_transform.basis.z
-	if huong.y >= -0.01:
+func _ground_point() -> Vector3:
+	var dir_ := -global_transform.basis.z
+	if dir_.y >= -0.01:
 		# Camera không chúc xuống thì không có giao điểm — đây gần như chắc
 		# chắn là lỗi đặt góc trong file map, nên báo ra thay vì im lặng.
-		push_warning("CameraTopDown không chúc xuống mặt sàn, hướng = %s" % huong)
+		push_warning("CameraTopDown không chúc xuống mặt sàn, hướng = %s" % dir_)
 		return Vector3(global_position.x, 0.0, global_position.z)
-	return global_position + huong * (global_position.y / -huong.y)
+	return global_position + dir_ * (global_position.y / -dir_.y)
 
 
-func _tim_nhan_vat() -> Node3D:
+func _find_character() -> Node3D:
 	var level := get_parent()
 	if level == null or not ("player" in level):
 		return null
@@ -199,8 +199,8 @@ func _apply_view(is_third_person: bool) -> void:
 ## được tạo lúc chạy nên các node con của nó không thuộc quyền sở hữu
 ## (owner) của scene màn chơi.
 func _find_player_camera() -> Camera3D:
-	if _nhan_vat == null:
+	if _character == null:
 		return null
-	for n in _nhan_vat.find_children("*", "Camera3D", true, false):
+	for n in _character.find_children("*", "Camera3D", true, false):
 		return n as Camera3D
 	return null

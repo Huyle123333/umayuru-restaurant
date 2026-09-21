@@ -349,8 +349,8 @@ func _on_cut_in_finished() -> void:
 
 
 func _lock_character(locked: bool) -> void:
-	if _character != null and "khoa_di_chuyen" in _character:
-		_character.khoa_di_chuyen = locked
+	if _character != null and "movement_locked" in _character:
+		_character.movement_locked = locked
 
 
 func _emit_state() -> void:

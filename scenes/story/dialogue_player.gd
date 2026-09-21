@@ -449,18 +449,18 @@ func _change_portrait(value: Variant) -> void:
 ## khung hình, nên ảnh của câu trước vẫn còn trong hàng khi ảnh mới được thêm
 ## vào — hai câu đồng thanh liền nhau sẽ thấy tám khuôn mặt trong một khung.
 func _build_group(list: Array[String]) -> void:
-	for con in _group_box.get_children():
-		_group_box.remove_child(con)
-		con.free()
+	for child in _group_box.get_children():
+		_group_box.remove_child(child)
+		child.free()
 	_align_group_bottom(list.size())
 	for id in list:
-		var o := TextureRect.new()
-		o.texture = load(String(PORTRAITS[id]))
-		o.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
-		o.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
-		o.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		o.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		_group_box.add_child(o)
+		var cell := TextureRect.new()
+		cell.texture = load(String(PORTRAITS[id]))
+		cell.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+		cell.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+		cell.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		cell.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		_group_box.add_child(cell)
 
 
 ## Kéo MÉP TRÊN của khung nhóm lên đúng bằng bề ngang một ảnh.
@@ -506,10 +506,10 @@ func _hide_portrait() -> void:
 ## alpha 0. Không tốn gì cả — nó neo tuyệt đối chứ không nằm trong container
 ## nên chẳng chiếm chỗ của ai, và mouse_filter đã đặt IGNORE nên không chắn
 ## cú bấm nào.
-func _reveal_gradually(nut: CanvasItem, hien: bool) -> void:
-	nut.visible = true
+func _reveal_gradually(btn: CanvasItem, show_it: bool) -> void:
+	btn.visible = true
 	var tween := create_tween()
-	tween.tween_property(nut, "modulate:a", 1.0 if hien else 0.0, 0.25 if hien else 0.2)
+	tween.tween_property(btn, "modulate:a", 1.0 if show_it else 0.0, 0.25 if show_it else 0.2)
 
 
 # --------------------------------------------------------------- kết thúc ---

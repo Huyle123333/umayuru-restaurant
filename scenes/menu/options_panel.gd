@@ -25,9 +25,9 @@ extends Control
 ## lặng ngay khi ai đó đổi tên hoặc di chuyển một node. Phát tín hiệu thì bảng
 ## này dùng lại được ở menu Pause mà không sửa một dòng nào.
 
-signal chon_huong_dan
-signal chon_cai_dat
-signal chon_credits
+signal guide_chosen
+signal settings_chosen
+signal credits_chosen
 
 @onready var _btn_guide: Button = %BtnGuide
 @onready var _btn_settings: Button = %BtnSettings
@@ -39,9 +39,9 @@ var _focus_on_close: Control = null
 
 func _ready() -> void:
 	hide()
-	_btn_guide.pressed.connect(func() -> void: chon_huong_dan.emit())
-	_btn_settings.pressed.connect(func() -> void: chon_cai_dat.emit())
-	_btn_credits.pressed.connect(func() -> void: chon_credits.emit())
+	_btn_guide.pressed.connect(func() -> void: guide_chosen.emit())
+	_btn_settings.pressed.connect(func() -> void: settings_chosen.emit())
+	_btn_credits.pressed.connect(func() -> void: credits_chosen.emit())
 	_btn_close.pressed.connect(close)
 
 

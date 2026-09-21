@@ -145,14 +145,14 @@ func _fill_card(card: Control, id: String) -> void:
 ## chồng mép nhau — đó là chủ ý, và z_index = i lo phần lá phải đè lên lá trái.
 func _layout_hand() -> void:
 	var order: Array = GameData.CHARACTER_ORDER
-	var so_la: int = order.size()
-	var buoc: float = 0.0
-	if so_la > 1:
-		buoc = (_hand.size.x - CARD_SIZE.x) / float(so_la - 1)
+	var card_count: int = order.size()
+	var step_x: float = 0.0
+	if card_count > 1:
+		step_x = (_hand.size.x - CARD_SIZE.x) / float(card_count - 1)
 	# Chừa sẵn khoảng nhấc lên ở phía trên, để lá đang chọn không bị cắt ngọn.
-	var day := _hand.size.y - CARD_SIZE.y
+	var bottom := _hand.size.y - CARD_SIZE.y
 
-	for i in so_la:
+	for i in card_count:
 		var id := str(order[i])
 		if not _cards.has(id):
 			continue
@@ -161,7 +161,7 @@ func _layout_hand() -> void:
 		card.size = CARD_SIZE
 		card.pivot_offset = CARD_SIZE * 0.5
 
-		var pos := Vector2(buoc * i, day)
+		var pos := Vector2(step_x * i, bottom)
 		_base_pos[id] = pos
 		# Giữ lại _base_rot dù hàng ngang không nghiêng lá nào: _animate_card
 		# vẫn nhận một góc đích, để sau này muốn thêm hiệu ứng nghiêng nhẹ lúc
@@ -266,18 +266,18 @@ func _fill_panel(id: String) -> void:
 	_lbl_name.text = str(info["label"])
 	_lbl_tagline.text = str(info.get("tagline", ""))
 	_lbl_intro.text = str(info.get("intro", ""))
-	_dung_bang(_grid_measure, info.get("measure", {}))
-	_dung_bang(_grid_profile, info.get("profile", {}))
+	_build_table(_grid_measure, info.get("measure", {}))
+	_build_table(_grid_profile, info.get("profile", {}))
 	_fill_skills(info)
 
 	# Mỗi bí mật một dòng. Dùng dấu đầu dòng "・" (kiểu Nhật) cho khớp với
 	# trang gốc, và nối bằng \n chứ không tạo mỗi dòng một Label: số lượng bí
 	# mật mỗi nhân vật một khác, một Label autowrap gánh được hết.
-	var bi_mat: Array = info.get("secrets", [])
-	var dong: PackedStringArray = []
-	for v in bi_mat:
-		dong.append("・%s" % str(v))
-	_lbl_secrets.text = "\n".join(dong)
+	var secrets: Array = info.get("secrets", [])
+	var lines: PackedStringArray = []
+	for v in secrets:
+		lines.append("・%s" % str(v))
+	_lbl_secrets.text = "\n".join(lines)
 
 	# Dòng gợi ý chỉ dành cho nhân vật chưa mở khóa.
 	var hint := str(info.get("hint", ""))
@@ -305,13 +305,13 @@ func _fill_panel(id: String) -> void:
 ## remove_child + free() chứ không queue_free(): queue_free chỉ xóa ở CUỐI
 ## khung hình, nên các hàng cũ vẫn còn trong cây khi hàng mới được thêm vào —
 ## đổi nhân vật liên tục sẽ thấy bảng dài gấp đôi trong đúng một khung hình.
-func _dung_bang(luoi: GridContainer, bang: Dictionary) -> void:
-	for con in luoi.get_children():
-		luoi.remove_child(con)
-		con.free()
-	for key in bang:
-		luoi.add_child(_o_bang(str(key), true))
-		luoi.add_child(_o_bang(str(bang[key]), false))
+func _build_table(grid: GridContainer, table: Dictionary) -> void:
+	for child in grid.get_children():
+		grid.remove_child(child)
+		child.free()
+	for key in table:
+		grid.add_child(_table_cell(str(key), true))
+		grid.add_child(_table_cell(str(table[key]), false))
 
 
 ## Bề ngang tối thiểu của ô GIÁ TRỊ. Đây là con số đã làm nổ bảng info.
@@ -326,20 +326,20 @@ func _dung_bang(luoi: GridContainer, bang: Dictionary) -> void:
 ## Đặt bề ngang tối thiểu thì Godot có cái để tính chiều cao ngay từ lượt đầu,
 ## không còn lượt nào bị phồng. Đây là lỗi kinh điển của autowrap trong
 ## container, và cách chữa luôn là cho nó một bề ngang, không phải chỉnh cao.
-const RONG_O_GIA_TRI := 300.0
+const VALUE_COL_WIDTH := 300.0
 
 
 ## Một ô trong bảng NHÃN / GIÁ TRỊ. nhan = true là cột trái (chữ nâu, rộng cố
 ## định để hai cột thẳng hàng), false là cột phải (chữ sáng, tự xuống dòng).
-func _o_bang(text: String, nhan: bool) -> Label:
+func _table_cell(text: String, highlight: bool) -> Label:
 	var lbl := Label.new()
 	lbl.text = text
 	lbl.add_theme_font_size_override("font_size", 15)
-	if nhan:
+	if highlight:
 		lbl.custom_minimum_size = Vector2(104.0, 0.0)
 		lbl.add_theme_color_override("font_color", Color(0.827, 0.639, 0.408))
 	else:
-		lbl.custom_minimum_size = Vector2(RONG_O_GIA_TRI, 0.0)
+		lbl.custom_minimum_size = Vector2(VALUE_COL_WIDTH, 0.0)
 		lbl.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		lbl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 		lbl.add_theme_color_override("font_color", Color(0.969, 0.929, 0.871))
