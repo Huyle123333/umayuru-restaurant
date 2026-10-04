@@ -1,17 +1,17 @@
 @tool
 extends Node3D
 
-@export var chieu_rong: int = 10  # Số lượng ô theo chiều ngang
-@export var chieu_dai: int = 10   # Số lượng ô theo chiều dọc
-@export var kich_thuoc_o: float = 2.0 # Kích thước 1 ô sàn (sửa lại cho đúng độ rộng miếng gltf của bạn)
+@export var width_tiles: int = 10  # Số lượng ô theo chiều ngang
+@export var depth_tiles: int = 10   # Số lượng ô theo chiều dọc
+@export var cell_size: float = 2.0 # Kích thước 1 ô sàn (sửa lại cho đúng độ rộng miếng gltf của bạn)
 
 func _ready():
-	var tile_goc = $TileGoc
-	if not tile_goc: return
+	var base_tile = $TileGoc
+	if not base_tile: return
 	
-	for x in range(chieu_rong):
-		for z in range(chieu_dai):
+	for x in range(width_tiles):
+		for z in range(depth_tiles):
 			if x == 0 and z == 0: continue # Bỏ qua ô gốc
-			var tile_moi = tile_goc.duplicate()
-			add_child(tile_moi)
-			tile_moi.position = Vector3(x * kich_thuoc_o, 0, z * kich_thuoc_o)
+			var new_tile = base_tile.duplicate()
+			add_child(new_tile)
+			new_tile.position = Vector3(x * cell_size, 0, z * cell_size)

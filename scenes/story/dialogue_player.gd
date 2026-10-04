@@ -97,6 +97,20 @@ const PORTRAITS := {
 ## đoạn cắt cảnh thì không, vì nó không phải một màn chơi.
 @export var mark_completed: String = ""
 
+## Scene sẽ chuyển tới khi kể xong, thay cho việc vào một màn chơi. Dùng cho
+## màn KẾT: sau nó không còn màn nào để vào, nên phải nói rõ đi đâu (về màn
+## chọn màn). Để trống thì giữ hành vi cũ — vào màn `next_level` / màn đang
+## chọn dở.
+@export_file("*.tscn") var next_scene: String = ""
+## BIẾN THỂ của đoạn kể này, do scene đặt. Dòng kịch bản nào ghi
+## "only_for_variant" khác giá trị này thì bị bỏ qua.
+##
+## Dùng cho màn kết: ending_normal.tscn và ending_secret.tscn trỏ CÙNG một
+## file kịch bản, chỉ khác biến này. Đặt ở scene chứ không để kịch bản tự hỏi
+## GameData "đang là kết nào": bộ máy hội thoại không cần biết luật mở kết ẩn,
+## và muốn xem thử một biến thể thì chỉ việc mở đúng scene đó.
+@export var variant: String = ""
+
 @onready var _background: TextureRect = %Background
 @onready var _tint: ColorRect = %Tint
 @onready var _portrait: TextureRect = %Portrait
@@ -257,6 +271,59 @@ func _finish_typing() -> void:
 
 # ----------------------------------------------------------- diễn kịch ---
 
+## Chọn câu thoại của một dòng kịch bản. Thứ tự ưu tiên:
+##   1. "line_by_player" — Dictionary {id nhân vật: câu}. Lấy câu của nhân vật
+##      người chơi đang chọn.
+##   2. "line_by_level"  — Dictionary {id màn: câu}. Lấy câu của màn sắp vào.
+##   3. "line"           — câu mặc định, cũng là câu dự phòng khi hai bảng
+##      trên không có mục cho nhân vật / màn hiện tại.
+##
+## Vì sao thêm hai khoá vào DỮ LIỆU thay vì viết bảy file kịch bản: đoạn hội ý
+## trước mỗi ngày chỉ khác nhau ở câu nhận việc của người đứng bếp. Bảy file
+## thì sửa một câu chung (lời trainer) là sửa bảy chỗ. Một file với câu riêng
+## nằm ngay cạnh câu chung thì người viết thấy được cả bảy giọng cùng lúc.
+func _pick_line(entry: Dictionary) -> String:
+	var by_player: Dictionary = entry.get("line_by_player", {})
+	var who := String(GameData.selected_character)
+	if by_player.has(who):
+		return String(by_player[who])
+	var by_level: Dictionary = entry.get("line_by_level", {})
+	var lvl := String(GameData.current_level)
+	if by_level.has(lvl):
+		return String(by_level[lvl])
+	return String(entry.get("line", ""))
+
+## Dòng này có bị BỎ QUA không. Ba loại điều kiện, dòng phải đạt CẢ BA:
+##   "only_for_player"      — người chơi phải là một trong các id ghi trong mảng.
+##   "only_for_variant"     — biến thể của scene (@export variant) phải trùng.
+##   "only_for_hidden_cast" — tập nhân vật ẩn đã ra mắt phải khớp CHÍNH XÁC
+##                            mảng này (cùng số người, cùng những người đó).
+##
+## Gom vào một hàm trả về bool thay vì ba khối if rải trong _next_line(): thêm
+## loại điều kiện thứ tư chỉ là thêm một khối ở đây, và _next_line() vẫn chỉ
+## có đúng một chỗ quyết định "chiếu hay bỏ".
+func _should_skip(entry: Dictionary) -> bool:
+	var only: Array = entry.get("only_for_player", [])
+	if not only.is_empty() and not only.has(String(GameData.selected_character)):
+		return true
+
+	var only_variant := String(entry.get("only_for_variant", ""))
+	if not only_variant.is_empty() and only_variant != variant:
+		return true
+
+	if entry.has("only_for_hidden_cast"):
+		var wanted: Array = entry["only_for_hidden_cast"]
+		var present := GameData.hidden_cast_seen()
+		# So khớp TẬP HỢP: cùng cỡ và mọi phần tử đều có mặt. Không so hai
+		# mảng bằng == vì khi đó thứ tự viết trong kịch bản cũng phải đúng.
+		if wanted.size() != present.size():
+			return true
+		for id in wanted:
+			if not present.has(String(id)):
+				return true
+	return false
+
+
 func _next_line() -> void:
 	_index += 1
 	if _index >= _scenes.size():
@@ -264,6 +331,18 @@ func _next_line() -> void:
 		return
 
 	var entry: Dictionary = _scenes[_index]
+
+	# Dòng có điều kiện mà không đạt thì bỏ qua, sang luôn dòng kế — không
+	# tốn một lần bấm vào một câu trống.
+	if _should_skip(entry):
+		_next_line()
+		return
+
+	# "music": "off" cho nhạc nền im từ dòng này, "on" cho phát tiếp. Xét
+	# TRƯỚC khi đổi nền: nhạc tắt cùng lúc màn hình bắt đầu tối, chứ không phải
+	# tối xong rồi mới tắt — tắt trễ thì nghe như lỗi.
+	if entry.has("music"):
+		AmThanh.set_music_hushed(String(entry["music"]) == "off")
 
 	if entry.has("background"):
 		await _change_background(String(entry["background"]))
@@ -279,38 +358,15 @@ func _next_line() -> void:
 	# trống. Ô trống làm hộp thoại nhảy lên nhảy xuống mỗi câu, rất khó chịu.
 	_lbl_name.visible = not speaker.is_empty()
 
-	_lbl_line.text = String(entry.get("line", ""))
+	_lbl_line.text = _pick_line(entry)
 	_lbl_line.visible_characters = 0
 	_revealed = 0.0
 	_typing = true
 
-	# Tiếng gõ chữ: ĐÚNG MỘT LẦN cho mỗi câu, và CHỈ khi có người nói.
-	#
-	# Kịch bản có hai loại câu, phân biệt bằng khoá "speaker":
-	#   có "speaker"     — một nhân vật đang NÓI. Kêu.
-	#   không "speaker"  — lời dẫn truyện ("Rồi cửa trước bật tung."). Im.
-	#
-	# Vì sao phân biệt: tiếng đó là tiếng CỦA MỘT NGƯỜI đang nói, nên gắn nó
-	# vào lời dẫn là gán giọng cho một người không tồn tại. Trong prologue,
-	# lời dẫn xen giữa các câu thoại để đổi nhịp — chính những quãng lặng đó
-	# làm nên nhịp, mà kêu ở mọi câu thì quãng lặng biến mất và cả đoạn thành
-	# một chuỗi tiếng đều đều.
-	#
-	# Dùng lại đúng biến `speaker` đã tính ở trên chứ không đọc lại entry["speaker"]:
-	# "speaker" có thể là AUTO_NAME (tên người chơi đang chọn), và câu đó VẪN là
-	# một người đang nói. Đọc lại khoá gốc thì nhánh đó bị coi nhầm là lời dẫn.
-	#
-	# Đặt ở đây chứ không trong _process: đây là chỗ duy nhất một câu mới bắt
-	# đầu, nên không cần cờ "đã kêu chưa" nào cả. Bấm nhảy cóc để hiện hết
-	# dòng cũng không kêu thêm lần nữa, vì nhánh đó không đi qua đây.
-	#
-	# Bản đầu còn phát LẶP theo nhịp trong lúc chữ chạy — đúng kiểu máy chữ
-	# nhưng nghe nhức đầu: prologue dài mấy chục dòng, và chuỗi tiếng "cạch"
-	# liên tục cạnh tranh trực tiếp với thứ người chơi đang phải làm ở đó —
-	# ĐỌC. Tiếng động trong game kể chuyện nên đánh dấu SỰ KIỆN, không mô tả
-	# quá trình.
-	if not speaker.is_empty():
-		AmThanh.play_type_tick()
+	# (2/10/2026) ĐÃ BỎ tiếng "tick" phát ở đầu mỗi câu thoại, theo yêu cầu
+	# user: hội thoại giờ chỉ có nhạc nền. Hàm AmThanh.play_type_tick() vẫn
+	# còn bên audio_manager, muốn bật lại thì gọi nó ở đây khi `speaker`
+	# không rỗng.
 	_arrow.hide()
 
 
@@ -520,9 +576,19 @@ func _skip() -> void:
 	_finish()
 
 
+## Lưới an toàn thứ hai cho nhạc: scene bị đổi bằng đường KHÔNG qua _finish()
+## (ví dụ thoát ra menu giữa chừng) thì vẫn trả nhạc lại.
+func _exit_tree() -> void:
+	AmThanh.set_music_hushed(false)
+
+
 func _finish() -> void:
 	_fading = true
 	_typing = false
+	# Trả nhạc lại dù đoạn kể kết thúc ở đâu. Nút Bỏ qua cũng đi qua đây: bấm
+	# bỏ qua giữa cảnh im lặng mà không có dòng này thì nhạc im luôn tới hết
+	# phiên chơi, vì dòng "music": "on" trong kịch bản không bao giờ được chạy.
+	AmThanh.set_music_hushed(false)
 	var tween := create_tween()
 	tween.tween_property(_tint, "color:a", 1.0, fade_time)
 	await tween.finished
@@ -531,6 +597,9 @@ func _finish() -> void:
 	# "needs" trong GameData.LEVELS — không phá lệ, không đi cửa sau.
 	if not mark_completed.is_empty():
 		GameData.complete_level(mark_completed)
+	if not next_scene.is_empty():
+		get_tree().change_scene_to_file(next_scene)
+		return
 	if not next_level.is_empty():
 		GameData.current_level = next_level
 

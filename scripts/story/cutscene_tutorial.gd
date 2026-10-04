@@ -7,8 +7,8 @@ extends RefCounted
 ## chơi đã làm được" nằm ở hai file khác nhau và không kéo nhau đổ.
 ##
 ## Mỗi bước có:
-##   loi   — câu trainer nói
-##   cho   — ĐIỀU KIỆN để bước này coi như xong. Bộ dẫn dắt hiểu các dạng:
+##   line     — câu trainer nói
+##   wait_for — ĐIỀU KIỆN để bước này coi như xong. Bộ dẫn dắt hiểu các dạng:
 ##             "ask"            hiện hai nút Có/Không, chờ người chơi bấm
 ##             "move"      đi đủ LEARN_DISTANCE đơn vị
 ##             "hold:<id>"       trên tay đang cầm đúng vật phẩm đó
@@ -30,7 +30,7 @@ const LEARN_DISTANCE := 6.0
 
 const STEPS := [
 	{
-		"line": "Chào cậu! Lần đầu đứng bếp hả? Để tôi chỉ cho một lượt nhé — hay cậu muốn tự mò?",
+		"line": " xin chào! Lần đầu đứng bếp hả? Để tôi chỉ cho một lượt nhé — hay muốn tự mò?",
 		"wait_for": "ask",
 	},
 	{
@@ -70,6 +70,14 @@ const STEPS := [
 		"line": "Chuẩn rồi! Cứ thế mà làm. Nhớ: [b]E[/b] đặt đồ, [b]F[/b] ráp món, [b]Q[/b] vứt đi, [b]1[/b] ẩn/hiện bảng đơn. Bấm [b]F1[/b] lúc nào cũng được để xem hướng dẫn đầy đủ.",
 		"wait_for": "seconds:7",
 	},
+	# (1/10/2026) Câu chốt + hỏi mở quán. Trước đây học xong là bị đẩy thẳng
+	# sang màn chọn nhân vật — đang đứng trong bếp thì cảnh đổi cái rụp, không
+	# một lời. Câu này cho trainer khép bài học và trao quyền quyết cho người
+	# chơi: ai chưa tự tin thì làm lại một lượt, không phải ra menu tìm.
+	{
+		"line": "Xong rồi đấy! Em đã nắm được hết những gì cần cho một buổi tối. Sắp tới giờ mở cửa rồi — mở quán luôn chứ, hay muốn thử lại một lượt?",
+		"wait_for": "ask_finish",
+	},
 ]
 
 ## Chữ trên hai cái nút ở bước hỏi. Để ở đây cùng kịch bản chứ không nằm trong
@@ -77,3 +85,7 @@ const STEPS := [
 ## không cần mở file code.
 const BTN_YES := "Chỉ đi"
 const BTN_NO := "Bỏ qua"
+
+## Hai nút của câu hỏi cuối bài.
+const BTN_OPEN := "Mở quán"
+const BTN_RETRY := "Thử lại"

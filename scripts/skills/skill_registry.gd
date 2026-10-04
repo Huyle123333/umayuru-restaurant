@@ -45,9 +45,12 @@ extends RefCounted
 const COND_PERFECT_ORDERS := "perfect_orders"
 ## Đếm số đơn đã hoàn thành, hoàn hảo hay không. (Chiyono O — chưa cài)
 const COND_ORDERS_DONE := "orders_done"
-## Đếm số MÓN đã nấu xong thuộc một nhóm. (Special Week, Mambo — chưa cài)
+## Đếm số đơn ĐÃ GIAO mà món khách gọi thuộc một nhóm món. Nhóm khai ở khoá
+## "dishes" của ACTIVE. (Special Week — Shooting Star)
+const COND_ORDERS_WITH_DISHES := "orders_with_dishes"
+## Đếm số MÓN đã nấu xong thuộc một nhóm. (Mambo — chưa cài)
 const COND_DISHES_COOKED := "dishes_cooked"
-## Đếm giây đã trôi của màn chơi. (Oguri — chưa cài)
+## Đếm giây đã trôi của màn chơi. (Oguri Cap — Triumphant Pulse)
 const COND_TIME_ELAPSED := "time_elapsed"
 ## Đếm số lần cho pet ăn. (Teio — chưa cài)
 const COND_PET_FED := "pet_fed"
@@ -65,6 +68,28 @@ const COND_MENU_COVERED := "menu_covered"
 
 ## Mọi đơn giao ra tính là hoàn hảo bất kể thanh kiên nhẫn. (Kita)
 const FX_FORCE_PERFECT := "force_perfect"
+## Các món khai ở khoá "wildcard_dishes" giao được cho MỌI đơn; tiền tính theo
+## món đã giao. (Special Week — Shooting Star)
+const FX_WILDCARD_DISHES := "wildcard_dishes"
+
+
+# ═══════════════════════════════════ NÚM PHỤ CỦA KĨ NĂNG CHỦ ĐỘNG
+#
+# Một kĩ năng chủ động khai được ĐÚNG MỘT khoá "effect". Khi nó cần thêm một
+# tác dụng nhỏ nữa thì khai thêm một khoá NÚM PHỤ vào cùng Dictionary ACTIVE —
+# quan_ly_ki_nang đọc riêng, không đi qua `match` của "effect".
+#
+# Vì sao không đặt tên hiệu ứng mới cho mỗi tổ hợp: hai tác dụng độc lập thì
+# có bốn tổ hợp, ba tác dụng thì tám. Đặt tên cho từng tổ hợp là nhân bản
+# không kiểm soát được; để rời thì mỗi tác dụng một khoá, cộng lại tuỳ ý.
+#
+# Bỏ trống khoá nào thì nhận giá trị đơn vị ở dưới, tức không có gì đổi.
+const ACTIVE_EXTRAS := {
+	## NHÂN vào tiền của đơn giao khi kiên nhẫn còn TRÊN ngưỡng hoàn hảo.
+	## Không áp cho đơn chỉ hoàn hảo nhờ FX_FORCE_PERFECT — xem
+	## customer_manager.perfect_payout_multiplier để biết vì sao tách.
+	"perfect_payout_multiplier": 1.0,
+}
 
 
 # ══════════════════════════════════════════════════ SỐ GỐC (KHÔNG KĨ NĂNG)
@@ -76,10 +101,24 @@ const FX_FORCE_PERFECT := "force_perfect"
 const DEFAULTS := {
 	## Nhân vào MỌI thanh kiên nhẫn của khách (cả xếp hàng lẫn ngồi bàn).
 	"patience_factor": 1.0,
-	## CỘNG thêm vào tỉ lệ thưởng đơn hoàn hảo của quan_ly_khach (gốc 0,35).
+	## CỘNG thêm vào tỉ lệ thưởng đơn hoàn hảo của customer_manager (gốc 0,35).
 	"perfect_bonus_add": 0.0,
 	## BỚT bấy nhiêu GIÂY vào thời điểm món trên bếp bị cháy.
 	"burn_time_cut": 0.0,
+	## BỚT bấy nhiêu GIÂY khi nấu trên bếp các món trong cook_time_cut_items.
+	"cook_time_cut": 0.0,
+	"cook_time_cut_items": [],
+	## Mỗi đơn có bấy nhiêu cơ hội (0…1) được nhân tiền với bonus_payout_multiplier.
+	"bonus_payout_chance": 0.0,
+	"bonus_payout_multiplier": 3.0,
+	## Hệ số giá riêng theo món: {id món: hệ số}.
+	"dish_price_factors": {},
+	## BỚT bấy nhiêu GIÂY cho mọi mẻ nướng trong lò.
+	"bake_time_cut": 0.0,
+	## Hệ số nhân vào trọng số bốc món: {id món: hệ số}.
+	"dish_weight_factors": {},
+	## true = mỗi đơn giao xong nạp đầy thanh thể lực (chạy nhanh).
+	"refill_stamina_on_order": false,
 }
 
 
@@ -98,6 +137,9 @@ const DEFAULTS := {
 # kĩ năng mà không ai biết.
 const SKILL_FILES := {
 	"kitamoi": preload("res://scripts/skills/characters/kita.gd"),
+	"tuandb": preload("res://scripts/skills/characters/spe.gd"),
+	"oui": preload("res://scripts/skills/characters/oguri.gd"),
+	"mambo": preload("res://scripts/skills/characters/mambo.gd"),
 }
 
 

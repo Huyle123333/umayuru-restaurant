@@ -1,7 +1,7 @@
 extends CanvasLayer
 ## Đoạn cut-in chiếu khi người chơi kích hoạt kĩ năng chủ động.
 ##
-## Dựng bằng CODE chứ không phải .tscn, cùng lý do với hud_tuong_tac.gd: cả
+## Dựng bằng CODE chứ không phải .tscn, cùng lý do với interaction_hud.gd: cả
 ## màn này chỉ có bốn node và không có gì để căn bằng mắt trong trình chỉnh
 ## scene. Để trong một file thì đọc một lượt là hiểu, và không có file .tscn
 ## nào để editor ghi đè mất.
@@ -93,7 +93,7 @@ var _uses_left := 0.0
 
 
 func _ready() -> void:
-	# Trên mọi HUD khác (hud_tuong_tac layer 10, bang_chon layer 20).
+	# Trên mọi HUD khác (interaction_hud layer 10, picker_menu layer 20).
 	layer = 60
 	# Phải chạy được KỂ CẢ khi cây scene đang bị dừng — nếu không thì bật
 	# pause_game xong chính node này cũng đứng im và đoạn phim không bao giờ
@@ -239,9 +239,9 @@ void fragment() {
 
 ## Chiếu cut-in của một nhân vật. Trả về false nếu không có file để chiếu.
 ##
-## Trả về bool thay vì âm thầm bỏ qua: người gọi cần biết để KHÔNG trừ lượt
-## dùng kĩ năng khi đoạn phim không tồn tại. Special Week hiện chưa có file,
-## nên trường hợp này là có thật chứ không phải phòng xa.
+## Trả về bool thay vì âm thầm bỏ qua: người gọi cần biết đoạn phim có chiếu
+## hay không — không có phim thì skill_manager bật kĩ năng luôn, không khoá
+## nhân vật và không chờ gì cả.
 func play(character_id: String) -> bool:
 	var path := GameData.skill_cutscene_path(character_id)
 	if path.is_empty() or not ResourceLoader.exists(path):

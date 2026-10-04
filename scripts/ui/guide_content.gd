@@ -1,28 +1,28 @@
 extends RefCounted
-## Nội build của menu hướng dẫn (F1) — DỮ LIỆU thuần, không có logic vẽ.
+## Nội dung của menu hướng dẫn (F1) — DỮ LIỆU thuần, không có logic vẽ.
 ##
-## Cùng lối viết với cutscene_prologue.gd và cutscene_tutorial.gd: sửa nội build
+## Cùng lối viết với cutscene_prologue.gd và cutscene_tutorial.gd: sửa nội dung
 ## là sửa bảng này, không đụng tới file dựng giao diện. Ba file kịch bản của
 ## game giờ đọc giống nhau, nên người sửa chữ chỉ phải học MỘT quy ước.
 ##
-## MỖI MỤC là một Dictionary {id, name_, khoi}. `khoi` là danh sách các khối nội
+## MỖI MỤC là một Dictionary {id, name, blocks}. `blocks` là danh sách các khối nội
 ## build, mỗi khối một loại:
 ##
 ##   {"h":   "Tiêu đề nhỏ"}
 ##   {"p":   "Đoạn văn, có BBCode"}
 ##   {"key_label": [["E", "việc"], ...]}      bảng phím hai cột
-##   {"img": "res://...png", "chu": ""}  ảnh minh hoạ kèm chú thích
-##   {"cong_thuc": "ban"|"noi"|"lo"}     bảng công thức TỰ SINH từ DanhMuc
+##   {"img": "res://...png", "caption": ""} ảnh minh hoạ kèm chú thích
+##   {"recipe": "table"|"oven"}           bảng công thức TỰ SINH từ ItemCatalog
 ##
-## Vì sao có loại khối "cong_thuc" thay vì gõ tay danh sách món:
+## Vì sao có loại khối "recipe" thay vì gõ tay danh sách món:
 ##
 ## Công thức là thứ đổi nhiều nhất trong cả game — riêng tuần này đã thêm ba
 ## món và khoá/mở một nhánh cơ chế. Gõ tay vào đây thì trang hướng dẫn sẽ nói
 ## sai ngay lần sửa công thức đầu tiên, mà nó nói sai một cách IM LẶNG: không
 ## có lỗi nào báo, chỉ có người chơi làm theo rồi không ra món. Sinh thẳng từ
-## DanhMuc thì trang này không bao giờ lệch được với luật thật.
+## ItemCatalog thì trang này không bao giờ lệch được với luật thật.
 ##
-## ẢNH: đặt ở res://assets/ui/huong_dan/<name_>.png. Thiếu ảnh thì khối đó tự bỏ
+## ẢNH: đặt ở res://assets/ui/huong_dan/<tên>.png. Thiếu ảnh thì khối đó tự bỏ
 ## qua, không báo lỗi và không để lại ô trống — nên khai sẵn đường dẫn rồi bổ
 ## sung ảnh sau lúc nào cũng được.
 
@@ -31,14 +31,14 @@ const IMAGE_DIR := "res://assets/ui/huong_dan/"
 const SECTIONS := [
 	# ══════════════════════════════════════════════════════════ GIAO DIỆN ══
 	{
-		"id": "giao_dien",
+		"id": "interface",
 		"name": "Giao diện",
-		"khoi": [
+		"blocks": [
 			{"p": "Màn hình chia làm bốn góc, mỗi góc trả lời một câu hỏi khác nhau. Biết góc nào trả lời câu gì thì không phải quét cả màn hình."},
 
 			{"h": "Bên trái — Bảng đơn hàng"},
 			{"p": "Mỗi tấm vé là một khách [b]đang ngồi bàn[/b]: ảnh món, tên món, giá, [b]số bàn[/b] và bar kiên nhẫn. Vé xếp theo kiên nhẫn còn lại nên [b]vé trên cùng luôn là việc gấp nhất[/b].\n\nBấm [b]1[/b] để đẩy bảng vào cho rộng tầm nhìn. Lúc đóng vẫn còn một cái nhãn nhỏ ở mép trái cho biết đang có mấy đơn, và viền nhãn mang màu của đơn gấp nhất."},
-			{"img": IMAGE_DIR + "bang_don_hang.png", "chu": "Bảng đơn hàng và cái nhãn khi đóng"},
+			{"img": IMAGE_DIR + "bang_don_hang.png", "caption": "Bảng đơn hàng và cái nhãn khi đóng"},
 
 			{"h": "Góc trên phải — Đồng hồ và ví"},
 			{"p": "Thời gian còn lại của màn, và tổng tiền đã kiếm. Dưới 30 giây thì đồng hồ chuyển đỏ. Trong màn hướng dẫn đồng hồ hiện [b]--:--[/b] vì màn đó không tính giờ."},
@@ -72,12 +72,12 @@ const SECTIONS := [
 
 	# ═════════════════════════════════════════════════════════ KHÁCH HÀNG ══
 	{
-		"id": "khach_hang",
+		"id": "customers",
 		"name": "Khách hàng",
-		"khoi": [
+		"blocks": [
 			{"h": "Một người khách đi qua bốn chặng"},
 			{"p": "[b]1. Xếp hàng.[/b] Khách vào cửa và đứng vào hàng đợi. Món họ muốn hiện ngay trong bong bóng trên đầu, kể cả khi chưa có bàn nào trống — nhìn cái hàng là biết công việc sắp tới.\n\n[b]2. Ngồi bàn.[/b] Có bàn trống thì người đầu hàng đi vào ngồi. Lúc này tấm vé của họ hiện ra ở bảng bên trái, kèm số bàn.\n\n[b]3. Ăn.[/b] Giao đúng món là xong đơn — tiền đã được chốt ngay lúc đó. Họ ngồi ăn thêm vài giây, và trong lúc đó cái bàn vẫn bị chiếm.\n\n[b]4. Về.[/b] Số tiền bay lên ở chỗ cái bàn, rồi khách đi ra cửa và trả lại bàn."},
-			{"img": IMAGE_DIR + "vong_doi_khach.png", "chu": "Bong bóng đơn trên đầu khách xếp hàng"},
+			{"img": IMAGE_DIR + "vong_doi_khach.png", "caption": "Bong bóng đơn trên đầu khách xếp hàng"},
 
 			{"h": "Hai bar kiên nhẫn, hai chỗ khác nhau"},
 			{"p": "[b]Lúc xếp hàng[/b] — bar nằm trong bong bóng trên đầu khách, [b]45 giây[/b] cho mọi món. Cố định chứ không theo món, vì lúc này khách chưa được phục vụ gì cả nên thời gian chờ dài ngắn theo món là thứ bạn không đoán được.\n\n[b]Lúc ngồi bàn[/b] — bar nằm trên tấm vé, và [b]dài ngắn theo món[/b]: món càng lâu làm thì khách càng kiên nhẫn. Ngồi được vào bàn là bar [b]nạp đầy lại[/b], không mang theo phần đã chờ ở cửa."},
@@ -98,29 +98,29 @@ const SECTIONS := [
 
 	# ══════════════════════════════════════════════════════════ CÔNG THỨC ══
 	{
-		"id": "cong_thuc",
+		"id": "recipe",
 		"name": "Công thức",
-		"khoi": [
+		"blocks": [
 			{"p": "Thứ tự bỏ nguyên liệu [b]không quan trọng[/b] — chỉ cần đủ và không thừa. Thừa một thứ là công thức không khớp, nên nhìn bảng bên cạnh bàn để biết mình đã bỏ gì."},
 
 			{"h": "Ráp ở bàn chế tạo"},
 			{"p": "Bấm [b]E[/b] để đặt từng thứ xuống bàn, rồi bấm [b]F[/b] để ráp. Ráp hụt thì có câu báo liệt kê những gì đang có trên bàn. Bấm [b]E[/b] tay không để nhấc lại thứ vừa bỏ vào."},
-			{"cong_thuc": "ban"},
+			{"recipe": "table"},
 
 			{"h": "Nấu trên bếp"},
 			{"p": "Vài thứ ráp xong ở bàn vẫn chưa ăn được — [b]nồi canh[/b] và [b]steak rau củ[/b] là đồ SỐNG. Bỏ chúng lên bếp, chờ bar tiến trình đầy, rồi bấm [b]E[/b] tay không để lấy ra.\n\nRiêng [b]nồi canh[/b] nấu xong thành [b]món canh hoàn chỉnh[/b] — mang thẳng ra bàn khách, không cần đĩa, vì cái nồi đã là đồ đựng rồi."},
 
 			{"h": "Nướng trong lò"},
 			{"p": "Đế bánh khởi động lò; topping bỏ thêm khi lò đang chạy."},
-			{"cong_thuc": "lo"},
+			{"recipe": "oven"},
 		],
 	},
 
 	# ═══════════════════════════════════════════════════════ CHỨC NĂNG BẾP ══
 	{
-		"id": "bep",
+		"id": "kitchen",
 		"name": "Chức năng bếp",
-		"khoi": [
+		"blocks": [
 			{"h": "Lấy nguyên liệu"},
 			{"p": "[b]Thùng rau[/b] — bấm [b]E[/b] lấy một thứ. Kho vô hạn, không phải tiết kiệm.\n\n[b]Tủ lạnh[/b] và [b]Máy kem[/b] — mở bảng chọn, [b]W/S[/b] đổi, [b]E[/b] chọn, [b]C[/b] đóng. Bảng [b]không dừng game[/b], khách vẫn đang chờ.\n\n[b]Chồng đĩa[/b] và [b]chồng nồi[/b] — bấm [b]E[/b] lấy một cái. Cũng vô hạn. Đĩa và nồi là hai thứ đồ đựng, và cả hai đều là [b]nguyên liệu[/b] trong công thức chứ không phải một bước riêng — quên lấy đĩa chỉ là công thức không khớp, giống hệt quên một củ cà rốt."},
 
@@ -149,15 +149,19 @@ const SECTIONS := [
 
 	# ═══════════════════════════════════════════════════════════ ĐÁNH GIÁ ══
 	{
-		"id": "danh_gia",
+		"id": "grading",
 		"name": "Đánh giá",
-		"khoi": [
+		"blocks": [
 			{"p": "Hết giờ là màn kết thúc và bảng tổng kết hiện ra. Xếp hạng tính theo [b]tổng doanh thu[/b] của lượt chơi đó."},
 
-			{"h": "Bốn hạng"},
-			{"p": "[color=#f2c230][b]S[/b][/color] · [color=#e8823f][b]A[/b][/color] · [color=#e27ba0][b]B[/b][/color] · [color=#4f9d5d][b]C[/b][/color] — mốc doanh thu của từng hạng xem ngay dưới đây."},
-			{"moc_hang": true},
-			{"p": "Không đạt nổi mốc [b]C[/b] thì màn coi như [b]chưa qua[/b]: màn tiếp theo vẫn khoá, và bảng sẽ nói rõ bạn còn thiếu bao nhiêu."},
+			{"h": "Năm hạng"},
+			# Chỉ ghi TÊN năm hạng, không in con số: mỗi màn có bộ mốc riêng
+			# (Ngày 1 khác Ngày 3), in số ở đây thì hoặc sai với màn đang chơi,
+			# hoặc thành một bảng dài không ai đọc. Con số của từng màn hiện ở
+			# bảng yêu cầu lúc chọn màn và ngay trên HUD trong lúc chơi.
+			{"p": "Từ thấp lên cao: [color=#5b8fb0][b]D[/b][/color] · [color=#4f9d5d][b]C[/b][/color] · [color=#e27ba0][b]B[/b][/color] · [color=#e8823f][b]A[/b][/color] · [color=#f2c230][b]S[/b][/color]."},
+			{"p": "Mỗi màn có mốc doanh thu riêng cho từng hạng. Bấm vào màn ở màn hình [b]Chọn màn[/b] để xem mốc của màn đó; trong lúc chơi, mốc kế tiếp hiện ngay bên phải số tiền."},
+			{"p": "Không đạt nổi mốc [b]D[/b] thì màn coi như [b]chưa qua[/b]: màn tiếp theo vẫn khoá, và bảng sẽ nói rõ bạn còn thiếu bao nhiêu."},
 
 			{"h": "Bảng tổng kết nói gì"},
 			{"p": "[b]Doanh thu[/b] của lượt này, kèm kỷ lục cũ của chính màn đó.\n[b]Đơn đã phục vụ[/b] — tổng số đơn giao đúng.\n[b]Trong đó hoàn hảo[/b] — số đơn giao lúc kiên nhẫn còn trên nửa. Đây là chỗ nhìn ra mình có đang chơi vội đúng cách không.\n[b]Khách bỏ đi[/b] — con số cần giảm ở lượt sau."},

@@ -3,11 +3,11 @@ extends Control
 ##
 ## Cấu trúc hai lớp, và đây là điểm quan trọng nhất của file này:
 ##
-##     Ve (Control, clip_contents = true)   ← con của VBoxContainer
+##     Ve (Control, clip_contents = true)   ← con của HBoxContainer
 ##       └── _card (PanelContainer)          ← KHÔNG do container xếp
 ##
 ## Vì sao phải tách hai lớp thay vì cho thẳng tấm thẻ vào VBox: hiệu ứng
-## "trượt từ trái vào" cần đổi `position.x` của tấm thẻ, mà VBoxContainer thì
+## "thả từ trên xuống" cần đổi `position.y` của tấm thẻ, mà HBoxContainer thì
 ## GHI ĐÈ vị trí mọi node con của nó ở mỗi lần bố trí lại. Tween sẽ chạy được
 ## đúng một frame hình rồi bị container kéo về chỗ cũ. Lớp ngoài nhận việc bị
 ## container xếp; lớp trong tự do vì nó không phải con của container nào cả.
@@ -20,8 +20,11 @@ extends Control
 ## lại rect từ anchor + offset mỗi lần bố trí, nên nó đánh nhau với position và
 ## cái rect phình ra thêm mỗi frame hình.
 
-const WIDTH := 330.0
-const HEIGHT := 110.0
+## (2/10/2026) Vé DỌC và hẹp: 148 × 112, thay cho vé ngang 330 × 110. Dải đơn
+## hàng giờ nằm ngang ở mép trên, nên bề NGANG của một vé là thứ quyết định
+## xếp được mấy vé — 148 thì vừa 10 vé, đúng số đơn tối đa của Ngày 3.
+const WIDTH := 148.0
+const HEIGHT := 112.0
 const SLIDE_SECONDS := 0.30
 
 ## Bảng màu giấy: lấy tông vé giấy nâu-kem cho khớp phong cách quán ăn, không
@@ -65,84 +68,90 @@ func _init() -> void:
 	mouse_filter = Control.MOUSE_FILTER_IGNORE
 
 
-func build(dh: RefCounted, anh_tien: Texture2D) -> void:
-	order = dh
+func build(order_: RefCounted, coin_icon: Texture2D) -> void:
+	order = order_
 
 	_card = PanelContainer.new()
 	_card.size = Vector2(WIDTH, HEIGHT)
-	_card.position = Vector2(-WIDTH - 12.0, 0.0)   # nằm sẵn ngoài mép trái
+	_card.position = Vector2(0.0, -HEIGHT - 12.0)   # nằm sẵn phía trên, ngoài khung
 	_card.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_card.add_theme_stylebox_override("panel", _paper_frame())
 	add_child(_card)
 
-	var row := HBoxContainer.new()
-	row.add_theme_constant_override("separation", 10)
-	_card.add_child(row)
+	# Ba tầng từ trên xuống: [ảnh món | số bàn + giá] / tên món / bar kiên nhẫn.
+	var col := VBoxContainer.new()
+	col.add_theme_constant_override("separation", 3)
+	_card.add_child(col)
+
+	var top := HBoxContainer.new()
+	top.add_theme_constant_override("separation", 6)
+	col.add_child(top)
 
 	# --- ảnh món ---
 	var img := TextureRect.new()
-	img.custom_minimum_size = Vector2(72, 72)
+	img.custom_minimum_size = Vector2(56, 56)
 	img.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 	img.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
-	img.size_flags_vertical = Control.SIZE_SHRINK_CENTER
-	var path_ := String(dh.icon_path())
+	var path_ := String(order_.icon_path())
 	if ResourceLoader.exists(path_):
 		img.texture = load(path_)
 	else:
 		push_warning("Vé đơn: thiếu ảnh %s" % path_)
-	row.add_child(img)
+	top.add_child(img)
 
-	# --- tên món / giá / bar kiên nhẫn ---
-	var col := VBoxContainer.new()
-	col.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	col.size_flags_vertical = Control.SIZE_SHRINK_CENTER
-	col.add_theme_constant_override("separation", 4)
-	row.add_child(col)
+	var side := VBoxContainer.new()
+	side.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	side.alignment = BoxContainer.ALIGNMENT_CENTER
+	side.add_theme_constant_override("separation", -4)
+	top.add_child(side)
 
-	var lbl_name := Label.new()
-	lbl_name.text = String(dh.dish_name())
-	lbl_name.add_theme_font_size_override("font_size", 22)
-	lbl_name.add_theme_color_override("font_color", COLOR_TEXT)
-	# Cắt bằng dấu … chứ không xuống dòng: tấm vé cao cố định, cho phép xuống
-	# dòng thì một cái tên dài đẩy bar kiên nhẫn ra khỏi thẻ.
-	lbl_name.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
-	col.add_child(lbl_name)
+	# --- số bàn ---
+	#
+	# Giữ tham chiếu chứ không gán một lần rồi thôi: vé hiện từ lúc khách còn
+	# ĐỨNG XẾP HÀNG, khi chưa có bàn nào. Số bàn chỉ có sau, nên ô này phải
+	# đổi được giữa chừng.
+	_lbl_number = Label.new()
+	_lbl_number.add_theme_font_size_override("font_size", 34)
+	_lbl_number.add_theme_color_override("font_color", COLOR_TEXT)
+	_lbl_number.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	side.add_child(_lbl_number)
 
+	# --- giá ---
 	var price_row := HBoxContainer.new()
-	price_row.add_theme_constant_override("separation", 4)
-	col.add_child(price_row)
+	price_row.alignment = BoxContainer.ALIGNMENT_CENTER
+	price_row.add_theme_constant_override("separation", 3)
+	side.add_child(price_row)
 
-	if anh_tien != null:
+	if coin_icon != null:
 		var icon := TextureRect.new()
-		icon.texture = anh_tien
-		icon.custom_minimum_size = Vector2(20, 20)
+		icon.texture = coin_icon
+		icon.custom_minimum_size = Vector2(16, 16)
 		icon.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 		icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 		icon.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 		price_row.add_child(icon)
 
 	var price := Label.new()
-	# `gia` van la ten thuoc tinh cua DonHang (don_hang.gd, lo 5 — chua doi).
-	price.text = str(int(dh.price))
-	price.add_theme_font_size_override("font_size", 17)
+	price.text = str(int(order_.price))
+	price.add_theme_font_size_override("font_size", 15)
 	price.add_theme_color_override("font_color", COLOR_DIM)
 	price_row.add_child(price)
 
+	# --- tên món ---
+	var lbl_name := Label.new()
+	lbl_name.text = String(order_.dish_name())
+	lbl_name.add_theme_font_size_override("font_size", 15)
+	lbl_name.add_theme_color_override("font_color", COLOR_TEXT)
+	lbl_name.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	# Cắt bằng dấu … chứ không xuống dòng: tấm vé cao cố định, cho phép xuống
+	# dòng thì một cái tên dài đẩy bar kiên nhẫn ra khỏi thẻ. Ảnh món ở ngay
+	# trên đã nói đủ món nào; tên chỉ là phần xác nhận.
+	lbl_name.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
+	lbl_name.clip_text = true
+	col.add_child(lbl_name)
+
 	_bar = _make_bar()
 	col.add_child(_bar)
-
-	# --- số bàn ---
-	#
-	# Giữ tham chiếu chứ không gán một lần rồi thôi: vé giờ hiện từ lúc khách
-	# còn ĐỨNG XẾP HÀNG, khi chưa có bàn nào. Số bàn chỉ có sau, nên ô này
-	# phải đổi được giữa chừng.
-	_lbl_number = Label.new()
-	_lbl_number.add_theme_font_size_override("font_size", 40)
-	_lbl_number.add_theme_color_override("font_color", COLOR_TEXT)
-	_lbl_number.custom_minimum_size = Vector2(44, 0)
-	_lbl_number.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	_lbl_number.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	row.add_child(_lbl_number)
 
 	_draw_table_no()
 	_draw_bar()
@@ -150,19 +159,19 @@ func build(dh: RefCounted, anh_tien: Texture2D) -> void:
 
 func slide_in() -> void:
 	var tween := create_tween().set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
-	tween.tween_property(_card, "position:x", 0.0, SLIDE_SECONDS)
+	tween.tween_property(_card, "position:y", 0.0, SLIDE_SECONDS)
 
 
 ## Trượt ngược ra rồi tự xoá. Trả về tween để bên gọi await nếu cần.
 func slide_out() -> void:
 	order = null
-	# Hai thứ chạy SONG SONG: thẻ trượt ra, đồng thời ô chứa nó xẹp chiều cao
-	# về 0. Chỉ trượt không thôi thì cái vé biến mất nhưng để lại một khoảng
-	# trống, và những vé dưới nhảy cóc lên khi node bị xoá.
+	# Hai thứ chạy SONG SONG: thẻ rút lên trên, đồng thời ô chứa nó xẹp bề
+	# NGANG về 0. Chỉ rút không thôi thì cái vé biến mất nhưng để lại một
+	# khoảng trống, và những vé bên phải nhảy cóc sang khi node bị xoá.
 	var tween := create_tween().set_parallel(true) \
 		.set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_IN)
-	tween.tween_property(_card, "position:x", -WIDTH - 12.0, SLIDE_SECONDS)
-	tween.tween_property(self, "custom_minimum_size:y", 0.0, SLIDE_SECONDS)
+	tween.tween_property(_card, "position:y", -HEIGHT - 12.0, SLIDE_SECONDS)
+	tween.tween_property(self, "custom_minimum_size:x", 0.0, SLIDE_SECONDS)
 	tween.finished.connect(queue_free)
 
 
@@ -225,10 +234,10 @@ func _paper_frame() -> StyleBoxFlat:
 	sb.border_color = COLOR_BORDER
 	sb.set_border_width_all(2)
 	sb.set_corner_radius_all(6)
-	sb.content_margin_left = 10
-	sb.content_margin_right = 10
-	sb.content_margin_top = 8
-	sb.content_margin_bottom = 8
+	sb.content_margin_left = 8
+	sb.content_margin_right = 8
+	sb.content_margin_top = 6
+	sb.content_margin_bottom = 7
 	sb.shadow_color = Color(0, 0, 0, 0.25)
 	sb.shadow_size = 4
 	sb.shadow_offset = Vector2(0, 2)

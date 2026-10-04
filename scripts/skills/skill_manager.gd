@@ -8,14 +8,14 @@ extends Node
 ##   3. Việc ÁP số kĩ năng vào các hệ khác lúc vào màn.
 ##
 ## Nó KHÔNG tự thi hành hiệu ứng. Hiệu ứng nằm ở nơi có luật: thanh kiên nhẫn
-## là chuyện của quan_ly_khach, mốc cháy là chuyện của bep_nau. Node này chỉ
+## là chuyện của customer_manager, mốc cháy là chuyện của cooking_system. Node này chỉ
 ## VẶN NÚM của chúng một lần lúc vào màn (bị động) hoặc một lần lúc bấm Space
 ## (chủ động).
 ##
 ## Vì sao không để hiệu ứng chạy trong này: nếu ở đây thì mỗi lần tính tiền
-## một đơn, quan_ly_khach phải đi hỏi ngược "kĩ năng có đang bật không" — tức
+## một đơn, customer_manager phải đi hỏi ngược "kĩ năng có đang bật không" — tức
 ## hệ khách hàng phụ thuộc vào hệ kĩ năng. Vặn núm thì phụ thuộc chỉ đi MỘT
-## chiều, đúng một lần, và quan_ly_khach chạy y hệt nhau dù có hệ kĩ năng hay
+## chiều, đúng một lần, và customer_manager chạy y hệt nhau dù có hệ kĩ năng hay
 ## không.
 ##
 ## ──────────────────────────── KĨ NĂNG CHỈ ĂN KHI DÙNG ĐÚNG NHÂN VẬT ĐÓ
@@ -100,6 +100,12 @@ func track_character(character: Node) -> void:
 func can_use() -> bool:
 	if _playing:
 		return false
+	if _is_toggle():
+		# "Dùng được" với kĩ năng bật/tắt = bấm Space lúc này CÓ tác dụng:
+		# đang bật (bấm để tắt), hoặc đã mở và còn ngân sách.
+		if _toggle_on or GameData.infinite_skill:
+			return true
+		return _budget_left > 0.0 and _meets_condition()
 	# Cheat vẫn phải tôn trọng "nhân vật này chưa có kĩ năng": cho bấm được
 	# thì cut-in chiếu ra một kĩ năng không tồn tại, và người thử sẽ tưởng nó
 	# đã cài xong.
@@ -142,6 +148,10 @@ func _meets_condition() -> bool:
 			return int(_customers.perfect_orders) >= threshold
 		Registry.COND_ORDERS_DONE:
 			return int(_customers.orders_done) >= threshold
+		Registry.COND_ORDERS_WITH_DISHES:
+			return int(_customers.counted_orders_done) >= threshold
+		Registry.COND_TIME_ELAPSED:
+			return _elapsed_seconds() >= threshold
 	# Bốn kiểu điều kiện còn lại (đếm món nấu, đếm giây, cho pet ăn, phủ kín
 	# thực đơn) chưa có bộ đếm nào trong game. Trả false là câu trả lời ĐÚNG:
 	# chưa đếm được thì chưa ai đạt. Trả true cho tiện thử là nói dối giao
@@ -167,6 +177,9 @@ func progress_text() -> String:
 
 ## Tỉ lệ hoàn thành điều kiện, 0…1 đã kẹp sẵn. Trả 0 khi không đếm được.
 func condition_ratio() -> float:
+	if _is_toggle() and (_toggle_on or _meets_condition()):
+		var budget := float(_active.get("budget_seconds", 0.0))
+		return clampf(_budget_left / budget, 0.0, 1.0) if budget > 0.0 else 0.0
 	var n := _count_progress()
 	var threshold := int(_active.get("threshold", 0))
 	if n < 0 or threshold <= 0:
@@ -188,16 +201,27 @@ func _count_progress() -> int:
 			return int(_customers.perfect_orders)
 		Registry.COND_ORDERS_DONE:
 			return int(_customers.orders_done)
+		Registry.COND_ORDERS_WITH_DISHES:
+			return int(_customers.counted_orders_done)
+		Registry.COND_TIME_ELAPSED:
+			return _elapsed_seconds()
 	return -1
+
+
+## Số giây ĐÃ TRÔI của màn, đọc từ đồng hồ màn. 0 nếu màn không có đồng hồ.
+func _elapsed_seconds() -> int:
+	if _clock == null:
+		return 0
+	return int(float(_clock.duration) - float(_clock.time_left))
 
 
 ## Gắn vào màn chơi: áp các kĩ năng BỊ ĐỘNG và bắt đầu theo dõi điều kiện.
 ##
-## Gọi SAU khi quan_ly_khach và cooking đã tồn tại — cả hai đều là thứ node này
+## Gọi SAU khi customer_manager và cooking đã tồn tại — cả hai đều là thứ node này
 ## vặn núm. level_base lo thứ tự đó.
 ##
 ## Vì sao áp bị động ở đây chứ không để mỗi hệ tự đi hỏi bảng kĩ năng: nếu mỗi
-## hệ tự hỏi thì quan_ly_khach phải biết tới SkillRegistry, bep_nau cũng vậy, và
+## hệ tự hỏi thì customer_manager phải biết tới SkillRegistry, cooking_system cũng vậy, và
 ## thêm một kĩ năng mới là thêm một hệ nữa phải biết. Vặn núm từ một chỗ thì
 ## các hệ kia chỉ cần có sẵn một biến số — chúng không biết kĩ năng là gì.
 func setup(customers: Node, cooking: Node, clock: Node = null) -> void:
@@ -211,7 +235,13 @@ func setup(customers: Node, cooking: Node, clock: Node = null) -> void:
 	# Chiyono O không giới hạn) và luật đó thuộc về kĩ năng chứ không thuộc
 	# về cái node quản lý.
 	_uses_left = int(_active.get("uses", uses_per_level))
+	_budget_left = float(_active.get("budget_seconds", 0.0))
 	_apply_passive(Registry.passive(id))
+	# Điều kiện "giao N đơn thuộc một nhóm món": báo cho hệ khách biết nhóm
+	# nào cần đếm. Hệ khách tự đếm, node này chỉ đọc con số.
+	if _customers != null \
+			and String(_active.get("condition", "")) == Registry.COND_ORDERS_WITH_DISHES:
+		_customers.counted_dishes = _active.get("dishes", [])
 
 	# Điều kiện của Kita đếm ĐƠN, nên chỉ cần xem lại trạng thái mỗi khi một
 	# đơn kết thúc — không phải kiểm tra mỗi frame hình. Với những điều kiện
@@ -223,20 +253,137 @@ func setup(customers: Node, cooking: Node, clock: Node = null) -> void:
 
 ## Vặn núm của các hệ khác theo bộ số bị động.
 ##
-## Dùng CỘNG/NHÂN vào giá trị đang có chứ không GÁN ĐÈ: luật màn (luat_man.gd)
-## cũng đặt vài con số của quan_ly_khach, và gán đè thì thứ tự gọi quyết định
+## Dùng CỘNG/NHÂN vào giá trị đang có chứ không GÁN ĐÈ: luật màn (level_rules.gd)
+## cũng đặt vài con số của customer_manager, và gán đè thì thứ tự gọi quyết định
 ## ai thắng — một phụ thuộc ngầm sẽ hỏng lặng lẽ vào ngày ai đó đổi thứ tự
 ## dựng node trong level_base.
 func _apply_passive(p: Dictionary) -> void:
 	if _customers != null:
 		_customers.patience_factor = float(p["patience_factor"])
 		_customers.perfect_bonus += float(p["perfect_bonus_add"])
+		_customers.bonus_payout_chance = float(p["bonus_payout_chance"])
+		_customers.bonus_payout_multiplier = float(p["bonus_payout_multiplier"])
+		_customers.dish_price_factors = p["dish_price_factors"]
+		_customers.dish_weight_factors = p["dish_weight_factors"]
+	_refill_stamina_on_order = bool(p["refill_stamina_on_order"])
 	if _cooking != null:
 		_cooking.burn_time_cut += float(p["burn_time_cut"])
+		_cooking.cook_time_cut += float(p["cook_time_cut"])
+		_cooking.cook_time_cut_items = p["cook_time_cut_items"]
+		_cooking.bake_time_cut += float(p["bake_time_cut"])
 
 
-func _on_order_finished(_order: Variant, _reason: String) -> void:
+func _on_order_finished(_order: Variant, reason: String) -> void:
+	# Hốc trưởng: giao xong một đơn là thanh chạy nhanh đầy lại. Chỉ đơn ĐÃ
+	# PHỤC VỤ ("served") — khách bỏ về không tính.
+	if _refill_stamina_on_order and reason == "served" \
+			and _character != null and _character.has_method("refill_stamina"):
+		_character.refill_stamina()
 	_emit_state()
+
+
+# ═══════════════════════════════════ KĨ NĂNG BẬT/TẮT TRONG NGÂN SÁCH
+#
+# Kĩ năng khai `"toggle": true` (Triumphant Pulse) không phải loại "bấm một
+# lần, có tác dụng tới hết màn": Space BẬT rồi Space lần nữa TẮT, và tổng thời
+# gian được bật trong cả màn bị chặn bởi `"budget_seconds"`. Hết ngân sách là
+# tự tắt và không bật lại được.
+#
+# Đoạn phim cut-in chỉ chiếu ở LẦN BẬT ĐẦU TIÊN. Các lần sau bật/tắt tức thì:
+# một kĩ năng sinh ra để bấm nhiều lần mà lần nào cũng chặn màn hình hai giây
+# thì người chơi sẽ thôi không bấm nữa.
+
+var _refill_stamina_on_order := false
+var _toggle_on := false
+var _budget_left := 0.0
+var _cut_in_shown := false
+## Nhịp cập nhật HUD cho điều kiện đếm THỜI GIAN và cho ngân sách đang chạy.
+var _hud_tick := 0.0
+
+
+## Rời màn khi kĩ năng còn đang bật (thoát ra menu, chơi lại): phải TẮT hiệu
+## ứng, nếu không thứ nó đã đụng ở ngoài màn chơi — nhạc nền đang bị cho im —
+## sẽ kẹt nguyên như vậy sang màn sau.
+func _exit_tree() -> void:
+	if _toggle_on:
+		disable_effect()
+
+
+## Màn chơi kết thúc (hết giờ, thua, đóng quán sớm): tắt kĩ năng bật/tắt nếu
+## nó còn đang bật. level_base gọi ngay trước khi dựng bảng tổng kết — không
+## có bước này thì bảng tổng kết hiện lên trên một màn hình còn phủ xanh,
+## nhạc vẫn im, khách vẫn đóng băng.
+func end_of_level() -> void:
+	if _toggle_on:
+		_set_toggle(false)
+
+
+func _is_toggle() -> bool:
+	return bool(_active.get("toggle", false))
+
+
+func _process(delta: float) -> void:
+	if _active.is_empty():
+		return
+	# Hiệu ứng viết riêng nào có hàm tick() thì được gọi mỗi khung hình trong
+	# lúc game đang chạy thật (không tạm dừng, không chiếu phim). Dành cho
+	# hiệu ứng có phần "diễn ra theo thời gian" — Go, Go, Mun! gieo choáng
+	# theo từng giây di chuyển.
+	if _effect != null and not _playing and not get_tree().paused \
+			and _effect.has_method("tick"):
+		_effect.tick(delta, _context())
+	# Ngân sách chỉ chạy khi kĩ năng ĐANG BẬT và game không bị dừng (menu
+	# tạm dừng, đoạn phim cut-in): thời gian người chơi không điều khiển được
+	# thì không được trừ vào ngân sách của họ.
+	if _toggle_on and not _playing and not get_tree().paused:
+		_budget_left -= delta
+		if _budget_left <= 0.0:
+			_budget_left = 0.0
+			_set_toggle(false)
+	# Điều kiện đếm giây và con số ngân sách đổi liên tục mà không có sự kiện
+	# nào báo, nên phải tự hỏi lại theo nhịp. Bốn lần mỗi giây là đủ mượt cho
+	# một con số đếm giây, và rẻ hơn nhiều so với mỗi khung hình.
+	_hud_tick -= delta
+	if _hud_tick <= 0.0:
+		_hud_tick = 0.25
+		if _is_toggle() or String(_active.get("condition", "")) == Registry.COND_TIME_ELAPSED:
+			_emit_state()
+
+
+func _set_toggle(on: bool) -> void:
+	if _toggle_on == on:
+		return
+	_toggle_on = on
+	if on:
+		_apply_effect()
+	else:
+		disable_effect()
+	_emit_state()
+
+
+## Space với kĩ năng bật/tắt. Trả về true nếu đã xử lý.
+func _activate_toggle() -> void:
+	if _toggle_on:
+		_set_toggle(false)
+		return
+	if _budget_left <= 0.0 and not GameData.infinite_skill:
+		return
+	if not (_meets_condition() or GameData.infinite_skill):
+		return
+	if GameData.infinite_skill and _budget_left <= 0.0:
+		_budget_left = float(_active.get("budget_seconds", 30.0))
+	if not _cut_in_shown:
+		_cut_in_shown = true
+		var cut_in := _make_cut_in()
+		if cut_in != null:
+			get_tree().current_scene.add_child(cut_in)
+			if cut_in.play(str(GameData.selected_character)):
+				_playing = true
+				_lock_character(true)
+				cut_in.finished.connect(_on_cut_in_finished)
+			else:
+				cut_in.queue_free()
+	_set_toggle(true)
 
 
 ## Bật hiệu ứng của kĩ năng chủ động.
@@ -261,6 +408,20 @@ func _apply_effect() -> void:
 		Registry.FX_FORCE_PERFECT:
 			if _customers != null:
 				_customers.force_perfect = true
+		Registry.FX_WILDCARD_DISHES:
+			if _customers != null:
+				_customers.wildcard_dishes = _active.get("wildcard_dishes", [])
+
+	# NÚM PHỤ, áp ĐỘC LẬP với khoá "effect" ở trên.
+	#
+	# Vì sao không gộp vào một hiệu ứng mới tên FX_CHEER: một kĩ năng chủ động
+	# chỉ khai được MỘT khoá "effect", nên gộp thì mỗi lần thêm một tác dụng
+	# lại phải đặt tên hiệu ứng mới và sửa cả `match` — trong khi bản chất mấy
+	# thứ này chỉ là vặn thêm một con số. Để rời thì kĩ năng nào cần cứ khai
+	# thêm khoá, không cần biết tới `match`, và hai tác dụng không dính nhau.
+	var multiplier := float(_active.get("perfect_payout_multiplier", 1.0))
+	if _customers != null and not is_equal_approx(multiplier, 1.0):
+		_customers.perfect_payout_multiplier = multiplier
 
 
 ## Nạp và chạy một hiệu ứng trong thư mục hieu_ung/. Xem effects/_template.gd để
@@ -274,6 +435,11 @@ func _run_custom_effect(path: String) -> void:
 	if script_class == null:
 		push_error("Không nạp được hiệu ứng kĩ năng: %s" % path)
 		return
+	# Hiệu ứng cũ còn đó (bật lại nhờ cheat không giới hạn lượt): TẮT nó trước
+	# khi thay bằng thực thể mới. Bỏ rơi nó thì thứ nó đang giữ dở — Mambo
+	# đang bị choáng, nhân vật đang bị khoá di chuyển — không ai trả lại nữa.
+	if _effect != null and _effect.has_method("disable"):
+		_effect.disable(_context())
 	_effect = script_class.new()
 	if not _effect.has_method("enable"):
 		push_error("Hiệu ứng %s thiếu hàm enable()." % path)
@@ -306,7 +472,7 @@ func disable_effect() -> void:
 ## Người chơi bấm Space.
 ##
 ## Dùng _unhandled_input chứ không phải _input: bảng chọn nguyên liệu
-## (bang_chon.gd) đang dùng _input để cướp phím trước, và trong lúc bảng đó
+## (picker_menu.gd) đang dùng _input để cướp phím trước, và trong lúc bảng đó
 ## mở thì bấm Space không được phép kích hoạt kĩ năng.
 func _unhandled_input(event: InputEvent) -> void:
 	if not event.is_action_pressed("skill"):
@@ -316,6 +482,17 @@ func _unhandled_input(event: InputEvent) -> void:
 
 
 func activate() -> void:
+	# Chưa vào ca (màn đếm ngược đầu màn còn đó) thì KHÔNG kĩ năng nào bật
+	# được. Điều kiện thật không bao giờ đạt sớm thế, nhưng cheat "kĩ năng
+	# không cần điều kiện" thì có — và bật dừng-thời-gian trong lúc đồng hồ
+	# đang bị màn đếm ngược giữ sẽ làm hai bên giành nhau cái đồng hồ: tắt kĩ
+	# năng xong đồng hồ đứng luôn tới hết màn.
+	if get_parent() != null and get_parent().get_node_or_null("LevelIntro") != null:
+		return
+	if _is_toggle():
+		if not _playing:
+			_activate_toggle()
+		return
 	if not can_use():
 		return
 	var id := str(GameData.selected_character)
@@ -326,9 +503,18 @@ func activate() -> void:
 	# đã nằm trong cây scene.
 	get_tree().current_scene.add_child(cut_in)
 	if not cut_in.play(id):
-		# Không có file cut-in cho nhân vật này. KHÔNG trừ lượt — người chơi
-		# không đáng bị mất lượt vì asset còn thiếu.
+		# Không có file cut-in cho nhân vật này: BỎ đoạn phim nhưng VẪN bật kĩ
+		# năng. (Bản trước dừng hẳn ở đây — hợp lý khi chưa nhân vật nào ngoài
+		# Kita có kĩ năng, nhưng giờ Special Week có kĩ năng thật mà chưa có
+		# phim, và "thiếu một file video" không được phép khoá cả một cơ chế.)
+		# Không khoá nhân vật, không dừng game: không có phim thì không có gì
+		# để chờ.
 		cut_in.queue_free()
+		if not GameData.infinite_skill:
+			_uses_left -= 1
+		AmThanh.play_sfx("perfect")
+		_apply_effect()
+		_emit_state()
 		return
 
 	# Chỉ trừ lượt khi cheat TẮT, để cheat đúng nghĩa "không giới hạn".
@@ -371,6 +557,8 @@ func _emit_state() -> void:
 func _progress_label(usable: bool) -> String:
 	if _active.is_empty():
 		return ""
+	if _is_toggle():
+		return _toggle_label()
 	if usable:
 		return "SPACE"
 	# Hết lượt: phân biệt với "chưa đủ điều kiện", vì hai thứ đó đòi người chơi
@@ -380,6 +568,24 @@ func _progress_label(usable: bool) -> String:
 		return "Đã dùng"
 	var text := progress_text()
 	return text if not text.is_empty() else "..."
+
+
+## Chữ trên HUD của kĩ năng bật/tắt:
+##   "2:35"    chưa tới giờ mở — đếm ngược tới lúc dùng được
+##   "SPACE"   mở rồi, đang tắt, còn ngân sách
+##   "18s"     đang BẬT — số giây ngân sách còn lại
+##   "Đã dùng" hết ngân sách
+func _toggle_label() -> String:
+	if _toggle_on:
+		return "%ds" % int(ceilf(_budget_left))
+	if _budget_left <= 0.0 and not GameData.infinite_skill:
+		return "Đã dùng"
+	if _meets_condition() or GameData.infinite_skill:
+		return "SPACE"
+	var wait := maxi(0, int(_active.get("threshold", 0)) - _elapsed_seconds())
+	# floori(x / 60.0) chứ không `wait / 60`: chia hai số nguyên trong GDScript
+	# chạy đúng nhưng in một cảnh báo mỗi lần nạp script.
+	return "%d:%02d" % [floori(wait / 60.0), wait % 60]
 
 
 ## Nạp lúc chạy chứ không preload, cùng lý do với level_base.gd: lỗi cú pháp

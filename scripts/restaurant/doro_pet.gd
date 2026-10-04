@@ -5,14 +5,14 @@ extends "res://scripts/interaction/workstation.gd"
 ## ═══════════════════════════════════════════════ VÌ SAO KẾ THỪA TrạmTươngTác
 ##
 ## Doro làm đúng việc của cái thùng rác: bấm E khi đang cầm đồ thì đồ biến
-## mất. Toàn bộ luật đó đã nằm trong `tay_cam._bo_di()`, và nó được gọi dựa
+## mất. Toàn bộ luật đó đã nằm trong `hands._discard()`, và nó được gọi dựa
 ## trên MỘT thứ duy nhất — `loai == "bin"`.
 ##
 ## Nên Doro không cần một hệ thống mới nào cả. Nó chỉ cần LÀ một trạm mang
 ## loại đó, rồi tự lo phần đi lại. Viết một cơ chế "cho đồ cho thú cưng"
 ## riêng thì sẽ có hai đường vứt đồ phải sửa song song mãi mãi.
 ##
-## Kế thừa bằng ĐƯỜNG DẪN chứ không viết `extends TramTuongTac`: tên lớp toàn
+## Kế thừa bằng ĐƯỜNG DẪN chứ không viết `extends Workstation`: tên lớp toàn
 ## cục chỉ phân giải được sau khi trình soạn thảo quét lại bộ nhớ đệm lớp, nên
 ## chạy từ dòng lệnh trên một file mới toanh sẽ chết với "Could not find type".
 ## Dự án này đã dính lỗi đó một lần rồi.
@@ -55,7 +55,7 @@ const MODEL := "res://assets/models/doro.glb"
 const Config := preload("res://scripts/restaurant/doro_main.gd")
 
 var _agent: NavigationAgent3D
-var _hoat_hinh: AnimationPlayer
+var _anim_player: AnimationPlayer
 var _body: Node3D
 var _player: Node3D
 
@@ -67,7 +67,7 @@ var _floor_y := 0.0
 
 ## Dựng Doro. Gọi từ level_base sau khi hệ khách đã nướng xong navmesh.
 ##
-## `lech_cao` là độ cao mặt navmesh so với mặt sàn — quan_ly_khach ĐO được lúc
+## `lech_cao` là độ cao mặt navmesh so với mặt sàn — customer_manager ĐO được lúc
 ## nướng. Không truyền thì NavigationAgent3D thấy mọi điểm đường nằm cách nó
 ## nửa đơn vị theo trục đứng, không bao giờ nhích sang điểm kế tiếp, và Doro
 ## đứng rung tại chỗ suốt màn. Đây đúng là cái bẫy đã làm khách hàng đi mãi
@@ -79,12 +79,23 @@ func setup(seat_marker: Vector3, lech_cao: float, nguoi_choi: Node3D) -> void:
 
 	display_name = "Doro"
 	kind = "bin"
+	# (2/10/2026) Doro luôn NHƯỜNG mọi trạm khác khi cùng lọt vào tầm với.
+	#
+	# Doro đi lang thang, nên nó tự mò tới đứng cạnh bàn khách đúng lúc người
+	# chơi bê món ra giao. Bộ chọn chấm điểm theo hướng quay mặt, Doro đứng
+	# chắn giữa là thắng — và bấm E thì món vừa nấu xong bị ăn mất. Một cái
+	# thùng rác BIẾT ĐI không được phép tranh mục tiêu với cái bàn đứng yên:
+	# mất món vì thú cưng đi ngang là lỗi của game, không phải của người chơi.
+	#
+	# Muốn cho Doro ăn thì đứng chỗ chỉ có nó trong tầm, hoặc bấm phím đổi
+	# mục tiêu để chọn tay.
+	pick_priority = -1
 
-	# NHÓM "station": đây là thứ duy nhất khiến tay_cam nối được tín hiệu
+	# NHÓM "station": đây là thứ duy nhất khiến hands nối được tín hiệu
 	# `da_tuong_tac` của Doro vào hàm xử lý của nó. Thiếu dòng này thì bộ chọn
-	# vẫn ngắm được Doro (bo_chon_muc_tieu lọc theo LỚP va chạm, không theo
+	# vẫn ngắm được Doro (target_picker lọc theo LỚP va chạm, không theo
 	# nhóm), Doro vẫn nảy lên khi bị bấm E — nhưng đồ trên tay không mất đi,
-	# vì nhánh "bin" trong tay_cam không bao giờ được gọi. Đúng triệu
+	# vì nhánh "bin" trong hands không bao giờ được gọi. Đúng triệu
 	# chứng "Doro không làm được chức năng thùng rác".
 	add_to_group("station")
 	# Lớp VẬT PHẨM: bộ chọn nhìn thấy, nhân vật đi xuyên qua. Mặt nạ 0 vì Doro
@@ -118,11 +129,11 @@ func _build_body() -> void:
 	_body.name = "Mesh"
 	# Co theo TỈ LỆ ĐO ĐƯỢC chứ không gõ sẵn 0,28: đổi Config.HEIGHT là xong,
 	# không phải bấm máy tính.
-	var ti := Config.HEIGHT / Config.BASE_HEIGHT
-	_body.scale = Vector3(ti, ti, ti)
+	var scale_ := Config.HEIGHT / Config.BASE_HEIGHT
+	_body.scale = Vector3(scale_, scale_, scale_)
 	add_child(_body)
-	_hoat_hinh = _body.find_child("AnimationPlayer", true, false) as AnimationPlayer
-	if _hoat_hinh == null:
+	_anim_player = _body.find_child("AnimationPlayer", true, false) as AnimationPlayer
+	if _anim_player == null:
 		push_warning("Model Doro không có AnimationPlayer — pet sẽ đứng đơ.")
 
 
@@ -234,15 +245,15 @@ func _wander() -> void:
 
 	var angle := randf() * TAU
 	var dist := randf_range(1.5, Config.WANDER_RADIUS)
-	var target_yaw := global_position + Vector3(cos(angle) * dist, 0.0, sin(angle) * dist)
-	target_yaw = _clamp_to_area(target_yaw)
-	target_yaw = NavigationServer3D.map_get_closest_point(nav_map, target_yaw)
+	var dest := global_position + Vector3(cos(angle) * dist, 0.0, sin(angle) * dist)
+	dest = _clamp_to_area(dest)
+	dest = NavigationServer3D.map_get_closest_point(nav_map, dest)
 
-	if target_yaw.is_equal_approx(Vector3.ZERO) or not _inside_area(target_yaw):
+	if dest.is_equal_approx(Vector3.ZERO) or not _inside_area(dest):
 		_rest_left = randf_range(Config.REST_MIN, Config.REST_MAX)
 		return
 
-	_agent.target_position = target_yaw
+	_agent.target_position = dest
 	_moving = true
 	_set_anim("walk")
 
@@ -307,10 +318,10 @@ func _turn_towards(dir_: Vector3, delta: float) -> void:
 func _set_anim(anim_name: String) -> void:
 	if _anim_now == anim_name:
 		return
-	if _hoat_hinh == null or not _hoat_hinh.has_animation(anim_name):
+	if _anim_player == null or not _anim_player.has_animation(anim_name):
 		return
 	_anim_now = anim_name
-	_hoat_hinh.play(anim_name)
+	_anim_player.play(anim_name)
 
 
 ## Nảy một cái khi người chơi bấm E vào Doro.
@@ -321,12 +332,12 @@ func _set_anim(anim_name: String) -> void:
 func _on_fed(_station: Node, _index: int) -> void:
 	if _body == null:
 		return
-	# KHÔNG phát tiếng ở đây: `tay_cam._bo_di()` đã phát "vut_rac" khi thật sự
+	# KHÔNG phát tiếng ở đây: `hands._discard()` đã phát "vut_rac" khi thật sự
 	# có đồ bị vứt. Phát thêm ở đây thì tiếng kêu hai lần chồng nhau.
 	#
 	# Và vì thế, bấm E lúc tay TRỐNG chỉ có cú nảy mà không có tiếng — hoá ra
 	# lại đúng: đó thành ra thao tác VUỐT VE con thú, không phải vứt rác.
-	var ti := Config.HEIGHT / Config.BASE_HEIGHT
+	var scale_ := Config.HEIGHT / Config.BASE_HEIGHT
 	var tw := create_tween().set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
-	tw.tween_property(_body, "scale", Vector3(ti * 1.2, ti * 0.8, ti * 1.2), 0.09)
-	tw.tween_property(_body, "scale", Vector3(ti, ti, ti), 0.09)
+	tw.tween_property(_body, "scale", Vector3(scale_ * 1.2, scale_ * 0.8, scale_ * 1.2), 0.09)
+	tw.tween_property(_body, "scale", Vector3(scale_, scale_, scale_), 0.09)

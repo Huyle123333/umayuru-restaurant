@@ -1,5 +1,5 @@
 extends CanvasLayer
-## Menu hướng dẫn đầy đủ — phím F1. Cột nút bên trái, nội build cuộn ở giữa.
+## Menu hướng dẫn đầy đủ — phím F1. Cột nút bên trái, nội dung cuộn ở giữa.
 ##
 ## LÀ AUTOLOAD, không phải node của một màn chơi.
 ##
@@ -51,8 +51,8 @@ func _ready() -> void:
 
 # ------------------------------------------------------------- đóng / mở ---
 
-func _unhandled_key_input(su_kien: InputEvent) -> void:
-	var key_label := su_kien as InputEventKey
+func _unhandled_key_input(event: InputEvent) -> void:
+	var key_label := event as InputEventKey
 	if key_label == null or not key_label.pressed or key_label.echo:
 		return
 	if key_label.keycode == KEY_F1:
@@ -154,11 +154,11 @@ func _build_left_col() -> Control:
 	col.custom_minimum_size = Vector2(LEFT_COL_WIDTH, 0)
 	col.add_theme_constant_override("separation", 8)
 
-	var tieu := Label.new()
-	tieu.text = "HƯỚNG DẪN"
-	tieu.add_theme_font_size_override("font_size", 26)
-	tieu.add_theme_color_override("font_color", COLOR_TITLE)
-	col.add_child(tieu)
+	var lbl_title := Label.new()
+	lbl_title.text = "HƯỚNG DẪN"
+	lbl_title.add_theme_font_size_override("font_size", 26)
+	lbl_title.add_theme_color_override("font_color", COLOR_TITLE)
+	col.add_child(lbl_title)
 
 	var key_label := Label.new()
 	key_label.text = "F1 hoặc ESC để đóng"
@@ -214,7 +214,7 @@ func _build_right_col() -> Control:
 	return col
 
 
-# -------------------------------------------------------------- nội build ---
+# -------------------------------------------------------------- nội dung ---
 
 func _select_section(i: int) -> void:
 	if i < 0 or i >= GuideContent.SECTIONS.size():
@@ -232,22 +232,22 @@ func _select_section(i: int) -> void:
 
 	for c in _content_col.get_children():
 		c.queue_free()
-	for khoi in entry["khoi"]:
-		_build_block(khoi as Dictionary)
+	for block in entry["blocks"]:
+		_build_block(block as Dictionary)
 
 
-func _build_block(khoi: Dictionary) -> void:
-	if khoi.has("h"):
-		_content_col.add_child(_small_title(String(khoi["h"])))
-	elif khoi.has("p"):
-		_content_col.add_child(_paragraph(String(khoi["p"])))
-	elif khoi.has("key_label"):
-		_content_col.add_child(_key_hint(khoi["key_label"]))
-	elif khoi.has("img"):
-		_add_image(String(khoi["img"]), String(khoi.get("chu", "")))
-	elif khoi.has("cong_thuc"):
-		_add_recipe(String(khoi["cong_thuc"]))
-	elif khoi.has("moc_hang"):
+func _build_block(block: Dictionary) -> void:
+	if block.has("h"):
+		_content_col.add_child(_small_title(String(block["h"])))
+	elif block.has("p"):
+		_content_col.add_child(_paragraph(String(block["p"])))
+	elif block.has("key_label"):
+		_content_col.add_child(_key_hint(block["key_label"]))
+	elif block.has("img"):
+		_add_image(String(block["img"]), String(block.get("caption", "")))
+	elif block.has("recipe"):
+		_add_recipe(String(block["recipe"]))
+	elif block.has("grade_marks"):
 		_add_grade_marks()
 
 
@@ -300,7 +300,7 @@ func _key_hint(list: Array) -> Control:
 
 ## Thiếu ảnh thì BỎ QUA cả khối, không để lại ô trống và không báo lỗi.
 ##
-## Ảnh minh hoạ là thứ bổ sung dần: khai sẵn đường dẫn trong bảng nội build rồi
+## Ảnh minh hoạ là thứ bổ sung dần: khai sẵn đường dẫn trong bảng nội dung rồi
 ## chụp ảnh sau lúc nào cũng được, và trang hướng dẫn vẫn đọc được ngay từ bây
 ## giờ. Nếu để một ô trống hay một dòng "thiếu ảnh" thì trang trông như hỏng.
 func _add_image(path: String, text_: String) -> void:
@@ -328,7 +328,7 @@ func _add_image(path: String, text_: String) -> void:
 
 # ------------------------------------------------------ bảng tự sinh ---
 
-## Bảng công thức dựng THẲNG từ DanhMuc, không gõ tay.
+## Bảng công thức dựng THẲNG từ ItemCatalog, không gõ tay.
 ##
 ## Đây là điểm đáng nói nhất của cả menu này: trang hướng dẫn không thể nói sai
 ## được, vì nó đọc đúng cái bảng mà luật chơi đang dùng. Món bị khoá thì tự
@@ -336,11 +336,11 @@ func _add_image(path: String, text_: String) -> void:
 func _add_recipe(kind: String) -> void:
 	var table_: Dictionary = {}
 	match kind:
-		"ban": table_ = ItemCatalog.TABLE_RECIPES
-		# (Đã bỏ) "noi": CONG_THUC_NOI. Bảng công thức nồi không còn tồn tại
-		# — công thức nấu canh giờ nằm trong CONG_THUC_BAN như mọi món khác,
-		# nên trang hướng dẫn tự có nó ở mục "ban".
-		"lo": table_ = ItemCatalog.OVEN_RECIPES
+		"table": table_ = ItemCatalog.TABLE_RECIPES
+		# (Đã bỏ) "pot": OVEN_RECIPES riêng cho nồi. Bảng công thức nồi không
+		# còn tồn tại — công thức nấu canh giờ nằm trong TABLE_RECIPES như mọi
+		# món khác, nên trang hướng dẫn tự có nó ở mục "table".
+		"oven": table_ = ItemCatalog.OVEN_RECIPES
 		_: return
 
 	for key_ in table_:
@@ -405,33 +405,48 @@ func _marker(text_: String) -> Control:
 
 
 ## Bảng mốc xếp hạng, cũng đọc thẳng từ GameData.
+## (2/10/2026) Trang Đánh giá KHÔNG còn dùng khối "grade_marks" — nó chỉ ghi
+## tên năm hạng, vì mỗi màn một bộ mốc. Hàm giữ lại để khối này vẫn dùng được
+## nếu sau này cần một trang tra cứu mốc của cả ba ngày.
 func _add_grade_marks() -> void:
 	if get_node_or_null("/root/GameData") == null:
 		return
-	var mark: Dictionary = GameData.DEFAULT_THRESHOLDS
+	# Bảng theo TỪNG NGÀY, đọc thẳng GameData.rank_thresholds_for(): mỗi ngày
+	# có bộ mốc riêng, in một bộ "mặc định" ra đây là in sai cho cả ba ngày.
+	var days := ["d1_sang", "d2_sang", "d3_sang"]
+	var day_names := ["Ngày 1", "Ngày 2", "Ngày 3"]
 	var color := {
 		"S": Color("f2c230"), "A": Color("e8823f"),
-		"B": Color("e27ba0"), "C": Color("4f9d5d"),
+		"B": Color("e27ba0"), "C": Color("4f9d5d"), "D": Color("5b8fb0"),
 	}
 	var grid := GridContainer.new()
-	grid.columns = 2
-	grid.add_theme_constant_override("h_separation", 20)
+	grid.columns = 1 + days.size()
+	grid.add_theme_constant_override("h_separation", 36)
 	grid.add_theme_constant_override("v_separation", 6)
-	for row in GameData.RANK_ORDER:
-		var a := Label.new()
-		a.text = String(row)
-		a.add_theme_font_size_override("font_size", 26)
-		a.add_theme_color_override("font_color", color.get(row, COLOR_TEXT))
-		a.custom_minimum_size = Vector2(120, 0)
-		grid.add_child(a)
 
-		var b := Label.new()
-		b.text = "từ %d trở lên" % int(mark.get(row, 0))
-		b.add_theme_font_size_override("font_size", 18)
-		b.add_theme_color_override("font_color", COLOR_TEXT)
-		b.size_flags_vertical = Control.SIZE_SHRINK_CENTER
-		grid.add_child(b)
+	grid.add_child(_grade_cell("Hạng", COLOR_TEXT, 18))
+	for name_ in day_names:
+		grid.add_child(_grade_cell(name_, COLOR_TEXT, 18))
+
+	for row in GameData.RANK_ORDER:
+		grid.add_child(_grade_cell(String(row), color.get(row, COLOR_TEXT), 26))
+		for id in days:
+			var mark: Dictionary = GameData.rank_thresholds_for(id)
+			grid.add_child(_grade_cell(str(int(mark.get(row, 0))), COLOR_TEXT, 18))
+
+	grid.add_child(_grade_cell("Khách bỏ về", COLOR_TEXT, 18))
+	for id in days:
+		grid.add_child(_grade_cell("≤ %d" % GameData.max_left_for(id), COLOR_TEXT, 18))
 	_content_col.add_child(grid)
+
+
+func _grade_cell(text_: String, color_: Color, size_: int) -> Label:
+	var cell := Label.new()
+	cell.text = text_
+	cell.add_theme_font_size_override("font_size", size_)
+	cell.add_theme_color_override("font_color", color_)
+	cell.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	return cell
 
 
 func _spacing(height_: float) -> Control:

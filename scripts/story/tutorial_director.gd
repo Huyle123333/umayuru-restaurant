@@ -55,6 +55,9 @@ const WAIT_HOLD := "hold:"
 const WAIT_TABLE_HAS := "table_has:"
 const WAIT_SECONDS := "seconds:"
 
+## Bước hỏi cuối bài: "Mở quán" hay "Thử lại".
+const WAIT_ASK_FINISH := "ask_finish"
+
 var _panel: CanvasLayer
 var _hands: Node
 var _cooking: Node
@@ -161,7 +164,7 @@ func _on_hands_changed(id: String) -> void:
 func _on_cook_finished(station: Node, _dish: String, success: bool) -> void:
 	if not success:
 		return
-	# `loai` van la ten thuoc tinh cua TramTuongTac — lop do thuoc lo 6, chua doi.
+	# `loai` van la ten thuoc tinh cua Workstation — lop do thuoc lo 6, chua doi.
 	# Doc bang ten CU o day la dung; bien cuc bo thi da la tieng Anh.
 	var kind := String(station.kind)
 	if _wait_for == "chop" and kind == "cutting_board":
@@ -187,14 +190,40 @@ func _on_order_finished(_orders: RefCounted, reason: String) -> void:
 ## Bỏ qua vẫn đi qua `_restore_normal()` — hàm đó là nơi gọi
 ## `GameData.complete_level("tutorial")`, mà Ngày 1 khai `needs: "tutorial"`.
 ## Bỏ qua hướng dẫn không có nghĩa là bị khoá Ngày 1.
-func _on_select(dong_y: bool) -> void:
-	if dong_y:
+func _on_select(yes: bool) -> void:
+	# Câu hỏi CUỐI bài (mở quán / thử lại) đi chung tín hiệu với câu hỏi đầu
+	# bài, phân biệt bằng bước đang đứng — bảng chỉ có một kiểu hỏi hai nút,
+	# không cần dựng kiểu thứ hai.
+	if _wait_for == WAIT_ASK_FINISH:
+		_on_finish_choice(yes)
+		return
+	if yes:
 		_go_to_step(1)
 		return
 	_learned_all = true
 	_wait_for = ""
 	_panel.close()
 	_restore_normal()
+
+
+## Câu hỏi cuối bài.
+##   Mở quán  — đi đúng lối ra cũ: _restore_normal() đánh dấu xong tutorial và
+##              phát tutorial_finished, level_base chuyển sang chọn nhân vật.
+##   Thử lại  — nạp lại chính màn hướng dẫn, bài học chạy lại từ đầu.
+##
+## Thử lại VẪN đánh dấu hoàn thành trước khi nạp lại: người chơi đã học hết
+## bài, chỉ muốn ôn. Không đánh dấu thì lỡ họ thoát ra menu giữa lượt ôn là
+## Ngày 1 lại bị khoá — phạt người chăm chỉ nhất.
+func _on_finish_choice(open_shop: bool) -> void:
+	_wait_for = ""
+	_learned_all = true
+	_panel.close()
+	if open_shop:
+		_restore_normal()
+		return
+	if GameData != null:
+		GameData.complete_level("tutorial")
+	get_tree().reload_current_scene()
 
 
 # --------------------------------------------------------------- vòng chạy ---
@@ -244,10 +273,13 @@ func _go_to_step(i: int) -> void:
 
 	if _wait_for == "ask":
 		_panel.ask(String(step.get("line", "")), Cutscene.BTN_YES, Cutscene.BTN_NO)
+	elif _wait_for == WAIT_ASK_FINISH:
+		_panel.ask(String(step.get("line", "")), Cutscene.BTN_OPEN, Cutscene.BTN_RETRY)
 	else:
 		# Đánh số bỏ qua bước hỏi: người chơi đếm "bước 1" từ bài học đầu tiên,
 		# còn câu hỏi mở màn thì không phải một bài học.
-		_panel.set_step(String(step.get("line", "")), i, Cutscene.STEPS.size() - 1)
+		# Trừ 2: câu hỏi đầu bài và câu hỏi cuối bài đều không phải bài học.
+		_panel.set_step(String(step.get("line", "")), i, Cutscene.STEPS.size() - 2)
 
 	_do_action(String(step.get("action", "")))
 

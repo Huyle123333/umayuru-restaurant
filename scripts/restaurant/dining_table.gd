@@ -3,11 +3,11 @@ class_name DiningTable
 extends Workstation
 ## Một bàn ăn trong khu khách ngồi.
 ##
-## Kế thừa TramTuongTac chứ không phải Node3D, vì người chơi MANG MÓN TỚI BÀN
+## Kế thừa Workstation chứ không phải Node3D, vì người chơi MANG MÓN TỚI BÀN
 ## chứ không giao ở cửa sổ bếp. Kế thừa thì cái bàn tự động có mọi thứ một
 ## trạm cần và đã chạy đúng ở 18 trạm khác: nằm trong nhóm "station" để bộ chọn
 ## mục tiêu thấy, có `chua` để giữ món đang đặt trên mặt bàn, có
-## `hien_mo_hinh()` để bày model món đó, và có va chạm vì TramTuongTac vốn là
+## `show_model()` để bày model món đó, và có va chạm vì Workstation vốn là
 ## StaticBody3D. Viết một lớp trạm riêng cho bàn ăn thì bốn thứ đó phải làm
 ## lại từ đầu và sẽ lệch dần với phần còn lại.
 ##
@@ -37,12 +37,12 @@ extends Workstation
 ## tính tiền và tính "hoàn hảo". Để cái bàn PHÁT tín hiệu thay vì để đôi tay
 ## gọi thẳng vào hệ đơn hàng: cái bàn không cần biết hệ đơn hàng tồn tại, nên
 ## lúc chưa có hệ đó thì mọi thứ vẫn chạy, chỉ là không ai nghe.
-## Tắt cảnh báo "khai báo mà không dùng": tín hiệu này được PHÁT từ tay_cam.gd
+## Tắt cảnh báo "khai báo mà không dùng": tín hiệu này được PHÁT từ hands.gd
 ## bằng emit_signal() nên bộ phân tích tĩnh của Godot không thấy chỗ dùng nào
 ## trong chính file này. Đó là chủ ý — cái bàn chỉ khai báo, người phát và
 ## người nghe đều ở ngoài.
 @warning_ignore("unused_signal")
-signal dish_delivered(table: Node, id_mon: String)
+signal dish_delivered(table: Node, dish_id: String)
 
 ## Bật/tắt biển số, dùng khi muốn chụp ảnh map cho báo cáo.
 @export var show_number := true:

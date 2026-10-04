@@ -58,7 +58,7 @@ extends RefCounted
 ##
 ## `ctx` là mọi thứ hiệu ứng có thể cần, gói trong một Dictionary:
 ##
-##   ctx["customers"]       Node   — quan_ly_khach: khách, đơn, tiền, thanh kiên nhẫn
+##   ctx["customers"]       Node   — customer_manager: khách, đơn, tiền, thanh kiên nhẫn
 ##   ctx["cooking"]      Node   — cooking: bếp, lò, thớt, mốc cháy
 ##   ctx["clock"]      Node   — bang_thoi_gian: đồng hồ màn và ví tiền (có thể null)
 ##   ctx["level"]      Node   — node gốc của màn chơi, để kết thúc màn hoặc

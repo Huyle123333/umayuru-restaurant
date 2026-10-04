@@ -187,10 +187,21 @@ func _find_choice() -> int:
 	dir.y = 0.0
 	dir = dir.normalized()
 
+	# Mức ưu tiên cao nhất đang có trong tầm. Chỉ những trạm ở mức đó mới
+	# được chấm điểm — trạm mức thấp hơn (Doro) bị loại khỏi lựa chọn TỰ ĐỘNG
+	# chừng nào còn một trạm khác đứng cạnh. Lọc cứng chứ không cộng điểm
+	# thưởng: cộng điểm thì vẫn có góc đứng mà Doro thắng, và "thỉnh thoảng
+	# vẫn mất món" là đúng cái lỗi đang cần dập.
+	var top_priority := -1000000
+	for c in _candidates:
+		top_priority = maxi(top_priority, int((c["station"] as Workstation).pick_priority))
+
 	var best := -INF
 	var choice := 0
 	for i in _candidates.size():
 		var station: Workstation = _candidates[i]["station"]
+		if station.pick_priority < top_priority:
+			continue
 		var v: Vector3 = station.aim_position() - global_position
 		v.y = 0.0
 		if v.length() < 0.001:
@@ -223,7 +234,7 @@ func _unhandled_input(event: InputEvent) -> void:
 	#
 	# Nhờ vậy F thừa hưởng nguyên vẹn mọi luật đã có của E: phải đứng đủ gần,
 	# chọn được bằng Tab, chọn được bằng tâm ngắm ở góc nhìn thứ ba. Cho F một
-	# đường bắt phím riêng trong tay_cam thì hai phím sẽ nhắm vào hai thứ khác
+	# đường bắt phím riêng trong hands thì hai phím sẽ nhắm vào hai thứ khác
 	# nhau đúng lúc trong bếp có nhiều trạm sát nhau.
 	if event.is_action_pressed("assemble"):
 		_activate_alt()

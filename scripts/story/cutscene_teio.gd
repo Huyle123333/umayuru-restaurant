@@ -27,7 +27,7 @@ const BG_RESTAURANT := "res://assets/ui/backgrounds/quan_an.png"
 const SCENES: Array[Dictionary] = [
 	{
 		"background": BG_RESTAURANT,
-		"line": "Bốn giờ chiều. Quán vừa dọn xong bàn cuối, chưa kịp ngồi.",
+		"line": "Sáu giờ chiều. Quán vừa kê xong bàn cuối, chưa kịp ngồi.",
 	},
 	{
 		"line": "Chuông cửa reo. Rồi reo thêm bốn lần nữa, rất nhanh.",
@@ -35,7 +35,7 @@ const SCENES: Array[Dictionary] = [
 	{
 		"portrait": "hachimi",
 		"speaker": "Tokai Teio",
-		"line": "HÍ Ngọ! Nghe nói mọi người làm thêm ở đây đúng không? Mình cũng muốn giúp!",
+		"line": "Hí Ngọ! Nghe nói mọi người làm thêm ở đây đúng không? Mị cũng muốn giúp!",
 	},
 	{
 		"portrait": "kitamoi",
@@ -55,7 +55,7 @@ const SCENES: Array[Dictionary] = [
 	{
 		"portrait": "hachimi",
 		"speaker": "Tokai Teio",
-		"line": "Xin gì mà xin! Đây là thông báo không phải đè nghị! À mà bếp ở đâu? Tạp dề đâu? Chị buộc tóc trước nhé!",
+		"line": "Xin gì mà xin! Đây là thông báo không phải đề nghị! À mà bếp ở đâu? Tạp dề đâu? Mị buộc tóc trước nhé!",
 	},
 	{
 		"portrait": "oui",

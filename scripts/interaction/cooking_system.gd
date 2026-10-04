@@ -22,7 +22,7 @@ extends Node
 ## người chơi đổ nguyên liệu vào nồi trong lúc bếp đang chạy, nấu xong múc
 ## canh ra và nồi ở lại. Kèm theo nó là bốn hàm riêng (dat_noi, nhac_noi,
 ## noi_tren_bep, noi_dat_tren), một nhánh riêng trong _process để phát hiện
-## nồi bị nhấc giữa chừng, và một nhánh riêng trong _ket_thuc.
+## nồi bị nhấc giữa chừng, và một nhánh riêng trong _finish.
 ##
 ## Cái nồi giờ là một VẬT PHẨM nấu được như mọi vật phẩm khác: "nồi canh sống"
 ## khai `"nau": "stew"` trong danh mục, và đi đúng đường của ham sống hay
@@ -49,7 +49,7 @@ signal progress_changed(cooker: Node, ratio: float)
 ##
 ## Chỉ phát cho món CÓ khoá `hong` trong danh mục (hiện là ham và steak) —
 ## những món khác nấu xong là gỡ khỏi bảng đang-nấu luôn.
-signal burn_warning(cooker: Node, con_lai: float)
+signal burn_warning(cooker: Node, time_left: float)
 
 ## Nấu một mẻ trên bếp mất bao nhiêu giây.
 ##
@@ -69,7 +69,11 @@ signal burn_warning(cooker: Node, con_lai: float)
 ## Ngắn hơn hẳn nấu, vì thái là thao tác BẮT BUỘC và không có quyết định nào
 ## bên trong: đứng đó chờ lâu chỉ là thời gian chết. Cái đáng để người chơi
 ## cân nhắc là bếp và lò, nơi họ chọn giữa chờ và chạy.
-@export var chop_seconds := 2.5
+##
+## 2/10/2026: 2,5 -> 1,0 theo yêu cầu user sau khi chơi thử. Giữ lại 1 giây chứ
+## không về 0: thanh tiến trình và tiếng thái vẫn kịp hiện, nên người chơi
+## thấy rõ "đã sơ chế" thay vì nguyên liệu tự đổi hình trong tay.
+@export var chop_seconds := 1.0
 
 ## Để trên bếp quá bao nhiêu LẦN thời gian nấu thì cháy.
 ##
@@ -88,16 +92,16 @@ signal burn_warning(cooker: Node, con_lai: float)
 ## đầy đủ ở quan_ly_ki_nang.gd.
 @export var burn_time_cut := 0.0
 
-## trạm -> { "kho": TramTuongTac, "t": float, "kieu": String }
+## trạm -> { "kho": Workstation, "t": float, "kieu": String }
 ##
 ## "kho" là nơi giữ nguyên liệu. Từ khi bỏ kiểu nấu "nồi" thì kho LUÔN chính
 ## là cái trạm — nhưng khoá này được giữ lại chứ không rút gọn, vì nó là chỗ
 ## duy nhất phải sửa nếu sau này có thêm một trạm mượn kho của vật khác.
 ##
 ## "kieu" quyết định tra bảng nào lúc kết thúc:
-##   "bake"   — nướng pizza        -> CONG_THUC_LO
-##   "cook"  — nấu một món lẻ     -> DanhMuc.cook_step()
-##   "chop" — thái một món lẻ    -> DanhMuc.prep_step()
+##   "bake"   — nướng pizza        -> OVEN_RECIPES
+##   "cook"  — nấu một món lẻ     -> ItemCatalog.cook_step()
+##   "chop" — thái một món lẻ    -> ItemCatalog.prep_step()
 var _running: Dictionary = {}
 
 
@@ -114,7 +118,7 @@ func _process(delta: float) -> void:
 		if store.contents.is_empty():
 			continue
 
-		var limit: float = _duration_for(mode)
+		var limit: float = _duration_for_batch(m)
 		m["elapsed"] += delta
 
 		# Hai giai đoạn, hai tín hiệu. Phân nhánh TRƯỚC khi xét mốc thời gian:
@@ -122,7 +126,7 @@ func _process(delta: float) -> void:
 		if not bool(m.get("done", false)):
 			progress_changed.emit(station, clampf(m["elapsed"] / limit, 0.0, 1.0))
 		else:
-			var burn_limit: float = _burn_mark(limit)
+			var burn_limit: float = _burn_mark_for_batch(m)
 			# maxf(0.001, …) chặn chia cho 0 khi bot_giay_chay bị đặt lớn tới
 			# mức mốc cháy trùng luôn với lúc chín.
 			var span: float = maxf(0.001, burn_limit - limit)
@@ -137,14 +141,14 @@ func _process(delta: float) -> void:
 			# thì cháy. Các kiểu khác dừng hẳn ở đây.
 			if mode != "cook" or ItemCatalog.burnt_state(String(m["source_id"])).is_empty():
 				_running.erase(station)
-				# Phát 0 Ở ĐÂY chứ không ở _ket_thuc: chỉ khi mẻ thật sự kết
-				# thúc mới được ẩn thanh. Phát trong _ket_thuc thì món còn
+				# Phát 0 Ở ĐÂY chứ không ở _finish: chỉ khi mẻ thật sự kết
+				# thúc mới được ẩn thanh. Phát trong _finish thì món còn
 				# chờ cháy cũng bị ẩn mất một khung hình rồi hiện lại.
 				progress_changed.emit(station, 0.0)
 		# maxf(han, ...) là chốt chặn: đặt bot_giay_chay lớn hơn quãng ân hạn
 		# thì mốc cháy sẽ tụt xuống DƯỚI thời gian nấu, tức món cháy trước cả
 		# khi chín — một trạng thái không có đường thoát.
-		elif m["elapsed"] >= _burn_mark(limit):
+		elif m["elapsed"] >= _burn_mark_for_batch(m):
 			_burn(station, store, String(m["source_id"]))
 
 
@@ -162,6 +166,43 @@ func _burn_mark(limit: float) -> float:
 	return maxf(limit, limit * burn_factor - burn_time_cut)
 
 
+## BỚT bấy nhiêu giây khi NẤU TRÊN BẾP những món trong `cook_time_cut_items`.
+## 0 / rỗng = tắt. (Special Week — Độc tày Spe-chan: ham, steak, chả rau củ.)
+## Chỉ áp cho kiểu "cook" (bếp); thớt không đổi. Lò có núm riêng ở dưới.
+##
+## Danh sách chứa "*" nghĩa là MỌI món nấu trên bếp (Mambo — Mambo tongye).
+var cook_time_cut: float = 0.0
+var cook_time_cut_items: Array = []
+## BỚT bấy nhiêu giây cho mọi mẻ NƯỚNG trong lò. 0 = tắt. (Mambo)
+var bake_time_cut: float = 0.0
+## Sàn: nấu nhanh mấy cũng còn ít nhất bấy nhiêu giây, để thanh tiến trình và
+## tiếng báo kịp hiện — một món chín tức thì trông như lỗi.
+const MIN_COOK_SECONDS := 1.0
+
+
+## Thời gian nấu của ĐÚNG MẺ này (đã tính kĩ năng bớt giờ theo món).
+func _duration_for_batch(m: Dictionary) -> float:
+	var base := _duration_for(String(m["mode"]))
+	if String(m["mode"]) == "cook" and cook_time_cut > 0.0 \
+			and (cook_time_cut_items.has("*") \
+				or cook_time_cut_items.has(String(m.get("source_id", "")))):
+		return maxf(MIN_COOK_SECONDS, base - cook_time_cut)
+	if String(m["mode"]) == "bake" and bake_time_cut > 0.0:
+		return maxf(MIN_COOK_SECONDS, base - bake_time_cut)
+	return base
+
+
+## Mốc cháy của ĐÚNG MẺ này.
+##
+## Giữ nguyên QUÃNG ÂN HẠN (từ lúc chín tới lúc cháy) của thời gian nấu gốc,
+## rồi dời cả quãng đó theo thời gian nấu đã bớt. Tính thẳng _burn_mark() trên
+## thời gian đã bớt thì quãng ân hạn co lại theo — kĩ năng "nấu nhanh hơn" lại
+## âm thầm kèm thêm "cháy nhanh hơn", một hình phạt không ghi ở đâu cả.
+func _burn_mark_for_batch(m: Dictionary) -> float:
+	var base := _duration_for(String(m["mode"]))
+	return _duration_for_batch(m) + (_burn_mark(base) - base)
+
+
 func _duration_for(mode: String) -> float:
 	match mode:
 		"bake": return bake_seconds
@@ -171,11 +212,16 @@ func _duration_for(mode: String) -> float:
 
 # --------------------------------------------------------------- lò nướng ---
 
-## Bỏ đế bánh vào lò và bật lò.
-func start_oven(oven: Workstation) -> bool:
+## Bỏ thứ bật lò vào lò và bật lò.
+##
+## `id` là đế bánh trần (đường cũ: sau đó thả topping vào) HOẶC một chiếc
+## pizza sống đã ghép ở bàn chế tạo (đường mới: nướng luôn, không nhận thêm
+## topping). Cùng một hàm vì cả hai đều là "lò rỗng, bỏ vào, đồng hồ chạy";
+## khác nhau chỉ ở lúc nướng xong tra bảng gì, mà việc đó bake_in_oven() lo.
+func start_oven(oven: Workstation, id: String = ItemCatalog.PIZZA_BASE) -> bool:
 	if oven == null or _running.has(oven) or not oven.contents.is_empty():
 		return false
-	oven.add_item(ItemCatalog.PIZZA_BASE)
+	oven.add_item(id)
 	_running[oven] = {"store": oven, "elapsed": 0.0, "mode": "bake", "source_id": ""}
 	progress_changed.emit(oven, 0.0)
 	return true
@@ -184,6 +230,11 @@ func start_oven(oven: Workstation) -> bool:
 ## Thêm topping vào lò đang chạy.
 func add_to_oven(oven: Workstation, id: String) -> bool:
 	if not _running.has(oven) or not ItemCatalog.can_go_in_oven(id):
+		return false
+	# Chỉ rải topping lên ĐẾ TRẦN. Lò đang nướng pizza sống ghép sẵn mà nhận
+	# thêm topping thì tổ hợp không khớp công thức nào — cả mẻ thành đồ hỏng
+	# chỉ vì người chơi tưởng đang giúp.
+	if oven.contents.is_empty() or String(oven.contents[0]) != ItemCatalog.PIZZA_BASE:
 		return false
 	oven.add_item(id)
 	return true

@@ -17,7 +17,7 @@ extends CanvasLayer
 ## là cả game đổi theo, còn tự vẽ riêng thì hộp này sẽ lạc lõng dần mỗi lần
 ## theme được chỉnh.
 
-signal start_choice(dong_y: bool)
+signal start_choice(yes: bool)
 
 const THEME := "res://ui/theme/menu_theme.tres"
 const TRAINER_IMAGE := "res://assets/ui/avatars/trainer_avt1.png"
@@ -197,32 +197,32 @@ func _slide_to(dest: float) -> void:
 	tween.tween_property(_box, "position:x", dest, SLIDE_SECONDS)
 
 
-# -------------------------------------------------------------- nội build ---
+# -------------------------------------------------------------- nội dung ---
 
-## Đặt nội build một bước. `num` và `tong` để hiện "BƯỚC 3 / 10".
-func set_step(loi: String, num: int, total: int) -> void:
+## Đặt nội dung một bước. `num` và `total` để hiện "BƯỚC 3 / 10".
+func set_step(line_: String, num: int, total: int) -> void:
 	_lbl_step.text = "BƯỚC %d / %d" % [num, total]
-	_lbl_line.text = loi
+	_lbl_line.text = line_
 	_hide_buttons()
 
 
 ## Hiện hai nút lựa chọn. Bấm xong phát start_choice(true/false).
-func ask(loi: String, chu_co: String, chu_khong: String) -> void:
+func ask(line_: String, yes_label: String, no_label: String) -> void:
 	_lbl_step.text = "HƯỚNG DẪN"
-	_lbl_line.text = loi
+	_lbl_line.text = line_
 	_hide_buttons()
 
-	var yes_text := Button.new()
-	yes_text.text = chu_co
-	yes_text.add_theme_font_size_override("font_size", 20)
-	yes_text.pressed.connect(_on_choice.bind(true))
-	_button_row.add_child(yes_text)
+	var btn_yes := Button.new()
+	btn_yes.text = yes_label
+	btn_yes.add_theme_font_size_override("font_size", 20)
+	btn_yes.pressed.connect(_on_choice.bind(true))
+	_button_row.add_child(btn_yes)
 
-	var no_text := Button.new()
-	no_text.text = chu_khong
-	no_text.add_theme_font_size_override("font_size", 20)
-	no_text.pressed.connect(_on_choice.bind(false))
-	_button_row.add_child(no_text)
+	var btn_no := Button.new()
+	btn_no.text = no_label
+	btn_no.add_theme_font_size_override("font_size", 20)
+	btn_no.pressed.connect(_on_choice.bind(false))
+	_button_row.add_child(btn_no)
 
 	_button_row.visible = true
 
@@ -234,14 +234,14 @@ func ask(loi: String, chu_co: String, chu_khong: String) -> void:
 	# có màn nào chơi bằng chuột thì đặt cứng sẽ khoá mất chuột của màn đó.
 	_old_mouse_mode = Input.mouse_mode
 	Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
-	yes_text.grab_focus()
+	btn_yes.grab_focus()
 
 
-func _on_choice(dong_y: bool) -> void:
+func _on_choice(yes: bool) -> void:
 	_hide_buttons()
 	if _old_mouse_mode != Input.MOUSE_MODE_VISIBLE:
 		Input.mouse_mode = _old_mouse_mode
-	start_choice.emit(dong_y)
+	start_choice.emit(yes)
 
 
 func _hide_buttons() -> void:

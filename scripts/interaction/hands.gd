@@ -1,7 +1,7 @@
 extends Node
 ## Đôi tay của người chơi: cầm lên, đặt xuống, vứt ra.
 ##
-## Vì sao là một node RIÊNG gắn vào nhân vật, không nhét vào tram_tuong_tac
+## Vì sao là một node RIÊNG gắn vào nhân vật, không nhét vào workstation
 ## hay kitachibi_player:
 ##  - Trạm tương tác chỉ nên biết mình "là một mục tiêu bấm được". Nó không
 ##    được biết luật ai cầm được gì — nếu không thì mỗi lần thêm luật lại
@@ -21,13 +21,23 @@ signal held_name_changed(item_name: String)
 ## Vì sao cần tín hiệu thứ hai chứ không dùng lại cái trên: `ten` là chữ cho
 ## người đọc, và với cái nồi nó còn kèm số lượng ("Nồi (2): Cà rốt"). Bộ dẫn
 ## dắt màn hướng dẫn cần so khớp CHÍNH XÁC một id, mà so bằng chuỗi hiển thị
-## thì đổi một chữ trong DanhMuc là màn hướng dẫn đứng im.
+## thì đổi một chữ trong ItemCatalog là màn hướng dẫn đứng im.
 signal held_item_changed(id: String)
 
 ## Một câu báo ngắn cho HUD (ghép xong / ghép hụt). `tot` false = tin xấu.
 signal notice(text: String, good: bool)
 ## Xin mở bảng chọn nguyên liệu cho một trạm. level_base nối tới bảng.
 signal request_picker(station: Node)
+
+## Người chơi vừa LẤY một nguyên liệu ở kệ / tủ lạnh / máy kem.
+##
+## Đôi tay KHÔNG tự trừ tiền: nó không giữ ví và không biết luật tiền. Nó chỉ
+## thông báo "vừa lấy thứ này, ở chỗ này" rồi thôi — customer_manager nghe và
+## quyết định trừ bao nhiêu. Giữ luật tiền ở MỘT phía như vậy thì muốn đổi cách
+## tính (giảm giá, miễn phí món đầu, cheat tắt hẳn) chỉ sửa một file.
+##
+## KHÔNG phát cho đĩa và nồi: chúng là đồ đựng, miễn phí — xem ItemCatalog.cost().
+signal ingredient_taken(id: String, at: Vector3)
 
 ## Hệ thống bếp, do level_base gán vào. Để rỗng thì bếp chỉ là đồ trang trí.
 var cooking: Node = null
@@ -207,7 +217,7 @@ func _on_interact(station: Node, _index: int) -> void:
 			# Vật thể đang bị khoá (hiện tại là cái nồi) thì bấm vào không ăn
 			# thua gì cả. Chặn ngay từ lúc CẦM chứ không chặn lúc dùng: cầm
 			# được rồi mới báo "không dùng được" thì người chơi đã đi nửa bếp.
-			# Lý do khoá ghi ở đầu DanhMuc, chỗ hằng NOI_MO.
+			# Lý do khoá ghi ở đầu ItemCatalog, chỗ hằng POT_ENABLED.
 			if ItemCatalog.is_locked(t.item_id):
 				return
 			if _held == null:
@@ -226,6 +236,7 @@ func _on_interact(station: Node, _index: int) -> void:
 			# nguyên liệu là vô hạn, đúng như đã chốt khi bỏ cơ chế rửa đĩa.
 			if _held == null:
 				_pick_up(_spawn_item(t.item_id))
+				ingredient_taken.emit(t.item_id, t.global_position)
 		"cutting_board":
 			_use_single_station(t, "chop")
 		"stove":
@@ -242,7 +253,7 @@ func _on_interact(station: Node, _index: int) -> void:
 			# phải kệ nguyên liệu — chúng phát ra ĐỒ ĐỰNG, thứ duy nhất trong
 			# game không bao giờ hết. Để hai nhánh cạnh nhau ở đây thì đọc
 			# code là thấy ngay "có đúng hai thứ vô hạn".
-			# Kiểm bi_khoa() vì công tắc NOI_MO tắt cả nhóm món nồi: không có
+			# Kiểm bi_khoa() vì công tắc POT_ENABLED tắt cả nhóm món nồi: không có
 			# dòng này thì tắt công tắc xong chồng nồi vẫn phát nồi ra, và
 			# người chơi cầm một thứ không nấu được thành gì.
 			if _held == null and not ItemCatalog.is_locked("noi"):
@@ -311,10 +322,16 @@ func _assemble_table(table: Workstation) -> void:
 
 ## Bảng chọn trả về một id vật phẩm. Sinh vật rồi cầm lên, cùng đường với
 ## thùng nguyên liệu — hai nguồn khác nhau nhưng kết quả phải giống hệt.
-func receive_ingredient(_station: Node, id: String) -> void:
+func receive_ingredient(station: Node, id: String) -> void:
 	if _held != null or id.is_empty():
 		return
 	_pick_up(_spawn_item(id))
+	# Bảng chọn gửi kèm chính cái trạm, nhờ vậy số tiền bay lên ở đúng cái tủ
+	# chứ không phải ở chân nhân vật.
+	var at := Vector3.ZERO
+	if station is Node3D:
+		at = (station as Node3D).global_position
+	ingredient_taken.emit(id, at)
 
 
 # ---------------------------------------------------------- sinh vật phẩm ---
@@ -333,7 +350,7 @@ func _spawn_item(id: String) -> Workstation:
 	item.item_id = id
 	item.add_to_group("station")
 	# Vật phẩm nằm ở lớp riêng để không chặn đường nhân vật; xem giải thích
-	# ở TramTuongTac.LOP_VAT_PHAM.
+	# ở Workstation.LOP_VAT_PHAM.
 	item.collision_layer = Workstation.LAYER_ITEM
 	# Không cần dò gì cả: vật phẩm là thứ bị nhìn thấy, không phải thứ nhìn.
 	item.collision_mask = 0
@@ -341,7 +358,7 @@ func _spawn_item(id: String) -> Workstation:
 	# Dựng model qua danh mục chứ KHÔNG tự gọi instantiate() ở đây.
 	#
 	# Đây từng là lỗi thật: hàm này tự nạp scene và bỏ qua khoá "ti_le", nên
-	# pizza thu nhỏ trên mặt bàn (đường đi qua TramTuongTac.hien_mo_hinh)
+	# pizza thu nhỏ trên mặt bàn (đường đi qua Workstation.hien_mo_hinh)
 	# nhưng vẫn to như cũ khi cầm trên tay. Cùng một vật phẩm được "mặc đồ"
 	# ở hai nơi thì phải dùng chung MỘT hàm, nếu không hai nơi sẽ trôi khỏi
 	# nhau đúng vào lúc thêm thuộc tính mới.
@@ -446,9 +463,10 @@ func _use_single_station(station: Workstation, mode: String) -> void:
 
 ## Bấm E vào lò nướng.
 ##
-## Ba tình huống, phân biệt bằng TRẠNG THÁI TAY và trạng thái lò — không
+## Bốn tình huống, phân biệt bằng TRẠNG THÁI TAY và trạng thái lò — không
 ## tình huống nào phụ thuộc chỗ đứng, nên người chơi luôn đoán được:
 ##   - cầm đế bánh, lò rỗng      -> bỏ đế vào và bật lò
+##   - cầm pizza sống, lò rỗng   -> bỏ vào và nướng luôn (ghép sẵn ở bàn)
 ##   - cầm topping, lò đang chạy -> bỏ thêm vào
 ##   - tay không, lò có thành phẩm -> lấy ra
 func _use_oven(oven: Workstation) -> void:
@@ -459,6 +477,10 @@ func _use_oven(oven: Workstation) -> void:
 		var id: String = _held.item_id
 		if id == ItemCatalog.PIZZA_BASE and oven.contents.is_empty():
 			if cooking.start_oven(oven):
+				_clear_held()
+		# Pizza sống ghép sẵn ở bàn chế tạo: bỏ vào là nướng luôn.
+		elif not ItemCatalog.bake_step(id).is_empty() and oven.contents.is_empty():
+			if cooking.start_oven(oven, id):
 				_clear_held()
 		elif cooking.is_burning(oven) and ItemCatalog.can_go_in_oven(id):
 			if cooking.add_to_oven(oven, id):
@@ -542,7 +564,7 @@ func _put_on_table(table: Workstation) -> void:
 	# độc nhất của cả màn thì đó là xoá vĩnh viễn. Nồi vô hạn thì bị nuốt
 	# không còn là mất mát, và ĐẶT NỒI LÊN BÀN chính là bước đầu của công
 	# thức nấu canh mới — nên nhánh chặn phải đi.
-	# Lưới an toàn cho đồ đang bị khoá bởi công tắc NOI_MO.
+	# Lưới an toàn cho đồ đang bị khoá bởi công tắc POT_ENABLED.
 	if ItemCatalog.is_locked(id):
 		return
 	table.add_item(id)
@@ -555,7 +577,7 @@ func _put_on_table(table: Workstation) -> void:
 	# (Đã bỏ 17/9/2026) `hien_mo_hinh("bowl" if ban.chua.has("bowl") else "")`.
 	# Luật cũ chỉ bày mỗi cái đĩa, nên bỏ năm nguyên liệu lên bàn vẫn thấy một
 	# cái đĩa rỗng y như lúc mới đặt — mặt bàn không nói được gì về thứ người
-	# chơi vừa làm. Giờ bày cả chồng, mỗi món một tầng; xem DanhMuc.make_stack().
+	# chơi vừa làm. Giờ bày cả chồng, mỗi món một tầng; xem ItemCatalog.make_stack().
 	table.show_stack(table.contents)
 
 
@@ -563,9 +585,9 @@ func _put_on_table(table: Workstation) -> void:
 ##
 ## Chỉ nhận thứ BÁN ĐƯỢC, tức có giá trong danh mục.
 ##
-## Trước đây kiểm bằng DanhMuc.is_dish(), và điều kiện đó SAI theo cả hai chiều:
+## Trước đây kiểm bằng ItemCatalog.is_dish(), và điều kiện đó SAI theo cả hai chiều:
 ##  - Ba loại kem lẻ lấy thẳng từ máy, không qua bàn chế tạo, nên không nằm ở
-##    vế phải của CONG_THUC_BAN → la_mon() trả false → không giao ra bàn được,
+##    vế phải của TABLE_RECIPES → la_mon() trả false → không giao ra bàn được,
 ##    dù chúng có giá 15 và đã chốt là bán thẳng không cần đĩa.
 ##  - Ngược lại, chả rau củ SỐNG là vế phải của một công thức bàn chế tạo (để
 ##    nhấc lên được) nên la_mon() trả true → giao được cả đồ chưa nấu.

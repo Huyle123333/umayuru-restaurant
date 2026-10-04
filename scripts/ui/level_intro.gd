@@ -27,9 +27,15 @@ extends CanvasLayer
 ## chứ không phải quyền điều khiển. level_base lo phần đóng băng đó; node này
 ## chỉ đếm và báo khi hết.
 
+## (2/10/2026) Thời gian chờ là 30 giây, và trong lúc đó bảng THỰC ĐƠN HÔM NAY
+## mở ở mép phải. Bảng đó là node riêng (menu_panel.gd) chứ không nằm trong
+## node này: nó còn sống suốt màn chơi để người chơi bấm phím mở lại, trong khi
+## node này tự xoá ngay khi đếm xong. level_base nối hai thứ với nhau.
+
 signal started
 
-const COUNTDOWN_SECONDS := 10.0
+const COUNTDOWN_SECONDS := 30.0
+
 const THEME := "res://ui/theme/menu_theme.tres"
 
 const COLOR_NAME := Color(1, 0.96, 0.89)
@@ -66,10 +72,10 @@ func _process(delta: float) -> void:
 	_left -= delta
 	_lbl_counter.text = "Bắt đầu sau %d" % maxi(int(ceilf(_left)), 0)
 	if _left <= 0.0:
-		_ket_thuc()
+		_finish()
 
 
-func _ket_thuc() -> void:
+func _finish() -> void:
 	if _done:
 		return
 	_done = true
@@ -85,7 +91,7 @@ func _ket_thuc() -> void:
 
 func _build_ui() -> void:
 	_root = Control.new()
-	_root.set_anchors_preset(Control.PRESET_FULL_RECT)
+	_root.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	# KHÔNG chặn chuột và không chặn phím: người chơi phải đi lại được trong
 	# lúc đếm. Đây là cả lý do tồn tại của mười giây này.
 	_root.mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -114,10 +120,10 @@ func _build_ui() -> void:
 	col.add_child(_lbl_counter)
 
 
-func _text(noi_dung: String, yes_text: int, color: Color, border: int) -> Label:
+func _text(content: String, font_size: int, color: Color, border: int) -> Label:
 	var l := Label.new()
-	l.text = noi_dung
-	l.add_theme_font_size_override("font_size", yes_text)
+	l.text = content
+	l.add_theme_font_size_override("font_size", font_size)
 	l.add_theme_color_override("font_color", color)
 	# Viền đậm quanh chữ: chữ nằm đè lên cái bếp nhiều màu, không có viền thì
 	# đúng chỗ nào trùng màu là chỗ đó biến mất.

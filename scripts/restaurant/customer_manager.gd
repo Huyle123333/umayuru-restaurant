@@ -10,7 +10,7 @@ extends Node
 ## về một chỗ thì đọc một file là hiểu cả vòng đời người khách.
 
 signal customer_seated(customer: Node, table: Node)
-signal customer_ate(customer: Node, table: Node, id_mon: String)
+signal customer_ate(customer: Node, table: Node, dish_id: String)
 signal customer_left(customer: Node)
 
 ## Một đơn vừa sinh ra (khách đã ngồi vào bàn và gọi món).
@@ -18,9 +18,9 @@ signal order_created(order_: Order)
 ## Một đơn kết thúc. ly_do: "xong" (giao đúng) hoặc "bo_di" (hết kiên nhẫn).
 signal order_finished(order_: Order, reason: String)
 ## Ví thay đổi. `cho` là chỗ vừa xảy ra việc, để bắn hiệu ứng tiền bay lên.
-signal money_changed(total: int, them: int, spot: Vector3)
+signal money_changed(total: int, added: int, spot: Vector3)
 
-const CUSTOMER_SCENE := preload("res://scenes/nha_hang/khach.tscn")
+const CUSTOMER_SCENE := preload("res://scenes/restaurant/customer.tscn")
 const ItemCatalog := preload("res://scripts/interaction/item_catalog.gd")
 const Order := preload("res://scripts/restaurant/order.gd")
 const COIN_ICON := "res://assets/ui/tien/carrot_tien.png"
@@ -86,6 +86,30 @@ const COIN_ICON := "res://assets/ui/tien/carrot_tien.png"
 ## không căng dần.
 @export var weights: Dictionary = {}
 
+## Trọng số theo MỨC ĐỘ KHÓ: {"easy": 7, "medium": 3, "hard": 0}. Rỗng = không
+## dùng, bốc thẳng theo `weights` như cũ (Endless, Asian, màn không có luật).
+##
+## Vì sao cần thêm một tầng trên `weights`: `weights` là con số CỐ ĐỊNH cả màn,
+## nên món khó có thể là đơn đầu tiên — đúng lúc người chơi còn chưa nhớ công
+## thức. Tầng này do level_rules đổi theo từng CHẶNG của màn: chặng đầu mức khó
+## bằng 0, rồi tăng dần. Bốc hai bước: chọn MỨC theo bảng này, rồi chọn MÓN
+## trong mức đó theo `weights`.
+@export var tier_weights: Dictionary = {}
+
+## Sau một món KHÓ, phải qua bấy nhiêu đơn KHÔNG khó thì món khó mới được xuất
+## hiện lại. 0 = tắt.
+##
+## Vì sao cần dù đã có tỉ lệ: tỉ lệ chỉ nói về TRUNG BÌNH. 15% vẫn cho ra hai
+## món khó liền nhau khoảng một lần mỗi màn, và hai món khó chồng lên nhau là
+## lúc người chơi mất khách — không phải vì chơi kém mà vì xúc xắc. Quãng nghỉ
+## bắt buộc biến "trung bình hiếm" thành "không bao giờ dồn".
+##
+## Bộ đếm BẮT ĐẦU TỪ 0, tức là đầu màn cũng tính như vừa có một món khó: hai
+## đơn đầu tiên của màn không bao giờ là món khó, dù chặng đầu có tỉ lệ khó.
+@export var hard_cooldown_orders: int = 2
+## Số đơn không-khó đã ra kể từ món khó gần nhất.
+var _orders_since_hard: int = 0
+
 ## Có trừ kiên nhẫn theo thời gian không.
 ##
 ## Màn hướng dẫn tắt cờ này: thanh kiên nhẫn vẫn hiện đầy đủ để người chơi làm
@@ -100,6 +124,34 @@ const COIN_ICON := "res://assets/ui/tien/carrot_tien.png"
 @export var spawn_interval: float = 12.0
 ## Giây chờ trước người khách đầu tiên — cho người chơi kịp nhìn quanh bếp.
 @export var first_wait: float = 4.0
+
+## Hệ số nhân vào GIÁ BÁN mọi món của màn này. 1.0 = giá gốc trong ItemCatalog.
+##
+## (2/10/2026) Luật màn đặt: Ngày 1 ×0,95 — Ngày 2 ×1,0 — Ngày 3 ×1,15. Lý do:
+## giá món đặt theo thời gian làm, nên tiền kiếm được mỗi giây gần như bằng
+## nhau ở mọi ngày — ngày cuối khó hơn hẳn mà không đáng tiền hơn. Hệ số này
+## cho doanh thu (và các mốc hạng) TĂNG DẦN theo ngày mà không đổi lối chơi.
+##
+## Chỉ nhân giá BÁN, không nhân giá vốn nguyên liệu: giá vốn là cái giá của
+## một quyết định (lấy nhầm thì mất), không phải thứ cần lớn dần theo ngày.
+@export var price_factor: float = 1.0
+
+## Khoảng cách NGẪU NHIÊN giữa hai lượt khách, tính bằng giây: mỗi lần một
+## khách vào, lượt kế được hẹn sau một quãng bốc đều trong [min, max].
+## Cả hai bằng 0 = không dùng, khách vào đều đặn theo `spawn_interval` như cũ.
+##
+## Vì sao ngẫu nhiên (2/10/2026, user chơi thử): nhịp cố định thì người chơi
+## cảm được đúng một thứ là "càng lúc càng dồn" — chặng cuối cứ bảy giây một
+## khách, không có lúc nào thở. Quán thật thì có lúc vắng, có lúc đông nghịt.
+## Bốc ngẫu nhiên cho ra đúng cảm giác đó: vài khách tới sát nhau tạo cao
+## điểm, rồi một quãng trống để dọn dẹp.
+##
+## `max` là LỜI HỨA "trong vòng bấy nhiêu giây chắc chắn có khách": không có
+## chặn trên thì xúc xắc có thể cho một quãng chết dài, mà màn chỉ có 7 phút
+## và mốc hạng tính bằng tiền — vắng khách do xui là mất hạng do xui.
+## `min` chặn chiều ngược lại: hai khách không bao giờ vào cùng một lúc.
+@export var spawn_interval_min: float = 0.0
+@export var spawn_interval_max: float = 0.0
 
 ## Kiên nhẫn lúc đứng XẾP HÀNG (chưa có bàn), giây. CỐ ĐỊNH, không theo món.
 ##
@@ -155,7 +207,89 @@ const COIN_ICON := "res://assets/ui/tien/carrot_tien.png"
 ## tiền nói một nẻo.
 var force_perfect: bool = false
 
-## Tổng tiền đã kiếm trong màn.
+## Kita — "Victory Cheer!", phần NHÂN ĐÔI TIỀN. 1,0 = không đổi.
+##
+## Chỉ áp cho đơn THẬT SỰ hoàn hảo, tức kiên nhẫn còn trên ngưỡng lúc giao —
+## KHÔNG áp cho đơn chỉ hoàn hảo nhờ `force_perfect`. Hai cờ trả lời hai câu
+## khác nhau: `force_perfect` quyết đơn CÓ ĐƯỢC TÍNH là hoàn hảo không (sàn an
+## toàn), còn cờ này quyết đơn CÓ ĐƯỢC NHÂN ĐÔI không (phần thưởng cho người
+## vẫn chơi nhanh).
+##
+## Vì sao tách: nếu nhân đôi cả đơn được ép hoàn hảo thì suốt ~68% màn mọi đơn
+## đều 3,1 lần giá gốc bất kể chơi thế nào — kĩ năng thành "bấm Space rồi đi
+## chậm cũng được", và mốc hạng S/A/B/C phải tính lại toàn bộ. Tách ra thì kĩ
+## năng vừa đỡ được lúc bí, vừa còn lý do để chạy nhanh.
+var perfect_payout_multiplier: float = 1.0
+
+## Các món giao được cho MỌI đơn, kể cả khi khách gọi món khác. Rỗng = tắt.
+## (Special Week — Shooting Star bật lên bằng danh sách các món có ham/steak.)
+##
+## Tiền trả theo giá của MÓN ĐÃ GIAO, không theo món khách gọi: nếu trả theo
+## món gọi thì cách chơi tối ưu là chỉ nấu món rẻ nhất trong danh sách rồi đem
+## đổi lấy tiền của Bữa tối — kĩ năng thành máy in tiền thay vì lưới cứu khách.
+var wildcard_dishes: Array = []
+
+## Bộ đếm cho điều kiện kĩ năng "giao xong N đơn thuộc một nhóm món".
+## `counted_dishes` là nhóm món (theo món KHÁCH GỌI); rỗng = không đếm.
+var counted_dishes: Array = []
+var counted_orders_done: int = 0
+
+## Mỗi đơn giao ra có `bonus_payout_chance` (0…1) cơ hội được NHÂN tiền với
+## `bonus_payout_multiplier`. 0 = tắt. (Special Week — Hốc phó: 20% × 3.)
+## Nhân SAU mọi thưởng khác, nên một đơn hoàn hảo trúng thưởng là to nhất.
+var bonus_payout_chance: float = 0.0
+
+## Hệ số giá RIÊNG theo món: id món -> hệ số. Rỗng = không món nào đổi giá.
+## (Oguri Cap — Alo vũ à vũ: ba loại pizza × 1,6.) Nhân lúc tạo đơn, cùng chỗ
+## với hệ số giá của màn, nên con số trên vé đã là giá thật.
+var dish_price_factors: Dictionary = {}
+
+## Hệ số nhân vào TRỌNG SỐ bốc món: id món -> hệ số. Rỗng = bốc như thường.
+## (Mambo — Vua làm nền: ba loại pizza × 1,2, tức pizza được gọi nhiều hơn
+## 20% so với bình thường TRONG nhóm độ khó của nó.)
+var dish_weight_factors: Dictionary = {}
+
+## BẢNG GIEO THƯỞNG cho đơn HOÀN HẢO của một nhóm món. Rỗng = tắt.
+##   "dishes": mảng id món được gieo
+##   "rolls":  mảng [xác suất, hệ số] — gieo MỘT lần, rơi vào khoảng nào thì
+##             nhân hệ số đó; phần xác suất còn lại là giá thường.
+## (Mambo — Go, Go, Mun!: pizza hoàn hảo 36% × 3, 18% × 2.)
+var perfect_roll: Dictionary = {}
+
+## ĐÓNG BĂNG toàn bộ hệ khách: không khách mới, không trừ kiên nhẫn, và mọi
+## người khách đứng im tại chỗ (đang đi thì dừng, đang ăn thì ngừng ăn).
+## (Oguri Cap — Triumphant Pulse.) Đổi bằng set_frozen(), đừng gán thẳng.
+var frozen: bool = false
+
+const CUSTOMER_GROUP := "customers"
+
+func set_frozen(value: bool) -> void:
+	if frozen == value:
+		return
+	frozen = value
+	# Tắt XỬ LÝ của từng node khách chứ không tự viết cờ "đứng im" trong
+	# customer.gd: PROCESS_MODE_DISABLED dừng cả di chuyển, bộ đếm bữa ăn lẫn
+	# AnimationPlayer con của nó trong một lệnh, và bật lại là mọi thứ chạy
+	# tiếp đúng chỗ dở. Trong lúc đóng băng không có khách mới nào sinh ra,
+	# nên không sót ai.
+	var mode := Node.PROCESS_MODE_DISABLED if value else Node.PROCESS_MODE_INHERIT
+	for k in get_tree().get_nodes_in_group(CUSTOMER_GROUP):
+		k.process_mode = mode
+var bonus_payout_multiplier: float = 3.0
+
+## Nguyên liệu miễn phí (cheat). false = trừ tiền như bình thường.
+##
+## level_base đọc GameData.cheat_free_ingredients rồi gán vào đây. File này KHÔNG
+## tự hỏi GameData: nó là hệ cơ chế, còn "người chơi bật cheat gì" là chuyện của
+## màn chơi. Nhờ vậy chạy thử customer_manager trong một probe không cần dựng
+## GameData nào cả.
+var free_ingredients: bool = false
+
+## Tổng tiền trong màn. CÓ THỂ ÂM.
+##
+## Âm là hợp lệ, không phải lỗi: lấy nguyên liệu bị trừ tiền ngay, nên mấy giây
+## đầu màn (đã mua đồ, chưa giao được món nào) gần như chắc chắn âm. Kẹp về 0 thì
+## chi phí đầu màn biến mất và người chơi không thấy được mình đang đầu tư.
 var money: int = 0
 
 ## Thống kê một lượt chơi, để bảng kết quả đọc lúc hết giờ.
@@ -230,7 +364,7 @@ func _pick_spawn(marker_name: String) -> Marker3D:
 ## bếp — khách sẽ đi thẳng vào bếp qua lối người chơi ở x=16. Hai hộp chạm nhau
 ## dọc cạnh z=12, Godot tự nối hai vùng ở cạnh chung nên khách vẫn đi qua lại
 ## được.
-const SOURCE_GROUP := "nguon_navmesh"
+const SOURCE_GROUP := "navmesh_source"
 
 ## Lớp va chạm 5 (bit 16) dành RIÊNG cho mấy tấm chắn vô hình chỉ tồn tại với
 ## navmesh. Người chơi có mask 1 nên đi xuyên qua chúng như không có gì.
@@ -304,17 +438,17 @@ func _bake_navmesh() -> void:
 ## navmesh, người chơi vẫn đi qua lối của mình như cũ.
 func _build_blockers() -> void:
 	for c in BLOCKERS:
-		var than := StaticBody3D.new()
-		than.name = "NavBlocker"
-		than.collision_layer = NAV_BLOCK_LAYER
-		than.collision_mask = 0
+		var body := StaticBody3D.new()
+		body.name = "NavBlocker"
+		body.collision_layer = NAV_BLOCK_LAYER
+		body.collision_mask = 0
 		var shape := CollisionShape3D.new()
 		var box := BoxShape3D.new()
 		box.size = (c[1] as Vector3) * 2.0
 		shape.shape = box
-		than.add_child(shape)
-		_map.add_child(than)
-		than.global_position = c[0]
+		body.add_child(shape)
+		_map.add_child(body)
+		body.global_position = c[0]
 
 
 ## Đọc độ cao mặt navmesh THẲNG TỪ LƯỚI vừa nướng.
@@ -379,15 +513,16 @@ func spawn_customer() -> Node:
 		return null
 
 	var k := CUSTOMER_SCENE.instantiate()
+	k.add_to_group(CUSTOMER_GROUP)
 	_map.add_child(k)
 	# Nắn chỗ sinh về navmesh rồi lệch ngẫu nhiên một chút: cửa vào nằm sát
 	# tường đông (x=31,5 so với tường x=32) nên điểm gốc rơi ra ngoài vùng đi
 	# được, mà sinh mấy người CHỒNG LÊN NHAU ở đúng một toạ độ thì họ đẩy nhau
 	# ra và có người bị ép xuyên qua tường.
-	var vt: Vector3 = k.snap_to_navmesh(_map.get_world_3d().navigation_map,
+	var pos: Vector3 = k.snap_to_navmesh(_map.get_world_3d().navigation_map,
 		_door.global_position)
-	vt.z += randf_range(-0.7, 0.7)
-	k.global_position = vt
+	pos.z += randf_range(-0.7, 0.7)
+	k.global_position = pos
 	k.set_height_offset(_height_offset)
 	k.arrived.connect(_on_arrived)
 	k.ate.connect(_on_ate)
@@ -395,7 +530,7 @@ func spawn_customer() -> Node:
 	_in_queue[slot] = k
 	k.set_meta("in_queue", slot)
 	AmThanh.play_sfx("customer_in")
-	k.go_to(_queue[slot].global_position, "hang")
+	k.go_to(_queue[slot].global_position, "queue")
 	return k
 
 
@@ -405,10 +540,10 @@ func spawn_customer() -> Node:
 ## sau vẫn tồn tại và vẫn đúng vị trí, nên Ngày 2 chỉ cần nâng con số lên là
 ## hàng đợi dài ra ngay, không phải dựng lại gì.
 func _free_seat() -> int:
-	var het: int = _in_queue.size()
+	var limit: int = _in_queue.size()
 	if max_queue > 0:
-		het = mini(het, max_queue)
-	for i in het:
+		limit = mini(limit, max_queue)
+	for i in limit:
 		if _in_queue[i] == null:
 			return i
 	return -1
@@ -425,13 +560,13 @@ func _tables_full() -> bool:
 ## thì sáu chỗ có thể quên tắt lúc khách bị xoá, và một Timer sống sót sẽ gọi
 ## vào node đã biến mất. Một vòng lặp thì danh sách đơn chính là nguồn sự thật.
 func _process(delta: float) -> void:
-	if _map == null:
+	if _map == null or frozen:
 		return
 
 	if auto_spawn:
 		_spawn_timer -= delta
 		if _spawn_timer <= 0.0:
-			_spawn_timer = spawn_interval
+			_spawn_timer = _next_spawn_gap()
 			spawn_customer()
 
 	if not drain_patience:
@@ -441,18 +576,25 @@ func _process(delta: float) -> void:
 	for order_ in _orders.values().duplicate():
 		# Khai kiểu tường minh: `don` lấy từ Dictionary nên kiểu tĩnh là Variant,
 		# `:=` không suy được kiểu trả về và Godot báo lỗi biên dịch.
-		var het: bool = order_.tick(delta)
+		var expired: bool = order_.tick(delta)
 		# Vẽ thanh chờ trên đầu người đang xếp hàng. Chỉ giai đoạn hàng đợi mới
 		# vẽ ở đây; ngồi vào bàn rồi thì tấm vé trên HUD lo phần đó.
 		if order_.in_queue and is_instance_valid(order_.customer):
 			order_.customer.set_patience_bar(order_.patience_ratio())
-		if het:
+		if expired:
 			_leave_angry(order_)
 
 
-func _on_arrived(customer: Node, viec: String) -> void:
-	match viec:
-		"hang":
+## Bao lâu nữa thì lượt khách kế tiếp vào.
+func _next_spawn_gap() -> float:
+	if spawn_interval_max <= 0.0:
+		return spawn_interval
+	return randf_range(minf(spawn_interval_min, spawn_interval_max), spawn_interval_max)
+
+
+func _on_arrived(customer: Node, task: String) -> void:
+	match task:
+		"queue":
 			# Tới chỗ xếp hàng. Quay mặt về phía quầy rồi thử ra bàn ngay —
 			# nếu còn bàn trống thì không phải đợi ai.
 			customer.stop_moving(Vector3.LEFT)
@@ -477,7 +619,7 @@ func _on_arrived(customer: Node, viec: String) -> void:
 			customer.stop_moving(dir_.normalized())
 			customer_seated.emit(customer, table)
 			_seat_at_table(customer, table)
-		"ve":
+		"leave":
 			_clear_customer(customer)
 
 
@@ -529,7 +671,7 @@ func _shift_queue() -> void:
 		# đây chính là vài giây họ dùng để bắc nồi trước.
 		if before == 0:
 			_push_to_board(k)
-		k.go_to(_queue[before].global_position, "hang")
+		k.go_to(_queue[before].global_position, "queue")
 
 
 func _empty_table():
@@ -553,7 +695,7 @@ func _empty_table():
 
 
 ## Bàn nhận được món. Chỉ người đang ngồi ở CHÍNH bàn đó mới ăn.
-func _on_dish_delivered(table: Node, id_mon: String) -> void:
+func _on_dish_delivered(table: Node, dish_id: String) -> void:
 	var customer = _customer_at.get(table)
 	if customer == null:
 		return
@@ -564,12 +706,15 @@ func _on_dish_delivered(table: Node, id_mon: String) -> void:
 	# GIAO NHẦM MÓN: không làm gì cả.
 	#
 	# Cố ý im lặng chứ không phạt: món vẫn nằm trên mặt bàn và người chơi bấm
-	# E lần nữa là nhấc lại được (xem _giao_mon trong tay_cam.gd). Hình phạt
+	# E lần nữa là nhấc lại được (xem _giao_mon trong hands.gd). Hình phạt
 	# duy nhất là thời gian — mà trong một màn 7 phút thì thời gian đã là đồng
 	# tiền đắt nhất. Tịch thu cả món lẫn đơn thì một lần bấm nhầm lúc vội đủ
 	# làm hỏng cả màn, và người chơi học được điều sai: "đừng vội" thay vì
 	# "nhìn vé trước khi bê".
-	if id_mon != order_.dish:
+	#
+	# NGOẠI LỆ: món nằm trong `wildcard_dishes` thì đơn nào cũng nhận.
+	var is_wildcard := dish_id != order_.dish and wildcard_dishes.has(dish_id)
+	if dish_id != order_.dish and not is_wildcard:
 		return
 
 	# Chốt tiền NGAY LÚC GIAO, trả vào ví lúc khách ăn xong.
@@ -578,26 +723,59 @@ func _on_dish_delivered(table: Node, id_mon: String) -> void:
 	# ngồi ăn thì thanh đó vẫn đang chạy. Tính lúc ăn xong thì mọi đơn đều
 	# thành không hoàn hảo, và cái thưởng 20% coi như không tồn tại.
 	order_.draining = false
-	order_.was_perfect = force_perfect or order_.is_perfect()
-	order_.payout = order_.price
+
+	# ĐO "thật sự hoàn hảo" TRƯỚC khi force_perfect che mất. Đảo hai dòng này
+	# là phần nhân đôi âm thầm ăn cả đơn giao muộn — không lỗi, chỉ sai tiền.
+	var truly_perfect := order_.is_perfect()
+	order_.was_perfect = force_perfect or truly_perfect
+	# Giá gốc của lần giao này: giá đơn, hoặc — khi giao món thế chỗ — giá
+	# của chính món được giao (đã nhân hệ số giá của màn như mọi đơn khác).
+	var base_price: int = order_.price
+	if is_wildcard:
+		base_price = maxi(1, int(round(ItemCatalog.price(dish_id) * price_factor \
+			* float(dish_price_factors.get(dish_id, 1.0)))))
+	order_.payout = base_price
 	if order_.was_perfect:
-		order_.payout = int(round(order_.price * (1.0 + perfect_bonus)))
+		order_.payout = int(round(base_price * (1.0 + perfect_bonus)))
+	if truly_perfect and not is_equal_approx(perfect_payout_multiplier, 1.0):
+		# Nhân vào tiền ĐÃ CỘNG thưởng, không nhân riêng phần giá: "gấp đôi giá
+		# trị đơn hàng" nói gọn được thành một câu trong bảng thông tin nhân vật,
+		# và người chơi nhìn số tiền bay lên là hiểu ngay.
+		order_.payout = int(round(order_.payout * perfect_payout_multiplier))
+		order_.was_doubled = true
+
+	if order_.was_perfect and not perfect_roll.is_empty() \
+			and (perfect_roll.get("dishes", []) as Array).has(dish_id):
+		# Gieo MỘT số rồi dò dần qua bảng, chứ không gieo riêng cho từng dòng:
+		# gieo riêng thì "36% × 3" và "18% × 2" có thể cùng trúng, và tỉ lệ
+		# thật không còn là con số ghi trong mô tả kĩ năng.
+		var roll := randf()
+		for entry in perfect_roll.get("rolls", []):
+			roll -= float(entry[0])
+			if roll < 0.0:
+				order_.payout = int(round(order_.payout * float(entry[1])))
+				break
+
+	if bonus_payout_chance > 0.0 and randf() < bonus_payout_chance:
+		order_.payout = int(round(order_.payout * bonus_payout_multiplier))
 
 	orders_done += 1
+	if counted_dishes.has(order_.dish):
+		counted_orders_done += 1
 	if order_.was_perfect:
 		perfect_orders += 1
 		# Chồng LÊN TRÊN tiếng giao món, không thay thế: người chơi vẫn nghe
 		# tiếng giao quen thuộc, cộng thêm một tiếng nữa báo "lần này hoàn hảo".
 		AmThanh.play_sfx("perfect")
 
-	customer.set_meta("dish", id_mon)
+	customer.set_meta("dish", dish_id)
 	customer.eat(eat_seconds)
 	order_finished.emit(order_, "served")
 
 
 func _on_ate(customer: Node) -> void:
 	var table = _table_of.get(customer)
-	var id_mon := str(customer.get_meta("dish", ""))
+	var dish_id := str(customer.get_meta("dish", ""))
 	if table != null:
 		table.clear_all()
 		table.clear_model()
@@ -612,9 +790,9 @@ func _on_ate(customer: Node) -> void:
 			AmThanh.play_sfx("coin")
 			_money_popup(spot, order_.payout, order_.was_perfect)
 
-	customer_ate.emit(customer, table, id_mon)
+	customer_ate.emit(customer, table, dish_id)
 	if _door != null:
-		customer.go_to(_door.global_position, "ve")
+		customer.go_to(_door.global_position, "leave")
 
 
 ## Xoá hẳn người khách và trả lại cái bàn.
@@ -646,25 +824,31 @@ func _clear_customer(customer: Node) -> void:
 
 ## Người khách vừa ngồi xuống thì gọi món.
 ##
-## Món bốc NGẪU NHIÊN từ DanhMuc.sellable_dishes() chứ không từ một danh
+## Món bốc NGẪU NHIÊN từ ItemCatalog.sellable_dishes() chứ không từ một danh
 ## sách gõ tay ở đây. Nhờ vậy thêm một món có giá vào danh mục là nó tự vào
 ## thực đơn, còn khoá một món (như cả nhóm món nồi hiện giờ) là khách tự động
 ## thôi gọi — không có chỗ thứ hai để quên cập nhật.
 func _place_order(customer: Node) -> void:
 	if _orders.has(customer):
 		return
-	var mon_co_the := _actual_menu()
-	if mon_co_the.is_empty():
-		push_warning("Thực đơn rỗng — không món nào có giá trong DanhMuc.")
+	var available := _actual_menu()
+	if available.is_empty():
+		push_warning("Thực đơn rỗng — không món nào có giá trong ItemCatalog.")
 		return
 
-	var picked := _pick_dish(mon_co_the)
+	var picked := _pick_dish(available)
 	# Chỉ ép khi món đó THẬT SỰ bán được. Gõ nhầm tên món vào ô ép thì quay về
 	# ngẫu nhiên chứ không sinh ra một đơn không bao giờ giao được.
-	if not force_dish.is_empty() and mon_co_the.has(force_dish):
+	if not force_dish.is_empty() and available.has(force_dish):
 		picked = force_dish
 
 	var order_ := Order.new(customer, picked)
+	# Hệ số giá của màn. Nhân NGAY LÚC TẠO ĐƠN, không phải lúc trả tiền: con
+	# số trên tấm vé là con số người chơi sẽ nhận, và thưởng hoàn hảo (tính
+	# từ order_.price) tự ăn theo mà không cần biết có hệ số.
+	var factor := price_factor * float(dish_price_factors.get(picked, 1.0))
+	if not is_equal_approx(factor, 1.0):
+		order_.price = maxi(1, int(round(order_.price * factor)))
 	# Gán hệ số TRƯỚC wait_in_queue(): hàm đó chốt ngân sách kiên nhẫn ngay tại chỗ.
 	order_.patience_factor = patience_factor
 	order_.wait_in_queue(queue_patience)
@@ -729,16 +913,83 @@ func _actual_menu() -> Array[String]:
 ## muốn chỉnh "hamburger hiếm hơn steak một chút" thì đổi 3 thành 2.5, không
 ## phải nhân cả bảng lên mười lần.
 func _pick_dish(list_: Array[String]) -> String:
+	var picked := _pick_weighted(_narrow_to_tier(_without_hard_if_cooling(list_)))
+	if ItemCatalog.difficulty(picked) == "hard":
+		_orders_since_hard = 0
+	else:
+		_orders_since_hard += 1
+	return picked
+
+
+## Đang trong quãng nghỉ sau món khó thì bỏ hẳn các món khó khỏi danh sách.
+##
+## Lọc DANH SÁCH chứ không sửa tier_weights: cách này đúng cho cả những màn
+## không dùng tầng mức độ (Endless, Asian), và không đụng vào bảng tỉ lệ mà
+## level_rules đang quản. Nếu lọc xong không còn món nào (thực đơn toàn món
+## khó) thì trả lại danh sách gốc — thà phá luật nghỉ còn hơn không có đơn.
+func _without_hard_if_cooling(list_: Array[String]) -> Array[String]:
+	if _orders_since_hard >= hard_cooldown_orders:
+		return list_
+	var out: Array[String] = []
+	for id in list_:
+		if ItemCatalog.difficulty(id) != "hard":
+			out.append(id)
+	return out if not out.is_empty() else list_
+
+
+## Thu danh sách món về MỘT mức độ khó, bốc theo tier_weights. Trả nguyên danh
+## sách nếu không dùng tầng mức độ, hoặc nếu không mức nào bốc được.
+##
+## Chỉ xét những mức ĐANG CÓ MÓN trong thực đơn: Ngày 1 không có món khó, nên
+## trọng số của "hard" ở đó phải bị bỏ qua chứ không được bốc trúng một mức
+## rỗng rồi trả về không có gì.
+func _narrow_to_tier(list_: Array[String]) -> Array[String]:
+	if tier_weights.is_empty():
+		return list_
+	var by_tier: Dictionary = {}
+	for id in list_:
+		var tier := ItemCatalog.difficulty(id)
+		if not by_tier.has(tier):
+			var fresh: Array[String] = []
+			by_tier[tier] = fresh
+		(by_tier[tier] as Array[String]).append(id)
+
+	var total := 0.0
+	for tier in by_tier:
+		total += maxf(0.0, float(tier_weights.get(tier, 0)))
+	if total <= 0.0:
+		return list_
+
+	var pick := randf() * total
+	var last: Array[String] = list_
+	for tier in by_tier:
+		var w := maxf(0.0, float(tier_weights.get(tier, 0)))
+		if w <= 0.0:
+			continue
+		last = by_tier[tier]
+		pick -= w
+		if pick <= 0.0:
+			return last
+	return last
+
+
+## Trọng số bốc của một món: số trong bảng `weights` của màn, nhân với hệ số
+## riêng của kĩ năng (nếu có).
+func _dish_weight(id: String) -> float:
+	return maxf(0.0, float(weights.get(id, 1)) * float(dish_weight_factors.get(id, 1.0)))
+
+
+func _pick_weighted(list_: Array[String]) -> String:
 	var total := 0.0
 	for id in list_:
-		total += maxf(0.0, float(weights.get(id, 1)))
+		total += _dish_weight(id)
 	# Không có trọng số nào (hoặc toàn số 0): quay về bốc đều.
 	if total <= 0.0:
 		return String(list_.pick_random())
 
 	var pick := randf() * total
 	for id in list_:
-		pick -= maxf(0.0, float(weights.get(id, 1)))
+		pick -= _dish_weight(id)
 		if pick <= 0.0:
 			return id
 	# Lưới eat toàn cho sai số dấu phẩy động: randf() trả về gần đúng 1.0 thì
@@ -796,8 +1047,21 @@ func _dish_icon(id: String) -> Texture2D:
 func _leave_angry(order_: Order) -> void:
 	var customer: Node = order_.customer
 	_orders.erase(customer)
-	customers_lost += 1
-	AmThanh.play_sfx("customer_out")
+	# (2/10/2026) Khách bỏ về lúc còn ĐỨNG XẾP HÀNG thì KHÔNG tính là mất
+	# khách. Người chơi chưa được phép phục vụ họ — bàn còn kín — nên bắt chịu
+	# phạt vì họ là phạt một việc không nằm trong tay mình. Chỉ khách ĐÃ NGỒI
+	# BÀN mà không được món mới vào bộ đếm (bộ đếm này quyết định thua màn và
+	# hiện trên bảng tổng kết).
+	#
+	# Họ vẫn bỏ đi thật, vẫn kêu, vé vẫn biến mất: mất một đơn hàng là đủ đau
+	# rồi, chỉ là không cộng thêm vào giới hạn "khách bỏ về".
+	#
+	# Tiếng báo cũng chỉ kêu cho khách đã ngồi bàn: tiếng đó nghĩa là "bạn vừa
+	# mất một khách", mà khách rời hàng chờ thì không còn tính như vậy nữa —
+	# kêu lên là báo động giả, người chơi liếc HUD thấy bộ đếm không nhảy.
+	if not bool(order_.in_queue):
+		customers_lost += 1
+		AmThanh.play_sfx("customer_out")
 	order_finished.emit(order_, "left")
 	if not is_instance_valid(customer):
 		return
@@ -825,7 +1089,7 @@ func _leave_angry(order_: Order) -> void:
 	if not is_instance_valid(customer) or not customer.is_inside_tree():
 		return
 	if _door != null:
-		customer.go_to(_door.global_position, "ve")
+		customer.go_to(_door.global_position, "leave")
 
 
 ## Số tiền bay lên ở chỗ vừa phục vụ xong.
@@ -834,6 +1098,24 @@ func _leave_angry(order_: Order) -> void:
 ## CHỖ vừa xảy ra việc tốt, nếu không người chơi phải tự nối "tôi vừa làm gì"
 ## với "con số ở góc màn hình vừa nhảy". Ở góc còn có ví tiền nảy lên một cái
 ## nữa — hai phản hồi, một ngay tại chỗ, một ở nơi lưu tổng.
+## TRỪ TIỀN một nguyên liệu vừa được lấy. Nối từ hands.ingredient_taken.
+##
+## Trừ NGAY LÚC LẤY chứ không lúc món bán được: người chơi phải thấy cái giá ở
+## đúng khoảnh khắc họ quyết định, không phải ba mươi giây sau. Đây cũng là lý
+## do đồ vứt vào thùng rác không được hoàn tiền — tiền đã đi rồi, cái kệ không
+## phải cửa hàng nhận trả lại.
+func charge_for_ingredient(id: String, at: Vector3) -> void:
+	if free_ingredients:
+		return
+	var amount := ItemCatalog.cost(id)
+	if amount <= 0:
+		return
+	money -= amount
+	money_changed.emit(money, -amount, at)
+	_money_popup(at, -amount, false)
+
+
+## Số tiền bay lên chỗ vừa xảy ra chuyện. amount ÂM = vừa bị trừ.
 func _money_popup(spot: Vector3, amount: int, is_perfect: bool) -> void:
 	if _map == null:
 		return
@@ -852,13 +1134,18 @@ func _money_popup(spot: Vector3, amount: int, is_perfect: bool) -> void:
 		anchor.add_child(icon)
 
 	var text_ := Label3D.new()
-	text_.text = "+%d" % amount
+	# Dấu và màu nói cùng một chuyện hai lần, cố ý: lúc cao điểm người chơi chỉ
+	# liếc một phần mười giây, một tín hiệu dễ trượt.
+	text_.text = ("+%d" % amount) if amount >= 0 else ("−%d" % absi(amount))
 	text_.font_size = 128
 	text_.pixel_size = 0.0028
 	text_.billboard = BaseMaterial3D.BILLBOARD_ENABLED
 	text_.no_depth_test = true
 	text_.outline_size = 28
-	text_.modulate = Color("ffd76a") if is_perfect else Color("d8f0c8")
+	if amount < 0:
+		text_.modulate = Color("e08a7a")      # đỏ nhạt: vừa mất tiền
+	else:
+		text_.modulate = Color("ffd76a") if is_perfect else Color("d8f0c8")
 	text_.position.x = 0.22
 	anchor.add_child(text_)
 

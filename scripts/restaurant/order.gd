@@ -18,7 +18,7 @@ extends RefCounted
 ## tham chiếu, cái vé giữ một tham chiếu, và cả hai đọc chung một chỗ nhớ. Cái
 ## vé chỉ ĐỌC, không bao giờ ghi — luật nằm một phía.
 ##
-## Vì sao không lưu sẵn "kiên nhẫn" thành một cột trong DanhMuc: nó đã suy ra
+## Vì sao không lưu sẵn "kiên nhẫn" thành một cột trong ItemCatalog: nó đã suy ra
 ## được từ thời gian làm món (2,5 × thời gian, sàn 35 giây). Hai cột số rời
 ## nhau thì sửa cột này quên cột kia.
 
@@ -26,7 +26,7 @@ const ItemCatalog := preload("res://scripts/interaction/item_catalog.gd")
 
 ## Ngưỡng "đơn hoàn hảo": giao khi kiên nhẫn còn TRÊN mức này.
 ##
-## Con số 0,5 không phải chọn bừa — nó đi cùng hệ số 2,5 trong DanhMuc: kiên
+## Con số 0,5 không phải chọn bừa — nó đi cùng hệ số 2,5 trong ItemCatalog: kiên
 ## nhẫn = 2,5 × thời gian làm, nên còn trên một nửa nghĩa là người chơi xong
 ## trong khoảng 1,25 lần thời gian tối ưu. Đủ chặt để phải cố, đủ rộng để
 ## không cần chơi hoàn hảo.
@@ -43,10 +43,10 @@ var patience_left: float = 0.0        ## kiên nhẫn còn lại, giây
 ## Nhân vào ngân sách kiên nhẫn của CẢ HAI giai đoạn. 1,0 = không đổi.
 ##
 ## Đây là chỗ kĩ năng "Kiên nhẫn là một đức tính" của Kita cắm vào (1,30).
-## quan_ly_khach gán giá trị này ngay sau khi tạo đơn, TRƯỚC wait_in_queue().
+## customer_manager gán giá trị này ngay sau khi tạo đơn, TRƯỚC wait_in_queue().
 ##
-## Vì sao để ở đơn chứ không nhân sẵn vào hai con số gốc bên quan_ly_khach:
-## ngân sách lúc ngồi bàn tính từ DanhMuc.patience(dish), tức nó được tính
+## Vì sao để ở đơn chứ không nhân sẵn vào hai con số gốc bên customer_manager:
+## ngân sách lúc ngồi bàn tính từ ItemCatalog.patience(dish), tức nó được tính
 ## LẠI ở thời điểm khách ngồi xuống chứ không phải lúc tạo đơn. Nhân sẵn ở
 ## ngoài thì phải nhớ nhân ở hai chỗ, và chỗ thứ hai rất dễ quên vì nó nằm
 ## trong sit_at_table() của file này.
@@ -72,16 +72,22 @@ var draining: bool = true
 var payout: int = 0
 var was_perfect: bool = false
 
+## Đơn này có được kĩ năng nhân đôi tiền không. Chỉ để HIỂN THỊ.
+##
+## customer_manager đặt cờ lúc chốt tiền; luật nằm bên đó, file này chỉ giữ hộ
+## để cái vé và số tiền bay lên biết mà tô khác màu nếu muốn.
+var was_doubled: bool = false
+
 
 ## Đơn sinh ra lúc khách vào hàng đợi, khi CHƯA biết sẽ ngồi bàn nào.
 ##
 ## Đây là lý do đơn gắn với NGƯỜI KHÁCH chứ không gắn với cái bàn: lúc gọi món
 ## còn chưa có bàn nào cả. Gắn vào bàn thì phải đợi tới khi ngồi mới tạo được
 ## đơn, mà như vậy thì không hiện được món trên đầu người đang xếp hàng.
-func _init(nguoi: Node, id_mon: String) -> void:
-	customer = nguoi
-	dish = id_mon
-	price = ItemCatalog.price(id_mon)
+func _init(customer_node: Node, dish_id: String) -> void:
+	customer = customer_node
+	dish = dish_id
+	price = ItemCatalog.price(dish_id)
 
 
 ## Bắt đầu giai đoạn CHỜ BÀN với ngân sách kiên nhẫn cho trước.
@@ -90,9 +96,9 @@ func _init(nguoi: Node, id_mon: String) -> void:
 ## hàng thì khách chưa được phục vụ gì cả, nên thời gian chờ dài ngắn theo món
 ## là thứ người chơi không đoán được và cũng không tác động được. Một con số
 ## cố định thì thành một luật học một lần là thuộc.
-func wait_in_queue(giay: float) -> void:
+func wait_in_queue(seconds: float) -> void:
 	in_queue = true
-	patience_max = giay * patience_factor
+	patience_max = seconds * patience_factor
 	patience_left = patience_max
 
 

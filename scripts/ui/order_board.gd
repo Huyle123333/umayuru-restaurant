@@ -1,32 +1,32 @@
 extends CanvasLayer
-## Bảng theo dõi đơn hàng ở mép TRÁI màn hình. Bấm phím 1 để đóng/mở.
+## Dải theo dõi đơn hàng nằm NGANG ở mép TRÊN màn hình. Bấm phím 1 để đóng/mở.
 ##
-## Vì sao gộp các vé vào MỘT tấm bảng lớn thay vì để chúng lơ lửng thành cột:
-## sáu tấm vé rời rạc chiếm 330 px chiều ngang và gần trọn chiều cao màn hình
-## mà không bao giờ tắt được. Trong một game nhìn từ trên xuống thì đó là một
-## phần ba sàn bếp bị che vĩnh viễn. Gom vào một tấm bảng thì cả cụm có MỘT
-## công tắc: cần thì kéo ra đọc, xong thì đẩy vào, tầm nhìn trả lại nguyên vẹn.
+## (2/10/2026) Trước đây là một tấm bảng DỌC ở mép trái, rộng 354 px và cao gần
+## hết màn hình. User chơi thử thấy vướng: game nhìn từ trên xuống, bếp trải
+## theo chiều ngang, nên một cột dọc che mất nguyên một dải trạm bên trái. Dải
+## ngang phía trên chỉ che phần tường sau của phòng — chỗ ít khi phải nhìn.
 ##
-## Cái nhãn nhỏ ở mép trái là phần bắt buộc của thiết kế này, không phải trang
-## trí. Một bảng đóng hoàn toàn thì người chơi quên mất là có đơn đang chờ, và
-## quên theo cách tệ nhất — không có gì trên màn hình nhắc họ. Cái nhãn giữ lại
-## đúng hai thông tin cần để quyết định có mở bảng ra hay không: **có mấy đơn**
-## và **đơn gấp nhất còn bao nhiêu kiên nhẫn** (viền nhãn đổi màu theo). Nó
-## chiếm 46 px thay vì 354.
+## KHÔNG còn tấm nền tối phía sau các vé: nền chỉ để gom các vé thành một khối,
+## mà khối đó chính là thứ gây vướng. Giờ chỗ nào không có vé thì chỗ đó trống.
+##
+## Vẫn giữ MỘT công tắc cho cả cụm (phím 1) và cái nhãn nhỏ khi đóng. Nhãn là
+## phần bắt buộc: dải đóng hoàn toàn thì người chơi quên là có đơn đang chờ.
+## Nó giữ đúng hai thông tin cần để quyết định có mở ra hay không: **có mấy
+## đơn** và **đơn gấp nhất còn bao nhiêu kiên nhẫn** (viền nhãn đổi màu theo).
 ##
 ## Node này chỉ VẼ. Nó không đếm giờ, không tính tiền, không quyết định khi nào
 ## khách bỏ đi — nó nghe hai tín hiệu và đọc dữ liệu đơn. Luật nằm trọn ở
-## quan_ly_khach.gd, nên muốn đổi luật thì sửa một file.
+## customer_manager.gd, nên muốn đổi luật thì sửa một file.
 
 const OrderTicket := preload("res://scripts/ui/order_ticket.gd")
 const COIN_ICON := "res://assets/ui/tien/carrot_tien.png"
 
+const ACTION := "toggle_orders"
 const MARGIN := 28.0
-const TICKET_WIDTH := 330.0
-const COUNTER_SIZE := 12.0            # đệm trong lòng bảng
-const WIDTH := TICKET_WIDTH + COUNTER_SIZE * 2.0
-const HEIGHT := 820.0           # tới sát khối "sức · tay · kĩ năng" ở y=850
-const GAP := 8
+const GAP := 6
+## Chừa mép phải cho bảng đồng hồ & ví (hud_clock: rộng 300, lề 28) cộng một
+## khe hở. Dải vé dừng trước đó để hai thứ không bao giờ đè nhau.
+const RIGHT_RESERVED := 300.0 + 28.0 + 16.0
 
 const LABEL_WIDTH := 46.0
 const SLIDE_SECONDS := 0.32
@@ -47,8 +47,8 @@ const COLOR_RED := Color("c4433a")
 
 var is_open: bool = true
 
-var _board: PanelContainer
-var _col: VBoxContainer
+var _board: Control
+var _row: HBoxContainer
 var _label: PanelContainer
 var _lbl_counter: Label
 var _label_style: StyleBoxFlat
@@ -67,7 +67,7 @@ func _ready() -> void:
 	is_open = open_by_default
 	# Đặt thẳng vào vị trí ở frame hình đầu, KHÔNG tween: chạy hiệu ứng lúc
 	# vừa vào màn thì người chơi thấy bảng tự trôi mà không hiểu vì sao.
-	_board.position.x = _x_open() if is_open else _x_closed()
+	_board.position.y = _y_open() if is_open else _y_closed()
 	_label.visible = not is_open
 
 
@@ -79,44 +79,27 @@ func _build_ui() -> void:
 	root.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	add_child(root)
 
-	# --- tấm bảng ---
+	# --- dải vé ---
 	#
 	# Neo để nguyên góc trên-trái (mọi anchor = 0) và ta gán size bằng tay.
 	# KHÔNG dùng preset neo rồi tween position: neo tính lại rect từ anchor +
-	# offset ở mỗi lần bố trí nên nó đánh nhau với position, và cái rect phình
-	# thêm một ít sau mỗi frame hình.
-	_board = PanelContainer.new()
-	_board.size = Vector2(WIDTH, HEIGHT)
-	_board.position = Vector2(_x_closed(), MARGIN)
+	# offset ở mỗi lần bố trí nên nó đánh nhau với position.
+	#
+	# Bề ngang lấy theo khung hình THIẾT KẾ (1920, chế độ co giãn canvas_items
+	# nên con số này đúng ở mọi độ phân giải), trừ lề trái và phần chừa cho
+	# đồng hồ. Vừa đủ 10 vé — số đơn tối đa của Ngày 3 (6 bàn + 4 xếp hàng).
+	var design_width := float(ProjectSettings.get_setting("display/window/size/viewport_width", 1920))
+	_board = Control.new()
+	_board.size = Vector2(design_width - MARGIN - RIGHT_RESERVED, OrderTicket.HEIGHT)
+	_board.position = Vector2(MARGIN, _y_closed())
 	_board.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	_board.add_theme_stylebox_override("panel", _board_frame())
 	root.add_child(_board)
 
-	var empty := VBoxContainer.new()
-	empty.add_theme_constant_override("separation", 10)
-	_board.add_child(empty)
-
-	var head := HBoxContainer.new()
-	empty.add_child(head)
-
-	var title := Label.new()
-	title.text = "ĐƠN HÀNG"
-	title.add_theme_font_size_override("font_size", 18)
-	title.add_theme_color_override("font_color", COLOR_TITLE)
-	title.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	head.add_child(title)
-
-	var hint := Label.new()
-	hint.text = "1  ẩn/hiện"
-	hint.add_theme_font_size_override("font_size", 14)
-	hint.add_theme_color_override("font_color", COLOR_DIM)
-	head.add_child(hint)
-
-	_col = VBoxContainer.new()
-	_col.add_theme_constant_override("separation", GAP)
-	_col.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	_col.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	empty.add_child(_col)
+	_row = HBoxContainer.new()
+	_row.add_theme_constant_override("separation", GAP)
+	_row.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	_row.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_board.add_child(_row)
 
 	# --- cái nhãn còn lại khi bảng đóng ---
 	_label = PanelContainer.new()
@@ -142,7 +125,7 @@ func _build_ui() -> void:
 	label_col.add_child(_lbl_counter)
 
 	var key_label := Label.new()
-	key_label.text = "1"
+	key_label.text = SettingsManager.key_name(ACTION)
 	key_label.add_theme_font_size_override("font_size", 14)
 	key_label.add_theme_color_override("font_color", COLOR_DIM)
 	key_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
@@ -151,12 +134,12 @@ func _build_ui() -> void:
 
 # --------------------------------------------------------------- đóng mở ---
 
-func _x_open() -> float:
+func _y_open() -> float:
 	return MARGIN
 
 
-func _x_closed() -> float:
-	return -WIDTH - 16.0
+func _y_closed() -> float:
+	return -OrderTicket.HEIGHT - 16.0
 
 
 ## Bắt phím ở _unhandled_key_input chứ không phải _input.
@@ -165,12 +148,9 @@ func _x_closed() -> float:
 ## sẽ NUỐT phím 1 trước khi tới đây. Đúng như mong muốn — gõ số 1 vào một ô
 ## nhập mà cái bảng đơn hàng nhảy ra thì rất khó chịu, và lỗi kiểu đó chỉ lộ
 ## ra khi đã có màn hướng dẫn với hộp thoại Có/Không.
-func _unhandled_key_input(su_kien: InputEvent) -> void:
-	var key_label := su_kien as InputEventKey
-	if key_label == null or not key_label.pressed or key_label.echo:
-		return
-	# Nhận cả phím số hàng trên lẫn phím số bên bàn phím phụ.
-	if key_label.keycode == KEY_1 or key_label.keycode == KEY_KP_1:
+func _unhandled_key_input(event: InputEvent) -> void:
+	# Đọc HÀNH ĐỘNG chứ không so mã phím: phím này giờ đổi được trong Cài đặt.
+	if event.is_action_pressed(ACTION) and not event.is_echo():
 		toggle()
 		get_viewport().set_input_as_handled()
 
@@ -190,7 +170,7 @@ func set_open(open: bool) -> void:
 		_label.visible = false
 
 	var tween := create_tween().set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
-	tween.tween_property(_board, "position:x", _x_open() if open else _x_closed(), SLIDE_SECONDS)
+	tween.tween_property(_board, "position:y", _y_open() if open else _y_closed(), SLIDE_SECONDS)
 	if not open:
 		tween.finished.connect(func() -> void:
 			if not is_open:
@@ -200,20 +180,20 @@ func set_open(open: bool) -> void:
 # -------------------------------------------------------------- dữ liệu ---
 
 ## Nối vào hệ khách. Chỉ cần hai tín hiệu: đơn sinh ra và đơn kết thúc.
-func listen_to_orders(ql: Node) -> void:
-	if ql == null:
+func listen_to_orders(orders: Node) -> void:
+	if orders == null:
 		return
-	if ql.has_signal("order_created"):
-		ql.order_created.connect(add_order)
-	if ql.has_signal("order_finished"):
-		ql.order_finished.connect(_on_order_finished)
+	if orders.has_signal("order_created"):
+		orders.order_created.connect(add_order)
+	if orders.has_signal("order_finished"):
+		orders.order_finished.connect(_on_order_finished)
 
 
 func add_order(order: RefCounted) -> void:
 	if order == null or _ticket.has(order):
 		return
 	var v := OrderTicket.new()
-	_col.add_child(v)
+	_row.add_child(v)
 	v.build(order, _coin_icon)
 	v.slide_in()
 	_ticket[order] = v
@@ -268,20 +248,6 @@ func _update_label() -> void:
 
 
 # ---------------------------------------------------------------- frame ---
-
-func _board_frame() -> StyleBoxFlat:
-	var sb := StyleBoxFlat.new()
-	sb.bg_color = COLOR_PANEL
-	sb.border_color = COLOR_BORDER
-	sb.border_width_right = 3
-	sb.corner_radius_top_right = 10
-	sb.corner_radius_bottom_right = 10
-	sb.content_margin_left = COUNTER_SIZE
-	sb.content_margin_right = COUNTER_SIZE
-	sb.content_margin_top = 10
-	sb.content_margin_bottom = 10
-	return sb
-
 
 func _label_frame() -> StyleBoxFlat:
 	var sb := StyleBoxFlat.new()

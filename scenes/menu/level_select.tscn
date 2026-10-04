@@ -1,9 +1,25 @@
-[gd_scene load_steps=5 format=3]
+[gd_scene load_steps=6 format=3]
 
 [ext_resource type="Script" path="res://scenes/menu/level_select.gd" id="1_ls"]
 [ext_resource type="Texture2D" path="res://assets/ui/backgrounds/menu_bg.png" id="2_bg"]
 [ext_resource type="Theme" path="res://ui/theme/menu_theme.tres" id="3_theme"]
 [ext_resource type="PackedScene" path="res://scenes/menu/leaderboard_panel.tscn" id="4_lb"]
+
+[sub_resource type="StyleBoxFlat" id="SectionBox"]
+content_margin_left = 20.0
+content_margin_top = 14.0
+content_margin_right = 20.0
+content_margin_bottom = 16.0
+bg_color = Color(0.99, 0.93, 0.8, 0.12)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(1, 0.83, 0.44, 0.45)
+corner_radius_top_left = 10
+corner_radius_top_right = 10
+corner_radius_bottom_right = 10
+corner_radius_bottom_left = 10
 
 [node name="LevelSelect" type="Control"]
 layout_mode = 3
@@ -72,28 +88,45 @@ theme_override_colors/font_shadow_color = Color(0, 0, 0, 0.6)
 theme_override_constants/shadow_offset_y = 4
 theme_override_font_sizes/font_size = 44
 text = "LEVEL_TITLE"
-horizontal_alignment = 1
+horizontal_alignment = 0
 
-[node name="Scroll" type="ScrollContainer" parent="Content/VBox"]
+[node name="StoryPanel" type="PanelContainer" parent="Content/VBox"]
+layout_mode = 2
+size_flags_vertical = 3
+theme_override_styles/panel = SubResource("SectionBox")
+
+[node name="StoryBox" type="VBoxContainer" parent="Content/VBox/StoryPanel"]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="SectionMain" type="Label" parent="Content/VBox/StoryPanel/StoryBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.831373, 0.44, 1)
+theme_override_colors/font_shadow_color = Color(0, 0, 0, 0.7)
+theme_override_constants/shadow_offset_y = 3
+theme_override_font_sizes/font_size = 24
+text = "LEVEL_SECTION_MAIN"
+
+[node name="Scroll" type="ScrollContainer" parent="Content/VBox/StoryPanel/StoryBox"]
+unique_name_in_owner = true
 layout_mode = 2
 size_flags_vertical = 3
 horizontal_scroll_mode = 1
 vertical_scroll_mode = 0
 
-[node name="Columns" type="HBoxContainer" parent="Content/VBox/Scroll"]
+[node name="Columns" type="HBoxContainer" parent="Content/VBox/StoryPanel/StoryBox/Scroll"]
 layout_mode = 2
 size_flags_horizontal = 3
-size_flags_vertical = 4
+size_flags_vertical = 3
 theme_override_constants/separation = 8
-alignment = 1
 
-[node name="ColIntro" type="VBoxContainer" parent="Content/VBox/Scroll/Columns"]
-custom_minimum_size = Vector2(250, 0)
+[node name="ColIntro" type="VBoxContainer" parent="Content/VBox/StoryPanel/StoryBox/Scroll/Columns"]
+custom_minimum_size = Vector2(176, 0)
 layout_mode = 2
 size_flags_vertical = 4
 theme_override_constants/separation = 12
 
-[node name="Header" type="Label" parent="Content/VBox/Scroll/Columns/ColIntro"]
+[node name="Header" type="Label" parent="Content/VBox/StoryPanel/StoryBox/Scroll/Columns/ColIntro"]
 layout_mode = 2
 theme_override_colors/font_color = Color(1, 0.941176, 0.85098, 1)
 theme_override_colors/font_shadow_color = Color(0, 0, 0, 0.7)
@@ -102,30 +135,32 @@ theme_override_font_sizes/font_size = 30
 text = "LEVEL_GROUP_INTRO"
 horizontal_alignment = 1
 
-[node name="BtnPrologue" type="Button" parent="Content/VBox/Scroll/Columns/ColIntro"]
+[node name="BtnPrologue" type="Button" parent="Content/VBox/StoryPanel/StoryBox/Scroll/Columns/ColIntro"]
 unique_name_in_owner = true
+custom_minimum_size = Vector2(176, 56)
 layout_mode = 2
 text = "LEVEL_PROLOGUE"
 
-[node name="BtnTutorial" type="Button" parent="Content/VBox/Scroll/Columns/ColIntro"]
+[node name="BtnTutorial" type="Button" parent="Content/VBox/StoryPanel/StoryBox/Scroll/Columns/ColIntro"]
 unique_name_in_owner = true
+custom_minimum_size = Vector2(176, 56)
 layout_mode = 2
 text = "LEVEL_TUTORIAL"
 
-[node name="Arrow1" type="Label" parent="Content/VBox/Scroll/Columns"]
+[node name="Arrow1" type="Label" parent="Content/VBox/StoryPanel/StoryBox/Scroll/Columns"]
 layout_mode = 2
 size_flags_vertical = 4
 theme_override_colors/font_color = Color(0.933333, 0.792157, 0.482353, 0.75)
 theme_override_font_sizes/font_size = 40
 text = "→"
 
-[node name="ColDay1" type="VBoxContainer" parent="Content/VBox/Scroll/Columns"]
-custom_minimum_size = Vector2(250, 0)
+[node name="ColDay1" type="VBoxContainer" parent="Content/VBox/StoryPanel/StoryBox/Scroll/Columns"]
+custom_minimum_size = Vector2(176, 0)
 layout_mode = 2
 size_flags_vertical = 4
 theme_override_constants/separation = 12
 
-[node name="Header" type="Label" parent="Content/VBox/Scroll/Columns/ColDay1"]
+[node name="Header" type="Label" parent="Content/VBox/StoryPanel/StoryBox/Scroll/Columns/ColDay1"]
 layout_mode = 2
 theme_override_colors/font_color = Color(1, 0.941176, 0.85098, 1)
 theme_override_colors/font_shadow_color = Color(0, 0, 0, 0.7)
@@ -134,30 +169,32 @@ theme_override_font_sizes/font_size = 30
 text = "LEVEL_DAY_1"
 horizontal_alignment = 1
 
-[node name="BtnD1Morning" type="Button" parent="Content/VBox/Scroll/Columns/ColDay1"]
+[node name="BtnD1Morning" type="Button" parent="Content/VBox/StoryPanel/StoryBox/Scroll/Columns/ColDay1"]
 unique_name_in_owner = true
+custom_minimum_size = Vector2(176, 96)
 layout_mode = 2
 text = "COMMON_MORNING"
 
-[node name="BtnD1Evening" type="Button" parent="Content/VBox/Scroll/Columns/ColDay1"]
+[node name="BtnD1Evening" type="Button" parent="Content/VBox/StoryPanel/StoryBox/Scroll/Columns/ColDay1"]
 unique_name_in_owner = true
+custom_minimum_size = Vector2(176, 96)
 layout_mode = 2
 text = "COMMON_EVENING"
 
-[node name="Arrow2" type="Label" parent="Content/VBox/Scroll/Columns"]
+[node name="Arrow2" type="Label" parent="Content/VBox/StoryPanel/StoryBox/Scroll/Columns"]
 layout_mode = 2
 size_flags_vertical = 4
 theme_override_colors/font_color = Color(0.933333, 0.792157, 0.482353, 0.75)
 theme_override_font_sizes/font_size = 40
 text = "→"
 
-[node name="ColDay2" type="VBoxContainer" parent="Content/VBox/Scroll/Columns"]
-custom_minimum_size = Vector2(250, 0)
+[node name="ColDay2" type="VBoxContainer" parent="Content/VBox/StoryPanel/StoryBox/Scroll/Columns"]
+custom_minimum_size = Vector2(176, 0)
 layout_mode = 2
 size_flags_vertical = 4
 theme_override_constants/separation = 12
 
-[node name="Header" type="Label" parent="Content/VBox/Scroll/Columns/ColDay2"]
+[node name="Header" type="Label" parent="Content/VBox/StoryPanel/StoryBox/Scroll/Columns/ColDay2"]
 layout_mode = 2
 theme_override_colors/font_color = Color(1, 0.941176, 0.85098, 1)
 theme_override_colors/font_shadow_color = Color(0, 0, 0, 0.7)
@@ -166,30 +203,32 @@ theme_override_font_sizes/font_size = 30
 text = "LEVEL_DAY_2"
 horizontal_alignment = 1
 
-[node name="BtnD2Morning" type="Button" parent="Content/VBox/Scroll/Columns/ColDay2"]
+[node name="BtnD2Morning" type="Button" parent="Content/VBox/StoryPanel/StoryBox/Scroll/Columns/ColDay2"]
 unique_name_in_owner = true
+custom_minimum_size = Vector2(176, 96)
 layout_mode = 2
 text = "COMMON_MORNING"
 
-[node name="BtnD2Evening" type="Button" parent="Content/VBox/Scroll/Columns/ColDay2"]
+[node name="BtnD2Evening" type="Button" parent="Content/VBox/StoryPanel/StoryBox/Scroll/Columns/ColDay2"]
 unique_name_in_owner = true
+custom_minimum_size = Vector2(176, 96)
 layout_mode = 2
 text = "COMMON_EVENING"
 
-[node name="Arrow3" type="Label" parent="Content/VBox/Scroll/Columns"]
+[node name="Arrow3" type="Label" parent="Content/VBox/StoryPanel/StoryBox/Scroll/Columns"]
 layout_mode = 2
 size_flags_vertical = 4
 theme_override_colors/font_color = Color(0.933333, 0.792157, 0.482353, 0.75)
 theme_override_font_sizes/font_size = 40
 text = "→"
 
-[node name="ColDay3" type="VBoxContainer" parent="Content/VBox/Scroll/Columns"]
-custom_minimum_size = Vector2(250, 0)
+[node name="ColDay3" type="VBoxContainer" parent="Content/VBox/StoryPanel/StoryBox/Scroll/Columns"]
+custom_minimum_size = Vector2(176, 0)
 layout_mode = 2
 size_flags_vertical = 4
 theme_override_constants/separation = 12
 
-[node name="Header" type="Label" parent="Content/VBox/Scroll/Columns/ColDay3"]
+[node name="Header" type="Label" parent="Content/VBox/StoryPanel/StoryBox/Scroll/Columns/ColDay3"]
 layout_mode = 2
 theme_override_colors/font_color = Color(1, 0.941176, 0.85098, 1)
 theme_override_colors/font_shadow_color = Color(0, 0, 0, 0.7)
@@ -198,43 +237,77 @@ theme_override_font_sizes/font_size = 30
 text = "LEVEL_DAY_3"
 horizontal_alignment = 1
 
-[node name="BtnD3Morning" type="Button" parent="Content/VBox/Scroll/Columns/ColDay3"]
+[node name="BtnD3Morning" type="Button" parent="Content/VBox/StoryPanel/StoryBox/Scroll/Columns/ColDay3"]
 unique_name_in_owner = true
+custom_minimum_size = Vector2(176, 96)
 layout_mode = 2
 text = "COMMON_MORNING"
 
-[node name="BtnD3Evening" type="Button" parent="Content/VBox/Scroll/Columns/ColDay3"]
+[node name="BtnD3Evening" type="Button" parent="Content/VBox/StoryPanel/StoryBox/Scroll/Columns/ColDay3"]
 unique_name_in_owner = true
+custom_minimum_size = Vector2(176, 96)
 layout_mode = 2
 text = "COMMON_EVENING"
 
-[node name="Arrow4" type="Label" parent="Content/VBox/Scroll/Columns"]
+[node name="Arrow4" type="Label" parent="Content/VBox/StoryPanel/StoryBox/Scroll/Columns"]
 layout_mode = 2
 size_flags_vertical = 4
 theme_override_colors/font_color = Color(0.933333, 0.792157, 0.482353, 0.75)
 theme_override_font_sizes/font_size = 40
 text = "→"
 
-[node name="ColEndless" type="VBoxContainer" parent="Content/VBox/Scroll/Columns"]
-custom_minimum_size = Vector2(250, 0)
+[node name="ColEnding" type="VBoxContainer" parent="Content/VBox/StoryPanel/StoryBox/Scroll/Columns"]
+custom_minimum_size = Vector2(176, 0)
 layout_mode = 2
 size_flags_vertical = 4
 theme_override_constants/separation = 12
 
-[node name="Header" type="Label" parent="Content/VBox/Scroll/Columns/ColEndless"]
+[node name="BtnEnding" type="Button" parent="Content/VBox/StoryPanel/StoryBox/Scroll/Columns/ColEnding"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(176, 96)
 layout_mode = 2
-theme_override_colors/font_color = Color(1, 0.941176, 0.85098, 1)
+text = "LEVEL_ENDING"
+
+[node name="ModesPanel" type="PanelContainer" parent="Content/VBox"]
+layout_mode = 2
+theme_override_styles/panel = SubResource("SectionBox")
+
+[node name="ModesBox" type="VBoxContainer" parent="Content/VBox/ModesPanel"]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="SectionModes" type="Label" parent="Content/VBox/ModesPanel/ModesBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.831373, 0.44, 1)
 theme_override_colors/font_shadow_color = Color(0, 0, 0, 0.7)
 theme_override_constants/shadow_offset_y = 3
-theme_override_font_sizes/font_size = 30
-text = "LEVEL_GROUP_ENDLESS"
-horizontal_alignment = 1
+theme_override_font_sizes/font_size = 24
+text = "LEVEL_SECTION_MODES"
 
-[node name="BtnEndless" type="Button" parent="Content/VBox/Scroll/Columns/ColEndless"]
+[node name="Modes" type="HBoxContainer" parent="Content/VBox/ModesPanel/ModesBox"]
 unique_name_in_owner = true
 layout_mode = 2
-disabled = true
+theme_override_constants/separation = 16
+
+[node name="ColEndless" type="VBoxContainer" parent="Content/VBox/ModesPanel/ModesBox/Modes"]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="BtnEndless" type="Button" parent="Content/VBox/ModesPanel/ModesBox/Modes/ColEndless"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(230, 64)
+layout_mode = 2
 text = "LEVEL_ENDLESS"
+
+[node name="ColAsian" type="VBoxContainer" parent="Content/VBox/ModesPanel/ModesBox/Modes"]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="BtnAsian" type="Button" parent="Content/VBox/ModesPanel/ModesBox/Modes/ColAsian"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(230, 64)
+layout_mode = 2
+text = "LEVEL_ASIAN"
 
 [node name="Bottom" type="HBoxContainer" parent="Content/VBox"]
 texture_filter = 1
@@ -280,3 +353,72 @@ dialog_autowrap = true
 [node name="LeaderboardPanel" parent="." instance=ExtResource("4_lb")]
 unique_name_in_owner = true
 layout_mode = 1
+
+[node name="ModeDetail" type="Control" parent="."]
+unique_name_in_owner = true
+visible = false
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Dim" type="ColorRect" parent="ModeDetail"]
+unique_name_in_owner = true
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0, 0, 0, 0.72)
+
+[node name="Center" type="CenterContainer" parent="ModeDetail"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+
+[node name="Panel" type="PanelContainer" parent="ModeDetail/Center"]
+texture_filter = 1
+custom_minimum_size = Vector2(660, 480)
+layout_mode = 2
+
+[node name="VBox" type="VBoxContainer" parent="ModeDetail/Center/Panel"]
+layout_mode = 2
+theme_override_constants/separation = 18
+
+[node name="DetailTitle" type="Label" parent="ModeDetail/Center/Panel/VBox"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_font_sizes/font_size = 36
+horizontal_alignment = 1
+
+[node name="DetailDesc" type="Label" parent="ModeDetail/Center/Panel/VBox"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(600, 0)
+layout_mode = 2
+size_flags_vertical = 3
+theme_override_font_sizes/font_size = 20
+autowrap_mode = 3
+
+[node name="Buttons" type="HBoxContainer" parent="ModeDetail/Center/Panel/VBox"]
+layout_mode = 2
+theme_override_constants/separation = 16
+alignment = 1
+
+[node name="BtnCloseDetail" type="Button" parent="ModeDetail/Center/Panel/VBox/Buttons"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(200, 0)
+layout_mode = 2
+text = "COMMON_CLOSE"
+
+[node name="BtnStart" type="Button" parent="ModeDetail/Center/Panel/VBox/Buttons"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(200, 0)
+layout_mode = 2
+text = "LEVEL_START"

@@ -5,6 +5,8 @@ extends Node3D
 ## Nhân vật KHÔNG được đặt sẵn trong file map, vì như vậy thì menu chọn
 ## nhân vật sẽ vô nghĩa và mỗi lần sửa nhân vật phải sửa lại từng màn.
 
+const ItemCatalog := preload("res://scripts/interaction/item_catalog.gd")
+
 ## Nhân vật DỰ PHÒNG: chỉ dùng khi chưa qua màn hình chọn nhân vật
 ## (ví dụ bấm F6 chạy thẳng map trong editor). Bình thường màn chơi lấy
 ## nhân vật từ GameData.selected_character.
@@ -20,7 +22,7 @@ const PAUSE_MENU := preload("res://scenes/menu/pause_menu.tscn")
 ## CHEAT TUA GIỜ (phím 0) — kéo đồng hồ màn về còn bấy nhiêu giây.
 ##
 ## Vì sao 210 chứ không phải 212: 212 đúng là mốc đổi sang nhạc cao điểm
-## (GameData ... "moc_nhac"), mà luat_man so bằng `con_lai <= moc_nhac`. Đặt
+## (GameData ... "music_cue"), mà level_rules so bằng `time_left <= music_cue`. Đặt
 ## đúng 212,0 thì kết quả phụ thuộc vào khung hình nào chạy trước — tua xong
 ## có thể vẫn còn 212,0 chằn và nhạc chưa đổi. Đặt 210 là ĐÃ VƯỢT mốc, nên
 ## nhạc chắc chắn đổi ngay khung hình kế tiếp. Ba chữ số trên đồng hồ hiện
@@ -37,6 +39,31 @@ var customers: Node
 func _ready() -> void:
 	_spawn_player()
 	add_child(PAUSE_MENU.instantiate())
+
+
+## ── LỚP VA CHẠM (cả project) ─────────────────────────────────────────────
+##   1  (1)   thế giới: sàn, tường, bàn, phần lớn các trạm
+##   3  (4)   vật cầm được + Doro      — Workstation.LAYER_ITEM
+##   4  (8)   khách hàng               — customer.tscn
+##   5  (16)  tấm chắn navmesh         — customer_manager.NAV_BLOCK_LAYER
+##   6  (32)  NGƯỜI CHƠI               — PLAYER_LAYER
+##   7  (64)  tường CHỈ chặn người chơi — PLAYER_ONLY_WALL_LAYER
+##
+## Vì sao người chơi phải ra khỏi lớp 1: trước đây người chơi nằm ở lớp 1
+## CHUNG với tường, và khách có mask = 1 để không đi xuyên tường. Hệ quả là
+## mask của khách bao luôn cả người chơi — khách đi tới đụng người chơi thì
+## khựng lại, hoặc trượt lệch khỏi đường navmesh. Không có cách nào viết mask
+## "tường nhưng không phải người chơi" khi hai thứ chung một lớp.
+##
+## Tách ra lớp 6 thì cả HAI chiều đều không va: mask khách (1) không chứa 32,
+## mask người chơi (1 | 64) không chứa 8. Phải chặn cả hai chiều vì Godot chỉ
+## cần MỘT bên có mask chứa lớp bên kia là hai vật đã tính va chạm với nhau.
+const PLAYER_LAYER := 1 << 5
+
+## Tường vô hình chỉ người chơi thấy — chắn cửa ra vào (node DoorBarrier trong
+## map). Khách KHÔNG có lớp này trong mask, và bộ nướng navmesh chỉ đọc lớp
+## 1 | 16, nên tấm chắn không làm hẹp đường đi của khách lấy một ô nào.
+const PLAYER_ONLY_WALL_LAYER := 1 << 6
 
 
 func _spawn_player() -> void:
@@ -56,6 +83,10 @@ func _spawn_player() -> void:
 	# Gán cả transform chứ không chỉ position: Marker3D quay hướng nào thì
 	# nhân vật xuất hiện quay đúng hướng đó.
 	player.global_transform = spawn.global_transform
+
+	# Lớp va chạm riêng cho người chơi. Xem PLAYER_LAYER.
+	player.collision_layer = PLAYER_LAYER
+	player.collision_mask = 1 | PLAYER_ONLY_WALL_LAYER
 
 	_build_interaction()
 
@@ -147,7 +178,7 @@ func _build_interaction() -> void:
 
 			# Thanh tiến trình RIÊNG cho từng trạm, nổi trên đầu trạm đó.
 			#
-			# Node riêng chứ không nhét vào hud_tuong_tac: HUD kia đã 24 KB và
+			# Node riêng chứ không nhét vào interaction_hud: HUD kia đã 24 KB và
 			# lo bốn thứ không liên quan nhau (danh sách trạm trong tầm, thể
 			# lực, ô kĩ năng, bảng bàn chế tạo). Thanh trạm thì chỉ cần biết
 			# hệ bếp và cái camera — không đụng gì tới bốn thứ đó, nên tách ra
@@ -196,6 +227,18 @@ func _build_interaction() -> void:
 		# chuan_bi() phải gọi SAU add_child: nó dùng get_tree() để tìm nhóm
 		# "dining_table" và gắn vùng navmesh vào cây scene.
 		customers.setup(self)
+
+		# GIÁ VỐN NGUYÊN LIỆU: đôi tay báo "vừa lấy thứ này", hệ khách trừ tiền.
+		#
+		# Nối ở ĐÂY chứ không để hai file tự tìm nhau: đôi tay sinh ra trong
+		# _build_interaction() còn hệ khách sinh ra sau, nên bên nào tự đi tìm
+		# bên kia cũng phải chịu một lần null. Màn chơi dựng cả hai thì nó là
+		# nơi duy nhất biết chắc cả hai đã tồn tại.
+		var hands_node := player.get_node_or_null("Hands")
+		if hands_node != null and hands_node.has_signal("ingredient_taken"):
+			hands_node.ingredient_taken.connect(customers.charge_for_ingredient)
+		customers.free_ingredients = GameData.cheat_free_ingredients
+
 		_build_order_hud()
 	else:
 		push_warning("Không nạp được hệ khách hàng — màn chơi vẫn chạy, chỉ không có khách.")
@@ -211,7 +254,7 @@ func _build_interaction() -> void:
 
 ## Duyệt mọi vật cầm ĐẶT SẴN trong file map và xử lý hai việc trái ngược nhau.
 ##
-## 1. Vật thuộc nhóm đang bị khoá trong DanhMuc → GIẤU HẲN.
+## 1. Vật thuộc nhóm đang bị khoá trong ItemCatalog → GIẤU HẲN.
 ##    Đôi tay đã từ chối cầm chúng rồi, nhưng để nguyên một cái nồi sờ sờ giữa
 ##    bếp mà bấm E không ra gì thì người chơi tưởng game hỏng chứ không tưởng
 ##    là tính năng chưa mở.
@@ -228,7 +271,7 @@ func _build_interaction() -> void:
 ##    đang bị khoá.
 ##
 ## Làm lúc CHẠY chứ không sửa vào file map: mở/khoá một nhóm vật phẩm sau này
-## chỉ cần đổi một công tắc trong DanhMuc, không phải dựng lại node vào đúng
+## chỉ cần đổi một công tắc trong ItemCatalog, không phải dựng lại node vào đúng
 ## chỗ cũ trong map.
 func _reveal_map_items() -> void:
 	var item_catalog := load("res://scripts/interaction/item_catalog.gd") as GDScript
@@ -236,7 +279,7 @@ func _reveal_map_items() -> void:
 		return
 	for station in _find_stations(self):
 		# Chồng nồi không phải vật cầm được, nhưng nó là NGUỒN của cái nồi —
-		# công tắc NOI_MO tắt thì nó phải biến mất cùng cả nhóm món nồi, nếu
+		# công tắc POT_ENABLED tắt thì nó phải biến mất cùng cả nhóm món nồi, nếu
 		# không người chơi vẫn lấy được một cái nồi vô dụng.
 		if station.kind == "pot_stack" and item_catalog.is_locked("noi"):
 			station.hide()
@@ -265,12 +308,12 @@ func _find_stations(root: Node) -> Array[Workstation]:
 
 ## Hai bảng HUD của hệ đơn hàng: cột vé bên trái, đồng hồ & ví bên phải.
 ##
-## Tách khỏi _gan_he_tuong_tac() vì chúng phụ thuộc quan_ly_khach chứ không
+## Tách khỏi _build_interaction() vì chúng phụ thuộc customer_manager chứ không
 ## phụ thuộc nhân vật người chơi — nối nhầm thứ tự thì tín hiệu nối vào null
 ## mà không báo lỗi, cái vé chỉ đơn giản là không bao giờ hiện.
 ##
 ## Cả hai chỉ NGHE tín hiệu. Chúng không đọc trạng thái khách, không tự đếm
-## kiên nhẫn, không tự cộng tiền — luật nằm trọn trong quan_ly_khach.gd.
+## kiên nhẫn, không tự cộng tiền — luật nằm trọn trong customer_manager.gd.
 func _build_order_hud() -> void:
 	var cls_intro := load("res://scripts/ui/order_board.gd") as GDScript
 	if cls_intro != null:
@@ -289,6 +332,14 @@ func _build_order_hud() -> void:
 		add_child(clock)
 		clock.listen_to_orders(customers)
 		clock.time_up.connect(_end_level.bind(""))
+		_watch_lost_customers(clock)
+		# Chữ cái mốc hạng trên HUD. Chỉ màn KHAI mốc riêng mới có (Ngày 1–3);
+		# tutorial không xếp hạng thật nên không hiện.
+		if get_node_or_null("/root/GameData") != null:
+			var level_id := String(GameData.current_level)
+			if GameData.rules_for_level(level_id).has("rank_thresholds"):
+				clock.set_rank_marks(
+					GameData.rank_thresholds_for(level_id), GameData.RANK_ORDER)
 	else:
 		push_warning("Không nạp được bảng thời gian.")
 
@@ -300,7 +351,7 @@ func _build_order_hud() -> void:
 	# nó ngay, còn phần vặn núm tách ra setup() gọi sau — hai việc, hai
 	# thời điểm, thay vì phải sắp lại thứ tự dựng node.
 	#
-	# Đặt TRƯỚC _ap_dung_luat_man: luật màn đặt thời lượng và nhịp khách của
+	# Đặt TRƯỚC _apply_level_rules: luật màn đặt thời lượng và nhịp khách của
 	# riêng màn đó, và nếu sau này có kĩ năng đụng tới hai thứ ấy thì kĩ năng
 	# phải là lớp đè lên luật màn, không phải ngược lại.
 	var skills_node := get_node_or_null("SkillManager")
@@ -346,10 +397,10 @@ func _apply_level_rules(clock: Node) -> void:
 ##
 ## Dựng BẰNG CODE ở đây chứ không đặt sẵn trong file map, cùng lý do với mọi
 ## hệ thống khác: tám màn dùng chung một map, và Doro cần biết cả navmesh (do
-## quan_ly_khach nướng lúc chạy) lẫn nhân vật người chơi (do màn chơi sinh ra)
+## customer_manager nướng lúc chạy) lẫn nhân vật người chơi (do màn chơi sinh ra)
 ## — hai thứ chỉ tồn tại lúc chạy, không có cách nào kéo vào Inspector.
 ##
-## Gọi SAU quan_ly_khach.chuan_bi(): Doro hỏi độ lệch cao của navmesh, mà con
+## Gọi SAU customer_manager.setup(): Doro hỏi độ lệch cao của navmesh, mà con
 ## số đó chỉ có sau khi nướng xong.
 ##
 ## Chỗ đứng ban đầu: GIỮA vùng đi lại của Doro (khu khách), do chính lớp Doro
@@ -413,9 +464,26 @@ func _attach_tutorial(clock: Node) -> void:
 ##
 ## Bấm "Tự làm" thì KHÔNG tổng kết: bộ dẫn dắt đã trả màn về luật bình thường,
 ## đồng hồ chạy, và màn kết thúc bằng đường hết giờ như mọi màn khác.
-func _on_tutorial_done(tong_ket: bool) -> void:
-	if tong_ket:
-		_end_level("S")
+func _on_tutorial_done(_summary: bool) -> void:
+	_go_to_first_character_select()
+
+
+## (1/10/2026) Hết tutorial — học xong HAY bấm bỏ qua — là sang thẳng màn chọn
+## nhân vật cho Ngày 1, không hiện bảng tổng kết nữa.
+##
+## Vì sao bỏ bảng tổng kết: nó chỉ có hai nút "Chơi lại" và "Chọn màn", tức là
+## người vừa học xong phải tự đi tìm Ngày 1. Mà tutorial chơi bằng Kitasan cố
+## định, nên đây là LẦN ĐẦU người chơi được chọn nhân vật — đúng lúc họ vừa
+## biết game chơi thế nào để mà chọn.
+##
+## Không cần gọi complete_level("tutorial") ở đây: bộ dẫn dắt đã gọi trong
+## _restore_normal() trước khi phát tín hiệu, nên Ngày 1 đã mở.
+func _go_to_first_character_select() -> void:
+	Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
+	GameData.current_level = GameData.FIRST_REAL_LEVEL
+	# Nút "Trở lại" ở màn chọn nhân vật về màn chọn màn, không về tutorial.
+	GameData.return_scene = "res://scenes/menu/level_select.tscn"
+	get_tree().change_scene_to_file("res://scenes/menu/character_select.tscn")
 
 
 ## Kết thúc màn: đóng cửa quán rồi hiện bảng tổng kết.
@@ -431,6 +499,50 @@ func _on_tutorial_done(tong_ket: bool) -> void:
 ##
 ## Dùng _unhandled_key_input chứ không _input: menu Pause hay ô nhập liệu nào
 ## đang mở thì chúng ăn phím trước, và cheat không cướp phím của giao diện.
+# ------------------------------------------------ tương tác ẩn ở cửa ra vào
+## Đứng trong bán kính này quanh cửa thì phím Tương tác mở bảng "Đóng quán?".
+const DOOR_RADIUS := 2.2
+
+
+## TƯƠNG TÁC ẨN: đứng sát cửa ra vào và bấm Tương tác → hỏi có đóng quán
+## (kết thúc màn sớm) không. Không có gợi ý nào trên HUD — cố ý.
+##
+## Vì sao KHÔNG làm thành một trạm (Workstation) như mọi chỗ tương tác khác:
+## trạm thì bộ chọn mục tiêu tự liệt kê tên nó kèm chữ E ở đáy màn hình, tức
+## là hết ẩn. Ở đây chỉ đo khoảng cách tới điểm Markers/Entrance — không node
+## mới trong map, không dòng nào trên HUD.
+##
+## Kết thúc bằng _end_level("") như đường hết giờ: xếp hạng theo đúng số
+## tiền đang có, không phải thua ép.
+func _unhandled_input(event: InputEvent) -> void:
+	if not event.is_action_pressed("interact"):
+		return
+	if player == null or customers == null:
+		return
+	# Tutorial không có đồng hồ và có lối ra riêng; bảng tổng kết / bảng hỏi
+	# đang mở thì không mở thêm.
+	if get_node_or_null("/root/GameData") != null \
+			and String(GameData.current_level) == "tutorial":
+		return
+	if get_node_or_null("ResultsPanel") != null or get_node_or_null("CloseShopPrompt") != null:
+		return
+	var door := get_node_or_null("Markers/Entrance") as Node3D
+	if door == null:
+		return
+	var offset := player.global_position - door.global_position
+	if Vector2(offset.x, offset.z).length() > DOOR_RADIUS:
+		return
+
+	var cls := load("res://scripts/ui/close_shop_prompt.gd") as GDScript
+	if cls == null:
+		return
+	get_viewport().set_input_as_handled()
+	var prompt: Node = cls.new()
+	prompt.name = "CloseShopPrompt"
+	add_child(prompt)
+	prompt.confirmed.connect(_end_level.bind(""))
+
+
 func _unhandled_key_input(event: InputEvent) -> void:
 	if get_node_or_null("/root/GameData") == null or not GameData.cheat_time_skip:
 		return
@@ -463,7 +575,41 @@ func _skip_time() -> void:
 		_end_level("")
 
 
-func _end_level(rank: String) -> void:
+## Giới hạn khách bỏ về của màn này. 0 = không giới hạn.
+var _lost_limit := 0
+
+
+## Theo dõi số khách bỏ về: cập nhật HUD, và VƯỢT giới hạn thì thua ngay.
+##
+## "Vượt" là LỚN HƠN: Ngày 1 ghi "không quá 10" thì người thứ 10 bỏ về vẫn
+## còn chơi, người thứ 11 mới thua.
+##
+## Thua NGAY chứ không đợi hết giờ rồi mới báo trượt: đã chắc chắn trượt mà
+## vẫn bắt chơi nốt mấy phút thì phần còn lại của màn vô nghĩa, và người
+## chơi chỉ muốn bấm chơi lại.
+##
+## Nghe order_finished của hệ khách chứ không tự đếm: hệ khách đã có sẵn bộ
+## đếm customers_lost dùng cho bảng tổng kết — đếm lần hai ở đây là hai con
+## số có thể lệch nhau.
+func _watch_lost_customers(clock: Node) -> void:
+	if get_node_or_null("/root/GameData") == null or customers == null:
+		return
+	_lost_limit = GameData.max_left_for(String(GameData.current_level))
+	if clock.has_method("set_lost"):
+		clock.set_lost(0, _lost_limit)
+	if _lost_limit <= 0:
+		return
+	customers.order_finished.connect(func(_order: RefCounted, reason: String) -> void:
+		if reason != "left":
+			return
+		var lost := int(customers.customers_lost)
+		if clock.has_method("set_lost"):
+			clock.set_lost(lost, _lost_limit)
+		if lost > _lost_limit:
+			_end_level("", "Thua: %d khách bỏ về, quá giới hạn %d của màn này." % [lost, _lost_limit]))
+
+
+func _end_level(rank: String, fail_note: String = "") -> void:
 	# Chặn gọi hai lần: hết giờ và hướng dẫn xong về lý thuyết có thể trùng
 	# nhau, và hai tấm bảng chồng lên nhau thì cái dưới không bao giờ đóng.
 	if get_node_or_null("ResultsPanel") != null:
@@ -473,6 +619,10 @@ func _end_level(rank: String) -> void:
 	if cls == null:
 		push_warning("Không nạp được bảng kết quả — màn chơi kết thúc mà không tổng kết.")
 		return
+
+	var skills_node := get_node_or_null("SkillManager")
+	if skills_node != null and skills_node.has_method("end_of_level"):
+		skills_node.end_of_level()
 
 	var money := 0
 	var done := 0
@@ -488,6 +638,7 @@ func _end_level(rank: String) -> void:
 	var results: Node = cls.new()
 	results.name = "ResultsPanel"
 	add_child(results)
+	results.fail_note = fail_note
 	results.show_results(money, done, perfect, leaving, rank)
 
 
@@ -525,7 +676,14 @@ func _build_level_intro(clock: Node) -> void:
 	var intro: Node = cls.new()
 	intro.name = "LevelIntro"
 	add_child(intro)
+	# Bảng thực đơn: mở trong lúc đếm ngược, tự cất khi vào ca, và từ đó người
+	# chơi gọi lại bằng phím (mặc định 2).
+	var menu_panel := _build_menu_panel()
+	if menu_panel != null:
+		menu_panel.set_open(true)
 	intro.started.connect(func() -> void:
+		if is_instance_valid(menu_panel):
+			menu_panel.set_open(false)
 		if clock != null:
 			clock.counting_down = true
 		if customers != null:
@@ -535,3 +693,33 @@ func _build_level_intro(clock: Node) -> void:
 		# của bài nhạc đang chạy ở menu.
 		AmThanh.play_random_music("level"))
 	intro.start_countdown(label_)
+
+
+func _build_menu_panel() -> Node:
+	var cls := load("res://scripts/ui/menu_panel.gd") as GDScript
+	if cls == null:
+		return null
+	var panel: Node = cls.new()
+	panel.name = "MenuPanel"
+	add_child(panel)
+	panel.setup(_todays_menu())
+	return panel
+
+
+## Các món khách CÓ THỂ gọi trong màn này, để bảng thực đơn lúc chờ liệt kê.
+##
+## Đọc `customers.menu` — thứ luật màn đã gán — chứ không đọc lại RULES trong
+## GameData: bảng phải nói đúng cái mà hệ khách sẽ bốc, kể cả khi sau này có
+## chỗ khác sửa thực đơn lúc chạy. Rỗng (Endless, Asian) nghĩa là "mọi món".
+func _todays_menu() -> Array[String]:
+	var dishes: Array[String] = []
+	if customers == null:
+		return dishes
+	var source: Array = customers.menu
+	if source.is_empty():
+		source = ItemCatalog.sellable_dishes()
+	for id in source:
+		var dish := String(id)
+		if ItemCatalog.price(dish) > 0 and not ItemCatalog.is_locked(dish):
+			dishes.append(dish)
+	return dishes

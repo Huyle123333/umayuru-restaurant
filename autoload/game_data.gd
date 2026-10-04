@@ -40,6 +40,8 @@ const MAP_RESTAURANT := "res://restaurant_map_planb.tscn"
 ## scene kế tiếp đều là @export, nên đoạn mở đầu này KHÔNG cần thêm một dòng
 ## code nào — chỉ là một scene mới dùng lại đúng script cũ.
 const SCENE_PROLOGUE := "res://scenes/story/intro_prologue.tscn"
+const SCENE_ENDING_NORMAL := "res://scenes/story/ending_normal.tscn"
+const SCENE_ENDING_SECRET := "res://scenes/story/ending_secret.tscn"
 
 ## ĐOẠN RA MẮT của từng nhân vật ẩn: id nhân vật -> file scene.
 ##
@@ -72,7 +74,7 @@ const SHOW_EVENING := false
 ##
 ## Tám màn dùng CHUNG một file map. Thứ phân biệt chúng nằm ở đây: thực đơn
 ## nào mở, khách vào nhanh cỡ nào, màn dài bao lâu, và bao nhiêu tiền thì được
-## hạng nào. Đọc bởi scripts/nha_hang/luat_man.gd — xem file đó để biết ý
+## hạng nào. Đọc bởi scripts/restaurant/level_rules.gd — xem file đó để biết ý
 ## nghĩa từng khoá.
 ##
 ## Đặt trong GameData chứ không trong file map: dữ liệu cân bằng là họ hàng
@@ -122,8 +124,25 @@ const SHOW_EVENING := false
 ## lượt chơi khá ≈ 16 đơn, chừng 60% đạt hoàn hảo (+35%) → khoảng 1.230. Từ đó
 ## đặt S 1200 / A 950 / B 700 / C 450. Bốn con số này THẤP hơn hẳn mốc mặc
 ## định 1650/1300/950/600 vì thực đơn Ngày 1 không có món nào trên 95 tiền.
+## (2/10/2026) "interval_range": [min, max] trong mỗi chặng — khách vào cách
+## nhau một quãng NGẪU NHIÊN trong khoảng đó thay vì đều tăm tắp. `max` là hạn
+## chót: trong vòng bấy nhiêu giây chắc chắn có khách. "interval" cũ giữ lại
+## làm số dự phòng. Trung bình của mỗi khoảng xấp xỉ nhịp cũ ở hai chặng đầu
+## và THƯA hơn một giây ở chặng cuối, vì chặng cuối là chỗ user thấy quá dồn.
+## (2/10/2026, user chốt) BA NGÀY DÀI DẦN VÀ ĐÁNG TIỀN DẦN:
+##     Ngày 1 — 5 phút, giá ×0,95
+##     Ngày 2 — 6 phút, giá ×1,0
+##     Ngày 3 — 7 phút, giá ×1,15
+## Trước đó cả ba ngày cùng 7 phút và cùng giá, nên trần doanh thu gần như
+## bằng nhau — mốc S không thể vừa tăng dần theo ngày vừa với tới được. Giờ
+## trần tăng theo cả hai trục (thời lượng × giá), ngày cuối nặng ký nhất một
+## cách tự nhiên. Ba chặng của Ngày 1 và 2 co lại ĐÚNG TỈ LỆ với thời lượng
+## mới (2/7 – 3/7 – 2/7 của màn), để nhịp "khởi động – chính – cao điểm" giữ
+## nguyên hình dạng. "music_cue" không đổi: nó tính theo giây CÒN LẠI, nên bài
+## cao điểm vẫn kết thúc đúng lúc hết giờ.
 const RULES_D1 := {
-	"duration": 420.0,
+	"duration": 300.0,
+	"price_factor": 0.95,
 	"max_customers": 6,
 	"max_tables": 3,
 	"max_queue": 2,
@@ -137,12 +156,105 @@ const RULES_D1 := {
 		"mon_ham": 3, "mon_steak": 4, "hambuger": 3,
 	},
 	"stages": [
-		{"until": 120.0, "interval": 18.0},
-		{"until": 300.0, "interval": 12.0},
-		{"until": 420.0, "interval": 8.0},
+		# "tier_weights": tỉ lệ món dễ / vừa / khó của từng chặng (xem
+		# ItemCatalog.DISH_DIFFICULTY). Ngày 1 chỉ có một món vừa (Hamburger)
+		# và không có món khó.
+		{"until": 86.0, "interval": 18.0, "interval_range": [10.0, 20.0], "tier_weights": {"easy": 8, "medium": 2}},
+		{"until": 214.0, "interval": 12.0, "interval_range": [7.0, 15.0], "tier_weights": {"easy": 6, "medium": 4}},
+		{"until": 300.0, "interval": 8.0, "interval_range": [5.0, 13.0], "tier_weights": {"easy": 5, "medium": 5}},
 	],
 	"music_cue": 212.0,
-	"rank_thresholds": {"S": 1200, "A": 950, "B": 700, "C": 450},
+	# (2/10/2026) Mốc do người làm game chốt sau khi có kĩ năng Kita và giá
+	# vốn nguyên liệu. Thêm hạng D làm mốc QUA MÀN. Phần giải thích 1200/950
+	# ở chú thích phía trên là của bộ số cũ.
+	"rank_thresholds": {"S": 2026, "A": 1534, "B": 1000, "C": 777, "D": 555},
+	"max_left": 10,
+}
+
+## NGÀY 2 — thực đơn Ngày 1 CỘNG DỒN thêm năm món mới.
+##
+## Ý đồ: mỗi ngày dạy thêm một nhóm trạm. Ngày 2 mở lò nướng (đúng MỘT loại
+## pizza — pizza nấm, ít nguyên liệu nhất — để học cái lò chứ chưa phải học
+## ba công thức), bàn ghép kem (Kem tam hợp) và chuỗi chả rau củ.
+##
+## Hamburger rau củ và Canh rau củ được đưa vào TỪ NGÀY 2 theo yêu cầu của
+## người làm game: hai món này dài và đắt, cho người chơi gặp trước ở nhịp
+## khách còn thưa thì sang Ngày 3 — khi chúng xuất hiện dày — đã biết làm.
+## Vì thế trọng số của hai món này ở đây chỉ là 1 (hiếm gặp).
+##
+## Bốn bàn, tối đa 8 khách, khách vào nhanh hơn Ngày 1 một nấc.
+const RULES_D2 := {
+	"duration": 360.0,
+	"price_factor": 1.0,
+	"max_customers": 8,
+	"max_tables": 4,
+	# (2/10/2026) 3 -> 2 theo yêu cầu user sau khi chơi thử: khách xếp hàng
+	# cũng trừ kiên nhẫn, hàng dài hơn thì số khách bỏ về tăng mà người chơi
+	# không làm gì được — họ còn chưa có bàn để phục vụ.
+	"max_queue": 2,
+	"first_wait": 4.0,
+	"menu": [
+		"icecream_vani", "icecream_chocolate", "icecream_strawberry",
+		"mon_ham", "mon_steak", "hambuger",
+		"pizza_mushroom", "kem_tam_hop", "vegetablesteak",
+		"vegetablebuger", "stew",
+	],
+	"weights": {
+		"icecream_vani": 1, "icecream_chocolate": 1, "icecream_strawberry": 1,
+		"mon_ham": 2, "mon_steak": 3, "hambuger": 3,
+		"pizza_mushroom": 3, "kem_tam_hop": 2, "vegetablesteak": 3,
+		"vegetablebuger": 1, "stew": 1,
+	},
+	"stages": [
+		# (2/10/2026, user chốt) Tỉ lệ món khó GIẢM MỘT NỬA so với bản trước
+		# (20% -> 10%, 30% -> 15%); bù lại món khó có mặt ở MỌI chặng, kể cả
+		# chặng đầu. Hai thứ giữ cho chặng đầu không quá tải: bảng thực đơn
+		# 30 giây trước màn đã cho xem công thức, và customer_manager cấm món
+		# khó ở hai đơn đầu màn cũng như trong hai đơn sau mỗi món khó
+		# (hard_cooldown_orders). Các số viết theo phần trăm cho dễ đọc.
+		{"until": 103.0, "interval": 15.0, "interval_range": [8.0, 18.0], "tier_weights": {"easy": 67, "medium": 28, "hard": 5}},
+		{"until": 257.0, "interval": 10.0, "interval_range": [5.0, 15.0], "tier_weights": {"easy": 45, "medium": 45, "hard": 10}},
+		{"until": 360.0, "interval": 7.0, "interval_range": [4.0, 12.0], "tier_weights": {"easy": 35, "medium": 50, "hard": 15}},
+	],
+	"music_cue": 212.0,
+	"rank_thresholds": {"S": 2829, "A": 1971, "B": 1420, "C": 1050, "D": 800},
+	"max_left": 7,
+}
+
+## NGÀY 3 — toàn bộ thực đơn, đủ sáu bàn. Món rẻ (kem lẻ) vẫn có mặt nhưng
+## hiếm; phần lớn đơn là món từ 100 tiền trở lên, vì mốc S của ngày này
+## (3667) chỉ với tới được bằng món đắt.
+const RULES_D3 := {
+	"duration": 420.0,
+	"price_factor": 1.15,
+	"max_customers": 10,
+	"max_tables": 6,
+	"max_queue": 3,
+	"first_wait": 4.0,
+	"menu": [
+		"icecream_vani", "icecream_chocolate", "icecream_strawberry",
+		"mon_ham", "mon_steak", "hambuger",
+		"pizza_mushroom", "pizza_cheese", "pizza_peperoni",
+		"kem_tam_hop", "kem_tam_hop_que", "vegetablesteak",
+		"vegetablebuger", "stew", "dinner",
+	],
+	"weights": {
+		"icecream_vani": 1, "icecream_chocolate": 1, "icecream_strawberry": 1,
+		"mon_ham": 1, "mon_steak": 2, "hambuger": 3,
+		"pizza_mushroom": 2, "pizza_cheese": 2, "pizza_peperoni": 2,
+		"kem_tam_hop": 1, "kem_tam_hop_que": 2, "vegetablesteak": 3,
+		"vegetablebuger": 3, "stew": 3, "dinner": 3,
+	},
+	"stages": [
+		# (2/10/2026) Món khó giảm một nửa như Ngày 2: 10% -> 5%, 40% -> 20%,
+		# 50% -> 25%. Phần nhường lại dồn sang món vừa.
+		{"until": 120.0, "interval": 12.0, "interval_range": [6.0, 15.0], "tier_weights": {"easy": 53, "medium": 42, "hard": 5}},
+		{"until": 300.0, "interval": 8.0, "interval_range": [4.0, 13.0], "tier_weights": {"easy": 25, "medium": 55, "hard": 20}},
+		{"until": 420.0, "interval": 6.0, "interval_range": [3.0, 11.0], "tier_weights": {"easy": 15, "medium": 60, "hard": 25}},
+	],
+	"music_cue": 212.0,
+	"rank_thresholds": {"S": 3667, "A": 2501, "B": 1836, "C": 1357, "D": 1000},
+	"max_left": 5,
 }
 
 ## Toàn bộ màn chơi của game.
@@ -158,10 +270,14 @@ const LEVELS := {
 	"tutorial": {"label": "Tutorial", "needs": "prologue", "scene": MAP_RESTAURANT},
 	"d1_sang": {"label": "Sáng", "needs": "tutorial", "scene": MAP_RESTAURANT, "rules": RULES_D1},
 	"d1_toi": {"label": "Tối", "needs": "d1_sang", "evening": true, "scene": ""},
-	"d2_sang": {"label": "Sáng", "needs": "d1_sang", "scene": MAP_RESTAURANT},
+	"d2_sang": {"label": "Sáng", "needs": "d1_sang", "scene": MAP_RESTAURANT, "rules": RULES_D2},
 	"d2_toi": {"label": "Tối", "needs": "d2_sang", "evening": true, "scene": ""},
-	"d3_sang": {"label": "Sáng", "needs": "d2_sang", "scene": MAP_RESTAURANT},
+	"d3_sang": {"label": "Sáng", "needs": "d2_sang", "scene": MAP_RESTAURANT, "rules": RULES_D3},
 	"d3_toi": {"label": "Tối", "needs": "d3_sang", "evening": true, "scene": ""},
+	# MÀN KẾT. Mở khi qua Ngày 3. Có HAI kết (thường / ẩn) nhưng chỉ MỘT mục
+	# ở đây: người chơi thấy một nút "Ending" duy nhất, kết nào được chiếu do
+	# enter_level() quyết lúc bấm — xem ending_scene().
+	"ending": {"label": "Ending", "needs": "d3_sang", "scene": SCENE_ENDING_NORMAL, "story_only": true},
 }
 
 ## Các nhân vật. Khóa là id, cũng là tên file ảnh đại diện trong
@@ -194,7 +310,7 @@ const CHARACTERS := {
 		"player": "res://scenes/characters/player_kitamoi.tscn",
 		"skills": [
 			{"name": "Victory Cheer!", "level": 18, "desc": "Điều kiện: Hoàn thành 5 đơn hoàn hảo.
-			Trong thời gian còn lại của màn chơi, mọi đơn giao out đều được tính là hoàn hảo bất kể thanh kiên nhẫn.", "icon": "mac_dinh"},
+			Trong thời gian còn lại của màn chơi, mọi đơn giao ra đều được tính là hoàn hảo bất kể thanh kiên nhẫn. Riêng đơn giao khi kiên nhẫn còn trên một nửa thì được nhân đôi tiền.", "icon": "mac_dinh"},
 			{"name": "Kiên nhẫn là một đức tính", "level": 0, "desc": "Thời gian kiên nhẫn của khách hàng +30%.", "icon": "skill2"},
 			{"name": "Dòng tiền mờ ám", "level": 0, "desc": "Tiền thưởng từ đơn hoàn hảo +20% (35% → 55%). Đổi lại: món ăn trên bếp hỏng sớm hơn 2 giây.", "icon": "skill3"},
 		],
@@ -284,9 +400,10 @@ const CHARACTERS := {
 		"label": "Matikanetannhauser",
 		"player": "res://scenes/characters/player_mambo.tscn",
 		"skills": [
-			{"name": "Go, Go, Mun!", "level": 120, "desc": "", "icon": ""},
-			{"name": "", "level": 0, "desc": "", "icon": ""},
-			{"name": "", "level": 0, "desc": "", "icon": ""},
+			{"name": "Go, Go, Mun!", "level": 120, "desc": "Điều kiện: Hoàn thành 15 đơn.
+			Trong thời gian còn lại của màn chơi, mỗi đơn pizza hoàn hảo có 36% được nhân ba tiền, 18% được nhân đôi, còn lại giá thường. Đổi lại: trong lúc di chuyển, mỗi giây có 3% bị choáng đứng yên 2 giây.", "icon": "mac_dinh"},
+			{"name": "Mambo tongye", "level": 0, "desc": "Thời gian nấu trên bếp và trong lò nướng giảm 4 giây (bếp 8 → 4, lò 11 → 7).", "icon": "skill2"},
+			{"name": "Vua làm nền", "level": 0, "desc": "Khách gọi các món pizza nhiều hơn 20%.", "icon": "skill3"},
 		],
 		"desc": "Viên ngọc thô ai cũng quý. Hôm nay là ngày của cô ấy!",
 		"tagline": "Viên ngọc thô ai cũng quý. Hôm nay là ngày của cô ấy!",
@@ -314,10 +431,10 @@ const CHARACTERS := {
 		"label": "Oguri Cap",
 		"player": "res://scenes/characters/player_oui.tscn",
 		"skills": [
-			{"name": "Triumphant Pulse", "level": 11, "desc": "Điều kiện: Màn chơi trôi qua 4 phút
-			Bật/tắt bằng phím Space. Khi bật: bộ đếm màn chơi, khách hàng và thanh kiên nhẫn dừng lại; nhân vật và khu bếp vẫn hoạt động. Ngân sách 30 giây cho cả màn, dùng hết là không kích hoạt lại được.", "icon": ""},
-			{"name": "", "level": 0, "desc": "", "icon": ""},
-			{"name": "", "level": 0, "desc": "", "icon": ""},
+			{"name": "Triumphant Pulse", "level": 11, "desc": "Điều kiện: Màn chơi trôi qua 4 phút.
+			Bật/tắt bằng phím Space. Khi bật: đồng hồ màn, khách hàng và thanh kiên nhẫn đứng im; nhân vật và khu bếp vẫn hoạt động. Tổng cộng 30 giây cho cả màn, bật tắt bao nhiêu lần cũng được, dùng hết là không bật lại được.", "icon": "mac_dinh"},
+			{"name": "Alo vũ à vũ", "level": 0, "desc": "Các món pizza tăng 60% giá trị.", "icon": "skill2"},
+			{"name": "Hốc trưởng", "level": 0, "desc": "Mỗi lần giao xong một đơn, thanh chạy nhanh đầy lại ngay.", "icon": "skill3"},
 		],
 		"desc": "Một cô gái quê điềm tĩnh mà nhiều mơ mộng.",
 		"tagline": "Một cô gái quê điềm tĩnh mà nhiều mơ mộng.",
@@ -345,9 +462,10 @@ const CHARACTERS := {
 		"label": "Special Week",
 		"player": "res://scenes/characters/player_tuandb.tscn",
 		"skills": [
-			{"name": "Shooting Star", "level": 0, "desc": "", "icon": ""},
-			{"name": "", "level": 0, "desc": "", "icon": ""},
-			{"name": "", "level": 0, "desc": "", "icon": ""},
+			{"name": "Shooting Star", "level": 24, "desc": "Điều kiện: Giao xong 5 đơn có ham hoặc steak (Ham, Steak, Hamburger, Steak rau củ, Hamburger rau củ, Bữa tối).
+			Trong thời gian còn lại của màn chơi, sáu món đó giao được cho MỌI đơn, kể cả khi khách gọi món khác. Tiền nhận tính theo giá của món bạn giao, không phải món khách gọi.", "icon": "mac_dinh"},
+			{"name": "Độc tày Spe-chan", "level": 0, "desc": "Ham, steak và chả rau củ nấu trên bếp nhanh hơn 4 giây (8 → 4 giây).", "icon": "skill2"},
+			{"name": "Hốc phó", "level": 0, "desc": "Mỗi đơn giao ra có 20% cơ hội được trả gấp 3.", "icon": "skill3"},
 		],
 		"desc": "Sẵn sàng lao đi! Một cô gái trong veo chỉ hướng về giấc mơ.",
 		"tagline": "Sẵn sàng lao đi! Một cô gái trong veo chỉ hướng về giấc mơ.",
@@ -588,6 +706,16 @@ var intro_seen: Dictionary = {}
 ## đồng hồ vừa nhảy. Giấu sau CODE No.7 thì chỉ ai cố ý mới bật được.
 var cheat_time_skip: bool = false
 
+## Cheat: nguyên liệu MIỄN PHÍ. false = trừ tiền như bình thường.
+##
+## Cùng lý do với hai cheat trên: thử một món ở cuối chuỗi công thức (bữa tối
+## cần nồi canh, mà nồi canh cần bốn loại rau) tốn tiền thật, và khi đang chỉnh
+## số cân bằng thì cái ví tụt dần làm nhiễu đúng thứ đang đo.
+##
+## Lưu vào file save để bật một lần dùng cả buổi chỉnh số, không phải bật lại
+## mỗi lần vào màn.
+var cheat_free_ingredients: bool = false
+
 ## ───────────────────────────── BẢNG XẾP HẠNG ──────────────────────────────
 ##
 ## Lịch sử các lượt chơi: id màn -> mảng bản ghi, đã sắp giảm dần theo tiền.
@@ -605,15 +733,17 @@ var cheat_time_skip: bool = false
 var leaderboard: Dictionary = {}
 
 ## Các màn có bảng xếp hạng, đúng thứ tự tab trên giao diện.
-const RANKED_LEVELS := ["d1_sang", "d2_sang", "d3_sang", "endless"]
+const RANKED_LEVELS := ["d1_sang", "d2_sang", "d3_sang", "endless", "asian"]
 
-## Nhãn tab. "endless" chưa phải một màn thật trong LEVELS — nó là chỗ đã dành
-## sẵn, để lúc làm chế độ Vô tận không phải đụng lại vào giao diện này.
+## Nhãn tab. "endless" và "asian" chưa phải màn thật trong LEVELS — chúng là
+## chỗ đã dành sẵn, để lúc làm hai chế độ này không phải đụng lại giao diện.
+## Tên khớp với nút ở màn chọn màn ("Endless Mode", "Asian Mode").
 const RANKED_LEVEL_NAMES := {
 	"d1_sang": "Màn 1",
 	"d2_sang": "Màn 2",
 	"d3_sang": "Màn 3",
-	"endless": "Endless",
+	"endless": "Endless Mode",
+	"asian": "Asian Mode",
 }
 
 ## Giữ bao nhiêu dòng mỗi màn. Cắt bớt chứ không giữ hết: file save là JSON
@@ -631,6 +761,10 @@ const LEADERBOARD_ROWS := 10
 func record_rank(level_id: String, money: int, rank: String) -> void:
 	if not RANKED_LEVELS.has(level_id):
 		return
+	# Hạng của LƯỢT GẦN NHẤT — ghi đè, không giữ cái tốt nhất. Kết ẩn xét đúng
+	# con số này (xem ending_scene). Lượt trượt ghi hạng rỗng, tức là cũng xoá
+	# luôn chữ S của lượt trước.
+	last_rank[level_id] = rank
 	var list_: Array = leaderboard.get(level_id, [])
 	list_.append({
 		"character": selected_character,
@@ -668,6 +802,30 @@ func character_name(id: String) -> String:
 
 
 ## Bật/tắt cheat tua giờ.
+## Quên "đã xem đoạn ra mắt" của MỌI nhân vật ẩn — lần sau chọn họ là đoạn
+## ra mắt chiếu lại từ đầu.
+##
+## Vì sao cần: trước đây muốn xem lại chỉ có hai đường — khoá rồi mở lại
+## nhân vật, hoặc xoá cả file save. Đường thứ hai mất luôn bảng xếp hạng và
+## tiến trình, mà người cần xem lại nhiều nhất là chính người làm game lúc
+## sửa lời thoại và lúc trình bày trước hội đồng.
+##
+## Là HÀNH ĐỘNG một lần chứ không phải công tắc: không có trạng thái "đang
+## bật" nào để nhớ. Bấm xong, xem xong, muốn xem nữa thì bấm lại.
+func reset_intro_seen() -> void:
+	intro_seen.clear()
+	progress_changed.emit()
+	SaveSystem.save_game()
+
+
+func set_cheat_free_ingredients(value: bool) -> void:
+	if cheat_free_ingredients == value:
+		return
+	cheat_free_ingredients = value
+	progress_changed.emit()
+	SaveSystem.save_game()
+
+
 func set_cheat_time_skip(value: bool) -> void:
 	cheat_time_skip = value
 	progress_changed.emit()
@@ -737,18 +895,23 @@ func character_scene_path(id: String) -> String:
 ## Bữa tối, do nhóm món nồi đang khoá) nên trần doanh thu đã tụt. Phải playtest
 ## rồi chỉnh lại — mốc quá cao thì hạng S thành thứ không ai với tới, mốc quá
 ## thấp thì mọi lượt chơi đều S và cái hạng mất hết ý nghĩa.
-const DEFAULT_THRESHOLDS := {"S": 1650, "A": 1300, "B": 950, "C": 600}
+const DEFAULT_THRESHOLDS := {"S": 1650, "A": 1300, "B": 950, "C": 600, "D": 400}
 
 ## Thứ tự xét, cao xuống thấp. Không lấy MOC_MAC_DINH.keys() vì thứ tự khoá
 ## Dictionary là thứ tự khai báo — đúng lúc này nhưng sẽ sai lặng lẽ nếu ai đó
 ## sắp lại bảng trên, mà lỗi đó rất khó nhìn ra.
-const RANK_ORDER := ["S", "A", "B", "C"]
+const RANK_ORDER := ["S", "A", "B", "C", "D"]
 
-## Hạng thấp nhất coi là qua màn.
-const MIN_RANK := "C"
+## Hạng thấp nhất coi là qua màn. (2/10/2026: C → D, khi thêm hạng D.)
+const MIN_RANK := "D"
 
 
-## Xếp hạng một lượt chơi. Trả về "S"/"A"/"B"/"C", hoặc "" nếu chưa đạt.
+## Số khách bỏ về TỐI ĐA của một màn. 0 = màn không đặt giới hạn.
+func max_left_for(level_id: String) -> int:
+	return int(rules_for_level(level_id).get("max_left", 0))
+
+
+## Xếp hạng một lượt chơi. Trả về "S"/"A"/"B"/"C"/"D", hoặc "" nếu chưa đạt.
 func rank_for(level_id: String, money: int) -> String:
 	var marks := rank_thresholds_for(level_id)
 	for rank in RANK_ORDER:
@@ -766,7 +929,7 @@ func rank_thresholds_for(level_id: String) -> Dictionary:
 ##
 ## Rỗng là hợp lệ, không phải lỗi: màn hướng dẫn có bộ dẫn dắt riêng đặt luật
 ## của nó, và chạy thẳng map bằng F6 thì current_level rỗng. Cả hai trường hợp
-## đều muốn dùng số mặc định trong quan_ly_khach.gd.
+## đều muốn dùng số mặc định trong customer_manager.gd.
 func rules_for_level(level_id: String) -> Dictionary:
 	return LEVELS.get(level_id, {}).get("rules", {})
 
@@ -925,6 +1088,98 @@ func set_third_person_active(value: bool) -> void:
 ## thật sự chọn Gold Ship, và chưa xem lần nào. Nơi gọi (character_select)
 ## chỉ hỏi một câu, nên sau này đổi luật — ví dụ cho xem lại mỗi chương —
 ## thì sửa đúng ở đây.
+## ── MÀN KHÔNG CHỌN NHÂN VẬT (1/10/2026) ─────────────────────────────────
+## Prologue và Tutorial luôn chơi bằng Kitasan (id "kitamoi"), bỏ qua màn
+## chọn nhân vật. Người chơi chọn nhân vật LẦN ĐẦU ngay trước Ngày 1.
+##
+## Vì sao: hai màn này là phần GIỚI THIỆU. Bắt người mới chọn nhân vật trước
+## cả khi biết game chơi thế nào là bắt họ quyết định mà không có thông tin —
+## chưa biết kĩ năng là gì thì chọn ai cũng như nhau. Và kịch bản prologue /
+## lời trainer viết cho MỘT người nói thì đọc đúng giọng hơn là tự đổi theo
+## bảy nhân vật.
+##
+## Hai thứ khai ở đây chứ không rải ra ba nơi gọi (menu chính, chọn màn, hết
+## tutorial): đổi nhân vật dẫn truyện hay thêm một màn giới thiệu nữa thì sửa
+## đúng một chỗ.
+const STORY_CHARACTER := "kitamoi"
+const LEVELS_WITHOUT_CHARACTER_SELECT := ["prologue", "tutorial", "ending"]
+
+## Màn đầu tiên sau phần giới thiệu — nơi người chơi chọn nhân vật lần đầu.
+const FIRST_REAL_LEVEL := "d1_sang"
+
+
+func needs_character_select(id: String) -> bool:
+	return not LEVELS_WITHOUT_CHARACTER_SELECT.has(id)
+
+
+## Vào thẳng một màn giới thiệu: gán nhân vật dẫn truyện rồi trả scene cần nạp.
+##
+## Gán trực tiếp chứ không qua set_selected_character(): hàm đó phát
+## progress_changed để màn chọn màn vẽ lại, mà ở đây ta sắp rời màn hình đó
+## ngay — vẽ lại một màn hình đang bị huỷ là việc thừa.
+func start_story_level(id: String) -> String:
+	current_level = id
+	# Màn kết KHÔNG ép về Kitasan: nó kể tiếp câu chuyện của người vừa đứng
+	# bếp ba ngày, nên giữ nguyên nhân vật người chơi đang chọn.
+	if id != ENDING_LEVEL:
+		selected_character = STORY_CHARACTER
+	return enter_level(id)
+
+
+# ══════════════════════════════════════════════ HAI KẾT (2/10/2026)
+const ENDING_LEVEL := "ending"
+
+## Ba ngày phải đạt hạng S ở LƯỢT GẦN NHẤT thì mới ra kết ẩn.
+const SECRET_ENDING_LEVELS := ["d1_sang", "d2_sang", "d3_sang"]
+const SECRET_ENDING_RANK := "S"
+
+## Hạng của lượt chơi GẦN NHẤT ở từng màn: id -> "S"/"A"/.../"" (trượt).
+## Lưu trong save. Khác best_money / leaderboard ở chỗ nó KHÔNG nhớ thành tích
+## tốt nhất — chơi lại Ngày 1 được hạng A là chữ S cũ mất.
+var last_rank: Dictionary = {}
+
+
+## Kết ẩn có đủ điều kiện không: lượt gần nhất của CẢ ba ngày đều hạng S.
+func secret_ending_unlocked() -> bool:
+	for id in SECRET_ENDING_LEVELS:
+		if String(last_rank.get(id, "")) != SECRET_ENDING_RANK:
+			return false
+	return true
+
+
+## Scene của màn kết sẽ chiếu NGAY BÂY GIỜ. Xét lúc bấm chứ không lưu sẵn
+## "đã mở kết ẩn": người chơi có thể quay lại cày đủ ba chữ S rồi bấm Ending
+## lần nữa — và ngược lại, chơi lại một ngày tụt hạng thì kết ẩn cũng mất.
+##
+## Giao diện KHÔNG được gọi hàm này để hiện gợi ý. Kết ẩn là thứ người chơi
+## tự phát hiện: nút Ending trông y hệt nhau ở cả hai trường hợp.
+func ending_scene() -> String:
+	if cheat_force_secret_ending or secret_ending_unlocked():
+		return SCENE_ENDING_SECRET
+	return SCENE_ENDING_NORMAL
+
+
+## CHEAT: ép nút Ending luôn chiếu kết ẩn, không cần ba chữ S. Chỉ để kiểm
+## thử — KHÔNG lưu vào save, tắt game là mất, nên không thể vô tình để quên
+## rồi nộp một bản mà kết ẩn mở sẵn. Cũng không đụng tới last_rank: tắt cheat
+## đi là luật thật áp dụng lại ngay, số liệu của người chơi còn nguyên.
+var cheat_force_secret_ending: bool = false
+
+
+## Những nhân vật ẩn ĐÃ RA MẮT (đoạn giới thiệu của họ đã chiếu), theo thứ tự
+## trong HIDDEN_CHARACTERS. Màn kết dùng để chọn lời thoại theo tổ hợp.
+##
+## Xét intro_seen chứ không xét "đã mở khoá": mở khoá mà chưa dùng lần nào
+## thì trong cốt truyện cô ấy chưa từng tới quán — cho đi biển cùng team là
+## để một người lạ bước vào cảnh cuối.
+func hidden_cast_seen() -> Array[String]:
+	var cast: Array[String] = []
+	for id in HIDDEN_CHARACTERS:
+		if bool(intro_seen.get(String(id), false)):
+			cast.append(String(id))
+	return cast
+
+
 ## Màn này có phải chỉ để kể chuyện không (không có gameplay).
 func is_story_level(id: String) -> bool:
 	return bool(LEVELS.get(id, {}).get("story_only", false))
@@ -945,6 +1200,8 @@ func is_story_level(id: String) -> bool:
 ## gọi thấy rõ điều đó. Nhờ việc đánh dấu ngay tại đây mà chính scene cắt
 ## cảnh gọi lại hàm này cũng không bị lặp vô hạn.
 func enter_level(id: String) -> String:
+	if id == ENDING_LEVEL:
+		return ending_scene()
 	var target := scene_path(id)
 	if target.is_empty():
 		return ""
@@ -963,9 +1220,38 @@ func enter_level(id: String) -> String:
 			and not is_story_level(id):
 		intro_seen[who] = true
 		SaveSystem.save_game()
+		# Lần ĐẦU chọn nhân vật ẩn: đoạn ra mắt THAY cho đoạn hội ý, không
+		# chiếu cả hai. Đánh dấu luôn là "đã hội ý" cho màn này, để lúc đoạn ra
+		# mắt xong gọi lại hàm này thì đi thẳng vào map.
+		_meeting_shown_for = id
 		return String(INTRO_SCENES[who])
 
+	# ĐOẠN HỘI Ý "ai đứng bếp" — trước mọi màn chơi thật, trừ prologue và
+	# tutorial (hai màn đó luôn là Kitasan, không có gì để hội ý).
+	#
+	# _meeting_shown_for là cờ MỘT LẦN: lần gọi đầu trả về đoạn hội ý và bật
+	# cờ; đoạn hội ý xong, dialogue_player gọi lại enter_level() thì thấy cờ,
+	# tắt cờ và trả về map. Không có cờ thì hai bên gọi nhau vòng tròn mãi.
+	#
+	# Nút "Chơi lại" ở bảng tổng kết dùng reload_current_scene(), không đi qua
+	# hàm này — nên chơi lại KHÔNG phải xem lại đoạn hội ý. Đúng ý: người
+	# chơi lại vừa xem nó vài phút trước.
+	if needs_character_select(id) and not is_story_level(id) \
+			and _meeting_shown_for != id:
+		_meeting_shown_for = id
+		return KITCHEN_MEETING_SCENE
+
+	_meeting_shown_for = ""
 	return target
+
+
+## Đoạn hội ý "ai đứng bếp" chiếu trước mỗi ngày. Xem enter_level().
+const KITCHEN_MEETING_SCENE := "res://scenes/story/kitchen_meeting.tscn"
+
+## Màn vừa được chiếu đoạn hội ý (hoặc đoạn ra mắt nhân vật ẩn). Rỗng = chưa.
+## Không lưu vào save: đây là trạng thái của MỘT lượt vào màn, không phải
+## tiến trình.
+var _meeting_shown_for := ""
 
 
 ## Xóa sạch tiến trình, quay về trạng thái mới cài.
@@ -981,7 +1267,9 @@ func reset() -> void:
 	unlocked_characters.clear()
 	intro_seen.clear()
 	leaderboard.clear()
+	last_rank.clear()
 	cheat_time_skip = false
+	cheat_free_ingredients = false
 	progress_changed.emit()
 
 
@@ -996,7 +1284,9 @@ func to_dict() -> Dictionary:
 		"unlocked_characters": unlocked_characters,
 		"intro_seen": intro_seen,
 		"leaderboard": leaderboard,
+		"last_rank": last_rank,
 		"cheat_time_skip": cheat_time_skip,
+		"cheat_free_ingredients": cheat_free_ingredients,
 	}
 
 
@@ -1026,7 +1316,13 @@ func from_dict(data: Dictionary) -> void:
 	intro_seen = seen_raw if seen_raw is Dictionary else {}
 	var board_raw: Variant = data.get("leaderboard", data.get("bang_xep_hang", {}))
 	leaderboard = board_raw if board_raw is Dictionary else {}
+	# Khoá mới từ 2/10/2026. Save cũ không có → rỗng → kết thường cho tới khi
+	# người chơi chơi lại đủ ba ngày.
+	var last_raw: Variant = data.get("last_rank", {})
+	last_rank = last_raw if last_raw is Dictionary else {}
 	cheat_time_skip = bool(data.get("cheat_time_skip", data.get("cheat_tua_gio", false)))
+	# Khoá mới từ 26/9/2026, không có tên tiếng Việt cũ nên không cần đọc lùi.
+	cheat_free_ingredients = bool(data.get("cheat_free_ingredients", false))
 	# Save cũ chỉ có một cờ bool cho Gold Ship — chuyển sang từ điển để người
 	# đang chơi dở không bị chiếu lại đoạn họ đã xem.
 	if bool(data.get("golshi_da_gioi_thieu", false)):

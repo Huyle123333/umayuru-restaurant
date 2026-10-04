@@ -21,6 +21,18 @@ extends CharacterBody3D
 @export var carry_speed := 6.4
 @export var acceleration := 14.0
 @export var turn_speed := 14.0
+## Có TRƯỢT THEO QUÁN TÍNH không.
+##
+## false (mặc định) — nhả phím là đứng lại ngay, đổi hướng là đổi ngay. Trong
+## một game bếp, người chơi phải dừng ĐÚNG trước một trạm rộng chưa tới một ô;
+## trượt thêm nửa giây là trôi qua trạm rồi phải lùi lại, và lỗi đó không do
+## người chơi tính sai mà do nhân vật không nghe lời.
+##
+## true — vận tốc tiến dần về đích theo `acceleration` (cách cũ): khởi động
+## chậm, dừng chậm, trôi khi rẽ. KHÔNG xoá nhánh này: để dành làm đặc điểm
+## riêng cho một nhân vật sau này. Bật bằng cách tick ô này trên scene của
+## nhân vật đó trong Inspector, không phải sửa code.
+@export var slippery := false
 
 @export_group("Sprint (Shift)")
 ## Nhân thêm bấy nhiêu vào tốc độ khi giữ Shift. 2,0 = chạy nhanh GẤP ĐÔI
@@ -67,13 +79,13 @@ extends CharacterBody3D
 
 ## Tay có đang cầm gì không. Quyết định tốc độ, hoạt hình VÀ biểu cảm.
 ##
-## Khai báo `set = set_carrying` chứ không để biến trơn: tay_cam.gd gán
+## Khai báo `set = set_carrying` chứ không để biến trơn: hands.gd gán
 ## THẲNG `_than.carrying = true`, mà gán thẳng vào một biến trơn thì không
 ## có hàm nào chạy — nên hoạt hình bê đồ vẫn đổi (vì _physics_process đọc cờ
 ## mỗi frame) còn khuôn mặt thì không, vì nó chỉ đổi một lần lúc được gọi.
 ## Đó chính là lý do "cầm đồ vật mà model không thay đổi biểu cảm".
 ##
-## Sửa ở ĐÂY chứ không sửa tay_cam.gd gọi set_carrying(): đôi tay không có
+## Sửa ở ĐÂY chứ không sửa hands.gd gọi set_carrying(): đôi tay không có
 ## nghĩa vụ nhớ rằng đổi cờ này thì phải gọi kèm một hàm nào đó. Gắn hành vi
 ## vào chính biến thì mọi nơi gán nó — hôm nay và sau này — đều đúng.
 var carrying := false : set = set_carrying
@@ -149,7 +161,7 @@ func _unhandled_input(event: InputEvent) -> void:
 	# `carrying` — thứ quyết định tốc độ và hoạt hình — không còn phản ánh
 	# đúng tay có đang cầm gì không.
 	#
-	# Từ giờ chỉ tay_cam.gd được đặt `carrying`, và chỉ khi thật sự cầm hay
+	# Từ giờ chỉ hands.gd được đặt `carrying`, và chỉ khi thật sự cầm hay
 	# đặt một vật xuống. Một trạng thái chỉ nên có ĐÚNG MỘT nơi ghi vào.
 	#
 	# Esc cũng không xử lý ở đây: trước kia nhân vật nuốt phím này để nhả
@@ -183,17 +195,25 @@ func _physics_process(delta: float) -> void:
 	var speed := carry_speed if carrying else walk_speed
 	speed *= _update_sprint(delta, dir.length() > 0.01)
 
+	# Vận tốc ngang muốn có ở khung hình này (0 nếu không bấm phím nào).
+	var wanted := dir * speed
+	if slippery:
+		# Quán tính: tiến DẦN về vận tốc muốn có.
+		velocity.x = move_toward(velocity.x, wanted.x, acceleration * delta)
+		velocity.z = move_toward(velocity.z, wanted.z, acceleration * delta)
+	else:
+		# Gán THẲNG: bấm là đi, nhả là dừng. Chỉ đụng x và z — y thuộc về
+		# trọng lực ở trên.
+		velocity.x = wanted.x
+		velocity.z = wanted.z
+
 	if dir.length() > 0.01:
-		velocity.x = move_toward(velocity.x, dir.x * speed, acceleration * delta)
-		velocity.z = move_toward(velocity.z, dir.z * speed, acceleration * delta)
 		var target := atan2(dir.x, dir.z)
 		if not model_faces_plus_z:
 			target += PI
 		_model.rotation.y = lerp_angle(_model.rotation.y, target, turn_speed * delta)
 		_play("Run_Carry" if carrying else "Run")
 	else:
-		velocity.x = move_toward(velocity.x, 0.0, acceleration * delta)
-		velocity.z = move_toward(velocity.z, 0.0, acceleration * delta)
 		_play("Idle")
 
 	move_and_slide()
@@ -220,6 +240,13 @@ func _update_sprint(delta: float, dang_di: bool) -> float:
 	else:
 		_stamina = minf(_stamina + delta * (stamina_max / stamina_regen), stamina_max)
 	return 1.0
+
+
+## Nạp ĐẦY thanh thể lực ngay lập tức. (Oguri Cap — Hốc trưởng gọi mỗi khi
+## giao xong một đơn.)
+func refill_stamina() -> void:
+	_stamina = stamina_max
+	_regen_timer = 0.0
 
 
 ## Tỉ lệ thể lực còn lại (0..1) — HUD đọc giá trị này để vẽ thanh.

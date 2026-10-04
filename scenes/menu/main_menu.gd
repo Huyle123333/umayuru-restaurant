@@ -89,11 +89,11 @@ func _scale_to(btn: Button, target: float) -> void:
 
 # ------------------------------------------------------------ hành động nút ---
 
+## Chơi mới: vào thẳng prologue, KHÔNG qua màn chọn nhân vật — xem
+## GameData.LEVELS_WITHOUT_CHARACTER_SELECT. Người chơi chọn nhân vật lần đầu
+## sau khi xong (hoặc bỏ qua) tutorial.
 func _on_new_pressed() -> void:
-	GameData.current_level = "prologue"
-	# Nhớ đường về, để nút "Trở lại" ở màn chọn nhân vật quay lại đúng đây.
-	GameData.return_scene = scene_file_path
-	get_tree().change_scene_to_file(character_select_scene)
+	get_tree().change_scene_to_file(GameData.start_story_level("prologue"))
 
 
 func _on_levels_pressed() -> void:

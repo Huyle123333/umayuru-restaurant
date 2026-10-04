@@ -82,6 +82,14 @@ signal interacted_alt(station: Node, index: int)
 ##   "bin"                — vứt đồ hỏng
 @export var kind: String = ""
 
+## Mức ưu tiên khi bộ chọn mục tiêu TỰ chọn giữa nhiều trạm cùng trong tầm.
+## Trạm có mức cao hơn luôn thắng; cùng mức thì xét hướng quay mặt như cũ.
+## Mặc định 0. Số âm = "chỉ chọn khi không còn gì khác" (xem doro_pet.gd).
+##
+## Chỉ ảnh hưởng lựa chọn TỰ ĐỘNG: người chơi vẫn bấm phím đổi mục tiêu để
+## chọn tay bất kỳ trạm nào trong tầm.
+@export var pick_priority: int = 0
+
 ## Danh sách lựa chọn hiện ra khi người chơi đứng trong tầm.
 ## Để RỖNG nghĩa là trạm chỉ có một hành động duy nhất — thớt, bếp, chồng đĩa
 ## và máng bỏ đồ đều thuộc loại này.
@@ -177,7 +185,7 @@ func show_model(id: String) -> void:
 
 ## Bày CẢ CHỒNG đồ đang nằm trên mặt trạm. Truyền mảng rỗng để dọn sạch.
 ##
-## Tách khỏi hien_mo_hinh() chứ không thêm tham số: hai hàm trả lời hai câu
+## Tách khỏi show_model() chứ không thêm tham số: hai hàm trả lời hai câu
 ## khác nhau — "bày đúng một thứ này" (thớt, bếp) và "bày tất cả những gì đang
 ## có" (bàn chế tạo). Gộp lại thì mọi nơi gọi đều phải truyền thêm một tham số
 ## mà chín trên mười nơi không quan tâm.
@@ -233,13 +241,13 @@ func interact_alt(index: int = 0) -> void:
 # ---------------------------------------------- vật cầm đặt sẵn trong map ---
 
 ## Cạnh hộp va chạm của một vật cầm được. Trùng với `canh_vat_pham` bên
-## tay_cam.gd — hai nơi sinh ra cùng một loại vật thì phải cùng kích thước.
+## hands.gd — hai nơi sinh ra cùng một loại vật thì phải cùng kích thước.
 const ITEM_SIZE := 0.55
 
 
 ## Dựng phần NHÌN THẤY và phần BẤM ĐƯỢC cho một `vat_cam` đặt sẵn trong map.
 ##
-## Vì sao cần hàm này: vật phẩm do người chơi tạo ra lúc chơi thì tay_cam.gd
+## Vì sao cần hàm này: vật phẩm do người chơi tạo ra lúc chơi thì hands.gd
 ## dựng đủ bộ (model + hộp va chạm + điểm nhắm). Nhưng vật đặt SẴN trong file
 ## map — hiện chỉ có cái nồi — là một StaticBody3D trần do người kê map thêm
 ## vào, và nó thiếu cả ba thứ đó.

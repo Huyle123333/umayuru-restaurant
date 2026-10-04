@@ -27,7 +27,7 @@ signal open_state_changed(is_open: bool)
 ## gì cả. Nhờ vậy đổi ảnh hay đổi tên một nguyên liệu chỉ sửa ở một chỗ.
 const ItemCatalog := preload("res://scripts/interaction/item_catalog.gd")
 
-## Cùng lý do với hud_tuong_tac.gd: cỡ chữ tính theo viewport thiết kế
+## Cùng lý do với interaction_hud.gd: cỡ chữ tính theo viewport thiết kế
 ## 1920×1080, người chơi ở cửa sổ 1280×720 chỉ thấy 2/3 con số này.
 const SIZE_TITLE := 32
 const SIZE_SELECTED := 30

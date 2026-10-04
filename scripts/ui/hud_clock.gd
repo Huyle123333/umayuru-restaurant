@@ -51,7 +51,31 @@ var money: int = 0
 
 var _lbl_clock: Label
 var _lbl_money: Label
+## Dòng "Khách bỏ về 3 / 10". Chỉ hiện ở màn có giới hạn (xem set_lost()).
+var _lbl_lost: Label
 var _bar: ProgressBar
+
+# ------------------------------------------------ chữ cái mốc hạng (2/10/2026)
+## Mốc doanh thu của màn: hạng -> số tiền. Rỗng = màn không xếp hạng, ẩn chữ.
+var _marks: Dictionary = {}
+## Thứ tự hạng từ THẤP lên CAO (D, C, B, A, S).
+var _ranks_low_to_high: Array = []
+## Hạng cao nhất ĐÃ ĂN MỪNG trong lượt này (chỉ số trong mảng trên, -1 = chưa).
+## Tiền có thể tụt (mua nguyên liệu) rồi vượt lại cùng một mốc; nhớ số này để
+## mỗi mốc chỉ ăn mừng MỘT lần — nháy đi nháy lại thì hết còn là phần thưởng.
+var _best_celebrated := -1
+var _lbl_rank: Label
+var _lbl_rank_target: Label
+var _rank_tween: Tween
+var _celebrating := false
+## Đang ở hạng cao nhất: chữ chạy màu cầu vồng liên tục trong _process.
+var _rainbow := false
+var _flash: ColorRect
+
+const RANK_COLORS := {
+	"S": Color("f2c230"), "A": Color("e8823f"), "B": Color("e27ba0"),
+	"C": Color("4f9d5d"), "D": Color("5b8fb0"),
+}
 var _fill_style: StyleBoxFlat
 var _alerted := false
 
@@ -76,7 +100,9 @@ func _build_ui() -> void:
 	frame.offset_right = -MARGIN
 	frame.offset_left = -MARGIN - WIDTH
 	frame.offset_top = MARGIN
-	frame.offset_bottom = MARGIN + 132.0
+	# +28 cho dòng "Khách bỏ về". Dòng đó ẩn ở màn không có giới hạn, khi ấy
+	# khung chỉ dư một dải trống nhỏ ở đáy — rẻ hơn là đổi cỡ khung lúc chạy.
+	frame.offset_bottom = MARGIN + 160.0
 	frame.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	frame.add_theme_stylebox_override("panel", _bg_frame())
 	root.add_child(frame)
@@ -120,8 +146,55 @@ func _build_ui() -> void:
 	_lbl_money.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	row.add_child(_lbl_money)
 
+	# Đẩy chữ cái mốc hạng sang LỀ PHẢI của hàng tiền.
+	var gap := Control.new()
+	gap.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	gap.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	row.add_child(gap)
+
+	_lbl_rank_target = Label.new()
+	_lbl_rank_target.add_theme_font_size_override("font_size", 14)
+	_lbl_rank_target.add_theme_color_override("font_color", COLOR_DIM)
+	_lbl_rank_target.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	_lbl_rank_target.visible = false
+	row.add_child(_lbl_rank_target)
+
+	_lbl_rank = Label.new()
+	_lbl_rank.add_theme_font_size_override("font_size", 30)
+	_lbl_rank.add_theme_constant_override("outline_size", 6)
+	_lbl_rank.add_theme_color_override("font_outline_color", Color(0, 0, 0, 0.6))
+	_lbl_rank.custom_minimum_size = Vector2(30, 0)
+	_lbl_rank.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_lbl_rank.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	_lbl_rank.visible = false
+	row.add_child(_lbl_rank)
+
+	# Lớp chớp sáng phủ cả màn hình, dùng từ hạng B trở lên. Nằm TRONG root
+	# của HUD này nên không che bảng tạm dừng hay bảng tổng kết (lớp cao hơn).
+	_flash = ColorRect.new()
+	_flash.set_anchors_preset(Control.PRESET_FULL_RECT)
+	_flash.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_flash.color = Color(1, 1, 1, 0)
+	root.add_child(_flash)
+
+	_lbl_lost = Label.new()
+	_lbl_lost.add_theme_font_size_override("font_size", 16)
+	_lbl_lost.add_theme_color_override("font_color", COLOR_DIM)
+	_lbl_lost.visible = false
+	col.add_child(_lbl_lost)
+
 
 func _process(delta: float) -> void:
+	# Hạng cao nhất: chữ chạy vòng màu cầu vồng, kiểu đèn LED RGB. Đặt TRƯỚC
+	# mọi lệnh return bên dưới — đồng hồ dừng (hết giờ, tutorial) thì chữ vẫn
+	# phải chạy màu.
+	if _rainbow and _lbl_rank != null and not _celebrating:
+		var hue := fmod(Time.get_ticks_msec() / 1000.0 * 0.8, 1.0)
+		_lbl_rank.add_theme_color_override("font_color", Color.from_hsv(hue, 0.85, 1.0))
+		var pulse := 1.0 + 0.08 * sin(Time.get_ticks_msec() / 1000.0 * 6.0)
+		_lbl_rank.pivot_offset = _lbl_rank.size * 0.5
+		_lbl_rank.scale = Vector2(pulse, pulse)
+
 	if not counting_down or _alerted:
 		return
 	var before := time_left
@@ -165,15 +238,158 @@ func set_time_left(seconds: float) -> void:
 	_draw_clock()
 
 
+# ══════════════════════════════════════════ CHỮ CÁI MỐC HẠNG TRÊN HUD
+#
+# Bên phải số tiền luôn hiện MỐC KẾ TIẾP cần đạt (chữ mờ + số tiền của mốc).
+# Tiền vượt mốc thì chữ đó bùng lên ăn mừng rồi đổi sang mốc sau. Mỗi mốc ăn
+# mừng TO HƠN mốc trước — phần thưởng phải leo thang thì người chơi mới muốn
+# với tới mốc sau. Ở hạng cao nhất, chữ chạy màu cầu vồng cho tới hết màn.
+
+## level_base gọi một lần lúc vào màn. `order` là GameData.RANK_ORDER (cao
+## xuống thấp); đảo lại để đi từ D lên S.
+func set_rank_marks(marks: Dictionary, order: Array) -> void:
+	_marks = marks
+	_ranks_low_to_high = order.duplicate()
+	_ranks_low_to_high.reverse()
+	_best_celebrated = -1
+	_update_rank(false)
+
+
+## Số mốc mà số tiền HIỆN TẠI đã vượt (0 = chưa đạt hạng nào).
+func _ranks_reached() -> int:
+	var n := 0
+	for rank in _ranks_low_to_high:
+		if money >= int(_marks.get(rank, 0)):
+			n += 1
+	return n
+
+
+func _update_rank(celebrate: bool) -> void:
+	if _lbl_rank == null or _marks.is_empty():
+		return
+	var reached := _ranks_reached()
+	if celebrate and reached - 1 > _best_celebrated:
+		_best_celebrated = reached - 1
+		_celebrate(_best_celebrated)
+		return
+	if not _celebrating:
+		_draw_rank()
+
+
+## Vẽ trạng thái tĩnh: mốc kế tiếp (mờ), hoặc hạng cao nhất (cầu vồng).
+func _draw_rank() -> void:
+	var reached := _ranks_reached()
+	var top := _ranks_low_to_high.size()
+	_lbl_rank.visible = true
+	_lbl_rank.scale = Vector2.ONE
+	_lbl_rank.modulate = Color.WHITE
+	_rainbow = reached >= top
+	if _rainbow:
+		_lbl_rank.text = String(_ranks_low_to_high[top - 1])
+		_lbl_rank_target.visible = false
+		return
+	var next_rank := String(_ranks_low_to_high[reached])
+	_lbl_rank.text = next_rank
+	# Mốc CHƯA đạt thì chữ NHẠT (pha về xám sáng): nó là đích đến, chưa phải
+	# thành tích. Pha sáng chứ không làm tối — nền HUD màu đen, chữ tối thêm
+	# là chìm mất (chụp thử: chữ D xanh đậm gần như không đọc được).
+	_lbl_rank.add_theme_color_override("font_color",
+		(RANK_COLORS.get(next_rank, COLOR_DIM) as Color).lerp(COLOR_DIM, 0.55))
+	_lbl_rank_target.text = str(int(_marks.get(next_rank, 0)))
+	_lbl_rank_target.visible = true
+
+
+## Ăn mừng vừa đạt mốc thứ `level` (0 = D ... 4 = S). Bốn thứ cùng leo thang:
+##   - chữ phóng to hơn       (1,4 lần ở D → 2,6 lần ở S)
+##   - nháy nhiều lần hơn     (1 lần → 5 lần)
+##   - tiếng reo riêng cho từng hạng (rank_d … rank_s)
+##   - từ hạng B: cả màn hình chớp màu của hạng, càng cao càng đậm
+## Riêng hạng cao nhất: màn hình chớp lần lượt đủ bảy màu, rồi chữ S chạy cầu
+## vồng liên tục (xem _process).
+##
+## Dùng MỘT công thức theo `level` chứ không viết năm đoạn riêng: thêm hạng
+## thứ sáu thì hiệu ứng của nó tự to hơn hạng thứ năm, không phải viết thêm.
+func _celebrate(level: int) -> void:
+	var rank := String(_ranks_low_to_high[level])
+	var color: Color = RANK_COLORS.get(rank, COLOR_TEXT)
+	var is_top := level >= _ranks_low_to_high.size() - 1
+
+	# Mốc sau tới khi mốc trước còn đang nháy (một đơn lớn vượt hai mốc): bỏ
+	# hiệu ứng cũ, chạy luôn cái to hơn.
+	if _rank_tween != null and _rank_tween.is_valid():
+		_rank_tween.kill()
+	_celebrating = true
+	_rainbow = false
+
+	_lbl_rank.visible = true
+	_lbl_rank_target.visible = false
+	_lbl_rank.text = rank
+	_lbl_rank.add_theme_color_override("font_color", color)
+	_lbl_rank.pivot_offset = _lbl_rank.size * 0.5
+
+	var peak := 1.4 + 0.3 * float(level)
+	var blinks := level + 1
+	# Mỗi hạng một file tiếng riêng: assets/sfx/game/rank_<chữ>.mp3. Ghép tên
+	# khoá từ chữ cái hạng chứ không viết năm nhánh — thêm hạng mới chỉ cần
+	# thả thêm một file đúng tên. Không đổi cao độ: đây là giọng người, vặn
+	# pitch lên là méo tiếng. Thiếu file thì hệ âm thanh im lặng bỏ qua.
+	AmThanh.play_sfx("rank_" + rank.to_lower())
+
+	_rank_tween = create_tween()
+	_rank_tween.tween_property(_lbl_rank, "scale", Vector2(peak, peak), 0.14) \
+			.set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+	for i in blinks:
+		_rank_tween.tween_property(_lbl_rank, "modulate", Color(3, 3, 3), 0.07)
+		_rank_tween.tween_property(_lbl_rank, "modulate", Color.WHITE, 0.09)
+	_rank_tween.tween_property(_lbl_rank, "scale", Vector2.ONE, 0.25) \
+			.set_trans(Tween.TRANS_ELASTIC).set_ease(Tween.EASE_OUT)
+	_rank_tween.tween_interval(0.5)
+	_rank_tween.tween_callback(func() -> void:
+		_celebrating = false
+		_draw_rank())
+
+	# Chớp cả màn hình — chạy SONG SONG với chữ, trên một tween riêng.
+	if is_top:
+		var rgb := create_tween()
+		for i in 14:
+			var hue := Color.from_hsv(float(i % 7) / 7.0, 0.9, 1.0)
+			rgb.tween_property(_flash, "color", Color(hue.r, hue.g, hue.b, 0.30), 0.06)
+			rgb.tween_property(_flash, "color", Color(hue.r, hue.g, hue.b, 0.0), 0.08)
+	elif level >= 2:
+		var strength := 0.10 + 0.08 * float(level - 2)
+		_flash.color = Color(color.r, color.g, color.b, 0.0)
+		var fl := create_tween()
+		fl.tween_property(_flash, "color:a", strength, 0.08)
+		fl.tween_property(_flash, "color:a", 0.0, 0.35)
+
+
+## Cập nhật dòng đếm khách bỏ về. limit <= 0 nghĩa là màn không giới hạn —
+## ẩn hẳn dòng này, không hiện "0 / 0".
+##
+## Vì sao phải có trên HUD: vượt giới hạn là THUA NGAY. Một luật thua mà
+## người chơi không nhìn thấy đang tới gần thì khi nó xảy ra họ chỉ thấy bị
+## đá khỏi màn vô cớ. Chữ đổi sang màu báo động từ lúc còn đúng 2 người.
+func set_lost(count: int, limit: int) -> void:
+	if _lbl_lost == null:
+		return
+	_lbl_lost.visible = limit > 0
+	if limit <= 0:
+		return
+	_lbl_lost.text = "Khách bỏ về  %d / %d" % [count, limit]
+	_lbl_lost.add_theme_color_override("font_color",
+		COLOR_RUSH if count >= limit - 2 else COLOR_DIM)
+
+
 ## Nối vào hệ khách để ví tự cập nhật.
-func listen_to_orders(ql: Node) -> void:
-	if ql != null and ql.has_signal("money_changed"):
-		ql.money_changed.connect(_on_money_changed)
+func listen_to_orders(orders: Node) -> void:
+	if orders != null and orders.has_signal("money_changed"):
+		orders.money_changed.connect(_on_money_changed)
 
 
-func _on_money_changed(total: int, _them: int, _cho: Vector3) -> void:
+func _on_money_changed(total: int, _added: int, _at: Vector3) -> void:
 	money = total
 	_draw_money()
+	_update_rank(true)
 	# Nảy nhẹ con số: phần thưởng phải có phản hồi, nhưng ở góc màn hình thì
 	# một cú nảy 1,15 lần trong 0,18 giây là đủ thấy mà không kéo mắt khỏi bếp.
 	var tween := create_tween().set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
@@ -210,8 +426,14 @@ func _draw_clock() -> void:
 
 
 func _draw_money() -> void:
-	if _lbl_money != null:
-		_lbl_money.text = str(money)
+	if _lbl_money == null:
+		return
+	_lbl_money.text = str(money)
+	# Âm thì tô đỏ. Tiền âm là trạng thái BÌNH THƯỜNG mấy giây đầu màn (đã mua
+	# nguyên liệu, chưa giao được món nào), nên không cảnh báo gì thêm — chỉ đổi
+	# màu để người chơi biết mình đang âm mà không phải đọc dấu trừ bé tí.
+	_lbl_money.add_theme_color_override("font_color",
+		COLOR_RUSH if money < 0 else COLOR_TEXT)
 
 
 func _bg_frame() -> StyleBoxFlat:

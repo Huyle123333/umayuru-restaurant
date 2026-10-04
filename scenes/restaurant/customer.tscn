@@ -11,7 +11,7 @@ height = 3.0
 [node name="Customer" type="CharacterBody3D"]
 collision_layer = 8
 script = ExtResource("1_customer")
-patience_ratio = 2.0
+body_scale = 2.0
 
 [node name="Col" type="CollisionShape3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.5, 0)

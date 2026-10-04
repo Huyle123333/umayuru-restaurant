@@ -65,6 +65,12 @@ var _btn_view: Button = null
 var _btn_time_skip: Button = null
 ## Nút cho phép bấm kĩ năng chủ động mà không cần đủ điều kiện.
 var _btn_skill: Button = null
+var _btn_free_ingredients: Button
+## Nút XEM LẠI đoạn ra mắt nhân vật ẩn. Bấm một lần, KHÔNG phải công tắc —
+## nên không có dấu tích và không có mặt trong _redraw().
+var _btn_replay_intro: Button
+## Công tắc ép màn Ending chiếu kết ẩn (để kiểm thử, không lưu vào save).
+var _btn_secret_ending: Button
 
 ## Nhãn GỐC của từng nút, tức phần chữ KHÔNG kể dấu tích: Button -> String.
 ##
@@ -103,11 +109,20 @@ func _ready() -> void:
 		"BtnTuaGio", "Tua giờ trong màn (phím 0)", _on_time_skip_pressed)
 	_btn_skill = _make_button(
 		"BtnKiNang", "Kĩ năng không cần điều kiện", _on_skill_pressed)
+	_btn_free_ingredients = _make_button(
+		"BtnNguyenLieu", "Nguyên liệu miễn phí", _on_free_ingredients_pressed)
 	for id in GameData.HIDDEN_CHARACTERS:
 		var code_ := String(id)
 		var label_ := String(GameData.CHARACTERS.get(code_, {}).get("label", code_))
 		_character_buttons[code_] = _make_button(
 			"BtnNV_" + code_, "Mở khoá %s" % label_, _on_character_pressed.bind(code_))
+	_btn_replay_intro = _make_button(
+		"BtnReplayIntro", "Xem lại đoạn ra mắt nhân vật ẩn", _on_replay_intro_pressed)
+	# Không đi qua _redraw() nên phải tự gán chữ, nếu không nút giữ nguyên chữ
+	# của nút gốc mà _make_button() nhân bản ra.
+	_btn_replay_intro.text = String(_base_labels[_btn_replay_intro])
+	_btn_secret_ending = _make_button(
+		"BtnSecretEnding", "Ending: luôn chiếu kết ẩn", _on_secret_ending_pressed)
 	# Gõ mật khẩu xong bấm Enter cũng vào được, không bắt phải rê chuột.
 	_input.text_submitted.connect(_on_text_submitted)
 
@@ -221,6 +236,46 @@ func _on_skill_pressed() -> void:
 	_redraw()
 
 
+## Bật/tắt GIÁ VỐN NGUYÊN LIỆU.
+##
+## Bật cheat = nguyên liệu miễn phí, tức TẮT cơ chế. Đặt tên theo hướng "cheat
+## cho dễ" giống hai nút trên, không đặt "bật giá nguyên liệu" — mọi nút trong
+## bảng này bật lên là dễ đi, đọc một lượt không phải nhớ nút nào ngược chiều.
+##
+## Có tác dụng từ LẦN VÀO MÀN SAU: màn chơi đọc cờ này một lần lúc dựng hệ
+## khách. Đổi giữa màn thì cái ví đang chạy dở sẽ không khớp với luật mới, mà
+## một màn nửa có giá nửa miễn phí thì số liệu đo được không nói lên gì.
+func _on_free_ingredients_pressed() -> void:
+	GameData.set_cheat_free_ingredients(not GameData.cheat_free_ingredients)
+	_redraw()
+
+
+## Đặt lại "đã xem" cho cả ba nhân vật ẩn rồi báo ngay trên chính cái nút.
+##
+## Báo bằng cách đổi chữ nút trong 1,5 giây chứ không thêm dấu tích: dấu tích
+## trên bảng này nghĩa là "đang bật", mà nút này không bật cái gì cả — gắn
+## dấu thì người đọc tưởng phải bấm lần nữa để tắt.
+func _on_replay_intro_pressed() -> void:
+	GameData.reset_intro_seen()
+	var base := String(_base_labels.get(_btn_replay_intro, ""))
+	_btn_replay_intro.text = "Đã đặt lại — chọn nhân vật ẩn để xem"
+	_btn_replay_intro.disabled = true
+	await get_tree().create_timer(1.5).timeout
+	if is_instance_valid(_btn_replay_intro):
+		_btn_replay_intro.text = base
+		_btn_replay_intro.disabled = false
+
+
+## Bật: nút Ending luôn vào kết ẩn. Tắt: quay về luật thật (ba chữ S).
+##
+## Là CÔNG TẮC có dấu tích chứ không phải nút bấm một lần như nút xem lại
+## đoạn ra mắt: cần xem được cả hai kết qua lại nhiều lần, và dấu tích cho
+## biết lần bấm Ending sắp tới sẽ ra kết nào.
+func _on_secret_ending_pressed() -> void:
+	GameData.cheat_force_secret_ending = not GameData.cheat_force_secret_ending
+	_redraw()
+
+
 func _on_unlock_pressed() -> void:
 	# Đảo trạng thái: bấm lần nữa là tắt cheat đi.
 	GameData.set_unlock_all(not GameData.unlock_all)
@@ -237,6 +292,8 @@ func _redraw() -> void:
 	_set_tick(_btn_view, GameData.third_person_unlocked)
 	_set_tick(_btn_time_skip, GameData.cheat_time_skip)
 	_set_tick(_btn_skill, GameData.infinite_skill)
+	_set_tick(_btn_free_ingredients, GameData.cheat_free_ingredients)
+	_set_tick(_btn_secret_ending, GameData.cheat_force_secret_ending)
 	for id in _character_buttons:
 		var code_ := String(id)
 		_set_tick(_character_buttons[code_] as Button, GameData.is_character_unlocked(code_))

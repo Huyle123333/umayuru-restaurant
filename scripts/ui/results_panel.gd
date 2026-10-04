@@ -24,6 +24,7 @@ const COLOR_GRADE := {
 	"A": Color("e8823f"),
 	"B": Color("e27ba0"),
 	"C": Color("4f9d5d"),
+	"D": Color("5b8fb0"),
 	"": Color("9a8f84"),
 }
 
@@ -44,6 +45,12 @@ func _ready() -> void:
 ##   money        — doanh thu lượt này
 ##   xong, hoan_hao, bo_di — thống kê
 ##   ep_hang     — ép cứng một hạng (màn hướng dẫn luôn là "S"). Rỗng = tự xếp.
+## Lý do THUA ÉP (ví dụ quá nhiều khách bỏ về). Khác rỗng thì lượt này trượt
+## bất kể doanh thu, và câu này thay cho dòng "cần thêm N nữa". Gán TRƯỚC khi
+## gọi show_results().
+var fail_note := ""
+
+
 func show_results(money: int, served: int, perfect: int, left_angry: int,
 		ep_hang: String = "") -> void:
 	var level_id := ""
@@ -53,6 +60,12 @@ func show_results(money: int, served: int, perfect: int, left_angry: int,
 	var row := ep_hang
 	if row.is_empty():
 		row = GameData.rank_for(level_id, money) if not level_id.is_empty() else ""
+
+	# Thua ép thắng mọi mốc điểm: đủ tiền hạng S mà để khách bỏ về quá giới
+	# hạn thì vẫn là trượt. Xoá hạng ở ĐÂY, trước khi tính `place`, để mọi thứ
+	# phía dưới (không đánh dấu hoàn thành, chữ CHƯA ĐẠT) tự đúng theo.
+	if not fail_note.is_empty():
+		row = ""
 
 	var old_record := 0
 	var place := not row.is_empty()
@@ -131,9 +144,9 @@ func _build_ui(money: int, served: int, perfect: int, left_angry: int,
 	# hình đúng nửa bề rộng và nửa chiều cao của nó.
 	#
 	# GROW_DIRECTION_BOTH bắt nó nở đều về HAI phía quanh điểm neo, nên tâm
-	# bảng trùng tâm màn hình dù nội build dài ngắn thế nào. Đây cũng là lý do
+	# bảng trùng tâm màn hình dù nội dung dài ngắn thế nào. Đây cũng là lý do
 	# không gõ cứng offset âm bằng nửa kích thước: chiều cao bảng thay đổi theo
-	# nội build (có thêm dòng "cần thêm N nữa" khi chưa đạt), gõ cứng là lệch.
+	# nội dung (có thêm dòng "cần thêm N nữa" khi chưa đạt), gõ cứng là lệch.
 	_box.grow_horizontal = Control.GROW_DIRECTION_BOTH
 	_box.grow_vertical = Control.GROW_DIRECTION_BOTH
 	if ResourceLoader.exists(THEME):
@@ -189,7 +202,11 @@ func _build_ui(money: int, served: int, perfect: int, left_angry: int,
 	money_row.add_child(amount)
 
 	var record := Label.new()
-	if money > old_record:
+	# Chỉ khoe kỷ lục khi lượt này ĐẠT: kỷ lục chỉ được lưu trong
+	# complete_level(), mà lượt trượt thì không gọi hàm đó. Không có vế
+	# `place` thì một lượt thua vì khách bỏ về vẫn hiện "KỶ LỤC MỚI!" cho một
+	# con số không hề được lưu.
+	if money > old_record and place:
 		record.text = "KỶ LỤC MỚI!  (cũ: %d)" % old_record
 		record.add_theme_color_override("font_color", COLOR_GRADE["A"])
 	else:
@@ -203,7 +220,7 @@ func _build_ui(money: int, served: int, perfect: int, left_angry: int,
 
 	# --- thống kê ---
 	col.add_child(_row("Đơn đã phục vụ", str(served)))
-	# Chỉ hiện SỐ, không kèm "+35%": tỉ lệ thưởng nằm ở quan_ly_khach và có thể
+	# Chỉ hiện SỐ, không kèm "+35%": tỉ lệ thưởng nằm ở customer_manager và có thể
 	# đổi, gõ lại ở đây là dựng thêm một nguồn sự thật thứ hai để sau này lệch.
 	col.add_child(_row("Trong đó hoàn hảo", str(perfect)))
 	col.add_child(_row("Khách bỏ đi", str(left_angry)))
@@ -212,11 +229,13 @@ func _build_ui(money: int, served: int, perfect: int, left_angry: int,
 	# thiếu gì thì người chơi không biết lần sau phải cố thêm bao nhiêu.
 	if not place and get_node_or_null("/root/GameData") != null:
 		var mark: Dictionary = GameData.rank_thresholds_for(String(GameData.current_level))
-		var missing := int(mark.get("C", 0)) - money
+		var missing := int(mark.get(GameData.MIN_RANK, 0)) - money
 		var note := Label.new()
-		note.text = "Cần thêm %d nữa để đạt hạng C." % maxi(missing, 0)
+		note.text = "Cần thêm %d nữa để đạt hạng %s." % [maxi(missing, 0), GameData.MIN_RANK]
+		if not fail_note.is_empty():
+			note.text = fail_note
 		note.add_theme_font_size_override("font_size", 17)
-		note.add_theme_color_override("font_color", COLOR_GRADE["C"])
+		note.add_theme_color_override("font_color", COLOR_GRADE[GameData.MIN_RANK])
 		note.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 		col.add_child(note)
 
@@ -236,10 +255,26 @@ func _build_ui(money: int, served: int, perfect: int, left_angry: int,
 	ticket.pressed.connect(_go_level_select)
 	button_row.add_child(ticket)
 
-	again.grab_focus()
+	# Vừa QUA màn cuối cùng trước màn kết (Ngày 3): thêm nút sang thẳng Ending
+	# và đặt focus vào nó. Hỏi GameData "màn kết cần màn nào" chứ không so cứng
+	# với "d3_sang" — đổi điều kiện mở màn kết ở LEVELS là nút này tự theo.
+	# Nút y hệt nhau cho cả hai kết: không lộ kết ẩn.
+	var ending_needs := ""
+	var here := ""
+	if get_node_or_null("/root/GameData") != null:
+		ending_needs = String(GameData.LEVELS.get(GameData.ENDING_LEVEL, {}).get("needs", ""))
+		here = String(GameData.current_level)
+	if place and not here.is_empty() and here == ending_needs:
+		var ending := Button.new()
+		ending.text = "Ending"
+		ending.pressed.connect(_go_ending)
+		button_row.add_child(ending)
+		ending.grab_focus()
+	else:
+		again.grab_focus()
 
 
-func _row(label: String, gia_tri: String) -> HBoxContainer:
+func _row(label: String, value: String) -> HBoxContainer:
 	var h := HBoxContainer.new()
 	var a := Label.new()
 	a.text = label
@@ -249,7 +284,7 @@ func _row(label: String, gia_tri: String) -> HBoxContainer:
 	h.add_child(a)
 
 	var b := Label.new()
-	b.text = gia_tri
+	b.text = value
 	b.add_theme_font_size_override("font_size", 19)
 	b.add_theme_color_override("font_color", COLOR_TEXT)
 	h.add_child(b)
@@ -273,6 +308,11 @@ func _divider() -> Control:
 func _replay() -> void:
 	_leave_pause()
 	get_tree().reload_current_scene()
+
+
+func _go_ending() -> void:
+	_leave_pause()
+	get_tree().change_scene_to_file(GameData.start_story_level(GameData.ENDING_LEVEL))
 
 
 func _go_level_select() -> void:

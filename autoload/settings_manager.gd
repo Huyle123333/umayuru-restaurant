@@ -55,6 +55,11 @@ var _brightness_rect: ColorRect
 func _ready() -> void:
 	process_mode = Node.PROCESS_MODE_ALWAYS
 	_build_brightness_layer()
+	# Chụp phím MẶC ĐỊNH trước khi load_settings() ghi đè bằng phím đã lưu.
+	# Đảo hai dòng này là "mặc định" thành chính bộ phím người chơi đã đổi,
+	# và nút Đặt lại mặc định không còn đặt lại được gì.
+	_register_extra_actions()
+	_remember_default_keys()
 	load_settings()
 
 
@@ -189,8 +194,154 @@ func reset_to_default() -> void:
 	save_settings()
 
 
+# ══════════════════════════════════════════════ GÁN PHÍM (2/10/2026)
+#
+# Người chơi tự đổi phím cho các hành động trong REBINDABLE. Phím lưu trong
+# settings.cfg (mục "keys") — cùng file với âm lượng, vì đây là thói quen của
+# NGƯỜI NGỒI MÁY chứ không phải tiến trình chơi: xoá save không được làm mất
+# bộ phím đã quen tay.
+#
+# Lưu và so bằng physical_keycode (VỊ TRÍ phím trên bàn phím), giống hệt cách
+# project.godot đang khai: người dùng bàn phím AZERTY vẫn có cụm WASD nằm
+# đúng chỗ tay trái.
+
+## Các hành động cho phép đổi phím, theo thứ tự hiện trên bảng. "label" là
+## khoá dịch trong locale/translations.csv.
+##
+## KHÔNG có "pause" (ESC) và "toggle_view" (P): ESC còn là phím đóng mọi
+## bảng, đổi nó đi là có thể tự nhốt mình trong một cái bảng; P là phím cheat.
+const REBINDABLE := [
+	{"action": "move_up", "label": "KEY_MOVE_UP"},
+	{"action": "move_down", "label": "KEY_MOVE_DOWN"},
+	{"action": "move_left", "label": "KEY_MOVE_LEFT"},
+	{"action": "move_right", "label": "KEY_MOVE_RIGHT"},
+	{"action": "interact", "label": "KEY_INTERACT"},
+	{"action": "assemble", "label": "KEY_ASSEMBLE"},
+	{"action": "drop_item", "label": "KEY_DROP"},
+	{"action": "dash", "label": "KEY_DASH"},
+	{"action": "skill", "label": "KEY_SKILL"},
+	{"action": "cycle_target", "label": "KEY_CYCLE_TARGET"},
+	{"action": "cancel_menu", "label": "KEY_CANCEL_MENU"},
+	{"action": "toggle_orders", "label": "KEY_TOGGLE_ORDERS"},
+	{"action": "toggle_menu", "label": "KEY_TOGGLE_MENU"},
+]
+
+## Hành động KHAI BẰNG CODE thay vì trong project.godot: action -> phím mặc định.
+##
+## Vì sao không khai trong project.godot như mười một hành động kia: mục input
+## của file đó là các đối tượng InputEventKey tuần tự hoá, chỉ editor ghi cho
+## đúng được — sửa tay sai một trường là cả bảng phím hỏng. Hai hành động này
+## chỉ là phím tắt HUD, không node nào trong scene tham chiếu tới, nên đăng ký
+## lúc khởi động là đủ và an toàn. Autoload này chạy trước mọi scene, nên tới
+## lúc HUD hỏi thì hành động đã tồn tại.
+const EXTRA_ACTIONS := {
+	"toggle_orders": KEY_1,
+	"toggle_menu": KEY_2,
+}
+
+func _register_extra_actions() -> void:
+	for action in EXTRA_ACTIONS:
+		if InputMap.has_action(action):
+			continue
+		InputMap.add_action(action)
+		var ev := InputEventKey.new()
+		ev.physical_keycode = EXTRA_ACTIONS[action]
+		InputMap.action_add_event(action, ev)
+
+## Phím KHÔNG được gán vì game đang bắt cứng ở chỗ khác: ESC (tạm dừng / đóng
+## bảng), F1 (hướng dẫn), 0 và P (cheat).
+##
+## Phím 1 đã ra khỏi danh sách này: bảng đơn hàng giờ đọc hành động
+## "toggle_orders" chứ không bắt cứng KEY_1, nên nó đổi được như mọi phím khác.
+const RESERVED_KEYS := [KEY_ESCAPE, KEY_F1, KEY_0, KEY_P]
+
+## Phím mặc định: action -> physical_keycode. Chụp lúc khởi động.
+var _default_keys: Dictionary = {}
+
+
+func _remember_default_keys() -> void:
+	for entry in REBINDABLE:
+		var action := String(entry["action"])
+		_default_keys[action] = key_of(action)
+
+
+## Phím CHÍNH của một hành động (phím bàn phím đầu tiên trong InputMap).
+## 0 = hành động không có phím nào.
+func key_of(action: String) -> int:
+	if not InputMap.has_action(action):
+		return 0
+	for ev in InputMap.action_get_events(action):
+		if ev is InputEventKey:
+			return int((ev as InputEventKey).physical_keycode)
+	return 0
+
+
+## Tên phím để hiện trên nút, ví dụ "E", "Shift", "Space".
+func key_name(action: String) -> String:
+	var code_ := key_of(action)
+	return OS.get_keycode_string(code_) if code_ != 0 else "—"
+
+
+func is_reserved_key(code_: int) -> bool:
+	return RESERVED_KEYS.has(code_)
+
+
+## Gán phím mới cho một hành động. Trả về false nếu phím bị cấm.
+##
+## Phím đó đang thuộc hành động KHÁC thì hai hành động ĐỔI CHỖ phím cho nhau.
+## Đổi chỗ chứ không từ chối và cũng không để trùng: từ chối thì muốn hoán
+## hai phím phải đi qua một phím thứ ba; để trùng thì một lần bấm làm hai
+## việc (vừa nhặt đồ vừa vứt đồ) — lỗi mà người chơi không hiểu tại sao.
+func set_key(action: String, code_: int) -> bool:
+	if is_reserved_key(code_) or code_ == 0:
+		return false
+	var old := key_of(action)
+	if old == code_:
+		return true
+	for entry in REBINDABLE:
+		var other := String(entry["action"])
+		if other != action and key_of(other) == code_:
+			_write_key(other, old)
+	_write_key(action, code_)
+	settings_changed.emit()
+	return true
+
+
+func reset_keys() -> void:
+	for action in _default_keys:
+		_write_key(String(action), int(_default_keys[action]))
+	settings_changed.emit()
+	save_settings()
+
+
+## Thay phím CHÍNH của hành động, giữ nguyên các phím phụ (mũi tên của bốn
+## hướng đi). Xoá hết rồi thêm lại theo thứ tự "phím mới trước" để key_of()
+## — vốn lấy phím đầu tiên — luôn trả về đúng phím vừa gán.
+func _write_key(action: String, code_: int) -> void:
+	if not InputMap.has_action(action) or code_ == 0:
+		return
+	var keep: Array[InputEvent] = []
+	var skipped_primary := false
+	for ev in InputMap.action_get_events(action):
+		if ev is InputEventKey and not skipped_primary:
+			skipped_primary = true
+			continue
+		keep.append(ev)
+	InputMap.action_erase_events(action)
+	var fresh := InputEventKey.new()
+	fresh.physical_keycode = code_ as Key
+	InputMap.action_add_event(action, fresh)
+	for ev in keep:
+		# Phím phụ trùng phím mới thì bỏ, khỏi khai một phím hai lần.
+		if ev is InputEventKey and int((ev as InputEventKey).physical_keycode) == code_:
+			continue
+		InputMap.action_add_event(action, ev)
+
+
 func save_settings() -> void:
 	var cfg := ConfigFile.new()
+	for entry in REBINDABLE:
+		cfg.set_value("keys", String(entry["action"]), key_of(String(entry["action"])))
 	for bus_name in BUSES:
 		cfg.set_value("audio", bus_name, volumes[bus_name])
 	cfg.set_value("video", "brightness", brightness)
@@ -215,6 +366,15 @@ func load_settings() -> void:
 	# Khoá cũ "ngon_ngu" vẫn đọc được để không mất lựa chọn ngôn ngữ đã lưu.
 	language = String(cfg.get_value("locale", "language",
 		cfg.get_value("locale", "ngon_ngu", DEFAULT_LANGUAGE)))
+	# Phím đã lưu. Chỉ đọc những hành động CÒN trong REBINDABLE và bỏ qua phím
+	# bị cấm: file cấu hình là thứ người chơi sửa tay được, và bản game sau có
+	# thể đổi danh sách.
+	for entry in REBINDABLE:
+		var action := String(entry["action"])
+		if cfg.has_section_key("keys", action):
+			var code_ := int(cfg.get_value("keys", action, 0))
+			if code_ != 0 and not is_reserved_key(code_):
+				_write_key(action, code_)
 	_apply_all()
 
 

@@ -15,13 +15,13 @@ extends CharacterBody3D
 ## Đi tới nơi rồi. `viec` là chuỗi do người ra lệnh gửi kèm lúc gọi go_to(),
 ## trả lại nguyên vẹn để bên đó biết đây là chuyến nào — nhờ vậy máy trạng
 ## thái NẰM Ở quản lý, còn ở đây chỉ có "đang đi" và "đứng yên".
-signal arrived(customer: Node, viec: String)
+signal arrived(customer: Node, task: String)
 ## Ăn xong.
 signal ate(customer: Node)
 
 ## Cỡ người khách. 1,0 = đúng cỡ model gốc (cao 1,52 đơn vị).
 ##
-## ĐÂY LÀ Ô DUY NHẤT CẦN CHỈNH. Mở scenes/nha_hang/customer.tscn, chọn node gốc
+## ĐÂY LÀ Ô DUY NHẤT CẦN CHỈNH. Mở scenes/restaurant/customer.tscn, chọn node gốc
 ## "Khach", sửa số này trong Inspector — model, hộp va chạm, bán kính agent và
 ## độ cao bong bóng đều đổi theo cùng lúc.
 ##
@@ -36,9 +36,14 @@ signal ate(customer: Node)
 ##
 ## Nhân vật người chơi (model chibi) cao khoảng 1,94 sau khi phóng 1,6; để
 ## khách cao ngang thì tỉ lệ khoảng 1,3.
-@export var patience_ratio: float = 1.3:
+##
+## (1/10/2026) Đổi tên từ `patience_ratio`. Tên cũ là lỗi của đợt đổi tên sang
+## tiếng Anh: "tỉ lệ" bị dịch theo nghĩa của order.patience_ratio() (tỉ lệ
+## kiên nhẫn còn lại), trong khi số này là CỠ THÂN. Đọc tên cũ thì tưởng
+## khách to ra là khách kiên nhẫn hơn.
+@export var body_scale: float = 1.3:
 	set(v):
-		patience_ratio = maxf(0.1, v)
+		body_scale = maxf(0.1, v)
 		_apply_scale()
 
 ## Cỡ gốc, dùng làm mốc nhân. Phải trùng số trong customer.tscn.
@@ -53,7 +58,7 @@ const TURN_SPEED := 8.0
 const GRAVITY := 24.0
 
 @onready var _agent: NavigationAgent3D = $Agent
-@onready var _hoat_hinh: AnimationPlayer = $Model/AnimationPlayer
+@onready var _anim_player: AnimationPlayer = $Model/AnimationPlayer
 @onready var _bubble: Node3D = $Bubble
 
 var _task := ""
@@ -82,22 +87,22 @@ func _apply_scale() -> void:
 		return
 	var model := get_node_or_null("Model") as Node3D
 	if model != null:
-		model.scale = Vector3.ONE * patience_ratio
+		model.scale = Vector3.ONE * body_scale
 
 	var col := get_node_or_null("Col") as CollisionShape3D
 	if col != null and col.shape is CapsuleShape3D:
 		var shape := col.shape as CapsuleShape3D
-		shape.radius = BASE_RADIUS * patience_ratio
-		shape.height = BASE_HEIGHT * patience_ratio
+		shape.radius = BASE_RADIUS * body_scale
+		shape.height = BASE_HEIGHT * body_scale
 		# Capsule lấy gốc ở TÂM, nên phải nâng lên nửa chiều cao thì chân mới
 		# chạm sàn. Quên bước này là nhân vật lún nửa người xuống đất.
-		col.position.y = BASE_HEIGHT * 0.5 * patience_ratio
+		col.position.y = BASE_HEIGHT * 0.5 * body_scale
 
 	if _agent != null:
-		_agent.radius = BASE_AGENT_RADIUS * patience_ratio
-		_agent.height = BASE_HEIGHT * patience_ratio
+		_agent.radius = BASE_AGENT_RADIUS * body_scale
+		_agent.height = BASE_HEIGHT * body_scale
 	if _bubble != null:
-		_bubble.position.y = BASE_BUBBLE_HEIGHT * patience_ratio
+		_bubble.position.y = BASE_BUBBLE_HEIGHT * body_scale
 
 
 ## Ra lệnh đi tới một vị trí.
@@ -107,11 +112,11 @@ func _apply_scale() -> void:
 ## x=31,5 trong khi tường ở x=32) nên rơi ra NGOÀI vùng đi được sau khi navmesh
 ## co vào theo bán kính agent. Giao thẳng điểm ngoài mesh thì agent tìm đường
 ## tới chỗ gần nhất rồi loay hoay không bao giờ báo "đã tới".
-func go_to(target_yaw: Vector3, viec: String, huong_cuoi: Vector3 = Vector3.ZERO) -> void:
-	_task = viec
-	_face_dir = huong_cuoi
-	target_yaw = snap_to_navmesh(get_world_3d().navigation_map, target_yaw)
-	_agent.target_position = target_yaw
+func go_to(dest: Vector3, task: String, final_dir: Vector3 = Vector3.ZERO) -> void:
+	_task = task
+	_face_dir = final_dir
+	dest = snap_to_navmesh(get_world_3d().navigation_map, dest)
+	_agent.target_position = dest
 	_moving = true
 	_set_anim("walk")
 
@@ -127,12 +132,12 @@ func go_to(target_yaw: Vector3, viec: String, huong_cuoi: Vector3 = Vector3.ZERO
 ##     vì thế nhận đích là gốc toạ độ, đứng chết ngay cửa, và hai người sinh
 ##     sau chồng lên rồi kẹt cả đám. Nên phải coi (0,0,0) là "hỏng" và giữ
 ##     nguyên điểm gốc — trừ khi bản thân điểm cần nắn vốn đã là gốc toạ độ.
-static func snap_to_navmesh(nav_map: RID, diem: Vector3) -> Vector3:
+static func snap_to_navmesh(nav_map: RID, point: Vector3) -> Vector3:
 	if not nav_map.is_valid() or NavigationServer3D.map_get_iteration_id(nav_map) == 0:
-		return diem
-	var gan := NavigationServer3D.map_get_closest_point(nav_map, diem)
-	if gan.is_equal_approx(Vector3.ZERO) and not diem.is_equal_approx(Vector3.ZERO):
-		return diem
+		return point
+	var nearest := NavigationServer3D.map_get_closest_point(nav_map, point)
+	if nearest.is_equal_approx(Vector3.ZERO) and not point.is_equal_approx(Vector3.ZERO):
+		return point
 	# Chỉ lấy phần NGANG, giữ nguyên độ cao gốc.
 	#
 	# Điểm nắn ra nằm trên mặt navmesh, mà mặt đó cao hơn sàn nửa mét (Recast
@@ -141,8 +146,8 @@ static func snap_to_navmesh(nav_map: RID, diem: Vector3) -> Vector3:
 	# tức là target_desired_distance 0,45 KHÔNG BAO GIỜ thoả và người khách
 	# đứng dí một chỗ dù vẫn có vận tốc. Sàn quán phẳng tuyệt đối nên bỏ trục
 	# đứng đi là đúng, không mất gì.
-	gan.y = diem.y
-	return gan
+	nearest.y = point.y
+	return nearest
 
 
 ## Khai báo mặt navmesh cao hơn chân nhân vật bao nhiêu.
@@ -155,23 +160,23 @@ func set_height_offset(icon_height: float) -> void:
 	_agent.path_height_offset = icon_height
 
 
-func stop_moving(huong_cuoi: Vector3 = Vector3.ZERO) -> void:
+func stop_moving(final_dir: Vector3 = Vector3.ZERO) -> void:
 	_moving = false
-	_face_dir = huong_cuoi
+	_face_dir = final_dir
 	velocity.x = 0.0
 	velocity.z = 0.0
 	_set_anim("idle")
 
 
-func eat(giay: float) -> void:
+func eat(seconds: float) -> void:
 	_moving = false
 	velocity = Vector3(0.0, velocity.y, 0.0)
 	_set_anim("eat")
-	await get_tree().create_timer(giay).timeout
-	if not is_inside_tree():
-		return
-	_set_anim("idle")
-	ate.emit(self)
+	# Đếm bằng bộ đếm RIÊNG trong _physics_process, không dùng
+	# get_tree().create_timer(): đồng hồ của cây scene không dừng theo node,
+	# nên khi kĩ năng dừng thời gian đóng băng người khách này (tắt xử lý của
+	# node) thì bữa ăn vẫn "xong" và tiền vẫn rơi ra giữa lúc mọi thứ đứng im.
+	_eat_left = maxf(seconds, 0.01)
 
 
 func beg() -> void:
@@ -243,12 +248,12 @@ func _build_bubble() -> void:
 
 
 ## Hiện bong bóng với ảnh món. Gọi lúc khách vào hàng đợi.
-func show_order(anh: Texture2D) -> void:
+func show_order(icon: Texture2D) -> void:
 	if _bubble == null:
 		return
-	if _dish_icon != null and anh != null:
-		_dish_icon.texture = anh
-		var icon_height := maxi(anh.get_height(), 1)
+	if _dish_icon != null and icon != null:
+		_dish_icon.texture = icon
+		var icon_height := maxi(icon.get_height(), 1)
 		_dish_icon.pixel_size = DISH_ICON_HEIGHT / float(icon_height)
 	_last_col = -1
 	_draw_bar(1.0)
@@ -262,19 +267,19 @@ func hide_order() -> void:
 
 ## Cập nhật thanh chờ. `ti` là phần kiên nhẫn còn lại, 0…1.
 ##
-## Tham số tên `ti` chứ không phải `patience_ratio`: lớp này đã có @export `patience_ratio` (cỡ
+## Tham số tên `ti` chứ không phải `body_scale`: lớp này đã có @export `body_scale` (cỡ
 ## người khách), trùng tên thì tham số che mất biến thành viên — Godot cảnh
 ## báo, và kiểu nhầm đó rất khó thấy khi đọc lại.
-func set_patience_bar(ti: float) -> void:
+func set_patience_bar(ratio: float) -> void:
 	if _bubble == null or not _bubble.visible:
 		return
-	_draw_bar(ti)
+	_draw_bar(ratio)
 
 
-func _draw_bar(ti: float) -> void:
+func _draw_bar(ratio: float) -> void:
 	if _bar_sprite == null:
 		return
-	var filled_px := int(round(clampf(ti, 0.0, 1.0) * BAR_WIDTH))
+	var filled_px := int(round(clampf(ratio, 0.0, 1.0) * BAR_WIDTH))
 	if filled_px == _last_col:
 		return
 	_last_col = filled_px
@@ -282,9 +287,9 @@ func _draw_bar(ti: float) -> void:
 	# Ba bậc màu theo ngưỡng, khớp đúng ba bậc trên tấm vé ở HUD. Cùng một
 	# thông tin thì phải cùng một mã màu, dù vẽ ở hai chỗ khác nhau.
 	var color_ := COLOR_GREEN
-	if ti <= 0.2:
+	if ratio <= 0.2:
 		color_ = COLOR_RED
-	elif ti <= 0.5:
+	elif ratio <= 0.5:
 		color_ = COLOR_YELLOW
 
 	_bar_sprite.fill(BAR_BG)
@@ -293,9 +298,19 @@ func _draw_bar(ti: float) -> void:
 	_bar_tex.update(_bar_sprite)
 
 
+## Còn bao nhiêu giây thì ăn xong. 0 = không đang ăn.
+var _eat_left: float = 0.0
+
+
 func _physics_process(delta: float) -> void:
 	if Engine.is_editor_hint():
 		return
+	if _eat_left > 0.0:
+		_eat_left -= delta
+		if _eat_left <= 0.0:
+			_eat_left = 0.0
+			_set_anim("idle")
+			ate.emit(self)
 	# Giữ dính sàn. Sàn phẳng tuyệt đối nhưng vẫn cần trọng lực: nhân vật được
 	# sinh ra hơi cao hơn mặt sàn, không có trọng lực thì lơ lửng mãi.
 	if not is_on_floor():
@@ -345,7 +360,7 @@ func _turn_towards(dir_: Vector3, delta: float) -> void:
 func _set_anim(anim_name: String) -> void:
 	if _anim_now == anim_name:
 		return
-	if _hoat_hinh == null or not _hoat_hinh.has_animation(anim_name):
+	if _anim_player == null or not _anim_player.has_animation(anim_name):
 		return
 	_anim_now = anim_name
-	_hoat_hinh.play(anim_name)
+	_anim_player.play(anim_name)

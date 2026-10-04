@@ -65,6 +65,12 @@ const FILE_NAMES := {
 	"time_warning":  "warning_beep",   # còn 30 giây
 	"time_up":       "time_up_buzzer",
 	"results":       "results_screen",
+	# --- vượt mốc hạng giữa màn (HUD) — mỗi hạng một câu reo riêng ---
+	"rank_d":        "rank_d",
+	"rank_c":        "rank_c",
+	"rank_b":        "rank_b",
+	"rank_a":        "rank_a",
+	"rank_s":        "rank_s",
 	# --- kể chuyện ---
 	"type_tick":     "text_sound",     # tiếng gõ chữ trong hội thoại
 }
@@ -91,6 +97,12 @@ const TRACK_GROUPS := {
 	# Prologue dùng bài cố định: đoạn kể chuyện có nhịp riêng, bốc ngẫu nhiên
 	# thì mỗi lần chơi lại một không khí khác nhau.
 	"prologue": ["bgm2_ura"],
+	# Màn kết cũng một bài cố định. Phải KHAI nhóm riêng chứ không để màn kết
+	# "thừa hưởng" nhạc đang phát: đi thẳng từ Ngày 3 sang thì bài cao điểm
+	# (phát không lặp, dài đúng bằng đoạn cuối màn) đã hết từ lúc hết giờ, nên
+	# không còn gì để thừa hưởng — cả màn kết im lặng. Chọn bài "beach
+	# training" vì chuyến đi trong truyện là đi biển.
+	"ending": ["bgm1_beachtraining"],
 }
 
 ## Số kênh phát tiếng ngắn cùng lúc.
@@ -150,7 +162,11 @@ func _ready() -> void:
 ## khi phát tiếng tổng kết, nên dừng cả bể SFX thì cái tiếng quan trọng nhất
 ## của cả màn lại là cái duy nhất không kêu.
 func _process(_delta: float) -> void:
-	var was_paused := get_tree().paused
+	# Hai lý do để nhạc im, gộp vào MỘT phép tính: game tạm dừng, hoặc một đoạn
+	# kể chuyện đang yêu cầu im lặng (xem set_music_hushed). Gộp ở đây vì hàm
+	# này ghi stream_paused mỗi khung hình — đặt stream_paused ở chỗ khác thì
+	# khung hình sau nó ghi đè lại ngay.
+	var was_paused := get_tree().paused or _hushed
 	if _music.stream_paused != was_paused:
 		_music.stream_paused = was_paused
 
@@ -267,6 +283,19 @@ func play_random_music(group: String, keep_playing: bool = false,
 			tries += 1
 
 	play_music(picked, loop, true)
+
+
+## Cho nhạc nền IM tạm thời (true) rồi phát tiếp (false).
+##
+## Là TẠM DỪNG chứ không stop_music(): bài nhạc giữ nguyên vị trí, lúc thả ra
+## nó chạy tiếp đúng chỗ đang dở. Dùng cho cảnh ác mộng trong màn kết — tỉnh
+## dậy thì nhạc trở lại như chưa có gì, đúng cảm giác "chỉ là mơ". stop_music()
+## thì quên luôn bài đang phát, muốn bật lại phải biết tên bài, mà đoạn kể
+## chuyện không biết (nó thừa hưởng nhạc từ màn trước).
+var _hushed := false
+
+func set_music_hushed(value: bool) -> void:
+	_hushed = value
 
 
 ## Tắt hẳn nhạc nền.

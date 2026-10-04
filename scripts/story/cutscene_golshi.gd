@@ -34,7 +34,7 @@ const BG_RESTAURANT := "res://assets/ui/backgrounds/quan_an.png"
 const SCENES: Array[Dictionary] = [
 	{
 		"background": BG_RESTAURANT,
-		"line": "Mười giờ ba mươi. Quán còn ba mươi phút nữa mở cửa.",
+		"line": "Sáu giờ hai mươi tối. Quán còn ba mươi phút nữa mở cửa.",
 	},
 	{
 		"line": "Rồi cửa trước bật tung.",

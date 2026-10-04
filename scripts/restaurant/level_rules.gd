@@ -16,7 +16,7 @@ extends Node
 ## màn mới sẽ thêm một nhánh if vào giữa hệ thống lõi.
 ##
 ## Nên tách: dữ liệu màn nằm trong GameData.LEVELS[id]["luat"], còn node này
-## đọc dữ liệu đó rồi vặn các núm của quan_ly_khach theo đồng hồ. Thêm Ngày 4
+## đọc dữ liệu đó rồi vặn các núm của customer_manager theo đồng hồ. Thêm Ngày 4
 ## chỉ là thêm một Dictionary — không sửa một dòng code nào ở đây.
 ##
 ## Đây cũng đúng khuôn mẫu đã dùng cho màn hướng dẫn (tutorial_director.gd):
@@ -75,7 +75,7 @@ func setup(customers: Node, clock: Node, rules: Dictionary) -> bool:
 	_apply_static()
 	_stages = _rules.get("stages", [])
 	# Áp chặng đầu NGAY, không đợi khung hình sau: giữa lúc này và khung hình
-	# kế tiếp, quan_ly_khach có thể đã đặt hẹn sinh khách theo nhịp mặc định.
+	# kế tiếp, customer_manager có thể đã đặt hẹn sinh khách theo nhịp mặc định.
 	_go_to_stage(0)
 	return true
 
@@ -95,14 +95,16 @@ func _apply_static() -> void:
 		_customers.max_queue = int(_rules["max_queue"])
 	if _rules.has("first_wait"):
 		_customers.first_wait = float(_rules["first_wait"])
+	if _rules.has("price_factor"):
+		_customers.price_factor = float(_rules["price_factor"])
 	if _rules.has("menu"):
-		# Ép về Array[String]: ô @export bên quan_ly_khach khai kiểu chặt, mà
+		# Ép về Array[String]: ô @export bên customer_manager khai kiểu chặt, mà
 		# mảng đọc ra từ Dictionary là mảng trần (phần tử kiểu Variant). Gán
 		# thẳng thì Godot báo lỗi kiểu lúc chạy.
-		var td: Array[String] = []
+		var picked_menu: Array[String] = []
 		for m in _rules["menu"]:
-			td.append(String(m))
-		_customers.menu = td
+			picked_menu.append(String(m))
+		_customers.menu = picked_menu
 	if _rules.has("weights"):
 		_customers.weights = _rules["weights"]
 
@@ -158,5 +160,15 @@ func _go_to_stage(i: int) -> void:
 	var c: Dictionary = _stages[i]
 	if c.has("interval"):
 		_customers.spawn_interval = float(c["interval"])
+	# "interval_range": [min, max] — khách vào cách nhau một quãng NGẪU NHIÊN
+	# trong khoảng đó. Chặng không khai thì về 0, tức quay lại nhịp cố định
+	# "interval": không để khoảng của chặng trước rơi rớt sang chặng sau.
+	var range_: Array = c.get("interval_range", [])
+	_customers.spawn_interval_min = float(range_[0]) if range_.size() == 2 else 0.0
+	_customers.spawn_interval_max = float(range_[1]) if range_.size() == 2 else 0.0
+	# Tỉ lệ món dễ / vừa / khó của chặng này. Đổi theo chặng để món khó không
+	# rơi vào đơn đầu tiên của màn.
+	if c.has("tier_weights"):
+		_customers.tier_weights = c["tier_weights"]
 	if c.has("max_customers"):
 		_customers.max_customers = int(c["max_customers"])

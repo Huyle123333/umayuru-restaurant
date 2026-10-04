@@ -13,34 +13,37 @@ extends RefCounted
 ##    ở đây chúng chỉ là bốn dòng dữ liệu, và hệ thống nấu ăn chỉ việc đổi id.
 ##
 ## Mỗi mục gồm:
-##   ten   — chữ hiện trên giao diện
-##   anh   — ảnh 2D minh hoạ (bảng chọn, ghi chú, đơn hàng)
-##   model — file .gltf để sinh vật thể cầm trên tay
-##   anh    — id ảnh 2D, chỉ ghi khi KHÁC id vật phẩm (món dùng lại ảnh của
+##   name   — chữ hiện trên giao diện
+##   icon   — id ảnh 2D, chỉ ghi khi KHÁC id vật phẩm (món dùng lại ảnh của
 ##            nguyên liệu). Bỏ trống thì lấy đúng id.
-##   so_che — id sau khi THÁI ở thớt (rỗng = không thái được)
-##   nau    — id sau khi NẤU ở bếp (rỗng = không nấu lẻ được)
-##   hong   — id khi để quá lửa trên bếp (rỗng = không cháy)
-##   ti_le  — hệ số phóng to/thu nhỏ model, chỉ ghi khi KHÁC 1.0
-##   bay    — CÁCH XẾP CHỒNG trên mặt bàn chế tạo. Bỏ trống thì dùng số mặc
+##   model  — file .gltf sinh ra vật thể CẦM TRÊN TAY và bày trên bàn khách
+##   prep   — id sau khi THÁI ở thớt (rỗng = không thái được)
+##   cook   — id sau khi NẤU ở bếp (rỗng = không nấu lẻ được)
+##   burnt  — id khi để quá lửa trên bếp (rỗng = không cháy)
+##   scale  — hệ số phóng to/thu nhỏ model, chỉ ghi khi KHÁC 1.0
+##   layout — CÁCH XẾP CHỒNG trên mặt bàn chế tạo. Bỏ trống thì dùng số mặc
 ##            định, nên CHỈ khai khi món đó bày ra nhìn không ổn:
-##            {"day":    chỉ cho VẬT ĐẾ — mặt trong của nó cao bao nhiêu, tức
-##                       món đầu tiên nằm ở độ cao nào (mặc định 0.12),
-##             "cao":    món này DÀY bao nhiêu, tức món kế tiếp nhích lên bấy
-##                       nhiêu (mặc định 0.08),
-##             "ti_le":  thu nhỏ riêng khi nằm trên bàn (mặc định TI_LE_CHONG),
+##            {"thickness": chỉ cho VẬT ĐẾ — mặt trong của nó cao bao nhiêu,
+##                       tức món đầu tiên nằm ở độ cao nào (mặc định 0.12),
+##             "height": món này DÀY bao nhiêu, tức món kế tiếp nhích lên bấy
+##                       nhiêu (mặc định STACK_STEP),
+##             "scale":  thu nhỏ riêng khi nằm trên bàn (mặc định STACK_SCALE),
 ##             "y":      lệch thêm theo trục đứng, để chữa model có tâm không
 ##                       nằm ở đáy (mặc định 0.0),
-##             "thu_tu": VỊ TRÍ trong chồng — số nhỏ nằm DƯỚI (mặc định 50),
+##             "order":  VỊ TRÍ trong chồng — số nhỏ nằm DƯỚI (mặc định 50),
 ##             "model":  model KHÁC dùng riêng khi nằm trong chồng, ví dụ xà
-##                       lách nguyên cây đổi thành một lát,
-##             "model_tren": mảnh thứ hai, luôn đặt TRÊN CÙNG cả chồng — mới
+##                       lách nguyên cây đổi thành một lát, hay cây kem ốc quế
+##                       đổi thành một bát kem,
+##             "model_top": mảnh thứ hai, luôn đặt TRÊN CÙNG cả chồng — mới
 ##                       chỉ bánh mì dùng, để có nắp bánh}
-##   bat    — món BÀY TRONG BÁT. Ghi khoá này thì KHÔNG ghi "model": bộ dựng
+##   on_plate — món BÀY TRONG BÁT. Ghi khoá này thì KHÔNG ghi "model": bộ dựng
 ##            tự nạp cái bát rồi gắn phần thức ăn vào trong lòng nó.
 ##            {"model": tên gltf phần thức ăn,
-##             "y": độ cao đặt trong lòng bát (mặc định 0.12),
-##             "ti_le": thu nhỏ phần thức ăn, mặc định 1.0}
+##             "y": độ cao đặt trong lòng bát (mặc định BOWL_INNER_HEIGHT),
+##             "scale": thu nhỏ phần thức ăn, mặc định 1.0}
+##   model_inner — model thay thế khi vật đựng ĐANG CÓ THỨ BÊN TRONG (nồi có
+##            canh), dùng qua make_model(id, has_content = true)
+##   cost / price / seconds — giá vốn, giá bán, thời gian làm; xem cost() bên dưới
 ##
 ## Vì sao tách "so_che" và "nau" thành HAI khoá thay vì một khoá "bước kế
 ## tiếp": steak đi qua cả hai bước (thái rồi nấu) còn ham thì nấu thẳng. Một
@@ -53,43 +56,47 @@ const MODEL_FMT := "res://assets/gltf/%s.gltf"
 
 const ITEMS := {
 	# ---- nguyên liệu lấy từ thùng ----
-	"bun":        {"name": "Bánh mì",   "model": "food_ingredient_bun",
+	"bun":        {"cost": 1, "name": "Bánh mì",   "model": "food_ingredient_bun",
 		# Ổ bánh nguyên lúc cầm trên tay; TRÊN BÀN thì tách làm hai mảnh —
 		# đế nằm dưới cùng (nấc 10), nắp luôn đậy trên cùng cả chồng.
 		# Số đo: đế dày 0,200; nắp dày 0,307.
 		"layout": {"order": 10, "height": 0.20,
 			"model": "food_ingredient_bun_bottom",
 			"model_top": "food_ingredient_bun_top"}},
-	"lettuce":    {"name": "Xà lách",   "model": "food_ingredient_lettuce",
+	"lettuce":    {"cost": 2, "name": "Xà lách",   "model": "food_ingredient_lettuce",
 		# Cả cây xà lách cao 0,82 — kẹp nguyên cây vào bánh thì bánh cao gấp
 		# bốn lần bình thường. Trong chồng dùng MỘT LÁT, dày 0,088.
 		"layout": {"order": 20, "height": 0.088, "y": 0.034,
 			"model": "food_ingredient_lettuce_slice"}},
-	"carrot":     {"name": "Cà rốt",    "model": "food_ingredient_carrot",
+	"carrot":     {"cost": 4, "name": "Cà rốt",    "model": "food_ingredient_carrot",
 		"layout": {"height": 1.27, "y": 0.585}},
-	"potato":     {"name": "Khoai tây", "model": "food_ingredient_potato",
+	"potato":     {"cost": 4, "name": "Khoai tây", "model": "food_ingredient_potato",
 		"layout": {"height": 0.78, "y": 0.394}},
-	"tomato":     {"name": "Cà chua",   "model": "food_ingredient_tomato",
+	"tomato":     {"cost": 2, "name": "Cà chua",   "model": "food_ingredient_tomato",
 		"layout": {"height": 0.70}},
-	"onion":      {"name": "Hành tây",  "model": "food_ingredient_onion",
+	"onion":      {"cost": 4, "name": "Hành tây",  "model": "food_ingredient_onion",
 		"layout": {"height": 0.86, "y": 0.011}},
-	"mushroom":   {"name": "Nấm",       "model": "food_ingredient_mushroom",
+	"mushroom":   {"cost": 4, "name": "Nấm",       "model": "food_ingredient_mushroom",
 		"layout": {"height": 0.57, "y": 0.217}},
-	"dough":      {"name": "Bột",       "model": "food_ingredient_dough",
+	"dough":      {"cost": 4, "name": "Bột",       "model": "food_ingredient_dough",
 		"prep": "dough_pre"},
+	# "arrange" = topping bày VÒNG QUANH mặt đế thay vì chồng lên nhau. Xem
+	# _arrange_ring(). Đế rộng 1,75 (bán kính 0,87): vòng 0,42 giữ topping
+	# nằm gọn trong mép bánh. Thu 0,55 (chụp thử: 0,4 thì cây nấm chỉ còn một
+	# chấm trắng, không ai nhận ra là nấm).
 	"dough_pre":  {"name": "Bột đã cán", "model": "food_ingredient_dough_base",
-		"layout": {"thickness": 0.14}},
+		"layout": {"thickness": 0.14, "arrange": {"radius": 0.42, "scale": 0.55}}},
 
 	# ---- nguyên liệu trong tủ lạnh ----
 	# Ham KHÔNG qua thớt — nấu thẳng. Ảnh dùng lại ham_uncook.png (ham sống)
 	# vì bộ ảnh không có file "ham.png" riêng.
-	"ham":        {"name": "Ham", "model": "food_ingredient_ham",
+	"ham":        {"cost": 9, "name": "Ham", "model": "food_ingredient_ham",
 		"icon": "ham_uncook", "cook": "ham_cooked", "burnt": "ham_cooked_fail"},
 	"ham_cooked": {"name": "Ham đã nấu",  "model": "food_ingredient_ham_cooked",
 		"layout": {"height": 0.83, "y": 0.415}},
 	"ham_cooked_fail": {"name": "Ham cháy", "model": "food_ingredient_ham_trash"},
 
-	"steak":        {"name": "Steak", "model": "food_ingredient_steak",
+	"steak":        {"cost": 9, "name": "Steak", "model": "food_ingredient_steak",
 		"prep": "steak_uncook"},
 	"steak_uncook": {"name": "Steak đã thái", "layout": {"height": 0.20},
 		"model": "food_ingredient_burger_uncooked",
@@ -103,15 +110,15 @@ const ITEMS := {
 	"steak_cooked_fail": {"name": "Steak cháy",
 		"model": "food_ingredient_burger_trash"},
 
-	"cheese":      {"name": "Phô mai",  "model": "food_ingredient_cheese",
+	"cheese":      {"cost": 7, "name": "Phô mai",  "model": "food_ingredient_cheese",
 		# Khối phô mai cao 0,50 → một lát dày 0,105. Gốc toạ độ của lát nằm
 		# gần MẶT TRÊN (y từ −0,087 tới 0,018) nên phải nâng 0,087.
 		"layout": {"order": 40, "height": 0.105, "y": 0.087,
 			"model": "food_ingredient_cheese_slice"}},
-	"cookiestick": {"name": "Bánh quế", "model": "icecream_cookiestick",
+	"cookiestick": {"cost": 1, "name": "Bánh quế", "model": "icecream_cookiestick",
 		"layout": {"height": 0.52, "y": 0.258}},
 
-	"peperoni":     {"name": "Xúc xích", "model": "food_ingredient_pepperoni",
+	"peperoni":     {"cost": 9, "name": "Xúc xích", "model": "food_ingredient_pepperoni",
 		"prep": "peperoni_pre"},
 	"peperoni_pre": {"name": "Xúc xích đã thái", "layout": {"height": 0.40},
 		"model": "food_ingredient_pepperoni_chopped"},
@@ -160,7 +167,7 @@ const ITEMS := {
 	# lại — hầm lâu hơn một chút không hỏng gì cả, nên phạt ở đây là phạt một
 	# thứ trái với hiểu biết thông thường của người chơi.
 	#
-	# Cơ chế: bep_nau._process chỉ giữ mẻ lại đếm tiếp (để rồi cháy) khi
+	# Cơ chế: cooking_system._process chỉ giữ mẻ lại đếm tiếp (để rồi cháy) khi
 	# `trang_thai_hong(goc)` KHÁC RỖNG; không có khoá `hong` thì nấu xong là
 	# mẻ bị gỡ khỏi bảng đang-nấu ngay, không có đường nào đi tới _chay().
 	# Nghĩa là nồi canh nằm trên bếp bao lâu cũng được.
@@ -172,14 +179,24 @@ const ITEMS := {
 		"price": 95, "seconds": 20.0},
 	"vegetablebuger_uncook": {"name": "Steak rau củ (sống)",
 		"model": "food_ingredient_vegetableburger_uncooked",
-		"cook": "vegetablebuger_cooked"},
+		"cook": "vegetablebuger_cooked", "burnt": "vegetablebuger_cooked_fail"},
 	"vegetablebuger_cooked": {"name": "Steak rau củ (chín)",
 		"layout": {"order": 30, "height": 0.216},
 		"model": "food_ingredient_vegetableburger_cooked"},
+	# (2/10/2026) Chả rau củ cũng CHÁY được, như ham và steak. Trước đây nó
+	# là thứ duy nhất nấu trên bếp mà bỏ quên bao lâu cũng không sao — tức là
+	# món khó nhất thực đơn lại an toàn nhất ở đúng khâu dễ hỏng nhất.
+	#
+	# Mượn model và ảnh của steak cháy: bộ KayKit chỉ có hai model "trash"
+	# (burger và ham), không có bản cháy riêng cho chả rau củ. Cháy đen rồi
+	# thì hai miếng chả trông như nhau, nên mượn không gây nhầm.
+	"vegetablebuger_cooked_fail": {"name": "Steak rau củ cháy",
+		"icon": "steak_cooked_fail",
+		"model": "food_ingredient_burger_trash"},
 	"vegetablebuger": {"name": "Hamburger rau củ", "model": "food_vegetableburger",
-		"price": 110, "seconds": 22.6},
+		"price": 210, "seconds": 22.6},
 	"dinner":        {"name": "Bữa tối",         "model": "food_dinner",
-		"price": 150, "seconds": 30.6},
+		"price": 250, "seconds": 30.6},
 	# CANH RAU CỦ — món hoàn chỉnh, ra thẳng từ bếp, giao được cho khách ngay.
 	#
 	# Trước đây chỗ này có HAI mục cho cùng một bát canh: "stew" (canh múc ra
@@ -193,7 +210,7 @@ const ITEMS := {
 	# của ba MÓN BÀY BÁT ghép lúc chạy (mon_ham, mon_steak) — canh không thuộc
 	# nhóm đó vì nó có model sẵn.
 	"stew": {"name": "Canh rau củ", "model": "food_stew", "layout": {"height": 0.37},
-		"price": 135, "seconds": 28.0},
+		"price": 235, "seconds": 28.0},
 	# Ba loại pizza thu nhỏ còn 0.7: model "plated" của KayKit đã kèm sẵn cái
 	# khay bên dưới nên to hơn hẳn mọi món khác, cầm trên tay thì che mất
 	# nửa nhân vật.
@@ -203,17 +220,68 @@ const ITEMS := {
 		"scale": 0.5, "price": 100, "seconds": 23.0},
 	"pizza_peperoni": {"name": "Pizza xúc xích", "model": "food_pizza_pepperoni_plated",
 		"scale": 0.5, "price": 100, "seconds": 23.0},
-	"icecream_vani":       {"name": "Kem vani",
-		"model": "icecream_bowl_icecream_vanilla", "layout": {"height": 0.36},
+	# PIZZA SỐNG — ghép sẵn ở bàn chế tạo, mang vào lò nướng thẳng.
+	#
+	# Là con đường THỨ HAI tới cùng ba chiếc pizza, không thay con đường cũ
+	# (bỏ đế vào lò rồi thả topping). Lợi của đường mới: ghép trước lúc lò còn
+	# bận mẻ khác, nên hai mẻ pizza gối nhau được.
+	#
+	# "bake" chứ KHÔNG "cook": khoá "cook" là thứ cái BẾP đọc (put_item →
+	# cook_step). Ghi "cook" thì pizza sống bỏ lên bếp cũng nấu chín được —
+	# một lối tắt không ai thiết kế. Khoá riêng thì chỉ lò hỏi tới nó.
+	#
+	# Dùng CHÍNH model của pizza chín, phủ "raw_look" cho nhạt màu (xem
+	# _apply_raw_look). Bộ KayKit không có model pizza sống, và cùng hình dáng
+	# còn là một lợi thế: người chơi nhận ra ngay "đây là pizza gì", chỉ còn
+	# phải hỏi "đã nướng chưa" — đúng câu mà độ nhạt trả lời.
+	#
+	# Không "price": chưa nướng thì không bán. Không "cost": tiền đã trừ lúc
+	# lấy từng nguyên liệu. "icon" mượn ảnh pizza chín; tên có chữ "(sống)".
+	"pizza_cheese_uncooked":   {"name": "Pizza phô mai (sống)", "icon": "pizza_cheese",
+		"model": "food_pizza_cheese_plated", "scale": 0.5,
+		"raw_look": true, "bake": "pizza_cheese"},
+	"pizza_mushroom_uncooked": {"name": "Pizza nấm (sống)", "icon": "pizza_mushroom",
+		"model": "food_pizza_mushroom_plated", "scale": 0.5,
+		"raw_look": true, "bake": "pizza_mushroom"},
+	"pizza_peperoni_uncooked": {"name": "Pizza xúc xích (sống)", "icon": "pizza_peperoni",
+		"model": "food_pizza_pepperoni_plated", "scale": 0.5,
+		"raw_look": true, "bake": "pizza_peperoni"},
+	# Ba loại kem lẻ mang HAI hình dạng, tuỳ chỗ chúng đang nằm:
+	#
+	#   "model"        — cây kem ốc quế. Dùng khi cầm trên tay và khi đã giao
+	#                    cho khách, tức là lúc nó đóng vai MÓN BÁN hoàn chỉnh.
+	#   "layout.model" — bát kem một viên. Dùng khi nằm trong chồng trên bàn
+	#                    chế tạo, tức là lúc nó đóng vai NGUYÊN LIỆU của kem
+	#                    tam hợp.
+	#
+	# Vì sao phải tách: một viên kem trong game này mang hai vai. Ảnh 2D của nó
+	# (icecream_vani.png) vẽ cây ốc quế, nên trước đây cầm trên tay lại ra cái
+	# bát là LỆCH với chính ảnh đơn hàng mà khách đang giơ. Nhưng ốc quế thì
+	# không xếp chồng được: kem tam hợp là ba viên nằm trong MỘT cái bát, chồng
+	# ba cây ốc quế lên nhau vừa xuyên qua nhau vừa vô nghĩa.
+	#
+	# Không cần thêm cơ chế mới: khoá "layout.model" đã có sẵn và đang được xà
+	# lách (cả cây → một lát) với phô mai (cả khối → một lát) dùng đúng kiểu
+	# này. Đây là mục thứ ba dùng lại nó, nên bảng dữ liệu vẫn chỉ có một cách
+	# diễn đạt "vật này trông khác khi nằm trong chồng".
+	#
+	# "height" 0.36 giữ nguyên vì nó tả CÁI BÁT — đúng chiều cao model bát
+	# (0.360), và height chỉ có nghĩa trong chồng. Cây ốc quế cao 1.036 nhưng
+	# không bao giờ vào chồng nên không ảnh hưởng số này.
+	"icecream_vani":       {"cost": 2, "name": "Kem vani",
+		"model": "food_icecream_cone_vanilla",
+		"layout": {"height": 0.36, "model": "icecream_bowl_icecream_vanilla"},
 		"price": 15, "seconds": 4.2},
-	"icecream_chocolate":  {"name": "Kem chocolate",
-		"model": "icecream_bowl_icecream_chocolate", "layout": {"height": 0.36},
+	"icecream_chocolate":  {"cost": 2, "name": "Kem chocolate",
+		"model": "food_icecream_cone_chocolate",
+		"layout": {"height": 0.36, "model": "icecream_bowl_icecream_chocolate"},
 		"price": 15, "seconds": 4.2},
-	"icecream_strawberry": {"name": "Kem dâu",
-		"model": "icecream_bowl_icecream_strawberry", "layout": {"height": 0.36},
+	"icecream_strawberry": {"cost": 2, "name": "Kem dâu",
+		"model": "food_icecream_cone_strawberry",
+		"layout": {"height": 0.36, "model": "icecream_bowl_icecream_strawberry"},
 		"price": 15, "seconds": 4.2},
 	# Hai món kem ghép. Khác ba loại kem lẻ ở trên (lấy thẳng từ máy rồi giao
-	# luôn), hai món này phải qua bàn chế tạo — xem CONG_THUC_BAN.
+	# luôn), hai món này phải qua bàn chế tạo — xem TABLE_RECIPES.
 	#
 	# Ảnh riêng chứ không mượn ảnh kem lẻ: cả hai đều là BA viên kem trong một
 	# bát, nhìn từ xa mà dùng ảnh một viên thì người chơi không phân biệt được
@@ -251,7 +319,7 @@ const ITEMS := {
 	#
 	# Giá 105 suy từ công thức bảng cân bằng khi miếng này còn là 2 nguyên
 	# liệu (steak + cà rốt). Từ 18/9 nó thành 4 nguyên liệu, nên con số này
-	# ĐANG THẤP so với công sức bỏ ra — xem ghi chú ở CONG_THUC_BAN.
+	# ĐANG THẤP so với công sức bỏ ra — xem ghi chú ở TABLE_RECIPES.
 	"vegetablesteak": {"name": "Steak rau củ",
 		"on_plate": {"model": "food_ingredient_vegetableburger_cooked", "y": 0.12},
 		"icon": "vegetablebuger_cooked", "price": 105, "seconds": 24.5},
@@ -282,7 +350,7 @@ const ITEMS := {
 ## Còn một lỗi thứ tư không ai để ý vì nó im lặng hoàn toàn: node `Noi` trong
 ## file map là một StaticBody3D TRẦN — không mesh, không CollisionShape3D. Nó
 ## vô hình VÀ không bấm vào được ngay từ đầu, vì bộ chọn mục tiêu dò va chạm
-## mà nó thì không có hình va chạm nào. Sửa ở `TramTuongTac.dung_vat_cam()`.
+## mà nó thì không có hình va chạm nào. Sửa ở `Workstation.build_carriable()`.
 ##
 ## GIỮ LẠI cái công tắc này dù đã mở: nó là cách tắt cả một nhánh cơ chế trong
 ## một dòng khi cần thử cân bằng hay quay phim demo. Đổi thành false là thực
@@ -311,11 +379,11 @@ static func is_locked(id: String) -> bool:
 	return not POT_ENABLED and POT_LOCKED_ITEMS.has(id)
 
 
-## (Đã bỏ) CHO_VAO_NOI và CONG_THUC_NOI — bảng "thứ gì đổ được vào nồi" và
+## (Đã bỏ) CHO_VAO_NOI và TABLE_RECIPES — bảng "thứ gì đổ được vào nồi" và
 ## bảng "nồi chứa gì thì ra món gì".
 ##
 ## Cả hai là bảng công thức THỨ HAI của một cái bàn ghép đồ, chỉ khác chỗ
-## người chơi đứng. Công thức nấu canh giờ nằm chung CONG_THUC_BAN với mọi
+## người chơi đứng. Công thức nấu canh giờ nằm chung TABLE_RECIPES với mọi
 ## công thức khác, nên muốn biết làm canh thế nào thì tra đúng một bảng.
 
 
@@ -329,7 +397,7 @@ const OVEN_TOPPINGS := ["cheese", "mushroom", "onion", "tomato", "peperoni_pre"]
 ## Đế bánh — thứ duy nhất bật được lò nướng.
 const PIZZA_BASE := "dough_pre"
 
-## Công thức lò nướng. Cùng quy ước khoá với CONG_THUC_NOI: sắp xếp rồi nối
+## Công thức lò nướng. Cùng quy ước khoá với TABLE_RECIPES: sắp xếp rồi nối
 ## bằng "+", nên thứ tự bỏ vào không quan trọng.
 const OVEN_RECIPES := {
 	"dough_pre+peperoni_pre+tomato": "pizza_peperoni",
@@ -386,7 +454,7 @@ const TABLE_RECIPES := {
 	# KHÔNG sợ lồng công thức dù "bowl+vegetablebuger_cooked" (Steak rau củ)
 	# là TẬP CON của dòng này: bàn chỉ ráp khi người chơi bấm F, nên không có
 	# chuyện món ngắn tự ráp trước và chặn mất món dài. Đây đúng là lớp lỗi mà
-	# phím F sinh ra để dập — xem _rap_ban() trong tay_cam.gd.
+	# phím F sinh ra để dập — xem _rap_ban() trong hands.gd.
 	#
 	# CÂN BẰNG CẦN XEM LẠI: giá vẫn là 110 của công thức cũ, trong khi món giờ
 	# qua thêm một lượt ghép và một lượt nấu. Theo công thức 4 × giây × (1 +
@@ -404,6 +472,13 @@ const TABLE_RECIPES := {
 	# lấy nguyên bát từ máy làm kem chứ không đi qua bàn chế tạo.
 	"bowl+icecream_chocolate+icecream_strawberry+icecream_vani": "kem_tam_hop",
 	"bowl+cookiestick+icecream_chocolate+icecream_strawberry+icecream_vani": "kem_tam_hop_que",
+	# Pizza sống. CÙNG KHOÁ với OVEN_RECIPES, cố ý: một chiếc pizza làm từ
+	# đúng một bộ nguyên liệu dù ráp ở đâu. Hai bảng khác nhau ở KẾT QUẢ
+	# (lò ra pizza chín, bàn ra pizza sống), không khác ở công thức — nên
+	# người chơi học một công thức, dùng được ở hai nơi.
+	"dough_pre+peperoni_pre+tomato": "pizza_peperoni_uncooked",
+	"dough_pre+mushroom+tomato": "pizza_mushroom_uncooked",
+	"cheese+dough_pre+onion+tomato": "pizza_cheese_uncooked",
 
 	# ---- CÔNG THỨC NỐI TIẾP: ghép thêm vào một MÓN đã ráp xong ----
 	#
@@ -445,6 +520,64 @@ static func price(id: String) -> int:
 	return int(ITEMS.get(id, {}).get("price", 0))
 
 
+## ═════════════════════════════════════════════ GIÁ VỐN NGUYÊN LIỆU
+##
+## Tiền TRỪ NGAY lúc người chơi lấy một nguyên liệu ở kệ, tủ lạnh hay máy kem.
+## 0 = miễn phí.
+##
+## ── VÌ SAO CÓ CƠ CHẾ NÀY
+##
+## Trước đây nguyên liệu vô hạn và miễn phí, nên chiến thuật tối ưu là lấy bừa:
+## cầm sai thì vứt đi lấy lại, không mất gì ngoài vài giây. Có giá vốn thì mỗi
+## lần bấm E ở cái kệ là một quyết định, và món đắt tự nhiên đáng làm hơn món
+## rẻ vì phần lãi chênh nhau thật.
+##
+## ── CÁCH ĐẶT SỐ: 10–20% GIÁ BÁN
+##
+## Tổng giá vốn của một món phải nằm trong 10–20% giá bán nó. Dưới 10% thì chi
+## phí không cảm nhận được, trên 20% thì một lần giao muộn (mất thưởng hoàn
+## hảo) là lỗ, và người chơi học được điều sai: "đừng làm món khó".
+##
+## 16 con số dưới đây KHÔNG chọn tay — chúng là nghiệm của một bài toán 13 ràng
+## buộc khoảng (một ràng buộc cho mỗi món bán được), giải bằng máy. Sửa MỘT số
+## là có thể đẩy ba bốn món ra ngoài dải, vì nguyên liệu dùng chung nhiều món.
+## Tỉ lệ thực tế của từng món:
+##
+##   pizza_mushroom  10,0%   mon_steak       11,2%   kem_tam_hop_que 12,7%
+##   icecream_*      13,3%   mon_ham         15,0%   kem_tam_hop     15,0%
+##   pizza_peperoni  15,0%   dinner          15,3%   pizza_cheese    16,2%
+##   vegetablesteak  18,1%   hambuger        20,0%   vegetablebuger  20,0%
+##   stew            10,4%
+##
+## ── ĐỘNG VẬT ĐẮT HƠN THỰC VẬT
+##
+##   thịt (ham, steak, xúc xích)  9    ← đắt nhất
+##   sữa  (phô mai)               7
+##   bột và rau củ (bột, nấm,     4
+##         cà rốt, khoai, hành)
+##   lá và quả (xà lách, cà chua) 2
+##   bánh (bánh mì, bánh quế)     1    ← rẻ nhất
+##
+## MỘT NGOẠI LỆ: kem = 2, rẻ hơn cà rốt, dù kem là sản phẩm từ sữa. Không phải
+## quên — bị ÉP. Kem vừa là nguyên liệu vừa là MÓN BÁN giá 15, và kem tam hợp
+## giá 40 cần ba viên. Muốn kem tam hợp không vượt 20% thì 3 × giá kem ≤ 8, tức
+## giá kem ≤ 2,67. Đặt kem đắt hơn là món kem tam hợp lỗ nặng.
+##
+## ── BÁNH MÌ CHỈ 1 ĐỒNG
+##
+## Cũng bị ép: vegetablebuger giá 110 cần SÁU nguyên liệu, mà steak một mình đã
+## 9. Trần 20% của nó là 22, nên năm thứ còn lại chỉ được tổng 13.
+##
+## ── ĐỒ ĐỰNG MIỄN PHÍ
+##
+## Đĩa và nồi KHÔNG khai khoá này. Chúng là đồ đựng dùng lại, không bỏ vào món.
+## Quan trọng hơn: 8 trong 13 món đều cần đĩa, nên giá đĩa thành thuế đồng
+## loạt — nó bóp dải 10–20% của mấy món rẻ (kem tam hợp chỉ 40 đồng) mà không
+## thêm quyết định nào cho người chơi.
+static func cost(id: String) -> int:
+	return int(ITEMS.get(id, {}).get("cost", 0))
+
+
 ## Thời gian kiên nhẫn của khách gọi món này, tính bằng giây.
 ##
 ## TÍNH từ thời gian làm chứ không gõ sẵn một cột thứ hai: công thức trong
@@ -465,11 +598,199 @@ static func price(id: String) -> int:
 const PATIENCE_FACTOR := 3.75
 const PATIENCE_MIN := 52.5
 
+## 2/10/2026: món từ BA NGUYÊN LIỆU trở lên được thêm 50% kiên nhẫn.
+##
+## Lý do (user chơi thử): ngay cả Kitasan với kĩ năng +30% kiên nhẫn vẫn không
+## kịp các món dài. Công thức gốc chỉ nhân theo THỜI GIAN LÀM của một lượt
+## trơn tru, mà món nhiều nguyên liệu thì hiếm khi trơn tru: mỗi nguyên liệu
+## thêm là một chuyến đi có thể bị kẹt (bếp đang bận, thớt đang bận, cầm nhầm).
+## Rủi ro đó tăng theo SỐ nguyên liệu chứ không theo số giây, nên phần bù cũng
+## gắn vào số nguyên liệu.
+##
+## Vì sao ngưỡng là 3 chứ không tăng đều cho mọi món: kem lẻ, Ham và Steak
+## (một nguyên liệu) hiện đã kịp — tăng cả chúng thì chỉ làm màn chơi dễ đi
+## đồng loạt mà không chữa đúng chỗ đang đau.
+##
+## Hệ số này nhân SAU cái sàn: món nhiều nguyên liệu mà làm nhanh (Kem tam
+## hợp, 8,9 giây) đang ăn sàn 52,5 — nhân trước rồi mới lấy sàn thì nó vẫn
+## 52,5 và coi như không được tăng gì.
+const MANY_INGREDIENTS := 3
+const MANY_INGREDIENTS_BONUS := 1.5
+
 static func patience(id: String) -> float:
 	var t := float(ITEMS.get(id, {}).get("seconds", 0.0))
-	if t <= 0.0:
-		return PATIENCE_MIN
-	return maxf(PATIENCE_MIN, PATIENCE_FACTOR * t)
+	var base := PATIENCE_MIN
+	if t > 0.0:
+		base = maxf(PATIENCE_MIN, PATIENCE_FACTOR * t)
+	if ingredient_count(id) >= MANY_INGREDIENTS:
+		base *= MANY_INGREDIENTS_BONUS
+	return base
+
+
+## Đồ ĐỰNG: có mặt trong công thức nhưng không phải nguyên liệu (dùng lại
+## được, không mất tiền). Không tính vào số nguyên liệu của món.
+const CONTAINER_ITEMS := ["bowl", "noi"]
+
+## Số nguyên liệu THÔ người chơi phải đi lấy để làm ra món này.
+##
+## TÍNH từ bảng công thức chứ không gõ thêm một cột "số nguyên liệu" vào từng
+## món — cùng lý do với patience(): hai nguồn số liệu rời nhau thì đổi công
+## thức mà quên sửa cột kia, và không có lỗi nào báo.
+##
+## Cách đếm: bung món ra theo công thức; mỗi thành phần lại bung tiếp cho tới
+## khi gặp thứ không do công thức nào sinh ra — đó là một nguyên liệu thô.
+## Một thành phần đã qua sơ chế / nấu (steak_cooked, dough_pre, stew...) thì
+## lần ngược về thứ sinh ra nó qua khoá "prep" / "cook" / "bake".
+##
+## Ví dụ: hambuger = bowl + bun + cheese + lettuce + steak_cooked
+##        -> bowl bỏ (đồ đựng); steak_cooked <- steak_uncook <- steak
+##        -> 4 nguyên liệu.
+static func ingredient_count(id: String) -> int:
+	return _count_raw(id, 0)
+
+
+static func _count_raw(id: String, depth: int) -> int:
+	if CONTAINER_ITEMS.has(id):
+		return 0
+	# Chặn đệ quy vô hạn nếu sau này ai khai hai công thức vòng nhau.
+	if depth > 8:
+		return 1
+	# 1. Là kết quả của một công thức ghép -> cộng các thành phần. Bảng nào
+	#    khai trước thắng; với món có hai công thức (Kem tam hợp bánh quế) thì
+	#    công thức đầy đủ đứng trước dòng nối tiếp nên được chọn.
+	for table in [TABLE_RECIPES, OVEN_RECIPES]:
+		for key in table:
+			if String(table[key]) != id:
+				continue
+			var total := 0
+			for part in String(key).split("+"):
+				total += _count_raw(part, depth + 1)
+			return total
+	# 2. Là kết quả sơ chế / nấu / nướng của một thứ khác -> lần ngược về nó.
+	for source in ITEMS:
+		var info: Dictionary = ITEMS[source]
+		for step in ["prep", "cook", "bake"]:
+			if String(info.get(step, "")) == id:
+				return _count_raw(String(source), depth + 1)
+	# 3. Không ai sinh ra nó -> chính nó là một nguyên liệu thô.
+	return 1
+
+
+## ═════════════════════════════════════════════ ĐỘ KHÓ CỦA MÓN
+##
+## Ba mức: "easy" / "medium" / "hard". Hệ đơn hàng dùng để quyết định ĐẦU MÀN
+## khách gọi gì: mức khó chỉ bắt đầu xuất hiện khi người chơi đã vào nhịp (xem
+## "tier_weights" trong các RULES_* của GameData và customer_manager._pick_dish).
+##
+## Chia theo SỐ BƯỚC phải làm, không theo giá:
+##   easy   — lấy ra là giao, hoặc nấu một thứ rồi bày đĩa (một trạm).
+##   medium — phải gom nhiều nguyên liệu về một chỗ (bàn chế tạo hoặc lò),
+##            nhưng mỗi nguyên liệu chỉ qua tối đa một bước xử lý.
+##   hard   — có CHUỖI lồng nhau: ghép ra một thứ trung gian, đem nấu, rồi mới
+##            ghép tiếp (chả rau củ, nồi canh). Sai một bước là làm lại từ đầu.
+##
+## Gõ tay thành bảng chứ không suy từ số nguyên liệu: Pizza phô mai (4 nguyên
+## liệu) và Steak rau củ (4 nguyên liệu) cùng con số nhưng khác hẳn độ rối —
+## pizza chỉ là "bỏ hết vào lò", còn chả rau củ là thái → ghép → nướng → bày.
+## Món không có trong bảng coi là "medium".
+##
+## (2/10/2026) GIÁ ba món khó đã cộng thêm 100 mỗi món (Hamburger rau củ 110 ->
+## 210, Canh rau củ 135 -> 235, Bữa tối 150 -> 250), theo yêu cầu user. Lý do:
+## cùng ngày, tỉ lệ món khó bị cắt hơn một nửa và thêm quãng nghỉ sau mỗi món
+## khó, nên phần doanh thu chúng đóng góp tụt mạnh trong khi mốc hạng giữ
+## nguyên. Món khó giờ HIẾM, nên mỗi lần gặp phải ĐÁNG — không thì người chơi
+## thấy nó chỉ là rủi ro (dễ cháy, dễ mất khách) mà chẳng được gì hơn pizza.
+const DIFFICULTY_ORDER := ["easy", "medium", "hard"]
+const DISH_DIFFICULTY := {
+	"icecream_vani": "easy", "icecream_chocolate": "easy", "icecream_strawberry": "easy",
+	"mon_ham": "easy", "mon_steak": "easy",
+	"kem_tam_hop": "medium", "kem_tam_hop_que": "medium", "hambuger": "medium",
+	"pizza_mushroom": "medium", "pizza_peperoni": "medium", "pizza_cheese": "medium",
+	# (2/10/2026) Steak rau củ xuống mức vừa theo yêu cầu user: nó là NỀN của
+	# Hamburger rau củ, nên phải gặp trước ở mức dễ hơn rồi mới tới món dựng
+	# trên nó.
+	"vegetablesteak": "medium",
+	"vegetablebuger": "hard", "stew": "hard", "dinner": "hard",
+}
+
+static func difficulty(id: String) -> String:
+	return String(DISH_DIFFICULTY.get(id, "medium"))
+
+
+## Những thứ phải GOM LẠI để làm ra món này, để vẽ công thức cho người chơi.
+##
+## Khác ingredient_count() ở chỗ GIỮ nguyên trạng thái đã xử lý: hamburger trả
+## về "steak_cooked" chứ không lần ngược về "steak", vì ảnh miếng thịt chín
+## chính là lời nhắc "phải nấu". Chỉ bung tiếp những thứ TRUNG GIAN do một
+## công thức khác ghép ra (chả rau củ, nồi canh) — người chơi không lấy được
+## chúng ở kệ nào cả, nên để nguyên thì công thức vô dụng.
+##
+## Món không có công thức (kem lẻ: lấy thẳng từ máy) trả về mảng rỗng.
+##
+## NGOẠI LỆ: thứ trung gian mà bản thân nó ĐÃ LÀ MỘT MÓN trong thực đơn thì
+## giữ nguyên, không bung. Hamburger rau củ hiện "miếng steak rau củ" chứ không
+## hiện lại cà rốt, hành, cà chua, steak — công thức của miếng chả đã nằm ở
+## dòng Steak rau củ ngay phía trên, lặp lại chỉ làm dòng dài ra và che mất ý
+## chính: "món này = món kia + bánh + xà lách". Bữa tối hiện "canh" cũng vì thế.
+static func recipe_parts(id: String) -> Array[String]:
+	var out: Array[String] = []
+	_expand_parts(id, out, 0, id)
+	return out
+
+
+## Thứ này có phải là (lõi của) một món BÁN ĐƯỢC khác với `root` không: hoặc
+## chính nó có giá (canh), hoặc bày nó ra đĩa là thành một món có giá (miếng
+## chả rau củ -> Steak rau củ).
+static func _is_other_dish(id: String, root: String) -> bool:
+	if id == root:
+		return false
+	if price(id) > 0:
+		return true
+	var plated := String(TABLE_RECIPES.get("bowl+" + id, ""))
+	return not plated.is_empty() and plated != root and price(plated) > 0
+
+
+static func _expand_parts(id: String, out: Array[String], depth: int, root: String) -> void:
+	var is_root := id == root and depth == 0
+	if depth > 8:
+		out.append(id)
+		return
+	if not is_root and _is_other_dish(id, root):
+		out.append(id)
+		return
+	var key := _recipe_key_for(id)
+	if not key.is_empty():
+		for part in key.split("+"):
+			_expand_parts(part, out, depth + 1, root)
+		return
+	# Thứ này là kết quả NẤU của một thứ do công thức ghép ra (stew <- noi_canh,
+	# vegetablebuger_cooked <- vegetablebuger_uncook) -> bung thứ đó.
+	var source := _source_of(id)
+	if not source.is_empty() and not _recipe_key_for(source).is_empty():
+		_expand_parts(source, out, depth + 1, root)
+		return
+	if not is_root:
+		out.append(id)
+
+
+## Khoá công thức ("a+b+c") sinh ra id này, hoặc rỗng. Bảng bàn chế tạo xét
+## trước lò; trong một bảng thì dòng khai trước thắng.
+static func _recipe_key_for(id: String) -> String:
+	for table in [TABLE_RECIPES, OVEN_RECIPES]:
+		for key in table:
+			if String(table[key]) == id:
+				return String(key)
+	return ""
+
+
+## Thứ mà sơ chế / nấu / nướng lên thì ra id này, hoặc rỗng.
+static func _source_of(id: String) -> String:
+	for source in ITEMS:
+		var info: Dictionary = ITEMS[source]
+		for step in ["prep", "cook", "bake"]:
+			if String(info.get(step, "")) == id:
+				return String(source)
+	return ""
 
 
 ## Mọi món BÁN ĐƯỢC, tức có giá. Hệ đơn hàng bốc món từ đây.
@@ -484,7 +805,7 @@ static func sellable_dishes() -> Array[String]:
 
 
 static func is_dish(id: String) -> bool:
-	# HOẶC có giá. Chỉ hỏi CONG_THUC_BAN là thiếu, vì có những món hoàn chỉnh
+	# HOẶC có giá. Chỉ hỏi TABLE_RECIPES là thiếu, vì có những món hoàn chỉnh
 	# KHÔNG ra đời ở bàn chế tạo: ba loại kem lẻ lấy thẳng từ máy, và từ
 	# 14/9/2026 thêm món canh — nấu xong trên bếp là xong luôn.
 	#
@@ -510,9 +831,20 @@ static func can_go_in_oven(id: String) -> bool:
 
 
 static func bake_in_oven(ingredients: Array) -> String:
+	# Lò đang chứa đúng MỘT chiếc pizza sống ghép sẵn: nướng nó thành bản chín.
+	if ingredients.size() == 1:
+		var ready_ := bake_step(String(ingredients[0]))
+		if not ready_.is_empty():
+			return ready_
 	var list_ := ingredients.duplicate()
 	list_.sort()
 	return String(OVEN_RECIPES.get("+".join(list_), ""))
+
+
+## Kết quả khi đưa NGUYÊN MỘT vật vào lò nướng. Rỗng = không nướng thẳng được
+## (đế bánh trần thì rỗng: nó bật lò theo đường cũ, chờ topping).
+static func bake_step(id: String) -> String:
+	return String(ITEMS.get(id, {}).get("bake", ""))
 
 
 ## Dựng node model 3D của một vật phẩm, hoặc null nếu không có model.
@@ -541,7 +873,38 @@ static func make_model(id: String, has_content: bool = false) -> Node3D:
 		var scale_: float = float(entry.get("scale", 1.0))
 		if not is_equal_approx(scale_, 1.0):
 			m.scale = Vector3.ONE * scale_
+		if bool(entry.get("raw_look", false)):
+			_apply_raw_look(m)
 	return m
+
+
+## Màu phủ lên đồ SỐNG (hiện chỉ pizza chưa nướng). Trắng, nửa trong suốt.
+const RAW_TINT := Color(1.0, 1.0, 1.0, 0.45)
+
+## Vật liệu phủ, tạo MỘT lần rồi dùng chung cho mọi chiếc pizza sống.
+static var _raw_material: StandardMaterial3D = null
+
+
+## Làm NHẠT một model bằng material_overlay: một lớp trắng mờ vẽ đè lên trên.
+##
+## Vì sao overlay chứ không đổi màu vật liệu gốc: toàn bộ bộ KayKit dùng CHUNG
+## MỘT vật liệu tên "restaurant" (một tấm ảnh bảng màu). Sửa vật liệu đó là
+## đổi màu mọi đồ vật trong nhà hàng cùng lúc. Overlay gắn vào TỪNG
+## MeshInstance3D của riêng model này, vật liệu gốc không bị chạm tới.
+##
+## Vì sao UNSHADED: lớp phủ phải trông nhạt như nhau dù đứng dưới đèn hay
+## trong bóng. Có đổ bóng thì pizza trong góc tối nhìn chẳng khác pizza chín.
+static func _apply_raw_look(root: Node) -> void:
+	if _raw_material == null:
+		_raw_material = StandardMaterial3D.new()
+		_raw_material.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+		_raw_material.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+		_raw_material.albedo_color = RAW_TINT
+	var meshes: Array[Node] = root.find_children("*", "MeshInstance3D", true, false)
+	if root is MeshInstance3D:
+		meshes.append(root)
+	for mi in meshes:
+		(mi as MeshInstance3D).material_overlay = _raw_material
 
 
 # ══════════════════════════════════════ XẾP CHỒNG TRÊN BÀN CHẾ TẠO
@@ -609,7 +972,7 @@ static func layout(id: String) -> Dictionary:
 
 ## Dựng MỘT node gồm cả chồng đồ đang nằm trên bàn chế tạo.
 ##
-## Trả về đúng một Node3D như tao_mo_hinh(), nên nơi gọi (TramTuongTac) không
+## Trả về đúng một Node3D như tao_mo_hinh(), nên nơi gọi (Workstation) không
 ## phải biết trên bàn có mấy món — nó vẫn giữ đúng một tham chiếu để xoá.
 ##
 ## Một món thì đi thẳng tao_mo_hinh(): món đã ráp xong nằm một mình trên bàn
@@ -623,6 +986,7 @@ static func make_stack(list_: Array[String]) -> Node3D:
 	var parts: Array[String] = list_.duplicate()
 	var origin: Node3D = null
 	var height := 0.0
+	var base_id := ""
 
 	for base in BASE_ITEMS:
 		var pos := parts.find(String(base))
@@ -632,7 +996,8 @@ static func make_stack(list_: Array[String]) -> Node3D:
 		if origin == null:
 			continue
 		parts.remove_at(pos)
-		height = float(layout(String(base)).get("thickness", DEFAULT_THICKNESS))
+		base_id = String(base)
+		height = float(layout(base_id).get("thickness", DEFAULT_THICKNESS))
 		break
 
 	# Không có vật đế nào: chồng thẳng trên mặt bàn. Dùng một Node3D rỗng làm
@@ -663,6 +1028,40 @@ static func make_stack(list_: Array[String]) -> Node3D:
 		if int(a["tt"]) != int(b["tt"]):
 			return int(a["tt"]) < int(b["tt"])
 		return int(a["i"]) < int(b["i"]))
+
+	# ---- CÁCH BÀY THỨ HAI: VÒNG QUANH thay vì chồng lên nhau ----
+	#
+	# Chồng tầng chỉ đúng với món THẬT SỰ là một chồng (hamburger). Pizza là
+	# topping rải trên MẶT đế, kem tam hợp là ba viên nằm CẠNH nhau trong
+	# bát — chồng chúng thành cột thì mặt bàn tả sai chính món người chơi
+	# đang làm.
+	#
+	# Vật ĐẾ quyết định cách bày, không phải từng nguyên liệu: cùng một quả cà
+	# chua nằm trên đế bánh thì rải quanh, nằm trong nồi canh thì chồng. Nên
+	# khoá "arrange" khai ở ĐẾ (dough_pre), không khai ở cà chua.
+	var ids: Array[String] = []
+	for entry in ordered:
+		ids.append(String(entry["id"]))
+
+	var ring: Dictionary = {}
+	if not base_id.is_empty():
+		ring = layout(base_id).get("arrange", {})
+
+	# Kem: trên đĩa CHỈ có kem / bánh quế thì đổi cái đĩa thành bát kem. Công
+	# thức vẫn là "bowl + 3 kem" — chỉ đổi HÌNH, không đổi thứ phải mang tới.
+	# Không bắt người chơi lấy thêm một loại bát riêng: như vậy là thêm một
+	# vật phẩm, một nguồn lấy và một chỗ để quên, chỉ để đổi cái vỏ.
+	if base_id == "bowl" and _all_in(ids, ICECREAM_ITEMS):
+		var cup := _load_model(ICECREAM_BOWL_MODEL)
+		if cup != null:
+			origin.free()
+			origin = cup
+			ring = ICECREAM_ARRANGE
+			height = 0.0
+
+	if not ring.is_empty():
+		_arrange_ring(origin, ids, ring, height)
+		return origin
 
 	var layer := 0
 	# Mảnh phải nằm TRÊN CÙNG (nắp bánh mì), để dành đặt sau cùng.
@@ -707,6 +1106,97 @@ static func make_stack(list_: Array[String]) -> Node3D:
 	return origin
 
 
+## Model bát kem rỗng (rộng 0,95, cao 0,30) — thay cái đĩa khi bày kem.
+const ICECREAM_BOWL_MODEL := "icecream_bowl"
+
+## Những thứ được phép nằm trong bát kem. Có một thứ khác lẫn vào (người chơi
+## bỏ nhầm cà chua) thì giữ nguyên cái đĩa và chồng như thường: bày bát kem
+## chứa cà chua là nói dối về thứ đang nằm trên bàn.
+const ICECREAM_ITEMS := ["icecream_vani", "icecream_chocolate", "icecream_strawberry",
+		"cookiestick"]
+
+## Số bày kem trong bát. Viên kem (model bát-một-viên) rộng 0,45: ba viên ở
+## bán kính 0,19, thu 0,8, vừa khít lòng bát 0,95 mà còn chạm nhau như kem
+## thật. Bánh quế cắm ĐỨNG ở giữa ba viên, nhô cao hơn — đúng như model
+## thành phẩm kem_tam_hop_que.
+const ICECREAM_ARRANGE := {
+	"radius": 0.19, "scale": 0.8, "y": 0.10,
+	"center": ["cookiestick"], "center_y": 0.22, "center_scale": 1.1,
+}
+
+## Viên đầu tiên của vòng nằm ở góc này (độ). Không để 0: ở 0 độ viên đầu
+## nằm đúng trục X, mà camera nhìn chéo từ trên xuống nên hai viên sau che
+## mất nó. Lệch 90 độ đẩy viên đầu ra phía camera.
+const RING_START_ANGLE := 90.0
+
+
+static func _all_in(ids: Array[String], allowed: Array) -> bool:
+	for id in ids:
+		if not allowed.has(id):
+			return false
+	return not ids.is_empty()
+
+
+## Bày các món THÀNH VÒNG quanh tâm đế, cách đều nhau.
+##
+## Khoá của `arrange`:
+##   radius — bán kính vòng, đo trên model đế
+##   scale  — thu nhỏ mỗi món nằm trên vòng (THAY cho STACK_SCALE)
+##   y      — nâng thêm so với mặt đế
+##   center — id những thứ nằm GIỮA chứ không trên vòng (bánh quế)
+##   center_y / center_scale — độ cao và cỡ riêng của thứ nằm giữa
+##
+## Chỉ MỘT món trên vòng thì đặt nó vào tâm: một quả cà chua lệch hẳn về một
+## mép đế bánh trông như đặt hụt chứ không như đang bày.
+##
+## Vẫn dùng _stack_model(): phô mai trên pizza vẫn là MỘT LÁT, và viên kem
+## vẫn là viên kem chứ không thành cây ốc quế.
+static func _arrange_ring(origin: Node3D, ids: Array[String], arr: Dictionary,
+		base_height: float) -> void:
+	var center: Array = arr.get("center", [])
+	var around: Array[String] = []
+	var middle: Array[String] = []
+	for id in ids:
+		if center.has(id):
+			middle.append(id)
+		else:
+			around.append(id)
+
+	var radius := float(arr.get("radius", 0.4))
+	var scale_ := float(arr.get("scale", STACK_SCALE))
+	var y0 := base_height + float(arr.get("y", 0.0))
+	var n := around.size()
+
+	for k in n:
+		var id := around[k]
+		var m := _stack_model(id)
+		if m == null:
+			continue
+		var angle := TAU * float(k) / float(n) + deg_to_rad(RING_START_ANGLE)
+		var r := radius if n > 1 else 0.0
+		m.scale = Vector3.ONE * scale_
+		# Xoay theo góc của chính nó trên vòng: mỗi món quay mặt ra ngoài như
+		# topping thật, và hai món giống nhau (ba viên kem) không trông như
+		# một món bị nhân bản thẳng hàng.
+		m.rotation.y = -angle
+		# Nhân "y" riêng của món với scale, cùng lý do như trong make_stack.
+		m.position = Vector3(cos(angle) * r,
+				y0 + float(layout(id).get("y", 0.0)) * scale_,
+				sin(angle) * r)
+		origin.add_child(m)
+
+	var c_scale := scale_ * float(arr.get("center_scale", 1.0))
+	for id in middle:
+		var m := _stack_model(id)
+		if m == null:
+			continue
+		m.scale = Vector3.ONE * c_scale
+		m.position = Vector3(0.0,
+				y0 + float(arr.get("center_y", 0.0)) + float(layout(id).get("y", 0.0)) * c_scale,
+				0.0)
+		origin.add_child(m)
+
+
 ## Model của một vật phẩm KHI NÓ NẰM TRONG CHỒNG.
 ##
 ## Mặc định là model thường. Khai "model" trong khoá "bay" thì dùng cái đó
@@ -715,7 +1205,8 @@ static func make_stack(list_: Array[String]) -> Node3D:
 ##
 ## Vì sao không sửa thẳng "model" của mục: cây xà lách vẫn phải là cây xà lách
 ## lúc cầm trên tay và lúc nằm trong thùng nguyên liệu. Chỉ riêng lúc bị kẹp
-## vào bánh nó mới là một lát.
+## vào bánh nó mới là một lát. Kem lẻ dùng cùng khoá theo chiều ngược lại: ốc
+## quế trên tay, bát kem khi nằm trong chồng.
 ## Tham số đặt tên `ten_m` chứ không `ten`: lớp này đã có hàm ten(id), trùng
 ## tên thì Godot cảnh báo che khuất — cùng cái bẫy đã ghi ở _nap_model().
 static func _stack_model(id: String) -> Node3D:

@@ -33,9 +33,10 @@ extends RefCounted
 ##            GameData.NHAN_VAT_AN.)
 ##            (và golshi — nhưng KHÔNG dùng trong prologue, xem
 ##            cutscene_golshi.gd.)
-##            Ghi "player" thì lấy nhân vật người chơi vừa chọn ở màn trước —
-##            nhờ vậy prologue tự khớp với lựa chọn của họ mà mình không phải
-##            viết bốn bản kịch bản khác nhau.
+##            Ghi "player" thì lấy nhân vật người chơi đang chọn. (Prologue
+##            giờ luôn là Kitasan — xem GameData.STORY_CHARACTER — nên kịch bản
+##            này gọi thẳng "kitamoi"; "player" dùng ở các đoạn hội ý trước
+##            mỗi ngày.)
 ##            Ghi "other" thì bốc BẤT KỲ AI TRỪ người chơi (bốc một lần rồi
 ##            giữ nguyên suốt đoạn kể). Dùng cho câu mà người nói không thể
 ##            là chính mình.
@@ -166,7 +167,7 @@ const SCENES: Array[Dictionary] = [
 	{
 		"portrait": "trainer",
 		"speaker": "0rca's Trainer",
-		"line": "Chi phí ăn uống tháng này nhiều hơn dự tính... tầm [b]11 lần[/b].",
+		"line": "Chi phí ăn uống tháng này nhiều hơn dự tính... tầm 11 lần.",
 	},
 	{
 		"portrait": "",
@@ -185,7 +186,7 @@ const SCENES: Array[Dictionary] = [
 	{
 		"portrait": "trainer2",
 		"speaker": "0rca's Trainer",
-		"line": "\"Một ít\" của hai em là [b]564[/b] phần hamburger cà rốt size max dành cho mã nương.",
+		"line": "\"Một ít\" của hai em là 564 phần hamburger cà rốt size max dành cho mã nương.",
 	},
 	{
 		# Cũng là câu đồng thanh, hai người.
@@ -231,48 +232,61 @@ const SCENES: Array[Dictionary] = [
 	{
 		"portrait": "trainer",
 		"speaker": "0rca's Trainer",
-		"line": "Đổi lại, [b]toàn bộ doanh thu ba ngày đó là của chúng ta[/b].",
+		"line": "Đổi lại, toàn bộ doanh thu ba ngày đó là của chúng ta.",
 	},
 	{
 		"portrait": "mambo",
 		"speaker": "@",
 		"line": "Ba ngày... Vậy là chúng ta có thể giải quyết được vấn đề kinh phí rồi.",
 	},
+	# (1/10/2026) BỎ đoạn "ai nấu?" → cả team quay sang người chơi → "Mình
+	# á?". Prologue và tutorial giờ luôn chơi bằng Kitasan, nên chuyện ai đứng
+	# bếp không còn được quyết ở đây — nó chuyển sang đoạn hội ý trước MỖI
+	# NGÀY (cutscene_kitchen_meeting.gd), ngay sau khi người chơi chọn nhân vật.
+	# Ở đây cả team chỉ muốn tới xem cái quán trước đã.
+	#
+	# Lời thoại dựa trên hồ sơ GameTora: Kitasan mê không khí lễ hội và hay
+	# quyết định theo cảm hứng; Oguri Cap chỉ thích "ăn đồ ngon"; Special Week
+	# nghe tiếng nấu nướng là tai tự quay về phía bếp.
 	{
-		# Kịch bản giấy giao câu này cho Kitasan, nhưng ở đây phải là "other".
-		# Lý do: câu này dẫn thẳng tới cảnh cả team quay sang nhìn NGƯỜI CHƠI.
-		# Người chơi có thể đang chọn chính Kitasan — lúc đó thành tự hỏi "ai
-		# nấu?" rồi tự chỉ vào mình. "other" bốc một người cố định cho cả đoạn,
-		# nên đây cũng chính là người khen ở câu dưới, đọc liền mạch.
-		"portrait": "other",
+		"portrait": "kitamoi",
 		"speaker": "@",
-		"line": "Ba ngày thì được. Nhưng ai nấu?",
+		"line": "Nhà hàng thật á?! Có bếp to không ạ? Có treo lồng đèn không ạ?! Em muốn đi xem ngay bây giờ!",
+	},
+	{
+		"portrait": "oui",
+		"speaker": "@",
+		"line": "...Nhà hàng thì có đồ ăn.",
+	},
+	{
+		"portrait": "tuandb",
+		"speaker": "@",
+		"line": "Tai em đã nghe thấy tiếng chảo xèo xèo rồi đấy ạ! Mình đi luôn đi!",
+	},
+	{
+		"portrait": "mambo",
+		"speaker": "@",
+		"line": "Đi xem trước cũng hay. Phải kiểm tra thật kĩ thời tiết, địa hình... à, đây đâu phải cuộc đua nhỉ.",
+	},
+	{
+		"portrait": "trainer",
+		"speaker": "0rca's Trainer",
+		"line": "Được. Tối nay quán chưa mở cửa, cả team qua đó làm quen với căn bếp trước.",
 	},
 	{
 		"portrait": "trainer2",
 		"speaker": "0rca's Trainer",
-		"line": "Ai đứng bếp cũng được. Nhưng nhớ giùm tôi: đồ nấu ra là để bán.",
+		"line": "Nhưng nhớ giùm tôi: đồ trong bếp là để bán. Oguri, Special Week — tôi đang nhìn hai em đấy.",
 	},
 	{
-		"portrait": "",
-		"line": "Cả team quay sang nhìn một người.",
+		"portrait": ["oui", "tuandb"],
+		"speaker": "",
+		"line": "...Vâng ạ.",
 	},
 	{
-		"portrait": "player",
+		"portrait": "kitamoi",
 		"speaker": "@",
-		"line": "...Mình á?",
-	},
-	{
-		# "other" = bất kỳ ai TRỪ người chơi. Không được để người chơi tự khen
-		# mình nấu ngon nhất team.
-		"portrait": "other",
-		"speaker": "@",
-		"line": "Cậu nấu ngon nhất team mà! Quyết định vậy nhé!",
-	},
-	{
-		"portrait": "player",
-		"speaker": "@",
-		"line": "Thôi được. Ba ngày. Vì chuyến đi.",
+		"line": "Vậy thì xuất phát thôi! Mùa hè rực cháy bắt đầu từ căn bếp!",
 	},
 
 	# --------------------------------------------------------- khép màn đen

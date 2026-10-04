@@ -26,6 +26,12 @@ const ROW := {
 @onready var _chk_fullscreen: CheckButton = %ChkFullscreen
 @onready var _opt_language: OptionButton = %OptLanguage
 @onready var _btn_default: Button = %BtnDefault
+@onready var _btn_keybinds: Button = %BtnKeybinds
+
+## Bảng gán phím — dựng bằng code, nằm chồng lên bảng cài đặt. Xem
+## keybind_panel.gd.
+const KeybindPanel := preload("res://scenes/menu/keybind_panel.gd")
+var _keybinds: Control = null
 @onready var _btn_close: Button = %BtnClose
 
 var _focus_on_close: Control = null
@@ -47,6 +53,14 @@ func _ready() -> void:
 	_opt_language.item_selected.connect(_on_language_selected)
 
 	_btn_default.pressed.connect(_on_default_pressed)
+
+	# Bảng gán phím là một bảng RIÊNG mở từ nút này, không nhét thẳng mười một
+	# hàng phím vào đây: bảng cài đặt đã cao gần kín màn hình 720p, thêm nữa
+	# là nút Đóng rơi ra ngoài khung hình.
+	_keybinds = KeybindPanel.new()
+	_keybinds.name = "KeybindPanel"
+	add_child(_keybinds)
+	_btn_keybinds.pressed.connect(func() -> void: _keybinds.open(_btn_keybinds))
 	_btn_close.pressed.connect(close)
 
 
@@ -94,6 +108,10 @@ func close() -> void:
 
 
 func _unhandled_input(event: InputEvent) -> void:
+	# Bảng gán phím đang mở thì ESC là của nó (đóng nó trước, không đóng cả
+	# bảng cài đặt).
+	if _keybinds != null and _keybinds.visible:
+		return
 	if visible and event.is_action_pressed("ui_cancel"):
 		close()
 		get_viewport().set_input_as_handled()

@@ -43,7 +43,7 @@ extends CanvasLayer
 ## phạt. Cùng chiều thì người chơi liếc nhanh sẽ nhầm cái sau là cái trước.
 
 ## Cỡ bar, tính theo viewport thiết kế 1920×1080 (chia 1.5 ra cỡ thật ở cửa
-## sổ 1280×720 — xem giải thích ở hud_tuong_tac.gd).
+## sổ 1280×720 — xem giải thích ở interaction_hud.gd).
 const WIDTH := 92.0
 const HEIGHT := 12.0
 
@@ -76,9 +76,9 @@ func _ready() -> void:
 ## nào — mọi con số đến từ tín hiệu. Nhờ vậy không có khả năng bar trên màn
 ## hình lệch với đồng hồ thật, kiểu lỗi không bao giờ báo mà chỉ làm người
 ## chơi thấy "rõ ràng bar chưa đầy mà món đã cháy".
-func listen_to_cooking(he: Node) -> void:
-	he.progress_changed.connect(_on_cooking)
-	he.burn_warning.connect(_on_burn_warning)
+func listen_to_cooking(system: Node) -> void:
+	system.progress_changed.connect(_on_cooking)
+	system.burn_warning.connect(_on_burn_warning)
 
 
 func _on_cooking(station: Node, ratio: float) -> void:

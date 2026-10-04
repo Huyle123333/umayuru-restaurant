@@ -40,7 +40,8 @@ extends RefCounted
 # ═══════════════════════════════════ CHỦ ĐỘNG: Victory Cheer! Lv18 (Space)
 #
 # "Điều kiện: Hoàn thành 5 đơn hoàn hảo. Trong thời gian còn lại của màn chơi,
-#  mọi đơn giao ra đều được tính là hoàn hảo bất kể thanh kiên nhẫn."
+#  mọi đơn giao ra đều được tính là hoàn hảo bất kể thanh kiên nhẫn; riêng đơn
+#  giao khi kiên nhẫn còn trên một nửa thì được NHÂN ĐÔI tiền."
 #
 # Vì sao hiệu lực tới HẾT MÀN chứ không phải 45 hay 60 giây (mục 4 tài liệu):
 # kĩ năng chủ động mỗi màn chỉ dùng một lần, nên nếu thời lượng cố định thì
@@ -67,6 +68,25 @@ const ACTIVE := {
 	## effects/_template.gd.
 	"effect": "force_perfect",     # Registry.FX_FORCE_PERFECT
 
+	## NHÂN vào tiền của đơn giao khi kiên nhẫn còn TRÊN ngưỡng hoàn hảo (50%).
+	##
+	## Đây là NÚM PHỤ, cộng thêm vào "effect" ở trên chứ không thay nó — xem
+	## skill_registry.gd phần ACTIVE_EXTRAS.
+	##
+	## CHỈ ăn với đơn thật sự nhanh. Đơn giao muộn vẫn được `force_perfect` đỡ
+	## lên mức hoàn hảo (155 đồng cho món 100) nhưng KHÔNG được nhân đôi.
+	##
+	## Số tiền một món 100 đồng, trong lúc kĩ năng bật:
+	##   giao còn trên 50% kiên nhẫn  →  100 × 1,55 × 2 = 310
+	##   giao dưới 50%                →  100 × 1,55     = 155
+	##   (không có kĩ năng, dưới 50%) →  100            = 100
+	##
+	## Vì sao 2,0 chứ không 1,5: mức 1,5 ra 232 đồng, chỉ hơn sàn 155 khoảng
+	## 50% — mà người chơi đã phải đạt 5 đơn hoàn hảo để bật kĩ năng RỒI còn
+	## phải tiếp tục giao nhanh mới được hưởng. Hai lớp điều kiện thì phần
+	## thưởng phải thấy rõ, không thì không ai cố lớp thứ hai.
+	"perfect_payout_multiplier": 2.0,
+
 	## Mỗi màn dùng được mấy lần. Bỏ trống = 1.
 	"uses": 1,
 }
@@ -89,7 +109,7 @@ const PASSIVE := {
 
 	# "Dòng tiền mờ ám — Tiền thưởng từ đơn hoàn hảo +20%."
 	#
-	# CỘNG ĐIỂM PHẦN TRĂM vào mức gốc 0,35 của quan_ly_khach → 0,55. Món 100
+	# CỘNG ĐIỂM PHẦN TRĂM vào mức gốc 0,35 của customer_manager → 0,55. Món 100
 	# đồng giao hoàn hảo trả 155 thay vì 135.
 	#
 	# Vì sao cộng chứ không nhân (nhân ra 0,42, tức 142 đồng): mục 7 tài liệu
@@ -109,7 +129,7 @@ const PASSIVE := {
 	# (món xong sớm hơn), ngược hẳn với chữ "đổi lại".
 	#
 	# Thực tế chỉ ham và steak chịu ảnh hưởng — hai món duy nhất khai khoá
-	# `hong` trong DanhMuc. Vẫn viết chung chứ không viết riêng cho hai món,
+	# `hong` trong ItemCatalog. Vẫn viết chung chứ không viết riêng cho hai món,
 	# để thêm một món cháy được sau này không phải sửa lại kĩ năng.
 	"burn_time_cut": 2.0,
 }

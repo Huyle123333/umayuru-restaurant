@@ -1,5 +1,5 @@
 extends Control
-## Bảng xếp hạng — bốn tab (Màn 1, Màn 2, Màn 3, Endless), mỗi tab là danh
+## Bảng xếp hạng — năm tab (Màn 1, Màn 2, Màn 3, Endless Mode, Asian Mode), mỗi tab là danh
 ## sách các lượt chơi đã ghi: nhân vật, doanh thu, hạng.
 ##
 ## ─────────────────────────────────────────────── VÌ SAO LÀM NHƯ THẾ NÀY
@@ -30,6 +30,7 @@ const COLOR_RANK := {
 	"A": Color("e8823f"),
 	"B": Color("e27ba0"),
 	"C": Color("4f9d5d"),
+	"D": Color("5b8fb0"),
 	"": Color("9a8f84"),
 }
 
@@ -115,9 +116,12 @@ func _draw_table() -> void:
 	var list_ := GameData.level_leaderboard(_level_shown)
 	if list_.is_empty():
 		_lbl_empty.show()
-		# Endless chưa làm nên nói rõ là "chưa có chế độ", chứ không nói
-		# "chưa ai chơi" — hai câu đó dẫn người đọc đi hai hướng khác nhau.
-		_lbl_empty.text = tr("RANK_ENDLESS_SOON") if _level_shown == "endless" else tr("RANK_EMPTY")
+		# Chế độ chưa làm (Endless Mode, Asian Mode) thì nói rõ là "chưa có
+		# chế độ", chứ không nói "chưa ai chơi" — hai câu đó dẫn người đọc đi
+		# hai hướng khác nhau. Hỏi GameData.LEVELS chứ không so tên từng chế
+		# độ: chế độ nào được thêm vào LEVELS là tab của nó tự đổi câu.
+		var is_real := GameData.LEVELS.has(_level_shown)
+		_lbl_empty.text = tr("RANK_EMPTY") if is_real else tr("LEVEL_COMING_SOON")
 		return
 
 	_lbl_empty.hide()
