@@ -15,3 +15,9 @@ func enable(ctx: Dictionary) -> void:
 	var clock: Node = ctx.get("clock")
 	if clock != null and clock.has_method("reset_time"):
 		clock.reset_time()
+	# Nhạc cao điểm đang kêu thì trả về nhạc nền: màn vừa quay lại phút đầu
+	# tiên, và bài cao điểm phải để dành cho lúc nó thật sự tới lần nữa.
+	var level: Node = ctx.get("level")
+	var rules: Node = level.get_node_or_null("LevelRules") if level != null else null
+	if rules != null and rules.has_method("rearm_music"):
+		rules.rearm_music()
