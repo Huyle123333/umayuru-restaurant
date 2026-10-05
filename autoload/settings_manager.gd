@@ -224,6 +224,7 @@ const REBINDABLE := [
 	{"action": "cancel_menu", "label": "KEY_CANCEL_MENU"},
 	{"action": "toggle_orders", "label": "KEY_TOGGLE_ORDERS"},
 	{"action": "toggle_menu", "label": "KEY_TOGGLE_MENU"},
+	{"action": "skill_alt", "label": "KEY_SKILL_ALT"},
 ]
 
 ## Hành động KHAI BẰNG CODE thay vì trong project.godot: action -> phím mặc định.
@@ -237,6 +238,7 @@ const REBINDABLE := [
 const EXTRA_ACTIONS := {
 	"toggle_orders": KEY_1,
 	"toggle_menu": KEY_2,
+	"skill_alt": KEY_3,
 }
 
 func _register_extra_actions() -> void:

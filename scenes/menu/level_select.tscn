@@ -175,12 +175,6 @@ custom_minimum_size = Vector2(176, 96)
 layout_mode = 2
 text = "COMMON_MORNING"
 
-[node name="BtnD1Evening" type="Button" parent="Content/VBox/StoryPanel/StoryBox/Scroll/Columns/ColDay1"]
-unique_name_in_owner = true
-custom_minimum_size = Vector2(176, 96)
-layout_mode = 2
-text = "COMMON_EVENING"
-
 [node name="Arrow2" type="Label" parent="Content/VBox/StoryPanel/StoryBox/Scroll/Columns"]
 layout_mode = 2
 size_flags_vertical = 4
@@ -209,12 +203,6 @@ custom_minimum_size = Vector2(176, 96)
 layout_mode = 2
 text = "COMMON_MORNING"
 
-[node name="BtnD2Evening" type="Button" parent="Content/VBox/StoryPanel/StoryBox/Scroll/Columns/ColDay2"]
-unique_name_in_owner = true
-custom_minimum_size = Vector2(176, 96)
-layout_mode = 2
-text = "COMMON_EVENING"
-
 [node name="Arrow3" type="Label" parent="Content/VBox/StoryPanel/StoryBox/Scroll/Columns"]
 layout_mode = 2
 size_flags_vertical = 4
@@ -242,12 +230,6 @@ unique_name_in_owner = true
 custom_minimum_size = Vector2(176, 96)
 layout_mode = 2
 text = "COMMON_MORNING"
-
-[node name="BtnD3Evening" type="Button" parent="Content/VBox/StoryPanel/StoryBox/Scroll/Columns/ColDay3"]
-unique_name_in_owner = true
-custom_minimum_size = Vector2(176, 96)
-layout_mode = 2
-text = "COMMON_EVENING"
 
 [node name="Arrow4" type="Label" parent="Content/VBox/StoryPanel/StoryBox/Scroll/Columns"]
 layout_mode = 2

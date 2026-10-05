@@ -69,6 +69,8 @@ func show_results(money: int, served: int, perfect: int, left_angry: int,
 
 	var old_record := 0
 	var place := not row.is_empty()
+	# Đọc cờ TRƯỚC khi gọi record_rank(): hàm đó tắt cờ sau khi dùng.
+	_skill_win = GameData.skill_win_pending
 	if not level_id.is_empty():
 		old_record = GameData.get_best_money(level_id)
 		# Chỉ ghi nhận hoàn thành khi ĐẠT ÍT NHẤT HẠNG C.
@@ -119,6 +121,9 @@ func show_results(money: int, served: int, perfect: int, left_angry: int,
 
 
 # ------------------------------------------------------------ dựng hình ---
+
+var _skill_win := false
+
 
 func _build_ui(money: int, served: int, perfect: int, left_angry: int,
 		row: String, old_record: int, place: bool) -> void:
@@ -206,7 +211,9 @@ func _build_ui(money: int, served: int, perfect: int, left_angry: int,
 	# complete_level(), mà lượt trượt thì không gọi hàm đó. Không có vế
 	# `place` thì một lượt thua vì khách bỏ về vẫn hiện "KỶ LỤC MỚI!" cho một
 	# con số không hề được lưu.
-	if money > old_record and place:
+	# Lượt thắng bằng kĩ năng không ghi kỷ lục (xem GameData.complete_level),
+	# nên cũng không được khoe "kỷ lục mới".
+	if money > old_record and place and not _skill_win:
 		record.text = "KỶ LỤC MỚI!  (cũ: %d)" % old_record
 		record.add_theme_color_override("font_color", COLOR_GRADE["A"])
 	else:

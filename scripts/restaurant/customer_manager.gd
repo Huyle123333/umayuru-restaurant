@@ -277,6 +277,20 @@ func set_frozen(value: bool) -> void:
 		k.process_mode = mode
 var bonus_payout_multiplier: float = 3.0
 
+## Hệ số giá do KĨ NĂNG đặt, nhân lên MỌI món. 1,0 = không đổi.
+## (Sakura Chiyono O — Cute puppy: 1,5.)
+## Tách khỏi `price_factor` vì con số kia là của MÀN: level_rules gán nó SAU
+## khi kĩ năng đã cài xong, nên viết chung một biến thì luật màn đè mất kĩ năng.
+var skill_price_factor: float = 1.0
+
+## Tốc độ trôi của hệ khách: nhân vào nhịp khách đến VÀ tốc độ tụt kiên nhẫn.
+## 1,0 = bình thường. (Sakura Chiyono O — Made in haven: 1,25.)
+var time_scale: float = 1.0
+
+## Những món đã từng được giao HOÀN HẢO trong màn này: id món -> true.
+## (Gold Ship — Anchors Aweigh! cần mọi món trong thực đơn có mặt ở đây.)
+var perfect_dishes: Dictionary = {}
+
 ## Nguyên liệu miễn phí (cheat). false = trừ tiền như bình thường.
 ##
 ## level_base đọc GameData.cheat_free_ingredients rồi gán vào đây. File này KHÔNG
@@ -564,7 +578,7 @@ func _process(delta: float) -> void:
 		return
 
 	if auto_spawn:
-		_spawn_timer -= delta
+		_spawn_timer -= delta * time_scale
 		if _spawn_timer <= 0.0:
 			_spawn_timer = _next_spawn_gap()
 			spawn_customer()
@@ -576,7 +590,7 @@ func _process(delta: float) -> void:
 	for order_ in _orders.values().duplicate():
 		# Khai kiểu tường minh: `don` lấy từ Dictionary nên kiểu tĩnh là Variant,
 		# `:=` không suy được kiểu trả về và Godot báo lỗi biên dịch.
-		var expired: bool = order_.tick(delta)
+		var expired: bool = order_.tick(delta * time_scale)
 		# Vẽ thanh chờ trên đầu người đang xếp hàng. Chỉ giai đoạn hàng đợi mới
 		# vẽ ở đây; ngồi vào bàn rồi thì tấm vé trên HUD lo phần đó.
 		if order_.in_queue and is_instance_valid(order_.customer):
@@ -732,7 +746,7 @@ func _on_dish_delivered(table: Node, dish_id: String) -> void:
 	# của chính món được giao (đã nhân hệ số giá của màn như mọi đơn khác).
 	var base_price: int = order_.price
 	if is_wildcard:
-		base_price = maxi(1, int(round(ItemCatalog.price(dish_id) * price_factor \
+		base_price = maxi(1, int(round(ItemCatalog.price(dish_id) * price_factor * skill_price_factor \
 			* float(dish_price_factors.get(dish_id, 1.0)))))
 	order_.payout = base_price
 	if order_.was_perfect:
@@ -764,6 +778,7 @@ func _on_dish_delivered(table: Node, dish_id: String) -> void:
 		counted_orders_done += 1
 	if order_.was_perfect:
 		perfect_orders += 1
+		perfect_dishes[order_.dish] = true
 		# Chồng LÊN TRÊN tiếng giao món, không thay thế: người chơi vẫn nghe
 		# tiếng giao quen thuộc, cộng thêm một tiếng nữa báo "lần này hoàn hảo".
 		AmThanh.play_sfx("perfect")
@@ -846,7 +861,7 @@ func _place_order(customer: Node) -> void:
 	# Hệ số giá của màn. Nhân NGAY LÚC TẠO ĐƠN, không phải lúc trả tiền: con
 	# số trên tấm vé là con số người chơi sẽ nhận, và thưởng hoàn hảo (tính
 	# từ order_.price) tự ăn theo mà không cần biết có hệ số.
-	var factor := price_factor * float(dish_price_factors.get(picked, 1.0))
+	var factor := price_factor * skill_price_factor * float(dish_price_factors.get(picked, 1.0))
 	if not is_equal_approx(factor, 1.0):
 		order_.price = maxi(1, int(round(order_.price * factor)))
 	# Gán hệ số TRƯỚC wait_in_queue(): hàm đó chốt ngân sách kiên nhẫn ngay tại chỗ.
@@ -1169,6 +1184,55 @@ func _money_popup(spot: Vector3, amount: int, is_perfect: bool) -> void:
 ##
 ## Không đụng tới người khách đang có mặt: họ cứ đứng đó cho tới khi đổi màn.
 ## Xoá sạch thì phía sau tấm bảng bỗng thành một cái quán trống trơn.
+## Thực đơn thật của màn này (đã lọc món bị khoá). Cho kĩ năng đọc.
+func menu_dishes() -> Array[String]:
+	return _actual_menu()
+
+
+## Cộng thẳng một khoản tiền vào ví, có báo cho HUD.
+func add_money(amount: int, spot: Vector3 = Vector3.ZERO) -> void:
+	money += amount
+	money_changed.emit(money, amount, spot)
+
+
+## Cho TOÀN BỘ khách biến mất ngay và đưa nhịp khách về như đầu màn.
+## (Sakura Chiyono O — Ambition to Surpass the Sakura.)
+##
+## KHÔNG ai bị tính là "bỏ về": customers_lost đứng yên, không có tiếng báo mất
+## khách. Người chơi tự bấm kĩ năng, phạt họ vì chính tác dụng của kĩ năng là
+## vô lý.
+##
+## Khách ĐANG ĂN thì được trả tiền ngay: món đã giao xong, tiền đã chốt lúc
+## giao (xem _on_dish_delivered), chỉ còn chờ họ ăn hết. Kĩ năng ghi "giữ
+## nguyên số tiền đã kiếm" — nuốt mất khoản đó là trái với chính câu mô tả.
+func clear_all_customers() -> void:
+	for customer in _orders.keys():
+		var order_: Order = _orders[customer]
+		if order_.payout > 0 and not order_.draining and is_instance_valid(customer) \
+				and customer.has_meta("dish"):
+			add_money(order_.payout, customer.global_position)
+		order_finished.emit(order_, "left")
+	_orders.clear()
+
+	# Bàn có khách đang ăn thì dọn món đi; bàn trống giữ nguyên thứ người chơi
+	# đang để trên đó.
+	for table in _customer_at.keys():
+		if is_instance_valid(table):
+			table.clear_all()
+			table.clear_model()
+	_customer_at.clear()
+	_table_of.clear()
+	for i in _in_queue.size():
+		_in_queue[i] = null
+
+	for k in get_tree().get_nodes_in_group(CUSTOMER_GROUP):
+		customer_left.emit(k)
+		k.queue_free()
+
+	_spawn_timer = first_wait
+	_orders_since_hard = 0
+
+
 func close_shop() -> void:
 	auto_spawn = false
 	drain_patience = false

@@ -313,6 +313,15 @@ func _assemble_table(table: Workstation) -> void:
 		AmThanh.play_sfx("craft_fail")
 		return
 
+	# Gold Ship — Everything but cooking: ghép có thể hỏng, mất nguyên liệu.
+	if craft_fail_chance > 0.0 and randf() < craft_fail_chance:
+		table.clear_all()
+		table.add_item(FAILED_ITEM)
+		table.show_model(FAILED_ITEM)
+		notice.emit("Ghép hỏng!", false)
+		AmThanh.play_sfx("craft_fail")
+		return
+
 	table.clear_all()
 	table.add_item(dish)
 	table.show_model(dish)
@@ -322,6 +331,25 @@ func _assemble_table(table: Workstation) -> void:
 
 ## Bảng chọn trả về một id vật phẩm. Sinh vật rồi cầm lên, cùng đường với
 ## thùng nguyên liệu — hai nguồn khác nhau nhưng kết quả phải giống hệt.
+## Xác suất (0…1) một lần ghép ở bàn chế tạo ra đồ hỏng. Kĩ năng đặt.
+var craft_fail_chance: float = 0.0
+const FAILED_ITEM := "do_hong"
+
+
+## Đặt thẳng một món vào tay, KHÔNG trừ tiền. Trả về false nếu tay đang bận.
+## (Tokai Teio — Fan tê liệt.) Khác receive_ingredient() ở chỗ không phát
+## ingredient_taken: món này là quà của kĩ năng, không phải thứ mua ở kệ.
+func give_item(id: String) -> bool:
+	if _held != null or id.is_empty() or not ItemCatalog.has_item(id):
+		return false
+	_pick_up(_spawn_item(id))
+	return true
+
+
+func is_holding() -> bool:
+	return _held != null
+
+
 func receive_ingredient(station: Node, id: String) -> void:
 	if _held != null or id.is_empty():
 		return

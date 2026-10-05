@@ -126,9 +126,16 @@ func _draw_table() -> void:
 
 	_lbl_empty.hide()
 	_table.add_child(_header_row())
+	# Dòng ghim (Gold Ship) hiện là hạng 0 và KHÔNG chiếm chỗ: dòng ngay sau nó
+	# vẫn là hạng 1 với huy chương vàng.
+	var place := 0
 	for i in list_.size():
 		var record: Dictionary = list_[i]
-		_table.add_child(_data_row(i, record))
+		if bool(record.get("pinned", false)):
+			_table.add_child(_data_row(-1, record))
+		else:
+			_table.add_child(_data_row(place, record))
+			place += 1
 
 
 func _header_row() -> Control:
@@ -147,8 +154,9 @@ func _data_row(index: int, record: Dictionary) -> Control:
 
 	# Kiểu ghi rõ ràng, không dùng ":=": HUY_CHUONG là hằng mảng, và giá trị
 	# lấy ra từ mảng hằng bị GDScript coi là Variant nên không suy ra được kiểu.
-	var place: String = MEDALS[index] if index < MEDALS.size() \
-		else str(index + 1)
+	var place: String = "0"
+	if index >= 0:
+		place = MEDALS[index] if index < MEDALS.size() else str(index + 1)
 	h.add_child(_cell(place, 46, COLOR_TEXT, 20, HORIZONTAL_ALIGNMENT_CENTER))
 
 	var name_ := GameData.character_name(String(record.get("character", record.get("nv", ""))))

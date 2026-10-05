@@ -10,11 +10,7 @@ signal progress_changed
 ## tới ai — thêm thứ khác cần biết góc nhìn (HUD, minimap...) chỉ việc nối vào.
 signal view_mode_changed(is_third_person: bool)
 
-## Giai đoạn buổi tối chưa làm. Khi nào làm xong thì đổi thành true,
-## toàn bộ các màn "Tối" tự mở khóa theo đúng quy tắc bên dưới.
-const EVENING_ENABLED := false
-
-## Map của quán, dùng chung cho cả ba màn Sáng.
+## Map của quán, dùng chung cho cả ba ngày.
 ##
 ## Ba ngày khác nhau ở thực đơn, tốc độ khách vào và số bàn được mở — chứ
 ## không khác nhau ở hình dạng cái quán. Nên chỉ cần MỘT file map; đổi một
@@ -60,15 +56,6 @@ const INTRO_SCENES := {
 	"chiyo": "res://scenes/story/chiyono_intro.tscn",
 	"golshi": "res://scenes/story/golshi_intro.tscn",
 }
-
-## Giai đoạn BUỔI TỐI đã có chỗ trong dữ liệu nhưng chưa có nội dung.
-##
-## Để là một cái cờ chứ không xoá hẳn các màn "*_toi" khỏi LEVELS: xoá đi thì
-## luật mở khoá (needs) phải viết lại, file save cũ đang ghi tiến trình theo
-## id cũ sẽ lệch, và lúc quay lại làm buổi tối phải dựng lại từ đầu. Bật lại
-## chỉ là đổi false thành true — bố cục, luật mở khoá và bản dịch đều còn
-## nguyên.
-const SHOW_EVENING := false
 
 ## ─────────────────────────────── LUẬT RIÊNG CỦA TỪNG MÀN ──────────────────
 ##
@@ -266,7 +253,6 @@ const RULES_D3 := {
 ## Toàn bộ màn chơi của game.
 ##   label   — chữ hiện trên nút
 ##   needs   — phải hoàn thành màn nào thì màn này mới mở (rỗng = mở sẵn)
-##   evening — thuộc giai đoạn buổi tối
 ##   scene   — file map của màn. RỖNG = chưa dựng map cho màn đó.
 const LEVELS := {
 	# ke_chuyen — màn này chỉ kể chuyện, không có bếp và không có nhân vật
@@ -275,11 +261,8 @@ const LEVELS := {
 	"prologue": {"label": "Prologue", "needs": "", "scene": SCENE_PROLOGUE, "story_only": true},
 	"tutorial": {"label": "Tutorial", "needs": "prologue", "scene": MAP_RESTAURANT},
 	"d1_sang": {"label": "Sáng", "needs": "tutorial", "scene": MAP_RESTAURANT, "rules": RULES_D1},
-	"d1_toi": {"label": "Tối", "needs": "d1_sang", "evening": true, "scene": ""},
 	"d2_sang": {"label": "Sáng", "needs": "d1_sang", "scene": MAP_RESTAURANT, "rules": RULES_D2},
-	"d2_toi": {"label": "Tối", "needs": "d2_sang", "evening": true, "scene": ""},
 	"d3_sang": {"label": "Sáng", "needs": "d2_sang", "scene": MAP_RESTAURANT, "rules": RULES_D3},
-	"d3_toi": {"label": "Tối", "needs": "d3_sang", "evening": true, "scene": ""},
 	# MÀN KẾT. Mở khi qua Ngày 3. Có HAI kết (thường / ẩn) nhưng chỉ MỘT mục
 	# ở đây: người chơi thấy một nút "Ending" duy nhất, kết nào được chiếu do
 	# enter_level() quyết lúc bấm — xem ending_scene().
@@ -346,9 +329,9 @@ const CHARACTERS := {
 		"label": "Tokai Teio",
 		"player": "res://scenes/characters/player_hachimi.tscn",
 		"skills": [
-			{"name": "Sky-High Teio Step", "level": 36, "desc": "", "icon": ""},
-			{"name": "", "level": 0, "desc": "", "icon": ""},
-			{"name": "", "level": 0, "desc": "", "icon": ""},
+			{"name": "Sky-High Teio Step", "level": 3, "desc": "Điều kiện: Đang có 1500 tiền trở lên.\nTừ đó tới hết màn, mỗi đơn giao xong cộng thêm 10 giây vào đồng hồ của màn.", "icon": "mac_dinh"},
+			{"name": "Fan tê liệt", "level": 0, "desc": "Phím 3: mở bảng chọn một món trong thực đơn hôm nay và nhận ngay món đó trên tay. Tối đa 6 lần mỗi màn.", "icon": "skill2"},
+			{"name": "Tưởng tày nhưng không", "level": 0, "desc": "Các món kem tăng 60% giá trị, nhưng khách gọi kem ít đi một nửa.", "icon": "skill3"},
 		],
 		"desc": "Bất bại và đáng yêu! Một tay đua tưng tưng lúc nào cũng vui.",
 		"tagline": "Bất bại và đáng yêu! Một tay đua tưng tưng lúc nào cũng vui.",
@@ -376,9 +359,9 @@ const CHARACTERS := {
 		"label": "Sakura Chiyono O",
 		"player": "res://scenes/characters/player_chiyo.tscn",
 		"skills": [
-			{"name": "Ambition to Surpass the Sakura", "level": 67, "desc": "", "icon": ""},
-			{"name": "", "level": 0, "desc": "", "icon": ""},
-			{"name": "", "level": 0, "desc": "", "icon": ""},
+			{"name": "Ambition to Surpass the Sakura", "level": 76, "desc": "Điều kiện: Hoàn thành 10 đơn (đếm lại từ đầu sau mỗi lần dùng).\nĐặt lại đồng hồ màn về đầu và cho toàn bộ khách ra về, giữ nguyên số tiền đã kiếm. Dùng bao nhiêu lần cũng được.", "icon": "mac_dinh"},
+			{"name": "Cute puppy", "level": 0, "desc": "Giá trị của tất cả món ăn tăng 50%.", "icon": "skill2"},
+			{"name": "Made in haven", "level": 0, "desc": "Đồng hồ màn, thời gian nấu, tốc độ khách đến và thanh kiên nhẫn đều chạy nhanh hơn 25%.", "icon": "skill3"},
 		],
 		"desc": "Theo đuổi giấc mơ! Một Umamusume thật thà và chăm chỉ.",
 		"tagline": "Theo đuổi giấc mơ! Một Umamusume thật thà và chăm chỉ.",
@@ -501,9 +484,9 @@ const CHARACTERS := {
 		"label": "Gold Ship",
 		"player": "res://scenes/characters/player_golshi.tscn",
 		"skills": [
-			{"name": "Anchors Aweigh!", "level": 99, "desc": "", "icon": ""},
-			{"name": "", "level": 0, "desc": "", "icon": ""},
-			{"name": "", "level": 0, "desc": "", "icon": ""},
+			{"name": "Anchors Aweigh!", "level": 999, "desc": "Điều kiện: Mỗi món trong thực đơn hôm nay đã được giao hoàn hảo ít nhất một lần.\nNhận ngay 9.999.999 tiền và kết thúc màn chơi.", "icon": "mac_dinh"},
+			{"name": "Aura farming", "level": 0, "desc": "Mọi đơn giao ra đều được tính là hoàn hảo, bất kể thanh kiên nhẫn.", "icon": "skill2"},
+			{"name": "Everything but cooking", "level": 0, "desc": "Mỗi lần nấu trên bếp, nướng trong lò hay ghép ở bàn chế tạo có 20% thất bại: ra đồ hỏng và mất nguyên liệu.", "icon": "skill3"},
 		],
 		"an_khi_khoa": true,
 		"desc": "Hoang dã và khó đoán, tay đua vàng không giống bất kỳ ai!",
@@ -757,6 +740,11 @@ const RANKED_LEVEL_NAMES := {
 ## thứ hai mươi.
 const LEADERBOARD_ROWS := 10
 
+## true = lượt chơi vừa xong THẮNG BẰNG KĨ NĂNG chứ không bằng tiền kiếm được
+## (Gold Ship — Anchors Aweigh! tự bật cờ này ngay trước khi kết màn).
+## record_rank() đọc rồi tắt; không lưu vào file save.
+var skill_win_pending: bool = false
+
 
 ## Ghi một lượt chơi vào bảng xếp hạng.
 ##
@@ -772,15 +760,37 @@ func record_rank(level_id: String, money: int, rank: String) -> void:
 	# luôn chữ S của lượt trước.
 	last_rank[level_id] = rank
 	var list_: Array = leaderboard.get(level_id, [])
-	list_.append({
+	var entry := {
 		"character": selected_character,
 		"money": money,
 		"rank": rank,
-	})
+	}
+	# LƯỢT THẮNG BẰNG KĨ NĂNG (Gold Ship — Anchors Aweigh!): mỗi màn chỉ được
+	# lên bảng MỘT lần, và dòng đó ghim ở HẠNG 0, phía trên hạng 1. Dùng kĩ
+	# năng lần nữa thì không ghi thêm gì — muốn ghi lại phải xoá dữ liệu.
+	# Gold Ship chơi KHÔNG dùng kĩ năng thì xếp hạng như mọi nhân vật khác.
+	# (User chốt 5/10/2026.)
+	#
+	# Lý do: kĩ năng trả 9.999.999 tiền. Cho nó xếp như mọi lượt khác thì chỉ
+	# cần bấm mười lần là cả bảng thành mười dòng 9.999.999, và điểm thật của
+	# mọi nhân vật không bao giờ hiện ra nữa.
+	var skill_win := skill_win_pending
+	skill_win_pending = false
+	if skill_win:
+		for old in list_:
+			if bool((old as Dictionary).get("pinned", false)):
+				SaveSystem.save_game()
+				return
+		entry["pinned"] = true
+	list_.append(entry)
 	# Sắp lại NGAY lúc ghi chứ không sắp lúc hiện: bảng được đọc nhiều lần
 	# hơn số lần được ghi, và sắp sẵn thì mọi nơi đọc đều thấy cùng một thứ tự.
 	list_.sort_custom(func(a: Dictionary, b: Dictionary) -> bool:
 		# Bản ghi cũ dùng khoá "tien"; đọc lùi để bảng đã lưu vẫn sắp đúng.
+		# Dòng ghim (hạng 0) luôn đứng đầu, bất kể số tiền.
+		var a_pinned := bool(a.get("pinned", false))
+		if a_pinned != bool(b.get("pinned", false)):
+			return a_pinned
 		return int(a.get("money", a.get("tien", 0))) \
 			> int(b.get("money", b.get("tien", 0))))
 	if list_.size() > LEADERBOARD_ROWS:
@@ -843,16 +853,12 @@ func is_completed(id: String) -> bool:
 	return bool(completed.get(id, false))
 
 
-## Quy tắc mở khóa: hoàn thành Sáng ngày N sẽ mở Sáng ngày N+1 VÀ Tối ngày N.
+## Quy tắc mở khóa: hoàn thành ngày N sẽ mở ngày N+1.
 ## Quy tắc đó nằm gọn trong bảng LEVELS ở trên chứ không rải rác trong code,
-## nên thêm ngày mới chỉ là thêm 2 dòng vào bảng.
+## nên thêm ngày mới chỉ là thêm 1 dòng vào bảng.
 func is_unlocked(id: String) -> bool:
 	var info: Dictionary = LEVELS.get(id, {})
 	if info.is_empty():
-		return false
-	# Giai đoạn buổi tối chưa có nội dung, cheat cũng không mở được —
-	# mở ra chỉ dẫn người chơi vào một màn trống.
-	if bool(info.get("evening", false)) and not EVENING_ENABLED:
 		return false
 	if unlock_all:
 		return true
@@ -942,27 +948,21 @@ func rules_for_level(level_id: String) -> Dictionary:
 
 ## Tên màn hiện ở màn hình mở đầu, ví dụ "NGÀY 1".
 ##
-## Đặt ở đây chứ không gõ trong mo_man.gd vì màn hình chọn màn CŨNG đang gộp
-## "Sáng/Tối" thành "Ngày N" (xem KHOA_NGAY trong level_select.gd). Hai chỗ
-## tự đặt tên riêng thì sớm muộn một chỗ nói "Ngày 1" còn chỗ kia nói "Sáng".
-##
-## Khi bật HIEN_MAN_TOI thì mới cần phân biệt buổi, nên lúc đó mới ghép thêm
-## nhãn của màn vào sau.
+## Đặt ở đây chứ không gõ trong level_intro.gd vì màn hình chọn màn CŨNG gọi
+## các màn này là "Ngày N" (xem DAY_LABELS trong level_select.gd). Hai chỗ tự
+## đặt tên riêng thì sớm muộn một chỗ nói "Ngày 1" còn chỗ kia nói khác.
 const DAY_NAMES := {
-	"d1_sang": "NGÀY 1", "d1_toi": "NGÀY 1",
-	"d2_sang": "NGÀY 2", "d2_toi": "NGÀY 2",
-	"d3_sang": "NGÀY 3", "d3_toi": "NGÀY 3",
+	"d1_sang": "NGÀY 1",
+	"d2_sang": "NGÀY 2",
+	"d3_sang": "NGÀY 3",
 }
 
 func level_name(id: String) -> String:
 	if id == "tutorial":
 		return "HƯỚNG DẪN"
-	if not DAY_NAMES.has(id):
-		return String(LEVELS.get(id, {}).get("label", "")).to_upper()
-	var day_label: String = DAY_NAMES[id]
-	if not SHOW_EVENING:
-		return day_label
-	return "%s · %s" % [day_label, String(LEVELS[id].get("label", "")).to_upper()]
+	if DAY_NAMES.has(id):
+		return String(DAY_NAMES[id])
+	return String(LEVELS.get(id, {}).get("label", "")).to_upper()
 
 
 func get_best_money(id: String) -> int:
@@ -972,7 +972,9 @@ func get_best_money(id: String) -> int:
 ## Gọi khi người chơi hoàn thành một màn. Tự lưu game ngay.
 func complete_level(id: String, earned: int = 0) -> void:
 	completed[id] = true
-	if earned > get_best_money(id):
+	# Lượt thắng bằng kĩ năng không đụng tới KỶ LỤC của màn: 9.999.999 tiền
+	# mà thành kỷ lục thì dòng "KỶ LỤC MỚI!" không bao giờ hiện ra nữa.
+	if earned > get_best_money(id) and not skill_win_pending:
 		best_money[id] = earned
 	progress_changed.emit()
 	SaveSystem.save_game()

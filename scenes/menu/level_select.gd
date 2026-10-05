@@ -1,11 +1,9 @@
 extends Control
 ## Màn hình chọn màn.
 ## Bố cục: HAI KHUNG xếp chồng, cùng bề ngang, tiêu đề cùng căn trái. Khung
-## trên "Màn chính" là các cột theo ngày, mỗi cột có màn Sáng và màn Tối, nối
+## trên "Màn chính" là các cột theo ngày, mỗi cột một nút "Ngày N", nối
 ## bằng mũi tên — bấm là vào thẳng. Khung dưới "Chế độ" là các chế độ chơi
 ## (Endless, Asian Mode) — bấm thì mở bảng mô tả lớn giữa màn hình.
-## Khi GameData.SHOW_EVENING = false thì mỗi ngày rút lại còn MỘT nút "Ngày N",
-## xem _group_by_day().
 ## Nút của màn chưa mở khóa bị làm mờ — quy tắc mở khóa nằm trong GameData,
 ## màn hình này chỉ hỏi "màn này mở chưa" chứ không tự quyết định.
 
@@ -17,17 +15,14 @@ extends Control
 	"prologue": %BtnPrologue,
 	"tutorial": %BtnTutorial,
 	"d1_sang": %BtnD1Morning,
-	"d1_toi": %BtnD1Evening,
 	"d2_sang": %BtnD2Morning,
-	"d2_toi": %BtnD2Evening,
 	"d3_sang": %BtnD3Morning,
-	"d3_toi": %BtnD3Evening,
 	# Màn kết: một nút duy nhất cho cả kết thường lẫn kết ẩn. Màn hình này
 	# KHÔNG hỏi GameData xem kết nào sẽ chiếu — kết ẩn không có gợi ý.
 	"ending": %BtnEnding,
 }
 
-## Khoá dịch cho nút gộp của từng ngày, khi giai đoạn buổi tối đang tắt.
+## Khoá dịch cho nút của từng ngày.
 ## Dùng KHOÁ chứ không gõ thẳng "Ngày 1": cả màn hình này chạy qua bảng dịch
 ## trong locale/translations.csv, gõ chữ Việt vào đây thì bản tiếng Anh mất.
 const DAY_LABELS := {
@@ -35,8 +30,6 @@ const DAY_LABELS := {
 	"d2_sang": "LEVEL_DAY_2",
 	"d3_sang": "LEVEL_DAY_3",
 }
-
-const EVENING_LEVELS := ["d1_toi", "d2_toi", "d3_toi"]
 
 ## ── HAI KHUNG (1/10/2026) ──────────────────────────────────────────────
 ## Đã thử ba bố cục khác trước khi chốt cái này: hai vùng trên/dưới không
@@ -105,8 +98,7 @@ func _ready() -> void:
 	# màn hình thì chỉ cần bấm qua lại vài lần là nhạc giật liên tục.
 	AmThanh.play_random_music("menu", true)
 
-	if not GameData.SHOW_EVENING:
-		_group_by_day()
+	_name_day_buttons()
 
 	for id in _buttons:
 		var btn: Button = _buttons[id]
@@ -136,21 +128,12 @@ func _ready() -> void:
 	_refresh()
 
 
-## Rút mỗi cột ngày từ hai nút (Sáng / Tối) xuống còn một nút "Ngày N".
+## Đặt tên "Ngày N" cho nút của từng ngày và ẩn tiêu đề cột.
 ##
-## Ẩn nút Tối rồi để nguyên nút "Sáng" thì sai theo cả hai nghĩa: quán mở cửa
-## lúc bảy giờ kém mười TỐI, nên chữ "Sáng" tả sai giờ chơi; mà một cột chỉ
-## còn đúng một nút thì cái tiêu đề "Ngày 1" phía trên và nút "Sáng" phía dưới
-## thành hai dòng nói về cùng một thứ. Gộp lại: bỏ tiêu đề, nút mang luôn tên
-## ngày.
-##
-## hide() chứ không queue_free(): nút Tối vẫn nằm trong _buttons và vẫn nhận
-## đủ trạng thái khoá/mở như cũ. Bật GameData.SHOW_EVENING lên là chúng hiện
-## lại nguyên vẹn, không phải dựng lại node nào.
-func _group_by_day() -> void:
-	for id in EVENING_LEVELS:
-		(_buttons[id] as Button).hide()
-
+## Mỗi cột chỉ có đúng một nút, nên tiêu đề "Ngày 1" phía trên và nút phía
+## dưới sẽ thành hai dòng nói về cùng một thứ. Gộp lại: bỏ tiêu đề, nút mang
+## luôn tên ngày.
+func _name_day_buttons() -> void:
 	for id in DAY_LABELS:
 		var btn: Button = _buttons[id]
 		btn.text = String(DAY_LABELS[id])

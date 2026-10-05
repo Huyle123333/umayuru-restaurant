@@ -104,6 +104,15 @@ signal burn_warning(cooker: Node, time_left: float)
 ##   "chop" — thái một món lẻ    -> ItemCatalog.prep_step()
 var _running: Dictionary = {}
 
+## Xác suất (0…1) một mẻ NẤU hoặc NƯỚNG ra đồ hỏng thay vì món chín.
+## (Gold Ship — Everything but cooking: 0,2.) Không áp cho thớt: mô tả kĩ năng
+## chỉ kể bếp, lò và bàn chế tạo.
+var fail_chance: float = 0.0
+
+## Tốc độ chạy của mọi bộ đếm nấu (kể cả đếm tới lúc cháy). 1,0 = bình thường.
+## (Sakura Chiyono O — Made in haven: 1,25.)
+var speed_factor: float = 1.0
+
 
 func _process(delta: float) -> void:
 	for station in _running.keys():
@@ -119,7 +128,7 @@ func _process(delta: float) -> void:
 			continue
 
 		var limit: float = _duration_for_batch(m)
-		m["elapsed"] += delta
+		m["elapsed"] += delta * speed_factor
 
 		# Hai giai đoạn, hai tín hiệu. Phân nhánh TRƯỚC khi xét mốc thời gian:
 		# cờ "xong" đã nói rõ đang ở giai đoạn nào, không cần suy từ con số.
@@ -284,6 +293,12 @@ func _cancel(cooker: Node) -> void:
 
 ## Chỗ DUY NHẤT bốn kiểu rẽ nhánh: tra bảng nào.
 func _finish(station: Node, store: Workstation, mode: String) -> void:
+	# Gieo thất bại TRƯỚC khi tính món: hỏng thì đi đúng đường của món cháy
+	# (cùng tiếng, cùng model, cùng tín hiệu), nên mọi thứ đang nghe "món
+	# cháy" — thanh tiến độ, HUD — tự xử lý mà không cần biết tới kĩ năng.
+	if mode != "chop" and fail_chance > 0.0 and randf() < fail_chance:
+		_burn(station, store, String(_running.get(station, {}).get("source_id", "")))
+		return
 	var dish: String = ""
 	match mode:
 		"bake": dish = ItemCatalog.bake_in_oven(store.contents)

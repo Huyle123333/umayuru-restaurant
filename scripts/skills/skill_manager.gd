@@ -90,6 +90,41 @@ func _ready() -> void:
 
 func track_character(character: Node) -> void:
 	_character = character
+	_apply_to_hands()
+
+
+## Xác suất ghép hỏng ở bàn chế tạo. Bàn chế tạo do node Hands của NHÂN VẬT
+## xử lý chứ không do hệ bếp, mà nhân vật có thể được gắn trước hoặc sau
+## setup() — nên giữ con số ở đây và gán lại ở cả hai thời điểm.
+var _craft_fail_chance := 0.0
+
+
+func hands() -> Node:
+	if _character == null or not is_instance_valid(_character):
+		return null
+	return _character.get_node_or_null("Hands")
+
+
+func _apply_to_hands() -> void:
+	var h := hands()
+	if h != null and "craft_fail_chance" in h:
+		h.craft_fail_chance = _craft_fail_chance
+
+
+## Dựng kĩ năng chủ động thứ hai (nếu nhân vật có). Nó là một node con tự lo
+## phím bấm và giao diện của mình; node này chỉ tạo ra và trao đồ nghề.
+func _build_secondary(character_id: String) -> void:
+	var data := Registry.secondary(character_id)
+	if data.is_empty() or get_node_or_null("SecondarySkill") != null:
+		return
+	var script_class := load(String(data.get("script", ""))) as GDScript
+	if script_class == null:
+		push_error("Không nạp được kĩ năng phụ: %s" % data.get("script", ""))
+		return
+	var node: Node = script_class.new()
+	node.name = "SecondarySkill"
+	add_child(node)
+	node.setup(data, _customers, self)
 
 
 ## Kĩ năng có đang bấm được không.
@@ -142,21 +177,21 @@ func _meets_condition() -> bool:
 		return true
 	if _active.is_empty() or _customers == null:
 		return false
-	var threshold := int(_active.get("threshold", 0))
-	match String(_active.get("condition", "")):
-		Registry.COND_PERFECT_ORDERS:
-			return int(_customers.perfect_orders) >= threshold
-		Registry.COND_ORDERS_DONE:
-			return int(_customers.orders_done) >= threshold
-		Registry.COND_ORDERS_WITH_DISHES:
-			return int(_customers.counted_orders_done) >= threshold
-		Registry.COND_TIME_ELAPSED:
-			return _elapsed_seconds() >= threshold
-	# Bốn kiểu điều kiện còn lại (đếm món nấu, đếm giây, cho pet ăn, phủ kín
-	# thực đơn) chưa có bộ đếm nào trong game. Trả false là câu trả lời ĐÚNG:
-	# chưa đếm được thì chưa ai đạt. Trả true cho tiện thử là nói dối giao
-	# diện — ảnh kĩ năng sáng lên trong khi cơ chế không hề có.
-	return false
+	# Một chỗ đếm, một chỗ lấy ngưỡng: điều kiện "đạt chưa" và con số "n/N"
+	# trên HUD đọc CHUNG hai hàm này, nên không thể có chuyện HUD ghi 10/10 mà
+	# phím Space vẫn không ăn.
+	var n := _count_progress()
+	var threshold := _threshold()
+	return n >= 0 and threshold > 0 and n >= threshold
+
+
+## Ngưỡng phải đạt của điều kiện hiện tại.
+func _threshold() -> int:
+	if String(_active.get("condition", "")) == Registry.COND_MENU_COVERED:
+		# Ngưỡng là số món của thực đơn HÔM ĐÓ — Ngày 1 bảy món, Ngày 3 mười ba.
+		# Gõ cứng một con số vào file kĩ năng thì chỉ đúng với một màn.
+		return _customers.menu_dishes().size() if _customers != null else 0
+	return int(_active.get("threshold", 0))
 
 
 ## Tiến độ điều kiện, dạng "3/5". Rỗng khi nhân vật chưa có kĩ năng chủ động
@@ -171,8 +206,7 @@ func progress_text() -> String:
 	var n := _count_progress()
 	if n < 0:
 		return ""
-	return "%d/%d" % [mini(n, int(_active.get("threshold", 0))),
-		int(_active.get("threshold", 0))]
+	return "%d/%d" % [mini(n, _threshold()), _threshold()]
 
 
 ## Tỉ lệ hoàn thành điều kiện, 0…1 đã kẹp sẵn. Trả 0 khi không đếm được.
@@ -181,7 +215,7 @@ func condition_ratio() -> float:
 		var budget := float(_active.get("budget_seconds", 0.0))
 		return clampf(_budget_left / budget, 0.0, 1.0) if budget > 0.0 else 0.0
 	var n := _count_progress()
-	var threshold := int(_active.get("threshold", 0))
+	var threshold := _threshold()
 	if n < 0 or threshold <= 0:
 		return 0.0
 	return clampf(float(n) / float(threshold), 0.0, 1.0)
@@ -200,12 +234,26 @@ func _count_progress() -> int:
 		Registry.COND_PERFECT_ORDERS:
 			return int(_customers.perfect_orders)
 		Registry.COND_ORDERS_DONE:
-			return int(_customers.orders_done)
+			# Trừ mốc của lần dùng trước: kĩ năng dùng lại được (Chiyono O)
+			# phải đếm lại từ 0 sau mỗi lần bấm.
+			return int(_customers.orders_done) - _progress_base
 		Registry.COND_ORDERS_WITH_DISHES:
 			return int(_customers.counted_orders_done)
 		Registry.COND_TIME_ELAPSED:
 			return _elapsed_seconds()
+		Registry.COND_MONEY_EARNED:
+			return maxi(0, int(_customers.money))
+		Registry.COND_MENU_COVERED:
+			var covered := 0
+			for dish in _customers.menu_dishes():
+				if _customers.perfect_dishes.has(dish):
+					covered += 1
+			return covered
 	return -1
+
+
+## Số đơn đã có lúc dùng kĩ năng lần gần nhất. Chỉ kĩ năng khai "repeat" đụng tới.
+var _progress_base := 0
 
 
 ## Số giây ĐÃ TRÔI của màn, đọc từ đồng hồ màn. 0 nếu màn không có đồng hồ.
@@ -248,6 +296,13 @@ func setup(customers: Node, cooking: Node, clock: Node = null) -> void:
 	# đếm THỜI GIAN sau này (Oguri) thì sẽ cần thêm một nhịp kiểm tra riêng.
 	if _customers != null and _customers.has_signal("order_finished"):
 		_customers.order_finished.connect(_on_order_finished)
+	# Điều kiện đếm TIỀN (Teio): tiền vào ví lúc khách ăn xong, tức SAU tín hiệu
+	# order_finished vài giây. Không nghe riêng tín hiệu tiền thì HUD chậm một
+	# đơn so với ví.
+	if _customers != null and _customers.has_signal("money_changed"):
+		_customers.money_changed.connect(func(_t: int, _a: int, _s: Vector3) -> void:
+			_emit_state())
+	_build_secondary(id)
 	_emit_state()
 
 
@@ -265,8 +320,18 @@ func _apply_passive(p: Dictionary) -> void:
 		_customers.bonus_payout_multiplier = float(p["bonus_payout_multiplier"])
 		_customers.dish_price_factors = p["dish_price_factors"]
 		_customers.dish_weight_factors = p["dish_weight_factors"]
+		_customers.skill_price_factor = float(p["all_price_factor"])
+		_customers.time_scale = float(p["time_scale"])
+		if bool(p["force_perfect"]):
+			_customers.force_perfect = true
+	if _clock != null:
+		_clock.time_scale = float(p["time_scale"])
+	_craft_fail_chance = float(p["cook_fail_chance"])
+	_apply_to_hands()
 	_refill_stamina_on_order = bool(p["refill_stamina_on_order"])
 	if _cooking != null:
+		_cooking.fail_chance = float(p["cook_fail_chance"])
+		_cooking.speed_factor = float(p["time_scale"])
 		_cooking.burn_time_cut += float(p["burn_time_cut"])
 		_cooking.cook_time_cut += float(p["cook_time_cut"])
 		_cooking.cook_time_cut_items = p["cook_time_cut_items"]
@@ -496,30 +561,34 @@ func activate() -> void:
 	if not can_use():
 		return
 	var id := str(GameData.selected_character)
-	var cut_in := _make_cut_in()
+	# Kĩ năng dùng lại được chỉ chiếu phim LẦN ĐẦU. Chiyono O bấm cứ mười đơn
+	# một lần; lần nào cũng chặn màn hình hai giây thì người chơi sẽ ngại bấm.
+	var skip_film := bool(_active.get("repeat", false)) and _cut_in_shown
+	var cut_in: Node = null if skip_film else _make_cut_in()
+	if cut_in != null:
+		# Thêm vào cây TRƯỚC khi gọi play(): VideoStreamPlayer chỉ phát được
+		# khi đã nằm trong cây scene.
+		get_tree().current_scene.add_child(cut_in)
+		if not cut_in.play(id):
+			cut_in.queue_free()
+			cut_in = null
+
+	# Chỉ trừ lượt khi cheat TẮT, để cheat đúng nghĩa "không giới hạn".
+	if not GameData.infinite_skill:
+		_uses_left -= 1
+	if bool(_active.get("repeat", false)) and _customers != null:
+		_progress_base = int(_customers.orders_done)
+
 	if cut_in == null:
-		return
-	# Thêm vào cây TRƯỚC khi gọi play(): VideoStreamPlayer chỉ phát được khi
-	# đã nằm trong cây scene.
-	get_tree().current_scene.add_child(cut_in)
-	if not cut_in.play(id):
-		# Không có file cut-in cho nhân vật này: BỎ đoạn phim nhưng VẪN bật kĩ
-		# năng. (Bản trước dừng hẳn ở đây — hợp lý khi chưa nhân vật nào ngoài
-		# Kita có kĩ năng, nhưng giờ Special Week có kĩ năng thật mà chưa có
-		# phim, và "thiếu một file video" không được phép khoá cả một cơ chế.)
-		# Không khoá nhân vật, không dừng game: không có phim thì không có gì
-		# để chờ.
-		cut_in.queue_free()
-		if not GameData.infinite_skill:
-			_uses_left -= 1
+		# Không có phim (thiếu file, hoặc cố ý bỏ qua): VẪN bật kĩ năng. "Thiếu
+		# một file video" không được phép khoá cả một cơ chế. Không khoá nhân
+		# vật, không dừng game: không có phim thì không có gì để chờ.
 		AmThanh.play_sfx("perfect")
 		_apply_effect()
 		_emit_state()
 		return
 
-	# Chỉ trừ lượt khi cheat TẮT, để cheat đúng nghĩa "không giới hạn".
-	if not GameData.infinite_skill:
-		_uses_left -= 1
+	_cut_in_shown = true
 	_playing = true
 	_lock_character(true)
 	_emit_state()

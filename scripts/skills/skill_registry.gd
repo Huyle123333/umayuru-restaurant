@@ -43,7 +43,7 @@ extends RefCounted
 
 ## Đếm số ĐƠN HOÀN HẢO đã giao. (Kita — Victory Cheer!)
 const COND_PERFECT_ORDERS := "perfect_orders"
-## Đếm số đơn đã hoàn thành, hoàn hảo hay không. (Chiyono O — chưa cài)
+## Đếm số đơn đã hoàn thành, hoàn hảo hay không. (Mambo, Chiyono O)
 const COND_ORDERS_DONE := "orders_done"
 ## Đếm số đơn ĐÃ GIAO mà món khách gọi thuộc một nhóm món. Nhóm khai ở khoá
 ## "dishes" của ACTIVE. (Special Week — Shooting Star)
@@ -52,9 +52,10 @@ const COND_ORDERS_WITH_DISHES := "orders_with_dishes"
 const COND_DISHES_COOKED := "dishes_cooked"
 ## Đếm giây đã trôi của màn chơi. (Oguri Cap — Triumphant Pulse)
 const COND_TIME_ELAPSED := "time_elapsed"
-## Đếm số lần cho pet ăn. (Teio — chưa cài)
-const COND_PET_FED := "pet_fed"
-## Mọi món trong thực đơn đã hoàn hảo ít nhất một lần. (Gold Ship — chưa cài)
+## Số tiền đang có trong ví. (Tokai Teio — Sky-High Teio Step)
+const COND_MONEY_EARNED := "money_earned"
+## Mọi món trong thực đơn đã hoàn hảo ít nhất một lần. Ngưỡng tự lấy bằng số
+## món của thực đơn hôm đó, không khai "threshold". (Gold Ship — Anchors Aweigh!)
 const COND_MENU_COVERED := "menu_covered"
 
 
@@ -119,6 +120,14 @@ const DEFAULTS := {
 	"dish_weight_factors": {},
 	## true = mỗi đơn giao xong nạp đầy thanh thể lực (chạy nhanh).
 	"refill_stamina_on_order": false,
+	## true = mọi đơn tính là hoàn hảo ngay từ đầu màn. (Gold Ship)
+	"force_perfect": false,
+	## Xác suất (0…1) một lần nấu / nướng / ghép ra đồ hỏng. (Gold Ship)
+	"cook_fail_chance": 0.0,
+	## NHÂN vào giá của mọi món. (Chiyono O)
+	"all_price_factor": 1.0,
+	## Tốc độ chạy của đồng hồ màn, bếp lò, nhịp khách và kiên nhẫn. (Chiyono O)
+	"time_scale": 1.0,
 }
 
 
@@ -126,11 +135,6 @@ const DEFAULTS := {
 #
 # Thêm kĩ năng cho một nhân vật = tạo file trong nhan_vat/ rồi thêm MỘT dòng
 # ở đây. Không phải sửa gì khác.
-#
-# Sáu nhân vật còn lại (Special Week, Oguri Cap, Mambo, Gold Ship, Tokai Teio,
-# Chiyono O) cố ý KHÔNG có dòng nào: thiếu dòng đọc ra là "chưa làm tới", còn
-# một dòng trỏ tới file rỗng đọc ra là "nhân vật này không có kĩ năng". Hai
-# câu khác nhau.
 #
 # Dùng preload chứ không load(): preload chạy lúc BIÊN DỊCH nên gõ sai đường
 # dẫn là báo lỗi ngay khi mở game, thay vì im lặng cho một nhân vật mất sạch
@@ -140,6 +144,9 @@ const SKILL_FILES := {
 	"tuandb": preload("res://scripts/skills/characters/spe.gd"),
 	"oui": preload("res://scripts/skills/characters/oguri.gd"),
 	"mambo": preload("res://scripts/skills/characters/mambo.gd"),
+	"hachimi": preload("res://scripts/skills/characters/teio.gd"),
+	"chiyo": preload("res://scripts/skills/characters/chiyono.gd"),
+	"golshi": preload("res://scripts/skills/characters/golshi.gd"),
 }
 
 
@@ -177,3 +184,19 @@ static func active(character_id: String) -> Dictionary:
 		return {}
 	var constants: Dictionary = script_class.get_script_constant_map()
 	return constants.get("ACTIVE", {})
+
+
+## Kĩ năng chủ động THỨ HAI của một nhân vật (hằng SECONDARY trong file của
+## họ), hoặc rỗng. Hiện chỉ Tokai Teio có: Fan tê liệt, bấm bằng phím riêng.
+##
+## Vì sao không cho ACTIVE thành một mảng: mọi nhân vật khác có đúng một kĩ
+## năng chủ động gắn với phím Space, thanh tiến độ và đoạn phim cut-in. Kĩ năng
+## thứ hai của Teio không có thứ nào trong ba thứ đó — nó là một cái bảng chọn
+## có phím riêng. Ép hai thứ khác bản chất vào chung một mảng thì quan_ly phải
+## rẽ nhánh ở mọi chỗ đọc ACTIVE.
+static func secondary(character_id: String) -> Dictionary:
+	var script_class: GDScript = SKILL_FILES.get(character_id, null)
+	if script_class == null:
+		return {}
+	var constants: Dictionary = script_class.get_script_constant_map()
+	return constants.get("SECONDARY", {})

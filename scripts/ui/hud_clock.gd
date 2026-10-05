@@ -47,6 +47,10 @@ const RUSH_THRESHOLD := 30.0
 			_draw_clock()
 
 var time_left: float = 0.0
+
+## Tốc độ đếm ngược. 1,0 = một giây thật là một giây màn.
+## (Sakura Chiyono O — Made in haven: 1,25.)
+var time_scale: float = 1.0
 var money: int = 0
 
 var _lbl_clock: Label
@@ -198,7 +202,7 @@ func _process(delta: float) -> void:
 	if not counting_down or _alerted:
 		return
 	var before := time_left
-	time_left = maxf(0.0, time_left - delta)
+	time_left = maxf(0.0, time_left - delta * time_scale)
 	_draw_clock()
 
 	# Kêu ĐÚNG MỘT LẦN ở khoảnh khắc vượt qua mốc, bằng cách num trước-sau chứ
@@ -233,6 +237,25 @@ func _process(delta: float) -> void:
 ##
 ## clamp về [0, duration]: tua tới một con số âm thì phép chia trong _draw_clock
 ## cho ra bar tiến trình âm, còn tua vượt quá thời lượng thì bar vượt 100%.
+## Nối dài màn chơi thêm `seconds` giây. (Tokai Teio — Sky-High Teio Step.)
+##
+## Cộng vào CẢ duration lẫn time_left chứ không chỉ time_left: luật màn tính
+## "đã trôi bao lâu" bằng duration − time_left để chọn giai đoạn khách. Chỉ
+## cộng time_left thì mỗi đơn giao xong kéo màn LÙI 10 giây về giai đoạn dễ
+## hơn — kĩ năng vừa cho thêm giờ vừa làm khách thưa đi, lợi hai lần.
+func add_time(seconds: float) -> void:
+	duration += seconds
+	time_left += seconds
+	_draw_clock()
+
+
+## Đưa đồng hồ về đầy như lúc vào màn. (Sakura Chiyono O — Ambition.)
+func reset_time() -> void:
+	time_left = duration
+	_alerted = false
+	_draw_clock()
+
+
 func set_time_left(seconds: float) -> void:
 	time_left = clampf(seconds, 0.0, duration)
 	_draw_clock()
