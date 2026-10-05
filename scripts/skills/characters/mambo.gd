@@ -18,7 +18,7 @@ const PIZZAS := ["pizza_cheese", "pizza_mushroom", "pizza_peperoni"]
 #  Đổi lại: trong lúc di chuyển, mỗi giây có 3% bị choáng đứng yên 2 giây."
 #
 # (4/10/2026) User chốt giữ 15 ĐƠN. Với Ngày 1 dài 5 phút, mốc này rơi vào
-# gần cuối màn — và Ngày 1 không có pizza, nên ở đó kĩ năng chỉ còn nửa rủi.
+# gần cuối màn, nên ở đó phần thưởng pizza chỉ kịp ăn vài đơn cuối.
 #
 # Giá trị kỳ vọng của một đơn pizza hoàn hảo khi kĩ năng bật:
 #     0,36 × 3 + 0,18 × 2 + 0,46 × 1 = 1,90 lần giá thường.

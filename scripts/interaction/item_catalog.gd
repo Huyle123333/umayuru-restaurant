@@ -735,7 +735,29 @@ static func difficulty(id: String) -> String:
 static func recipe_parts(id: String) -> Array[String]:
 	var out: Array[String] = []
 	_expand_parts(id, out, 0, id)
-	return out
+	return containers_first(out)
+
+
+## Xếp lại một công thức để vẽ: ĐỒ ĐỰNG (đĩa, nồi) đứng đầu hàng, phần còn lại
+## giữ nguyên thứ tự.
+##
+## Khoá công thức sắp theo bảng chữ cái (để thứ tự bỏ vào không quan trọng),
+## nên cái nồi của món canh rơi vào GIỮA hàng: cà rốt, xà lách, NỒI, hành,
+## khoai. Mắt người đọc từ trái sang, và thứ đầu tiên cần biết là "món này bày
+## vào cái gì" — nó quyết định bước đầu tiên là đi lấy đĩa hay lấy nồi.
+##
+## Chỉ đổi thứ tự VẼ. Khoá công thức và luật ghép không đụng tới.
+static func containers_first(parts: Array) -> Array[String]:
+	var head: Array[String] = []
+	var tail: Array[String] = []
+	for p in parts:
+		var id := String(p)
+		if CONTAINER_ITEMS.has(id):
+			head.append(id)
+		else:
+			tail.append(id)
+	head.append_array(tail)
+	return head
 
 
 ## Thứ này có phải là (lõi của) một món BÁN ĐƯỢC khác với `root` không: hoặc

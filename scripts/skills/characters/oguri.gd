@@ -37,8 +37,8 @@ const PASSIVE := {
 	# ── Alo vũ à vũ ───────────────────────────────────────────────────
 	# "Các món pizza tăng 60% giá trị."
 	#
-	# Ngày 1 không có pizza nên kĩ năng này chưa có tác dụng ở đó (user chốt
-	# giữ nguyên); Ngày 2 có một loại, Ngày 3 có cả ba.
+	# Ngày 1 và Ngày 2 mỗi ngày có một loại pizza (pizza nấm), Ngày 3 có cả
+	# ba — kĩ năng mạnh dần theo ngày.
 	"dish_price_factors": {
 		"pizza_cheese": 1.6,
 		"pizza_mushroom": 1.6,

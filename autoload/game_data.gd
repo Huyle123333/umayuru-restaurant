@@ -150,10 +150,16 @@ const RULES_D1 := {
 	"menu": [
 		"icecream_vani", "icecream_chocolate", "icecream_strawberry",
 		"mon_ham", "mon_steak", "hambuger",
+		# (5/10/2026) Thêm MỘT loại pizza ngay từ Ngày 1, theo yêu cầu user:
+		# người chơi làm quen với cái lò sớm, và các kĩ năng xoay quanh pizza
+		# (Oguri, Mambo) có đất dùng từ ngày đầu. Chọn pizza nấm — ít nguyên
+		# liệu nhất trong ba loại, và cũng là loại Ngày 2 đã dùng.
+		"pizza_mushroom",
 	],
 	"weights": {
 		"icecream_vani": 1, "icecream_chocolate": 1, "icecream_strawberry": 1,
 		"mon_ham": 3, "mon_steak": 4, "hambuger": 3,
+		"pizza_mushroom": 2,
 	},
 	"stages": [
 		# "tier_weights": tỉ lệ món dễ / vừa / khó của từng chặng (xem

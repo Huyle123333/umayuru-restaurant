@@ -34,7 +34,7 @@ const DIM := Color(0.58, 0.56, 0.58, 1.0)
 
 ## Map dùng khi màn đang chọn CHƯA khai báo map riêng trong GameData.LEVELS
 ## — ví dụ bấm "Chơi mới" từ menu chính, lúc đó chưa chọn màn nào cả.
-@export_file("*.tscn") var gameplay_scene: String = "res://restaurant_map.tscn"
+@export_file("*.tscn") var gameplay_scene: String = "res://restaurant_map_planb.tscn"
 @export_file("*.tscn") var back_scene: String = "res://scenes/menu/level_select.tscn"
 
 @onready var _hand: Control = %Hand

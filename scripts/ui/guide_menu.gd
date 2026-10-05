@@ -347,7 +347,9 @@ func _add_recipe(kind: String) -> void:
 		var value := String(table_[key_])
 		if ItemCatalog.is_locked(value):
 			continue
-		_content_col.add_child(_recipe_row(String(key_).split("+"), value))
+		# Đĩa và nồi đứng đầu hàng — xem ItemCatalog.containers_first().
+		_content_col.add_child(_recipe_row(
+			PackedStringArray(ItemCatalog.containers_first(Array(String(key_).split("+")))), value))
 
 
 func _recipe_row(ingredients: PackedStringArray, value: String) -> Control:
