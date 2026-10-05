@@ -735,29 +735,58 @@ static func difficulty(id: String) -> String:
 static func recipe_parts(id: String) -> Array[String]:
 	var out: Array[String] = []
 	_expand_parts(id, out, 0, id)
-	return containers_first(out)
+	return display_order(out)
 
 
-## Xếp lại một công thức để vẽ: ĐỒ ĐỰNG (đĩa, nồi) đứng đầu hàng, phần còn lại
-## giữ nguyên thứ tự.
+## Thứ tự VẼ nguyên liệu trong một dòng công thức, từ trái sang phải.
 ##
 ## Khoá công thức sắp theo bảng chữ cái (để thứ tự bỏ vào không quan trọng),
-## nên cái nồi của món canh rơi vào GIỮA hàng: cà rốt, xà lách, NỒI, hành,
-## khoai. Mắt người đọc từ trái sang, và thứ đầu tiên cần biết là "món này bày
-## vào cái gì" — nó quyết định bước đầu tiên là đi lấy đĩa hay lấy nồi.
+## nên vẽ thẳng theo khoá thì cái nồi rơi vào giữa hàng và đế pizza đứng sau
+## phô mai. Bảng này thay thứ tự chữ cái bằng thứ tự NGƯỜI CHƠI CẦN ĐỌC:
 ##
-## Chỉ đổi thứ tự VẼ. Khoá công thức và luật ghép không đụng tới.
-static func containers_first(parts: Array) -> Array[String]:
-	var head: Array[String] = []
-	var tail: Array[String] = []
-	for p in parts:
-		var id := String(p)
-		if CONTAINER_ITEMS.has(id):
-			head.append(id)
-		else:
-			tail.append(id)
-	head.append_array(tail)
-	return head
+##   1. ĐỒ ĐỰNG (đĩa, nồi)   — quyết định bước đầu tiên là đi lấy cái gì.
+##   2. PHẦN NỀN (đế bánh, bánh mì) — thứ cho biết món thuộc họ nào.
+##   3. NGUYÊN LIỆU DÙNG CHUNG — cà chua, xà lách... thứ nhiều món cùng có.
+##   4. THỨ RIÊNG của từng món — nấm, peperoni, miếng thịt.
+##
+## Vì MỌI dòng dùng chung một bảng, hai món cùng họ tự có phần đầu giống hệt
+## nhau: ba pizza đều mở bằng "đế + cà chua", hai hamburger đều mở bằng "đĩa +
+## bánh + xà lách". Các ô lại rộng bằng nhau nên phần giống nhau thẳng cột, và
+## chỗ hai món KHÁC nhau là ô đầu tiên lệch — mắt bắt được ngay.
+##
+## Một bảng cố định thay vì tự đếm "nguyên liệu nào nhiều món dùng nhất": tự
+## đếm thì thứ tự đổi theo thực đơn từng ngày, cùng một món mà ngày 1 và ngày
+## 3 vẽ khác nhau — người chơi phải học lại. Thứ không có trong bảng thì đứng
+## cuối, giữ thứ tự cũ.
+const DISPLAY_ORDER := [
+	"bowl", "noi",
+	"dough_pre", "bun",
+	"stew",
+	"tomato", "lettuce", "cheese", "onion", "carrot", "potato",
+	"mushroom", "peperoni_pre",
+	"steak_cooked", "steak_uncook", "ham_cooked", "vegetablebuger_cooked",
+	"icecream_vani", "icecream_chocolate", "icecream_strawberry", "cookiestick",
+]
+
+
+## Xếp lại một công thức theo DISPLAY_ORDER. Chỉ đổi thứ tự VẼ — khoá công
+## thức và luật ghép không đụng tới.
+static func display_order(parts: Array) -> Array[String]:
+	var ranked: Array = []
+	for i in parts.size():
+		var id := String(parts[i])
+		var rank := DISPLAY_ORDER.find(id)
+		if rank < 0:
+			rank = DISPLAY_ORDER.size()
+		# Vị trí gốc `i` làm khoá phụ: sort_custom của Godot KHÔNG ổn định, nên
+		# hai thứ cùng hạng phải tự mang theo thứ tự cũ.
+		ranked.append([rank, i, id])
+	ranked.sort_custom(func(a: Array, b: Array) -> bool:
+		return a[0] < b[0] if a[0] != b[0] else a[1] < b[1])
+	var out: Array[String] = []
+	for r in ranked:
+		out.append(String(r[2]))
+	return out
 
 
 ## Thứ này có phải là (lõi của) một món BÁN ĐƯỢC khác với `root` không: hoặc
