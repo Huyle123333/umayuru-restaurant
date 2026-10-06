@@ -115,8 +115,13 @@ const ITEMS := {
 		# gần MẶT TRÊN (y từ −0,087 tới 0,018) nên phải nâng 0,087.
 		"layout": {"order": 40, "height": 0.105, "y": 0.087,
 			"model": "food_ingredient_cheese_slice"}},
-	"cookiestick": {"cost": 1, "name": "Bánh quế", "model": "icecream_cookiestick",
-		"layout": {"height": 0.52, "y": 0.258}},
+	# Hai model, cùng cách với ba vị kem ở dưới:
+	#   "model"        — BÁT bánh quế. Dùng khi cầm trên tay, và khớp với ảnh 2D
+	#                    (cookiestick.png cũng là một bát bánh quế).
+	#   layout.model   — MỘT que bánh. Dùng khi cắm vào bát kem tam hợp: lúc đó
+	#                    cái bát đã có sẵn, chồng thêm bát nữa là bát lồng bát.
+	"cookiestick": {"cost": 1, "name": "Bánh quế", "model": "icecream_bowl_cookiesticks",
+		"layout": {"height": 0.52, "y": 0.258, "model": "icecream_cookiestick"}},
 
 	"peperoni":     {"cost": 9, "name": "Xúc xích", "model": "food_ingredient_pepperoni",
 		"prep": "peperoni_pre"},
