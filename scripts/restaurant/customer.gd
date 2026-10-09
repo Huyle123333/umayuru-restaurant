@@ -58,7 +58,7 @@ const TURN_SPEED := 8.0
 const GRAVITY := 24.0
 
 @onready var _agent: NavigationAgent3D = $Agent
-@onready var _anim_player: AnimationPlayer = $Model/AnimationPlayer
+var _anim_player: AnimationPlayer = null
 @onready var _bubble: Node3D = $Bubble
 
 var _task := ""
@@ -68,13 +68,112 @@ var _face_dir := Vector3.ZERO
 var _anim_now := ""
 
 
+## Các model khách. Mỗi người khách bốc NGẪU NHIÊN một model khi sinh ra.
+##
+##   path   — file .glb. Đường dẫn dạng CHUỖI rồi load() lúc chạy, chứ không kéo
+##            PackedScene vào scene: thiếu một file (chưa xuất xong) thì model
+##            đó tự bị bỏ qua thay vì làm hỏng cả scene khách.
+##   weight — trọng số bốc, tính theo TỈ LỆ trên tổng. Hiện năm model bằng
+##            nhau; muốn một khách hiếm thì cho trọng số nhỏ hơn hẳn số còn lại.
+##   scale  — nhân thêm vào body_scale, cho model có cỡ gốc khác các model
+##            Umamusume (1,5–1,7 đơn vị).
+##
+## Model trong customer.tscn (Akikawa) là dự phòng khi không nạp được cái nào.
+## Mọi model phải có cùng bốn animation idle / walk / eat / angry.
+const MODELS := [
+	{"path": "res://assets/models/khach_akikawa.glb", "weight": 1.0, "scale": 1.0},
+	{"path": "res://assets/models/khach_tazuna.glb", "weight": 1.0, "scale": 1.0},
+	{"path": "res://assets/models/khach_hello.glb", "weight": 1.0, "scale": 1.0},
+	{"path": "res://assets/models/khach_riko.glb", "weight": 1.0, "scale": 1.0},
+	{"path": "res://assets/models/khach_etsuko.glb", "weight": 1.0, "scale": 1.0},
+	# KHÁCH HIẾM: Spiki (Trickcal). 1% = 1 phần trong 100, mà năm model trên đã
+	# chiếm 5 phần, nên trọng số của Spiki là 5 / 99 ≈ 0,0505.
+	# scale 1,3: model chibi cao 0,75, nhân body_scale 2 và 1,3 thành ~1,95 —
+	# đúng chiều cao nhân vật chibi người chơi điều khiển.
+	# Rig Biped của 3ds Max, khác hẳn Umamusume, nên animation dựng riêng trong
+	# assets/npc/spiki/spiki_v2.blend, nhưng vẫn cùng bốn tên clip.
+	{"path": "res://assets/models/customer_spiki.glb", "weight": 5.0 / 99.0, "scale": 1.3},
+]
+
+## Animation phải LẶP. glTF không mang được cờ lặp, nên đặt ở đây lúc chạy thay
+## vì sửa tay file .import của từng model — thêm model mới không phải nhớ bước
+## đó. `angry` cố ý không lặp: cáu là cử chỉ diễn một lần.
+const LOOPING_ANIMS := ["idle", "walk", "eat"]
+
+## Model nạp sẵn, dùng chung cho mọi người khách: mỗi phần tử là
+## {"scene": PackedScene, "weight": float, "scale": float}. static để chỉ load()
+## một lần cho cả màn chơi chứ không mỗi người khách một lần.
+static var _model_cache: Array[Dictionary] = []
+
+## Tỉ lệ riêng của model đang dùng (khoá "scale" trong MODELS).
+var _model_scale := 1.0
+
+
 func _ready() -> void:
+	if not Engine.is_editor_hint():
+		_pick_model()
+	_anim_player = get_node_or_null("Model/AnimationPlayer") as AnimationPlayer
 	_apply_scale()
 	if Engine.is_editor_hint():
 		return
+	_make_loops()
 	_bubble.visible = false
 	_build_bubble()
 	_set_anim("idle")
+
+
+## Thay model mặc định bằng một model bốc theo trọng số trong MODELS.
+func _pick_model() -> void:
+	if _model_cache.is_empty():
+		for entry in MODELS:
+			var path := String(entry["path"])
+			if ResourceLoader.exists(path):
+				var scene := load(path) as PackedScene
+				if scene != null:
+					_model_cache.append({"scene": scene,
+						"weight": float(entry.get("weight", 1.0)),
+						"scale": float(entry.get("scale", 1.0))})
+	if _model_cache.is_empty():
+		return
+	var picked := _pick_weighted()
+	var old := get_node_or_null("Model")
+	var fresh := (picked["scene"] as PackedScene).instantiate() as Node3D
+	if fresh == null:
+		return
+	if old != null:
+		# remove_child TRƯỚC queue_free: queue_free chỉ xoá ở cuối khung hình,
+		# trong lúc đó hai node cùng tên "Model" và get_node lấy nhầm cái cũ.
+		remove_child(old)
+		old.queue_free()
+	fresh.name = "Model"
+	add_child(fresh)
+	move_child(fresh, 2)
+	_model_scale = float(picked["scale"])
+
+
+## Bốc theo trọng số: gieo một số trong [0, tổng) rồi trừ dần.
+##
+## Không dùng pick_random(): nó chia đều, không cho khách nào hiếm hơn. Trọng số
+## tính trên các model ĐÃ NẠP ĐƯỢC, nên thiếu một file thì phần của nó chia
+## đều cho số còn lại thay vì làm lệch tỉ lệ.
+func _pick_weighted() -> Dictionary:
+	var total := 0.0
+	for entry in _model_cache:
+		total += float(entry["weight"])
+	var roll := randf() * total
+	for entry in _model_cache:
+		roll -= float(entry["weight"])
+		if roll < 0.0:
+			return entry
+	return _model_cache[-1]
+
+
+func _make_loops() -> void:
+	if _anim_player == null:
+		return
+	for anim_name in LOOPING_ANIMS:
+		if _anim_player.has_animation(anim_name):
+			_anim_player.get_animation(anim_name).loop_mode = Animation.LOOP_LINEAR
 
 
 ## Áp tỉ lệ cho model, hộp va chạm, agent và bong bóng.
@@ -87,7 +186,7 @@ func _apply_scale() -> void:
 		return
 	var model := get_node_or_null("Model") as Node3D
 	if model != null:
-		model.scale = Vector3.ONE * body_scale
+		model.scale = Vector3.ONE * body_scale * _model_scale
 
 	var col := get_node_or_null("Col") as CollisionShape3D
 	if col != null and col.shape is CapsuleShape3D:
