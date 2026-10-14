@@ -1317,7 +1317,8 @@ static func has_item(id: String) -> bool:
 
 
 static func display_name(id: String) -> String:
-	return String(ITEMS.get(id, {}).get("name", id))
+	# Dịch ngay tại đây: mọi chỗ hiện tên món (HUD, vé, câu báo) đều đi qua hàm này.
+	return Lang.t(String(ITEMS.get(id, {}).get("name", id)))
 
 
 ## Đường dẫn ảnh 2D. Mặc định tên file TRÙNG id — bớt một cột dữ liệu và bớt

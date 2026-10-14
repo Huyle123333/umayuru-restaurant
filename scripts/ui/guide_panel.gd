@@ -156,7 +156,7 @@ func _build_ui() -> void:
 		label.add_child(border)
 
 	var label_text := Label.new()
-	label_text.text = "HƯỚNG DẪN"
+	label_text.text = Lang.t("HƯỚNG DẪN")
 	label_text.add_theme_font_size_override("font_size", 14)
 	label_text.add_theme_color_override("font_color", Color(1, 0.98, 0.92))
 	label_text.add_theme_color_override("font_outline_color", Color(0.16, 0.32, 0.16))
@@ -201,25 +201,25 @@ func _slide_to(dest: float) -> void:
 
 ## Đặt nội dung một bước. `num` và `total` để hiện "BƯỚC 3 / 10".
 func set_step(line_: String, num: int, total: int) -> void:
-	_lbl_step.text = "BƯỚC %d / %d" % [num, total]
-	_lbl_line.text = line_
+	_lbl_step.text = Lang.t("BƯỚC %d / %d") % [num, total]
+	_lbl_line.text = Lang.t(line_)
 	_hide_buttons()
 
 
 ## Hiện hai nút lựa chọn. Bấm xong phát start_choice(true/false).
 func ask(line_: String, yes_label: String, no_label: String) -> void:
-	_lbl_step.text = "HƯỚNG DẪN"
-	_lbl_line.text = line_
+	_lbl_step.text = Lang.t("HƯỚNG DẪN")
+	_lbl_line.text = Lang.t(line_)
 	_hide_buttons()
 
 	var btn_yes := Button.new()
-	btn_yes.text = yes_label
+	btn_yes.text = Lang.t(yes_label)
 	btn_yes.add_theme_font_size_override("font_size", 20)
 	btn_yes.pressed.connect(_on_choice.bind(true))
 	_button_row.add_child(btn_yes)
 
 	var btn_no := Button.new()
-	btn_no.text = no_label
+	btn_no.text = Lang.t(no_label)
 	btn_no.add_theme_font_size_override("font_size", 20)
 	btn_no.pressed.connect(_on_choice.bind(false))
 	_button_row.add_child(btn_no)

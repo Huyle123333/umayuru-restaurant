@@ -73,11 +73,11 @@ func open() -> void:
 	if hands == null:
 		return
 	if _uses_left <= 0 and not GameData.infinite_skill:
-		hands.notice.emit("%s: đã dùng hết lượt" % _data.get("name", ""), false)
+		hands.notice.emit(Lang.t("%s: đã dùng hết lượt") % Lang.t(String(_data.get("name", ""))), false)
 		AmThanh.play_sfx("craft_fail")
 		return
 	if hands.is_holding():
-		hands.notice.emit("Tay đang cầm đồ — đặt xuống trước đã", false)
+		hands.notice.emit(Lang.t("Tay đang cầm đồ — đặt xuống trước đã"), false)
 		AmThanh.play_sfx("craft_fail")
 		return
 
@@ -101,8 +101,8 @@ func _pick(id: String) -> void:
 	if not GameData.infinite_skill:
 		_uses_left -= 1
 	AmThanh.play_sfx("perfect")
-	hands.notice.emit("%s: %s (còn %d lượt)" % [
-		_data.get("name", ""), ItemCatalog.display_name(id), maxi(0, _uses_left)], true)
+	hands.notice.emit(Lang.t("%s: %s (còn %d lượt)") % [
+		Lang.t(String(_data.get("name", ""))), ItemCatalog.display_name(id), maxi(0, _uses_left)], true)
 
 
 func _build_ui() -> void:
@@ -136,14 +136,14 @@ func _build_ui() -> void:
 
 	var title := Label.new()
 	var left_text := "∞" if GameData.infinite_skill else str(_uses_left)
-	title.text = "%s — còn %s/%d lượt" % [
-		String(_data.get("name", "")).to_upper(), left_text, int(_data.get("uses", 0))]
+	title.text = Lang.t("%s — còn %s/%d lượt") % [
+		Lang.t(String(_data.get("name", ""))).to_upper(), left_text, int(_data.get("uses", 0))]
 	title.add_theme_font_size_override("font_size", 28)
 	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	col.add_child(title)
 
 	var hint := Label.new()
-	hint.text = "Chọn một món để nhận ngay trên tay. ESC để đóng."
+	hint.text = Lang.t("Chọn một món để nhận ngay trên tay. ESC để đóng.")
 	hint.add_theme_font_size_override("font_size", 17)
 	hint.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	col.add_child(hint)

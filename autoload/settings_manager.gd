@@ -58,6 +58,9 @@ func _ready() -> void:
 	# Chụp phím MẶC ĐỊNH trước khi load_settings() ghi đè bằng phím đã lưu.
 	# Đảo hai dòng này là "mặc định" thành chính bộ phím người chơi đã đổi,
 	# và nút Đặt lại mặc định không còn đặt lại được gì.
+	# Nạp bảng tiếng Anh (khoá = câu tiếng Việt gốc) TRƯỚC load_settings():
+	# load_settings() đặt locale, và mọi scene mở sau đó phải tìm thấy bản dịch.
+	TranslationServer.add_translation(Lang.build_english())
 	_register_extra_actions()
 	_remember_default_keys()
 	load_settings()

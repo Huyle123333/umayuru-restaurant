@@ -58,7 +58,7 @@ func _ready() -> void:
 	# Tên hiển thị trên HUD bám theo số bàn, không gõ tay trong Inspector —
 	# cùng lý do với biển số: hai chỗ ghi số thì sớm muộn cũng lệch nhau.
 	if not Engine.is_editor_hint():
-		display_name = "Bàn %d" % table_number
+		display_name = Lang.t("Bàn %d") % table_number
 
 
 ## Món đang nằm trên bàn, chuỗi rỗng nếu bàn trống.

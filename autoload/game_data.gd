@@ -959,7 +959,7 @@ const DAY_NAMES := {
 
 func level_name(id: String) -> String:
 	if id == "tutorial":
-		return "HƯỚNG DẪN"
+		return Lang.t("HƯỚNG DẪN")
 	if DAY_NAMES.has(id):
 		return String(DAY_NAMES[id])
 	return String(LEVELS.get(id, {}).get("label", "")).to_upper()

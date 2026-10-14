@@ -168,7 +168,7 @@ func _redraw() -> void:
 		_column.add_child(_build_row(String(_entries[i]), i == _index))
 
 	var hint := Label.new()
-	hint.text = "W/S: chọn     E: lấy     C: đóng"
+	hint.text = Lang.t("W/S: chọn     E: lấy     C: đóng")
 	hint.add_theme_color_override("font_color", COLOR_DIM)
 	hint.add_theme_font_size_override("font_size", SIZE_KEY)
 	hint.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER

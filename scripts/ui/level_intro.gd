@@ -70,7 +70,7 @@ func _process(delta: float) -> void:
 	if _done:
 		return
 	_left -= delta
-	_lbl_counter.text = "Bắt đầu sau %d" % maxi(int(ceilf(_left)), 0)
+	_lbl_counter.text = Lang.t("Bắt đầu sau %d") % maxi(int(ceilf(_left)), 0)
 	if _left <= 0.0:
 		_finish()
 

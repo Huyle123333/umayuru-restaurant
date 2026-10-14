@@ -148,7 +148,7 @@ func _slide(open: bool) -> void:
 
 func _draw_hint() -> void:
 	if _lbl_hint != null:
-		_lbl_hint.text = "%s  ẩn/hiện" % SettingsManager.key_name(ACTION)
+		_lbl_hint.text = Lang.t("%s  ẩn/hiện") % SettingsManager.key_name(ACTION)
 
 
 # ----------------------------------------------------------- dựng hình ---
@@ -172,7 +172,7 @@ func _build_menu_panel(dishes: Array[String]) -> PanelContainer:
 	col.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	panel.add_child(col)
 
-	var title := _text("THỰC ĐƠN HÔM NAY", 30, COLOR_NAME, 6)
+	var title := _text(Lang.t("THỰC ĐƠN HÔM NAY"), 30, COLOR_NAME, 6)
 	col.add_child(title)
 	_lbl_hint = _text("", 15, COLOR_DIM, 4)
 	col.add_child(_lbl_hint)
@@ -212,7 +212,7 @@ func _dish_row(id: String) -> Control:
 	var parts := ItemCatalog.recipe_parts(id)
 	if parts.is_empty():
 		# Món không qua công thức nào (kem lẻ): lấy ra là giao.
-		var hint := _text("lấy ra là giao", 16, COLOR_DIM, 4)
+		var hint := _text(Lang.t("lấy ra là giao"), 16, COLOR_DIM, 4)
 		hint.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 		row.add_child(hint)
 		return row

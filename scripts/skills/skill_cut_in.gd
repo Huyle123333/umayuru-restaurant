@@ -171,7 +171,7 @@ func _build_ui() -> void:
 	# trận hết 11 giây, hoặc bấm loạn xạ để thử — mà bấm loạn xạ chính là
 	# thứ sinh ra câu hỏi "vừa rồi mình có mất kĩ năng không?".
 	_lbl_music = Label.new()
-	_lbl_music.text = "Space hoặc Esc — bỏ qua"
+	_lbl_music.text = Lang.t("Space hoặc Esc — bỏ qua")
 	_lbl_music.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_lbl_music.add_theme_font_size_override("font_size", MUSIC_FONT_SIZE)
 	_lbl_music.add_theme_color_override("font_color", Color(1, 1, 1, 0.72))

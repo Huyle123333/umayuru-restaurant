@@ -276,13 +276,13 @@ func _fill_panel(id: String) -> void:
 	var secrets: Array = info.get("secrets", [])
 	var lines: PackedStringArray = []
 	for v in secrets:
-		lines.append("・%s" % str(v))
+		lines.append("・%s" % Lang.t(str(v)))
 	_lbl_secrets.text = "\n".join(lines)
 
 	# Dòng gợi ý chỉ dành cho nhân vật chưa mở khóa.
 	var hint := str(info.get("hint", ""))
 	_lbl_hint.visible = GameData.is_character_locked(id)
-	_lbl_hint.text = hint if not hint.is_empty() else "Gợi ý: sẽ cập nhật sau"
+	_lbl_hint.text = hint if not hint.is_empty() else Lang.t("Gợi ý: sẽ cập nhật sau")
 
 	# Số đo 3 vòng luôn bị che lại mỗi lần đổi nhân vật.
 	var sizes: Array = info.get("sizes", ["", "", ""])
@@ -360,7 +360,7 @@ func _fill_skills(info: Dictionary) -> void:
 			# Ô chưa có kỹ năng — gạch ngang cho biết ô vẫn tồn tại.
 			_skill_names[i].text = "—"
 		elif level > 0:
-			_skill_names[i].text = "%s   Lv%d" % [skill_name, level]
+			_skill_names[i].text = "%s   Lv%d" % [Lang.t(skill_name), level]
 		else:
 			_skill_names[i].text = skill_name
 

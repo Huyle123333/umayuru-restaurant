@@ -225,8 +225,8 @@ func target_count() -> int:
 
 func target_label(index: int) -> String:
 	if use_picker or options.is_empty():
-		return display_name
-	return "%s · %s" % [display_name, options[index]]
+		return Lang.t(display_name)
+	return "%s · %s" % [Lang.t(display_name), Lang.t(String(options[index]))]
 
 
 func interact(index: int) -> void:

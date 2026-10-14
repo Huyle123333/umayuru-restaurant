@@ -606,7 +606,7 @@ func _watch_lost_customers(clock: Node) -> void:
 		if clock.has_method("set_lost"):
 			clock.set_lost(lost, _lost_limit)
 		if lost > _lost_limit:
-			_end_level("", "Thua: %d khách bỏ về, quá giới hạn %d của màn này." % [lost, _lost_limit]))
+			_end_level("", Lang.t("Thua: %d khách bỏ về, quá giới hạn %d của màn này.") % [lost, _lost_limit]))
 
 
 func _end_level(rank: String, fail_note: String = "") -> void:
@@ -660,7 +660,7 @@ func _build_level_intro(clock: Node) -> void:
 	if cls == null:
 		return
 
-	var label_ := "BẮT ĐẦU"
+	var label_ := Lang.t("BẮT ĐẦU")
 	if get_node_or_null("/root/GameData") != null:
 		var t := GameData.level_name(String(GameData.current_level))
 		if not t.is_empty():

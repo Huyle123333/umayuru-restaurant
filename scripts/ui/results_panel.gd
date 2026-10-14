@@ -166,7 +166,7 @@ func _build_ui(money: int, served: int, perfect: int, left_angry: int,
 
 	# --- tiêu đề ---
 	var title := Label.new()
-	title.text = "HOÀN THÀNH" if place else "CHƯA ĐẠT"
+	title.text = Lang.t("HOÀN THÀNH") if place else Lang.t("CHƯA ĐẠT")
 	title.add_theme_font_size_override("font_size", 24)
 	title.add_theme_color_override("font_color", COLOR_DIM)
 	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
@@ -214,10 +214,10 @@ func _build_ui(money: int, served: int, perfect: int, left_angry: int,
 	# Lượt thắng bằng kĩ năng không ghi kỷ lục (xem GameData.complete_level),
 	# nên cũng không được khoe "kỷ lục mới".
 	if money > old_record and place and not _skill_win:
-		record.text = "KỶ LỤC MỚI!  (cũ: %d)" % old_record
+		record.text = Lang.t("KỶ LỤC MỚI!  (cũ: %d)") % old_record
 		record.add_theme_color_override("font_color", COLOR_GRADE["A"])
 	else:
-		record.text = "Kỷ lục: %d" % old_record
+		record.text = Lang.t("Kỷ lục: %d") % old_record
 		record.add_theme_color_override("font_color", COLOR_DIM)
 	record.add_theme_font_size_override("font_size", 17)
 	record.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
@@ -226,11 +226,11 @@ func _build_ui(money: int, served: int, perfect: int, left_angry: int,
 	col.add_child(_divider())
 
 	# --- thống kê ---
-	col.add_child(_row("Đơn đã phục vụ", str(served)))
+	col.add_child(_row(Lang.t("Đơn đã phục vụ"), str(served)))
 	# Chỉ hiện SỐ, không kèm "+35%": tỉ lệ thưởng nằm ở customer_manager và có thể
 	# đổi, gõ lại ở đây là dựng thêm một nguồn sự thật thứ hai để sau này lệch.
-	col.add_child(_row("Trong đó hoàn hảo", str(perfect)))
-	col.add_child(_row("Khách bỏ đi", str(left_angry)))
+	col.add_child(_row(Lang.t("Trong đó hoàn hảo"), str(perfect)))
+	col.add_child(_row(Lang.t("Khách bỏ đi"), str(left_angry)))
 
 	# Chưa đạt thì nói rõ còn thiếu bao nhiêu. Chỉ hiện "CHƯA ĐẠT" mà không nói
 	# thiếu gì thì người chơi không biết lần sau phải cố thêm bao nhiêu.
@@ -238,7 +238,7 @@ func _build_ui(money: int, served: int, perfect: int, left_angry: int,
 		var mark: Dictionary = GameData.rank_thresholds_for(String(GameData.current_level))
 		var missing := int(mark.get(GameData.MIN_RANK, 0)) - money
 		var note := Label.new()
-		note.text = "Cần thêm %d nữa để đạt hạng %s." % [maxi(missing, 0), GameData.MIN_RANK]
+		note.text = Lang.t("Cần thêm %d nữa để đạt hạng %s.") % [maxi(missing, 0), GameData.MIN_RANK]
 		if not fail_note.is_empty():
 			note.text = fail_note
 		note.add_theme_font_size_override("font_size", 17)
@@ -253,12 +253,12 @@ func _build_ui(money: int, served: int, perfect: int, left_angry: int,
 	col.add_child(button_row)
 
 	var again := Button.new()
-	again.text = "Chơi lại"
+	again.text = Lang.t("Chơi lại")
 	again.pressed.connect(_replay)
 	button_row.add_child(again)
 
 	var ticket := Button.new()
-	ticket.text = "Về chọn màn"
+	ticket.text = Lang.t("Về chọn màn")
 	ticket.pressed.connect(_go_level_select)
 	button_row.add_child(ticket)
 

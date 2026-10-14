@@ -109,7 +109,6 @@ var _anim: AnimationPlayer
 var _mesh: MeshInstance3D
 var _pivot: Node3D
 var _arm: SpringArm3D
-var _hud: Label
 
 var _eye_mats: Array = []
 var _mouth_mats: Array = []
@@ -122,7 +121,13 @@ func _ready() -> void:
 	_model = $Model
 	_pivot = $CameraPivot
 	_arm = $CameraPivot/SpringArm3D
-	_hud = get_node_or_null("HUD/Label")
+	# Nhãn chẩn đoán (tên animation, cờ cầm đồ, gợi ý phím không dấu) còn sót
+	# trong scene nhân vật từ hồi dựng điều khiển. Xoá lúc chạy chứ không sửa
+	# bảy file player_*.tscn: một chỗ sửa thay vì bảy, và nhân vật thêm sau
+	# này có lỡ chép node đó theo thì cũng tự biến mất.
+	var debug_label := get_node_or_null("HUD")
+	if debug_label != null:
+		debug_label.queue_free()
 
 	_anim = _find_first(self, "AnimationPlayer") as AnimationPlayer
 	_mesh = _find_biggest_mesh(self)
@@ -217,7 +222,6 @@ func _physics_process(delta: float) -> void:
 		_play("Idle")
 
 	move_and_slide()
-	_update_hud()
 
 
 ## Xử lý thể lực, trả về hệ số nhân tốc độ cho frame này.
@@ -341,11 +345,3 @@ func _apply_face(eye_cell: Vector2i, mouth_cell: Vector2i) -> void:
 		m.uv1_offset = Vector3(float(eye_cell.x) / eye_grid.x, float(eye_cell.y) / eye_grid.y, 0.0)
 	for m in _mouth_mats:
 		m.uv1_offset = Vector3(float(mouth_cell.x) / mouth_grid.x, float(mouth_cell.y) / mouth_grid.y, 0.0)
-
-
-func _update_hud() -> void:
-	if _hud == null:
-		return
-	var anim_name := _anim.current_animation if _anim else "-"
-	_hud.text = "Anim: %s\nCarrying: %s\nWASD di chuyen | E tuong tac | Q bo do | Space ki nang" % [
-		anim_name, "ON" if carrying else "OFF"]

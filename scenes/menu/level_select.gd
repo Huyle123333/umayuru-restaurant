@@ -158,11 +158,11 @@ func _refresh() -> void:
 		btn.text = tr(base) + "  ✔" if GameData.is_completed(id) else base
 
 		if unlocked:
-			btn.tooltip_text = "Doanh thu tốt nhất: %d" % GameData.get_best_money(id)
+			btn.tooltip_text = Lang.t("Doanh thu tốt nhất: %d") % GameData.get_best_money(id)
 			if first_open == null:
 				first_open = btn
 		else:
-			btn.tooltip_text = "Chưa mở khóa"
+			btn.tooltip_text = Lang.t("Chưa mở khóa")
 
 	# Nút Xóa dữ liệu chỉ có nghĩa khi thực sự có gì để xóa.
 	_btn_wipe.disabled = not SaveSystem.has_save()

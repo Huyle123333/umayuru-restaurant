@@ -116,7 +116,7 @@ func _build_ui() -> void:
 	frame.add_child(col)
 
 	var label := Label.new()
-	label.text = "CÒN LẠI"
+	label.text = Lang.t("CÒN LẠI")
 	label.add_theme_font_size_override("font_size", 14)
 	label.add_theme_color_override("font_color", COLOR_DIM)
 	col.add_child(label)
@@ -398,7 +398,7 @@ func set_lost(count: int, limit: int) -> void:
 	_lbl_lost.visible = limit > 0
 	if limit <= 0:
 		return
-	_lbl_lost.text = "Khách bỏ về  %d / %d" % [count, limit]
+	_lbl_lost.text = Lang.t("Khách bỏ về  %d / %d") % [count, limit]
 	_lbl_lost.add_theme_color_override("font_color",
 		COLOR_RUSH if count >= limit - 2 else COLOR_DIM)
 

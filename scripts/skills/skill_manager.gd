@@ -634,7 +634,7 @@ func _progress_label(usable: bool) -> String:
 	# làm hai việc khác nhau — một cái là cố thêm, một cái là thôi đừng chờ.
 	# Cheat bật thì không bao giờ hết lượt nên không rơi vào nhánh này.
 	if _uses_left <= 0 and not GameData.infinite_skill:
-		return "Đã dùng"
+		return Lang.t("Đã dùng")
 	var text := progress_text()
 	return text if not text.is_empty() else "..."
 
@@ -648,7 +648,7 @@ func _toggle_label() -> String:
 	if _toggle_on:
 		return "%ds" % int(ceilf(_budget_left))
 	if _budget_left <= 0.0 and not GameData.infinite_skill:
-		return "Đã dùng"
+		return Lang.t("Đã dùng")
 	if _meets_condition() or GameData.infinite_skill:
 		return "SPACE"
 	var wait := maxi(0, int(_active.get("threshold", 0)) - _elapsed_seconds())

@@ -353,12 +353,15 @@ func _next_line() -> void:
 	var speaker := String(entry.get("speaker", ""))
 	if speaker == AUTO_NAME:
 		speaker = _display_name(_shown_id)
+	# Dịch tên và câu thoại TRƯỚC khi gõ chữ: visible_characters đếm theo
+	# chuỗi đã dịch, dịch sau thì hiệu ứng gõ chữ đếm sai độ dài.
+	speaker = Lang.t(speaker)
 	_lbl_name.text = speaker
 	# Lời dẫn truyện không có người nói -> ẩn hẳn thẻ tên thay vì để một ô
 	# trống. Ô trống làm hộp thoại nhảy lên nhảy xuống mỗi câu, rất khó chịu.
 	_lbl_name.visible = not speaker.is_empty()
 
-	_lbl_line.text = _pick_line(entry)
+	_lbl_line.text = Lang.t(_pick_line(entry))
 	_lbl_line.visible_characters = 0
 	_revealed = 0.0
 	_typing = true

@@ -104,25 +104,25 @@ func _ready() -> void:
 
 	# Thứ tự thêm quyết định thứ tự hiện trên bảng.
 	_btn_view = _make_button(
-		"BtnThirdPerson", "Góc nhìn thứ 3 (phím P)", _on_third_person_pressed)
+		"BtnThirdPerson", Lang.t("Góc nhìn thứ 3 (phím P)"), _on_third_person_pressed)
 	_btn_time_skip = _make_button(
-		"BtnTuaGio", "Tua giờ trong màn (phím 0)", _on_time_skip_pressed)
+		"BtnTuaGio", Lang.t("Tua giờ trong màn (phím 0)"), _on_time_skip_pressed)
 	_btn_skill = _make_button(
-		"BtnKiNang", "Kĩ năng không cần điều kiện", _on_skill_pressed)
+		"BtnKiNang", Lang.t("Kĩ năng không cần điều kiện"), _on_skill_pressed)
 	_btn_free_ingredients = _make_button(
-		"BtnNguyenLieu", "Nguyên liệu miễn phí", _on_free_ingredients_pressed)
+		"BtnNguyenLieu", Lang.t("Nguyên liệu miễn phí"), _on_free_ingredients_pressed)
 	for id in GameData.HIDDEN_CHARACTERS:
 		var code_ := String(id)
 		var label_ := String(GameData.CHARACTERS.get(code_, {}).get("label", code_))
 		_character_buttons[code_] = _make_button(
-			"BtnNV_" + code_, "Mở khoá %s" % label_, _on_character_pressed.bind(code_))
+			"BtnNV_" + code_, Lang.t("Mở khoá %s") % label_, _on_character_pressed.bind(code_))
 	_btn_replay_intro = _make_button(
-		"BtnReplayIntro", "Xem lại đoạn ra mắt nhân vật ẩn", _on_replay_intro_pressed)
+		"BtnReplayIntro", Lang.t("Xem lại đoạn ra mắt nhân vật ẩn"), _on_replay_intro_pressed)
 	# Không đi qua _redraw() nên phải tự gán chữ, nếu không nút giữ nguyên chữ
 	# của nút gốc mà _make_button() nhân bản ra.
 	_btn_replay_intro.text = String(_base_labels[_btn_replay_intro])
 	_btn_secret_ending = _make_button(
-		"BtnSecretEnding", "Ending: luôn chiếu kết ẩn", _on_secret_ending_pressed)
+		"BtnSecretEnding", Lang.t("Ending: luôn chiếu kết ẩn"), _on_secret_ending_pressed)
 	# Gõ mật khẩu xong bấm Enter cũng vào được, không bắt phải rê chuột.
 	_input.text_submitted.connect(_on_text_submitted)
 
@@ -258,7 +258,7 @@ func _on_free_ingredients_pressed() -> void:
 func _on_replay_intro_pressed() -> void:
 	GameData.reset_intro_seen()
 	var base := String(_base_labels.get(_btn_replay_intro, ""))
-	_btn_replay_intro.text = "Đã đặt lại — chọn nhân vật ẩn để xem"
+	_btn_replay_intro.text = Lang.t("Đã đặt lại — chọn nhân vật ẩn để xem")
 	_btn_replay_intro.disabled = true
 	await get_tree().create_timer(1.5).timeout
 	if is_instance_valid(_btn_replay_intro):

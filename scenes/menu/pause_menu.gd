@@ -92,6 +92,6 @@ func _level_label() -> String:
 	var label := str(info.get("label", id))
 	var who := GameData.selected_character
 	if who.is_empty():
-		return label
+		return Lang.t(label)
 	var person: Dictionary = GameData.CHARACTERS.get(who, {})
-	return "%s  —  %s" % [label, str(person.get("label", who))]
+	return "%s  —  %s" % [Lang.t(label), Lang.t(str(person.get("label", who)))]

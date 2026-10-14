@@ -299,7 +299,7 @@ func _on_interact_alt(station: Node, _index: int) -> void:
 ## Dùng F chứ không phải E vì E ở cái bàn này đã có việc rồi — ĐẶT đồ xuống.
 func _assemble_table(table: Workstation) -> void:
 	if table.contents.is_empty():
-		notice.emit("Bàn đang trống", false)
+		notice.emit(Lang.t("Bàn đang trống"), false)
 		return
 
 	var dish: String = ItemCatalog.combine_on_table(table.contents)
@@ -309,7 +309,7 @@ func _assemble_table(table: Workstation) -> void:
 		var list_: Array[String] = []
 		for x in table.contents:
 			list_.append(ItemCatalog.display_name(String(x)))
-		notice.emit("Không thành món: " + ", ".join(list_), false)
+		notice.emit(Lang.t("Không thành món: ") + ", ".join(list_), false)
 		AmThanh.play_sfx("craft_fail")
 		return
 
@@ -318,14 +318,14 @@ func _assemble_table(table: Workstation) -> void:
 		table.clear_all()
 		table.add_item(FAILED_ITEM)
 		table.show_model(FAILED_ITEM)
-		notice.emit("Ghép hỏng!", false)
+		notice.emit(Lang.t("Ghép hỏng!"), false)
 		AmThanh.play_sfx("craft_fail")
 		return
 
 	table.clear_all()
 	table.add_item(dish)
 	table.show_model(dish)
-	notice.emit("Ghép xong: " + ItemCatalog.display_name(dish), true)
+	notice.emit(Lang.t("Ghép xong: ") + ItemCatalog.display_name(dish), true)
 	AmThanh.play_sfx("craft_ok")
 
 
