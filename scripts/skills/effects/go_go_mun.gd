@@ -65,6 +65,9 @@ func _stun(character: Node, seconds: float) -> void:
 	_moving_bank = 0.0
 	if "movement_locked" in character:
 		character.movement_locked = true
+	# Phần hiển thị (sao quanh đầu, đầu đảo vòng) do nhân vật tự lo.
+	if character.has_method("set_dizzy"):
+		character.set_dizzy(true)
 	AmThanh.play_sfx("craft_fail")
 
 
@@ -72,3 +75,5 @@ func _release(character: Variant) -> void:
 	_stun_left = 0.0
 	if character != null and is_instance_valid(character) and "movement_locked" in character:
 		character.movement_locked = false
+	if character != null and is_instance_valid(character) and character.has_method("set_dizzy"):
+		character.set_dizzy(false)

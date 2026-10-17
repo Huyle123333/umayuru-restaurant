@@ -115,6 +115,10 @@ var _mouth_mats: Array = []
 var _yaw := 0.0
 var _pitch := 0.35
 
+## Hai node hiệu ứng choáng, dựng lần đầu khi set_dizzy(true).
+var _dizzy_head: DizzyHeadModifier
+var _dizzy_stars: DizzyStars
+
 
 func _ready() -> void:
 	_stamina = stamina_max
@@ -283,6 +287,29 @@ func set_carrying(value: bool) -> void:
 	else:
 		_apply_face(eye_cell_normal, mouth_cell_normal)
 
+
+
+## Bật/tắt hiệu ứng CHOÁNG: sao bay quanh đầu + đầu đảo vòng.
+##
+## Đặt ở nhân vật chứ không ở go_go_mun.gd: hiệu ứng kĩ năng không biết
+## model trông thế nào (xương nào là đầu, cao bao nhiêu). Nó chỉ cần nói
+## "đang choáng"; nhân vật tự lo phần hiển thị. Sau này kĩ năng khác muốn
+## làm choáng thì gọi lại đúng hàm này.
+##
+## Dựng lần đầu khi cần (lazy) rồi giữ lại: đa số ván không bị choáng lần nào,
+## không lý gì nhân vật nào cũng mang sẵn bốn ngôi sao ẩn.
+func set_dizzy(on: bool) -> void:
+	if _dizzy_head == null:
+		var skeleton := _find_first(self, "Skeleton3D") as Skeleton3D
+		if skeleton == null:
+			return
+		_dizzy_head = DizzyHeadModifier.new()
+		skeleton.add_child(_dizzy_head)
+		_dizzy_stars = DizzyStars.new()
+		add_child(_dizzy_stars)
+		_dizzy_stars.setup(skeleton, _dizzy_head.head_bone)
+	_dizzy_head.dizzy = on
+	_dizzy_stars.visible = on
 
 # ---------------------------------------------------------------- helpers ---
 
