@@ -107,6 +107,9 @@ func _ready() -> void:
 	_btn_play.pressed.connect(_on_play_pressed)
 	_btn_back.pressed.connect(_on_back_pressed)
 
+	_cover_dlc_cards()
+	_add_dlc_ads()
+
 	# Kích thước của Hand chỉ biết được sau khi container xếp xong.
 	_hand.resized.connect(_layout_hand)
 	_layout_hand()
@@ -114,6 +117,67 @@ func _ready() -> void:
 	_panel.visible = false
 	_btn_play.disabled = true
 
+
+
+## AAA Mode: chỉ Kitasan Black chơi được, mọi thẻ khác "thuộc gói Deluxe".
+##
+## Nhân vật ẩn CHƯA mở khoá thì để nguyên (vẫn là bóng đen dấu hỏi): quảng cáo
+## bán nó sẽ làm lộ bí mật của chế độ chính.
+func _is_dlc_card(id: String) -> bool:
+	return GameData.is_aaa_mode() and id != GameData.STORY_CHARACTER \
+		and not GameData.is_character_locked(id)
+
+
+## AAA Mode: dải 5 thẻ quảng cáo DLC nằm ngang ở đáy màn hình, giữa hai nút.
+##
+## CanvasLayer riêng chứ không chen vào VBox của màn hình: bố cục màn chọn
+## nhân vật giữ nguyên y hệt chế độ thường, dải quảng cáo chỉ "dán đè" lên.
+## Thẻ dạng nằm ngang (compact) cho hàng thấp, không che tay bài nhân vật;
+## mô tả hiện PHÍA TRÊN thẻ vì bên dưới đã sát mép màn hình.
+func _add_dlc_ads() -> void:
+	if not GameData.is_aaa_mode():
+		return
+	var card_script := load("res://scripts/modes/aaa/dlc_card.gd") as GDScript
+	var catalog := load("res://scripts/modes/aaa/dlc_catalog.gd") as GDScript
+	var layer := CanvasLayer.new()
+	layer.layer = 5
+	add_child(layer)
+	var row := HBoxContainer.new()
+	row.add_theme_constant_override("separation", 10)
+	row.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	layer.add_child(row)
+	for id in catalog.ORDER:
+		var card: Control = card_script.new()
+		card.desc_side = "above"
+		card.compact = true
+		card.setup(String(id), 205.0)
+		row.add_child(card)
+	row.reset_size()
+	# Hàng dưới cùng, giữa nút Trở lại và nút Chơi.
+	row.position = Vector2((1920 - row.size.x) / 2.0, 1080 - row.size.y - 18)
+
+
+## Phủ lớp đen mờ lên thẻ "Deluxe". Mờ chứ không đen kịt: thấy được nhân vật
+## mà không chọn được mới là phần cà khịa.
+func _cover_dlc_cards() -> void:
+	for id in _cards:
+		if not _is_dlc_card(id):
+			continue
+		var shade := ColorRect.new()
+		shade.color = Color(0, 0, 0, 0.6)
+		shade.set_anchors_preset(Control.PRESET_FULL_RECT)
+		# Không chặn chuột: cú bấm vẫn phải tới nút của thẻ để mở quảng cáo.
+		shade.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		var tag := Label.new()
+		tag.text = "DELUXE"
+		tag.add_theme_font_size_override("font_size", 30)
+		tag.add_theme_color_override("font_color", Color(1.0, 0.85, 0.3))
+		tag.set_anchors_preset(Control.PRESET_FULL_RECT)
+		tag.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		tag.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+		tag.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		shade.add_child(tag)
+		(_cards[id] as Control).add_child(shade)
 
 
 ## Vẽ một lá bài trong tay quạt.
@@ -185,6 +249,12 @@ func _on_card_hover(id: String, entered: bool) -> void:
 
 func _on_card_pressed(id: String) -> void:
 	if id == _selected:
+		return
+	# AAA Mode: thẻ bị phủ đen → quảng cáo gói Deluxe, không chọn được.
+	if _is_dlc_card(id):
+		var offer: CanvasLayer = (load("res://scripts/modes/aaa/dlc_offer_panel.gd") as GDScript).new()
+		add_child(offer)
+		offer.show_offer("deluxe")
 		return
 	var previous := _selected
 	_selected = id
