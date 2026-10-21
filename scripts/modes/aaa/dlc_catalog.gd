@@ -18,8 +18,11 @@ const PACKS := {
 	"starter": {
 		"title": "Starter Pack",
 		"image": "res://assets/ui/dlc/starter.png",
-		"price": 19.99,
-		"desc": "Mọi thứ bạn cần để bắt đầu: quyền được bắt đầu. Tặng kèm một cái đĩa màu vàng.",
+		# Gói combo: Characters (14,99$) + Skill (7,99$) = 22,98$ nếu mua lẻ.
+		# Giá gói rẻ hơn hẳn để người chơi THẤY mình được lời — đúng chiêu bán
+		# "starter pack" của game thật: món hời nhất cửa hàng chính là mồi câu.
+		"price": 9.99,
+		"desc": "Bao gồm Characters Pack và Skill Pack. Mua lẻ 22,98$ — mua gói chỉ 9,99$, tiết kiệm hơn 50%! Món hời lớn nhất cửa hàng.",
 	},
 	"characters": {
 		"title": "Characters Pack",

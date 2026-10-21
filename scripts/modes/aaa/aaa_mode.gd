@@ -63,6 +63,12 @@ func setup(level: Node, player: CharacterBody3D, hands: Node, customers: Node,
 
 	_lock_kitchen(stations)
 
+	# Nhạc nền "thuộc Music Pack" — chưa mua thì cả màn chỉ có tiếng hiệu ứng.
+	# Dùng set_music_hushed() (TẠM DỪNG bài đang phát) chứ không stop_music():
+	# level_base vẫn bốc và bật bài ngẫu nhiên lúc vào ca như mọi màn, nên chỉ
+	# cần giữ nó im. Rời màn thì trả lại (_exit_tree), để menu có nhạc.
+	AmThanh.set_music_hushed(true)
+
 	_line = GuideLine.new()
 	_line.name = "AaaGuideLine"
 	level.add_child(_line)
@@ -201,25 +207,39 @@ func _build_countdown_cards() -> CanvasLayer:
 	layer.name = "AaaSaleBanner"
 	layer.layer = 8
 	var col := VBoxContainer.new()
-	col.position = Vector2(24, 120)
-	col.add_theme_constant_override("separation", 6)
+	# Đẩy sát mép trên (21/10/2026, user chốt): lúc đếm ngược chưa có vé đơn
+	# hàng ở góc trên trái, nên cả chiều cao màn hình dành cho thẻ to.
+	col.position = Vector2(24, 24)
+	col.add_theme_constant_override("separation", 8)
 	col.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	layer.add_child(col)
 	var head := Label.new()
 	head.text = Lang.t("SIÊU SALE DLC")
-	head.add_theme_font_size_override("font_size", 26)
+	head.add_theme_font_size_override("font_size", 32)
 	head.add_theme_color_override("font_color", Color(1.0, 0.85, 0.3))
 	head.add_theme_color_override("font_outline_color", Color(0.3, 0.05, 0.0))
-	head.add_theme_constant_override("outline_size", 8)
+	head.add_theme_constant_override("outline_size", 10)
 	col.add_child(head)
+	var muted := Label.new()
+	muted.text = Lang.t("Nhạc nền có trong Music Pack")
+	muted.add_theme_font_size_override("font_size", 20)
+	muted.add_theme_color_override("font_color", Color(1, 1, 1))
+	muted.add_theme_color_override("font_outline_color", Color(0.15, 0.1, 0.1))
+	muted.add_theme_constant_override("outline_size", 8)
+	col.add_child(muted)
 	for id in DlcCatalog.ORDER:
 		var card: Control = DlcCard.new()
 		card.desc_side = "right"
-		# Nằm ngang cho cột thấp: cột dọc thẻ to sẽ đè lên ô kĩ năng ở góc dưới.
+		# Nằm ngang: cột thẻ dọc to sẽ đè lên ô kĩ năng ở góc dưới.
 		card.compact = true
-		card.setup(String(id), 260.0)
+		card.setup(String(id), 380.0)
 		col.add_child(card)
 	return layer
+
+
+## Trả nhạc nền khi rời màn (về menu, chơi lại, sang đoạn kết).
+func _exit_tree() -> void:
+	AmThanh.set_music_hushed(false)
 
 
 ## Thẻ bật lên giữa ca, góc dưới phải. Đang trỏ chuột vào thẻ thì KHÔNG đếm

@@ -51,7 +51,9 @@ func setup(id: String, width: float) -> void:
 	img.texture = load(String(pack["image"]))
 	img.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 	img.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_COVERED
-	img.custom_minimum_size = Vector2(96, 72) if compact else Vector2(width - 12, (width - 12) * 0.72)
+	# Thẻ nằm ngang: ảnh chiếm ~40% bề ngang, nên thẻ to thì ảnh to theo.
+	var img_w := maxf(96.0, width * 0.4)
+	img.custom_minimum_size = Vector2(img_w, img_w * 0.75) if compact else Vector2(width - 12, (width - 12) * 0.72)
 	img.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	img.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	box.add_child(img)
@@ -65,7 +67,9 @@ func setup(id: String, width: float) -> void:
 	var title := Label.new()
 	title.text = String(pack["title"])
 	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	title.add_theme_font_size_override("font_size", 16)
+	# Thẻ to (từ 300 px) thì chữ to theo, không thì ảnh lớn mà chữ vẫn li ti.
+	var big := width >= 300.0
+	title.add_theme_font_size_override("font_size", 22 if big else 16)
 	title.add_theme_color_override("font_color", Color(0.29, 0.153, 0.071))
 	title.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	col.add_child(title)
@@ -77,8 +81,8 @@ func setup(id: String, width: float) -> void:
 	# Không tự xuống dòng: trong cột hẹp, RichTextLabel tự xuống dòng sẽ tính
 	# chiều rộng gần bằng 0 lúc dựng, rồi bẻ từng chữ một và kéo thẻ dài ngoằng.
 	_price.autowrap_mode = TextServer.AUTOWRAP_OFF
-	_price.add_theme_font_size_override("normal_font_size", 14)
-	_price.add_theme_font_size_override("bold_font_size", 15)
+	_price.add_theme_font_size_override("normal_font_size", 18 if big else 14)
+	_price.add_theme_font_size_override("bold_font_size", 21 if big else 15)
 	_price.add_theme_color_override("default_color", Color(0.4, 0.33, 0.27))
 	_price.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	col.add_child(_price)

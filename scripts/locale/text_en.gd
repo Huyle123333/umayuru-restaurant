@@ -807,10 +807,11 @@ const EN := {
 	"…Thằng cha nào nghĩ ra cái kịch bản này vậy.": "…What kind of idiot came up with this script.",
 	"0rca dev cảm thấy quá khúm núm nên sau khi nghĩ ra mode này đã quyết định không làm nữa.": "0rca dev felt too cringe after coming up with this mode, so decided not to make it after all.",
 	# --- AAA Mode: gói DLC ---
-	"Mọi thứ bạn cần để bắt đầu: quyền được bắt đầu. Tặng kèm một cái đĩa màu vàng.": "Everything you need to get started: the right to get started. Comes with one free golden plate.",
 	"Mở khoá Special Week, Oguri Cap và toàn bộ dàn nhân vật. Lời thoại riêng bán sau.": "Unlocks Special Week, Oguri Cap and the whole cast. Their dialogue is sold separately.",
 	"Thêm bếp thứ hai, lò nướng, máy kem và đầy đủ công thức. Oguri đã thử và thấy vẫn chưa đủ.": "Adds a second stove, the oven, the ice-cream machine and every recipe. Oguri tried it and says it's still not enough.",
 	"Bản thu Kitasan hát live trong lúc đứng bếp. Đã gồm tiếng xèo xèo của chảo.": "A live recording of Kitasan singing while she cooks. Pan sizzling included.",
 	"Mở khoá kĩ năng của mọi nhân vật. Dù chuyện gì xảy ra, cà rốt vẫn giòn.": "Unlocks every character's skills. Whatever happens, that's the way the carrot crunches.",
 	"Bấm để mua": "Click to buy",
+	"Nhạc nền có trong Music Pack": "Background music available in the Music Pack",
+	"Bao gồm Characters Pack và Skill Pack. Mua lẻ 22,98$ — mua gói chỉ 9,99$, tiết kiệm hơn 50%! Món hời lớn nhất cửa hàng.": "Includes the Characters Pack and the Skill Pack. $22.98 separately — only $9.99 as a bundle, save over 50%! The best deal in the store.",
 }
