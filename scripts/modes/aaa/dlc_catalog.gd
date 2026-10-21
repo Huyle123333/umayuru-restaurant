@@ -5,13 +5,11 @@ extends RefCounted
 ## chọn nhân vật, dải quảng cáo lúc đếm ngược, thẻ bật lên trong màn và bảng
 ## mua đều hiện CÙNG một giá. Bốn nơi tự tính giá thì sớm muộn lệch nhau.
 ##
-## MỨC SALE TĂNG THEO SỐ LẦN VÀO MÀN (user sửa 21/10/2026): bản cũ giảm mỗi
-## lần bấm "Để sau", nhưng thế thì bấm liên tục ở màn chọn nhân vật là ép giá
-## về −99% — thành mẹo. Giờ màn chọn nhân vật giữ nguyên giá; mỗi lần vào màn
-## chơi mà vẫn chưa mua thì giá tụt thêm một nấc. Vẫn nhại kiểu cửa hàng game:
-## chơi càng lâu mà không mua thì càng bị dí giá rẻ hơn. Bộ đếm là biến static — sống
-## suốt phiên chơi (qua cả màn chọn nhân vật lẫn màn chơi) nhưng KHÔNG lưu vào
-## file save: AAA Mode đã chốt là không lưu gì.
+## HAI MỨC SALE (user chốt 21/10/2026): màn chọn nhân vật một giá, vào màn
+## chơi thì giá thấp hơn — và chỉ vậy thôi. Bản cũ giảm mỗi lần bấm "Để sau"
+## (bấm liên tục là ép giá về −99%, thành mẹo); AAA Mode lại chỉ có MỘT màn,
+## nên cũng không cho giảm tiếp theo số lần chơi lại. Biến static: tắt game
+## thì về lại giá ban đầu, đúng nguyên tắc AAA Mode không lưu gì.
 
 ## Thứ tự hiện trên dải quảng cáo.
 const ORDER := ["starter", "characters", "cooking", "music", "skill"]
@@ -65,9 +63,10 @@ static func discount() -> int:
 	return mini(BASE_DISCOUNT + refusals * STEP_DISCOUNT, MAX_DISCOUNT)
 
 
-## Gọi một lần mỗi khi vào màn chơi AAA (aaa_mode.setup).
+## Gọi khi vào màn chơi AAA (aaa_mode.setup). Gán = 1 chứ không cộng dồn:
+## chơi lại bao nhiêu lần thì vẫn chỉ là mức giảm thứ hai.
 static func advance_sale() -> void:
-	refusals += 1
+	refusals = 1
 
 
 static func sale_price(id: String) -> float:
