@@ -33,23 +33,8 @@ extends Node
 ##   menu    Array   — id những món khách được phép gọi. Rỗng = cả danh mục
 ##   weights    Dict    — id -> trọng số bốc món. Thiếu = 1
 ##   chang       Array   — các chặng độ khó, xem _ap_dung_chang()
-##   moc_nhac    float   — còn bao nhiêu giây thì đổi sang nhạc cao điểm
 ##   moc         Dict    — bốn mốc doanh thu S/A/B/C (GameData tự đọc)
 
-## NHÓM nhạc cao điểm trong AmThanh.TRACK_GROUPS.
-##
-## (Sửa 19/9/2026) Trước là hằng `NHAC_CAO_DIEM := "nhac_cao_diem"` rồi gọi
-## `play_music()` thẳng bằng tên đó. Nhưng KHÔNG có file nào tên như vậy —
-## bài nhạc cao điểm thật tên `hashire_umamusume`. `play_music()` không tìm
-## thấy file thì THOÁT SỚM và im lặng: nhạc màn chơi cứ chạy tiếp, không lỗi,
-## không cảnh báo. Nên đoạn cao điểm chưa bao giờ đổi nhạc.
-##
-## Dùng NHÓM chứ không gõ thẳng tên bài: AmThanh đã có sẵn nhóm "cao_diem"
-## dành riêng cho việc này, và nhóm mới là chỗ khai báo bài nào thuộc giai
-## đoạn nào. Đổi bài sau này chỉ sửa một dòng bên AmThanh, không phải đi tìm
-## một hằng nằm lẫn trong luật màn.
-const PEAK_GROUP := "peak"
-const LEVEL_GROUP := "level"
 
 var _customers: Node
 var _clock: Node
@@ -58,7 +43,6 @@ var _rules: Dictionary = {}
 var _stages: Array = []
 ## Chặng đang áp dụng. -1 = chưa áp chặng nào.
 var _index := -1
-var _music_switched := false
 
 
 ## Gắn luật vào màn. Gọi từ level_base ngay sau khi dựng xong đồng hồ.
@@ -135,17 +119,10 @@ func _process(_delta: float) -> void:
 
 	var elapsed: float = float(_clock.duration) - float(_clock.time_left)
 
-	# Nhạc cao điểm. Đặt theo GIÂY CÒN LẠI chứ không theo giây đã trôi, vì bài
-	# hát phải kết thúc đúng lúc hết giờ — mốc của nó là cái đích, không phải
-	# vạch xuất phát.
-	if not _music_switched and _rules.has("music_cue"):
-		# Nhân với tốc độ đồng hồ: mốc là độ dài THẬT của bài hát, còn time_left
-		# là giây của màn. Đồng hồ chạy nhanh 1,25 lần (Chiyono O) mà không nhân
-		# thì bài hát bật muộn và bị cắt mất đoạn kết khi hết giờ.
-		var scale := float(_clock.time_scale) if "time_scale" in _clock else 1.0
-		if float(_clock.time_left) <= float(_rules["music_cue"]) * scale:
-			_music_switched = true
-			AmThanh.play_random_music(PEAK_GROUP)
+	# (21/10/2026) ĐÃ BỎ cơ chế đổi sang nhạc cao điểm khi còn 212 giây, theo
+	# yêu cầu user: cả màn chỉ phát một bài ngẫu nhiên (level_base gọi
+	# AmThanh.play_random_music("level") lúc vào ca). Bỏ luôn hàm rearm_music()
+	# mà kĩ năng của Chiyono O từng gọi — không còn nhạc cao điểm để trả về.
 
 	for i in _stages.size():
 		var c: Dictionary = _stages[i]
@@ -156,22 +133,6 @@ func _process(_delta: float) -> void:
 	# Trôi quá chặng cuối (đồng hồ dài hơn tổng các chặng): giữ chặng cuối.
 	if not _stages.is_empty() and _index != _stages.size() - 1:
 		_go_to_stage(_stages.size() - 1)
-
-
-## Trả nhạc về như đầu màn và cho phép bật lại nhạc cao điểm.
-## (Chiyono O — Ambition to Surpass the Sakura gọi sau khi đặt lại đồng hồ.)
-##
-## Không có hàm này thì đặt lại màn giữa lúc nhạc cao điểm sẽ để bài đó lặp đi
-## lặp lại suốt cả màn mới: cờ _music_switched vẫn là true nên mốc nhạc không
-## bao giờ được xét lại, và "cao điểm" kêu từ giây đầu tiên.
-##
-## Chỉ đổi nhạc khi bài cao điểm ĐÃ bật. Đặt lại màn lúc còn nhạc nền thường
-## thì để yên — đổi bài giữa chừng không vì lý do gì chỉ làm người chơi giật mình.
-func rearm_music() -> void:
-	if not _music_switched:
-		return
-	_music_switched = false
-	AmThanh.play_random_music(LEVEL_GROUP)
 
 
 func _go_to_stage(i: int) -> void:

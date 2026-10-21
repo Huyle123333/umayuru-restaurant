@@ -21,12 +21,8 @@ const PAUSE_MENU := preload("res://scenes/menu/pause_menu.tscn")
 
 ## CHEAT TUA GIỜ (phím 0) — kéo đồng hồ màn về còn bấy nhiêu giây.
 ##
-## Vì sao 210 chứ không phải 212: 212 đúng là mốc đổi sang nhạc cao điểm
-## (GameData ... "music_cue"), mà level_rules so bằng `time_left <= music_cue`. Đặt
-## đúng 212,0 thì kết quả phụ thuộc vào khung hình nào chạy trước — tua xong
-## có thể vẫn còn 212,0 chằn và nhạc chưa đổi. Đặt 210 là ĐÃ VƯỢT mốc, nên
-## nhạc chắc chắn đổi ngay khung hình kế tiếp. Ba chữ số trên đồng hồ hiện
-## 3:30, vừa đẹp.
+## (210 giây từng được chọn để vượt mốc đổi nhạc cao điểm 212 giây; cơ chế
+## đó đã bỏ 21/10/2026, con số giữ nguyên vì đồng hồ hiện 3:30 dễ đọc.)
 const SKIP_SECONDS := 210.0
 
 ## Tham chiếu tới nhân vật đang chơi, để các hệ thống khác (HUD, đơn hàng,
@@ -207,7 +203,11 @@ func _build_interaction() -> void:
 	# với bộ chọn mục tiêu: bảy nhân vật thì bảy chỗ phải sửa.
 	_reveal_map_items()
 
+	# AAA Mode: kĩ năng "thuộc DLC" — không dựng hệ kĩ năng; phím kĩ năng do
+	# aaa_mode.gd bắt để hiện quảng cáo.
 	var cls_skills := load("res://scripts/skills/skill_manager.gd") as GDScript
+	if _is_aaa():
+		cls_skills = null
 	if cls_skills != null:
 		var skills: Node = cls_skills.new()
 		skills.name = "SkillManager"
@@ -237,7 +237,9 @@ func _build_interaction() -> void:
 		var hands_node := player.get_node_or_null("Hands")
 		if hands_node != null and hands_node.has_signal("ingredient_taken"):
 			hands_node.ingredient_taken.connect(customers.charge_for_ingredient)
-		customers.free_ingredients = GameData.cheat_free_ingredients
+		# AAA Mode bỏ qua cheat nguyên liệu miễn phí.
+		customers.free_ingredients = GameData.cheat_free_ingredients and not _is_aaa()
+		customers.never_leave = _is_aaa()
 
 		_build_order_hud()
 	else:
@@ -361,6 +363,28 @@ func _build_order_hud() -> void:
 	_apply_level_rules(clock)
 	_build_level_intro(clock)
 	_attach_tutorial(clock)
+	_attach_aaa_mode()
+
+
+func _is_aaa() -> bool:
+	return get_node_or_null("/root/GameData") != null and GameData.is_aaa_mode()
+
+
+## AAA Mode — dựng bộ điều phối của chế độ. Gọi SAU _apply_level_rules (bộ
+## điều phối đọc thực đơn đã áp để biết khoá kệ nào) và SAU _build_level_intro
+## (nó gắn dải sale vào màn đếm ngược).
+func _attach_aaa_mode() -> void:
+	if not _is_aaa() or customers == null:
+		return
+	var cls := load("res://scripts/modes/aaa/aaa_mode.gd") as GDScript
+	if cls == null:
+		push_warning("Không nạp được AAA Mode — màn chạy như màn thường.")
+		return
+	var aaa: Node = cls.new()
+	aaa.name = "AaaMode"
+	add_child(aaa)
+	aaa.setup(self, player, player.get_node_or_null("Hands"), customers,
+		_find_stations(self), get_node_or_null("LevelIntro"))
 
 
 ## Áp luật riêng của màn đang chơi (thực đơn, nhịp khách, thời lượng).
@@ -546,6 +570,8 @@ func _unhandled_input(event: InputEvent) -> void:
 func _unhandled_key_input(event: InputEvent) -> void:
 	if get_node_or_null("/root/GameData") == null or not GameData.cheat_time_skip:
 		return
+	if GameData.is_aaa_mode():
+		return
 	var key := event as InputEventKey
 	if key == null or not key.pressed or key.echo:
 		return
@@ -613,6 +639,11 @@ func _end_level(rank: String, fail_note: String = "") -> void:
 	# Chặn gọi hai lần: hết giờ và hướng dẫn xong về lý thuyết có thể trùng
 	# nhau, và hai tấm bảng chồng lên nhau thì cái dưới không bao giờ đóng.
 	if get_node_or_null("ResultsPanel") != null:
+		return
+	# AAA Mode có bảng điểm riêng và không ghi gì vào file lưu.
+	var aaa := get_node_or_null("AaaMode")
+	if aaa != null:
+		aaa.show_review()
 		return
 
 	var cls := load("res://scripts/ui/results_panel.gd") as GDScript

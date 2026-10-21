@@ -125,8 +125,8 @@ const INTRO_SCENES := {
 ## trần tăng theo cả hai trục (thời lượng × giá), ngày cuối nặng ký nhất một
 ## cách tự nhiên. Ba chặng của Ngày 1 và 2 co lại ĐÚNG TỈ LỆ với thời lượng
 ## mới (2/7 – 3/7 – 2/7 của màn), để nhịp "khởi động – chính – cao điểm" giữ
-## nguyên hình dạng. "music_cue" không đổi: nó tính theo giây CÒN LẠI, nên bài
-## cao điểm vẫn kết thúc đúng lúc hết giờ.
+## nguyên hình dạng. (Khoá "music_cue" — mốc đổi nhạc cao điểm — đã bỏ
+## 21/10/2026: giờ cả màn phát một bài ngẫu nhiên.)
 const RULES_D1 := {
 	"duration": 300.0,
 	"price_factor": 0.95,
@@ -156,7 +156,6 @@ const RULES_D1 := {
 		{"until": 214.0, "interval": 12.0, "interval_range": [7.0, 15.0], "tier_weights": {"easy": 6, "medium": 4}},
 		{"until": 300.0, "interval": 8.0, "interval_range": [5.0, 13.0], "tier_weights": {"easy": 5, "medium": 5}},
 	],
-	"music_cue": 212.0,
 	# (2/10/2026) Mốc do người làm game chốt sau khi có kĩ năng Kita và giá
 	# vốn nguyên liệu. Thêm hạng D làm mốc QUA MÀN. Phần giải thích 1200/950
 	# ở chú thích phía trên là của bộ số cũ.
@@ -209,7 +208,6 @@ const RULES_D2 := {
 		{"until": 257.0, "interval": 10.0, "interval_range": [5.0, 15.0], "tier_weights": {"easy": 45, "medium": 45, "hard": 10}},
 		{"until": 360.0, "interval": 7.0, "interval_range": [4.0, 12.0], "tier_weights": {"easy": 35, "medium": 50, "hard": 15}},
 	],
-	"music_cue": 212.0,
 	"rank_thresholds": {"S": 2829, "A": 1971, "B": 1420, "C": 1050, "D": 800},
 	"max_left": 7,
 }
@@ -245,10 +243,32 @@ const RULES_D3 := {
 		{"until": 300.0, "interval": 8.0, "interval_range": [4.0, 13.0], "tier_weights": {"easy": 25, "medium": 55, "hard": 20}},
 		{"until": 420.0, "interval": 6.0, "interval_range": [3.0, 11.0], "tier_weights": {"easy": 15, "medium": 60, "hard": 25}},
 	],
-	"music_cue": 212.0,
 	"rank_thresholds": {"S": 3667, "A": 2501, "B": 1836, "C": 1357, "D": 1000},
 	"max_left": 5,
 }
+
+## AAA MODE — chế độ phụ nhại game AAA (xem thiet_ke_aaa_mode_v0.2.docx).
+##
+## Thực đơn chỉ gồm món ráp ở bàn chế tạo và chỉ cần MỘT bếp: chế độ này khoá
+## bếp phụ, lò và máy kem ("thuộc DLC"), và bộ suy ra bước tiếp theo của nó
+## chỉ hiểu công thức bàn chế tạo. Không có "rank_thresholds" và "max_left":
+## không xếp hạng, không thể thua.
+const RULES_AAA := {
+	"duration": 240.0,
+	"price_factor": 1.0,
+	"max_customers": 5,
+	"max_tables": 3,
+	"max_queue": 2,
+	"first_wait": 4.0,
+	"menu": ["mon_ham", "mon_steak", "hambuger"],
+	"weights": {"mon_ham": 3, "mon_steak": 3, "hambuger": 2},
+	"stages": [
+		{"until": 240.0, "interval": 16.0, "interval_range": [10.0, 20.0]},
+	],
+}
+
+## Id của AAA Mode trong LEVELS. Hỏi qua is_aaa_mode(), đừng so chuỗi tay.
+const AAA_LEVEL := "aaa"
 
 ## Toàn bộ màn chơi của game.
 ##   label   — chữ hiện trên nút
@@ -267,6 +287,8 @@ const LEVELS := {
 	# ở đây: người chơi thấy một nút "Ending" duy nhất, kết nào được chiếu do
 	# enter_level() quyết lúc bấm — xem ending_scene().
 	"ending": {"label": "Ending", "needs": "d3_sang", "scene": SCENE_ENDING_NORMAL, "story_only": true},
+	# Chế độ phụ, mở sẵn từ đầu (needs rỗng).
+	"aaa": {"label": "AAA Mode", "needs": "", "scene": MAP_RESTAURANT, "rules": RULES_AAA},
 }
 
 ## Các nhân vật. Khóa là id, cũng là tên file ảnh đại diện trong
@@ -849,6 +871,13 @@ func set_cheat_time_skip(value: bool) -> void:
 
 
 
+## Đang chơi AAA Mode không. Mọi chỗ cần đối xử khác (bỏ qua cheat, khoá nhân
+## vật, tắt kĩ năng…) hỏi qua đây, để sau này đổi cách nhận biết chế độ thì
+## chỉ sửa một hàm.
+func is_aaa_mode() -> bool:
+	return current_level == AAA_LEVEL
+
+
 func is_completed(id: String) -> bool:
 	return bool(completed.get(id, false))
 
@@ -971,6 +1000,9 @@ func get_best_money(id: String) -> int:
 
 ## Gọi khi người chơi hoàn thành một màn. Tự lưu game ngay.
 func complete_level(id: String, earned: int = 0) -> void:
+	# AAA Mode không lưu gì (đã chốt 19/10/2026).
+	if id == AAA_LEVEL:
+		return
 	completed[id] = true
 	# Lượt thắng bằng kĩ năng không đụng tới KỶ LỤC của màn: 9.999.999 tiền
 	# mà thành kỷ lục thì dòng "KỶ LỤC MỚI!" không bao giờ hiện ra nữa.
@@ -1213,6 +1245,10 @@ func enter_level(id: String) -> String:
 	var target := scene_path(id)
 	if target.is_empty():
 		return ""
+	# AAA Mode vào thẳng map: không đoạn hội ý, không đoạn ra mắt nhân vật —
+	# chế độ phụ không thuộc cốt truyện.
+	if id == AAA_LEVEL:
+		return target
 
 	# Bốn điều kiện chen đoạn ra mắt, xét cho ĐÚNG nhân vật đang được chọn:
 	#   1. nhân vật đó có đoạn ra mắt

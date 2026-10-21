@@ -86,21 +86,29 @@ const LEVEL_TRACKS: Array[String] = [
 	"bgm4_mant", "bgm5_mant2", "bgm6_gl",
 ]
 
+## Nhạc TRONG MÀN CHƠI = sáu bài trên + Hashire Umamusume (21/10/2026).
+##
+## Hashire từng là bài riêng cho đoạn cuối màn; cơ chế đó đã bỏ, nên nó vào
+## chung danh sách bốc ngẫu nhiên. Chỉ thêm cho màn chơi, KHÔNG thêm cho menu:
+## bài nhịp nhanh, hợp lúc đứng bếp hơn lúc đang chọn màn.
+##
+## Viết lại đủ bảy tên chứ không ghép `LEVEL_TRACKS + [...]`: hằng của GDScript
+## chỉ nhận biểu thức tính được lúc biên dịch, ghép mảng có kiểu ở đây dễ báo lỗi.
+const GAMEPLAY_TRACKS: Array[String] = [
+	"bgm1_beachtraining", "bgm2_ura", "bgm3_unity",
+	"bgm4_mant", "bgm5_mant2", "bgm6_gl",
+	"hashire_umamusume",
+]
+
 const TRACK_GROUPS := {
 	"menu": LEVEL_TRACKS,
-	"level": LEVEL_TRACKS,
-	# Hashire Umamusume — RIÊNG cho đoạn cuối màn chơi, dài đúng 212 giây.
-	# Không nằm trong LEVEL_TRACKS: nếu nó có thể bốc trúng ngay từ đầu màn thì
-	# lúc còn 3 phút rưỡi nó sẽ phải tự cắt chính mình để nhường chỗ cho...
-	# chính nó, và cái khoảnh khắc "đổi nhạc = sắp hết giờ" mất sạch ý nghĩa.
-	"peak": ["hashire_umamusume"],
+	"level": GAMEPLAY_TRACKS,
 	# Prologue dùng bài cố định: đoạn kể chuyện có nhịp riêng, bốc ngẫu nhiên
 	# thì mỗi lần chơi lại một không khí khác nhau.
 	"prologue": ["bgm2_ura"],
 	# Màn kết cũng một bài cố định. Phải KHAI nhóm riêng chứ không để màn kết
-	# "thừa hưởng" nhạc đang phát: đi thẳng từ Ngày 3 sang thì bài cao điểm
-	# (phát không lặp, dài đúng bằng đoạn cuối màn) đã hết từ lúc hết giờ, nên
-	# không còn gì để thừa hưởng — cả màn kết im lặng. Chọn bài "beach
+	# "thừa hưởng" nhạc đang phát: nhạc màn chơi là bài bốc ngẫu nhiên, đi
+	# thẳng từ Ngày 3 sang thì màn kết mang theo một bài không liên quan. Chọn bài "beach
 	# training" vì chuyến đi trong truyện là đi biển.
 	"ending": ["bgm1_beachtraining"],
 }
