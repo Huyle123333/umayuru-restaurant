@@ -177,8 +177,25 @@ func _lock(st: Node) -> void:
 	dlc_sign.outline_size = 14
 	dlc_sign.billboard = BaseMaterial3D.BILLBOARD_ENABLED
 	st.add_child(dlc_sign)
-	dlc_sign.global_position = (st.aim_position() if st.has_method("aim_position") else st.global_position) + Vector3.UP * 0.9
+	# Biển phải nằm TRÊN nóc khối hình của trạm. Bản cũ chỉ cộng cố định 0,9 m
+	# nên ở bếp (cao 1,21 m), lò nướng (1,45 m), máy kem (2,4 m) biển bị nuốt
+	# vào trong model — có biển mà không ai thấy. Giờ đo nóc thật rồi đặt cao
+	# hơn 0,35 m; trạm thấp thì vẫn giữ mức 0,9 m như cũ.
+	var base: Vector3 = st.aim_position() if st.has_method("aim_position") else st.global_position
+	dlc_sign.global_position = Vector3(base.x, maxf(base.y + 0.9, _top_of(st) + 0.35), base.z)
 	st.interacted.connect(func(_s: Node, _i: int) -> void: _show_offer("kitchen"))
+
+
+## Độ cao nóc của mọi mesh trong trạm (toạ độ thế giới). Bỏ qua Label3D để
+## không tính cả biển chữ vào.
+func _top_of(st: Node) -> float:
+	var top := -INF
+	for c in st.find_children("*", "VisualInstance3D", true, false):
+		if c is Label3D:
+			continue
+		var box: AABB = c.global_transform * c.get_aabb()
+		top = maxf(top, box.end.y)
+	return top
 
 
 func _show_offer(kind: String) -> void:
