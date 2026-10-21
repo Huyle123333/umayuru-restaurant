@@ -20,7 +20,7 @@ const DlcCatalog := preload("res://scripts/modes/aaa/dlc_catalog.gd")
 
 ## Quảng cáo nào trùng một gói trong DlcCatalog thì hiện bằng bảng của gói đó,
 ## để giá ở đây cũng nhảy theo số lần từ chối như mọi chỗ khác.
-const OFFER_TO_PACK := {"kitchen": "cooking", "skill": "skill"}
+const OFFER_TO_PACK := {"kitchen": "cooking", "skill": "skill", "deluxe": "characters"}
 
 const THEME := "res://ui/theme/menu_theme.tres"
 const COLOR_TEXT := Color(0.29, 0.153, 0.071)
@@ -64,7 +64,7 @@ var _btn_buy: Button
 var _btn_close: Button
 var _banner_left := 0.0
 var _banner_timer: Label
-## Đã bấm "Mua ngay" chưa. Đóng bảng mà CHƯA bấm mua = một lần từ chối.
+## Đã bấm "Mua ngay" chưa (đổi chữ nút Đóng).
 var _bought := false
 
 
@@ -163,9 +163,8 @@ func show_pack(id: String) -> void:
 	price.fit_content = true
 	price.scroll_active = false
 	price.add_theme_font_size_override("normal_font_size", 26)
-	price.add_theme_font_size_override("bold_font_size", 30)
 	price.add_theme_color_override("default_color", Color(0.4, 0.33, 0.27))
-	price.text = "[center]%s[/center]" % DlcCatalog.price_text(id, true)
+	price.text = "[center]%s[/center]" % DlcCatalog.price_text(id, true, 32)
 	col.add_child(price)
 
 	var row := HBoxContainer.new()
@@ -192,9 +191,8 @@ func _on_buy() -> void:
 
 
 func close() -> void:
-	# Từ chối (Để sau / Esc) thì lần quảng cáo sau giảm giá sâu hơn.
-	if _modal and not _bought:
-		DlcCatalog.refuse()
+	# (21/10/2026) Đóng bảng KHÔNG còn làm giảm giá: bấm "Để sau" liên tục ở
+	# màn chọn nhân vật sẽ thành mẹo ép giá về −99%. Giá chỉ giảm khi vào màn.
 	if _modal:
 		get_tree().paused = _was_paused
 		Input.mouse_mode = _old_mouse

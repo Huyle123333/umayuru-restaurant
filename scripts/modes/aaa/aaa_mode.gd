@@ -63,6 +63,9 @@ func setup(level: Node, player: CharacterBody3D, hands: Node, customers: Node,
 
 	_lock_kitchen(stations)
 
+	# Mỗi lần VÀO MÀN thì sale sâu thêm một nấc (xem DlcCatalog.advance_sale).
+	DlcCatalog.advance_sale()
+
 	# Nhạc nền "thuộc Music Pack" — chưa mua thì cả màn chỉ có tiếng hiệu ứng.
 	# Dùng set_music_hushed() (TẠM DỪNG bài đang phát) chứ không stop_music():
 	# level_base vẫn bốc và bật bài ngẫu nhiên lúc vào ca như mọi màn, nên chỉ

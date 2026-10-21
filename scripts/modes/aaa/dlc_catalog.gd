@@ -5,9 +5,11 @@ extends RefCounted
 ## chọn nhân vật, dải quảng cáo lúc đếm ngược, thẻ bật lên trong màn và bảng
 ## mua đều hiện CÙNG một giá. Bốn nơi tự tính giá thì sớm muộn lệch nhau.
 ##
-## MỨC SALE TĂNG THEO SỐ LẦN TỪ CHỐI (user chốt 21/10/2026): mỗi lần người
-## chơi bấm "Để sau", lần quảng cáo kế tiếp giảm thêm. Nhại đúng kiểu cửa hàng
-## game: càng làm ngơ càng được dí giá rẻ hơn. Bộ đếm là biến static — sống
+## MỨC SALE TĂNG THEO SỐ LẦN VÀO MÀN (user sửa 21/10/2026): bản cũ giảm mỗi
+## lần bấm "Để sau", nhưng thế thì bấm liên tục ở màn chọn nhân vật là ép giá
+## về −99% — thành mẹo. Giờ màn chọn nhân vật giữ nguyên giá; mỗi lần vào màn
+## chơi mà vẫn chưa mua thì giá tụt thêm một nấc. Vẫn nhại kiểu cửa hàng game:
+## chơi càng lâu mà không mua thì càng bị dí giá rẻ hơn. Bộ đếm là biến static — sống
 ## suốt phiên chơi (qua cả màn chọn nhân vật lẫn màn chơi) nhưng KHÔNG lưu vào
 ## file save: AAA Mode đã chốt là không lưu gì.
 
@@ -63,7 +65,8 @@ static func discount() -> int:
 	return mini(BASE_DISCOUNT + refusals * STEP_DISCOUNT, MAX_DISCOUNT)
 
 
-static func refuse() -> void:
+## Gọi một lần mỗi khi vào màn chơi AAA (aaa_mode.setup).
+static func advance_sale() -> void:
 	refusals += 1
 
 
@@ -74,12 +77,19 @@ static func sale_price(id: String) -> float:
 
 ## "9,99$ → 2,99$ (−70%)" — dùng dấu phẩy thập phân kiểu Việt; bản tiếng Anh
 ## đổi sang dấu chấm và đặt $ lên trước.
-static func price_text(id: String, bbcode: bool) -> String:
+## `sale_size` — cỡ chữ của giá sale (lớn hơn giá gốc để nổi bật thay cho chữ đậm).
+static func price_text(id: String, bbcode: bool, sale_size: int = 18) -> String:
 	var old := _money(float(PACKS[id]["price"]))
 	var now := _money(sale_price(id))
 	if bbcode:
-		return "[s]%s[/s]  [color=#d22a1f][b]%s[/b]  (−%d%%)[/color]" % [old, now, discount()]
-	return "%s → %s (−%d%%)" % [old, now, discount()]
+		# (21/10/2026, user chốt) Bỏ phần "(−82%)" nhỏ màu đỏ: giá gốc gạch
+		# ngang cạnh giá sale đã đủ nói mức giảm, thêm phần trăm chỉ làm rối.
+		# KHÔNG dùng [b]: font mặc định không có bản đậm thật, Godot tự "làm
+		# đậm" bằng cách nới nét chữ, mà trên font MSDF (đã bật trong
+		# project.godot) cách nới đó để lại các lỗ sáng lấm tấm trong nét chữ.
+		# Giá sale nổi bật nhờ màu đỏ và cỡ chữ lớn hơn là đủ.
+		return "[s]%s[/s]  [color=#d22a1f][font_size=%d]%s[/font_size][/color]" % [old, sale_size, now]
+	return "%s → %s" % [old, now]
 
 
 static func _money(v: float) -> String:
