@@ -812,6 +812,9 @@ const EN := {
 	"Bản thu Kitasan hát live trong lúc đứng bếp. Đã gồm tiếng xèo xèo của chảo.": "A live recording of Kitasan singing while she cooks. Pan sizzling included.",
 	"Mở khoá kĩ năng của mọi nhân vật. Dù chuyện gì xảy ra, cà rốt vẫn giòn.": "Unlocks every character's skills. Whatever happens, that's the way the carrot crunches.",
 	"Bấm để mua": "Click to buy",
+	"Chưa có đĩa! Ráp món với đĩa ở bàn chế tạo trước.": "No plate! Assemble the dish with a plate at the crafting table first.",
+	"Món của tôi đâu có đĩa?!": "Where's the plate for my food?!",
+	"Đây không phải món tôi gọi!": "This isn't what I ordered!",
 	"Nhạc nền có trong Music Pack": "Background music available in the Music Pack",
 	"Bao gồm Characters Pack và Skill Pack. Mua lẻ 22,98$ — mua gói chỉ 9,99$, tiết kiệm hơn 50%! Món hời lớn nhất cửa hàng.": "Includes the Characters Pack and the Skill Pack. $22.98 separately — only $9.99 as a bundle, save over 50%! The best deal in the store.",
 }

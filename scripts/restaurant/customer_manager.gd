@@ -299,6 +299,10 @@ var perfect_dishes: Dictionary = {}
 ## GameData nào cả.
 var free_ingredients: bool = false
 
+## Khách hết kiên nhẫn vẫn ngồi chờ, không bỏ về (AAA Mode: không thể thua).
+## Thanh kiên nhẫn vẫn chạy và vẫn đổi màu; giao muộn chỉ mất thưởng hoàn hảo.
+var never_leave: bool = false
+
 ## Tổng tiền trong màn. CÓ THỂ ÂM.
 ##
 ## Âm là hợp lệ, không phải lỗi: lấy nguyên liệu bị trừ tiền ngay, nên mấy giây
@@ -348,6 +352,8 @@ func setup(map: Node3D) -> void:
 	for b in _tables:
 		if b.has_signal("dish_delivered"):
 			b.dish_delivered.connect(_on_dish_delivered)
+		if b.has_signal("delivery_rejected"):
+			b.delivery_rejected.connect(_on_delivery_rejected)
 
 	_bake_navmesh()
 	_spawn_timer = first_wait
@@ -595,7 +601,7 @@ func _process(delta: float) -> void:
 		# vẽ ở đây; ngồi vào bàn rồi thì tấm vé trên HUD lo phần đó.
 		if order_.in_queue and is_instance_valid(order_.customer):
 			order_.customer.set_patience_bar(order_.patience_ratio())
-		if expired:
+		if expired and not never_leave:
 			_leave_angry(order_)
 
 
@@ -729,6 +735,11 @@ func _on_dish_delivered(table: Node, dish_id: String) -> void:
 	# NGOẠI LỆ: món nằm trong `wildcard_dishes` thì đơn nào cũng nhận.
 	var is_wildcard := dish_id != order_.dish and wildcard_dishes.has(dish_id)
 	if dish_id != order_.dish and not is_wildcard:
+		# (25/10/2026) Vẫn không phạt tiền/thời gian, nhưng KHÔNG còn im lặng:
+		# khách cáu + nói ra, để người chơi biết ngay là nhầm chứ không tưởng
+		# game bị đơ. Món vẫn nằm trên bàn để nhấc lại như cũ.
+		if _waiting_at_table(order_):
+			_complain(customer, Lang.t("Đây không phải món tôi gọi!"))
 		return
 
 	# Chốt tiền NGAY LÚC GIAO, trả vào ví lúc khách ăn xong.
@@ -786,6 +797,68 @@ func _on_dish_delivered(table: Node, dish_id: String) -> void:
 	customer.set_meta("dish", dish_id)
 	customer.eat(eat_seconds)
 	order_finished.emit(order_, "served")
+
+
+## Bàn từ chối đồ người chơi bê tới (chưa thành món, vd. thiếu đĩa).
+func _on_delivery_rejected(table: Node, reason: String) -> void:
+	var customer = _customer_at.get(table)
+	if customer == null:
+		return
+	var order_: Order = _orders.get(customer)
+	if order_ == null or not _waiting_at_table(order_):
+		return
+	if reason == "no_plate":
+		_complain(customer, Lang.t("Món của tôi đâu có đĩa?!"))
+
+
+## Khách đã NGỒI vào bàn và đang chờ món. Bàn được giữ chỗ ngay khi khách
+## bắt đầu đi tới (_customer_at có từ lúc đó), nên phải kiểm thêm: người còn
+## đang đi trên đường hay đã ăn xong thì không cáu.
+func _waiting_at_table(order_: Order) -> bool:
+	return not order_.in_queue and order_.draining
+
+
+## Khách nổi cáu tại chỗ: animation angry + một câu nói nổi trên đầu.
+##
+## Chỉ là PHẢN HỒI, không phải hình phạt — không trừ tiền, không trừ kiên
+## nhẫn. Lý do giữ nguyên luật cũ: một lần bấm nhầm lúc vội không được làm
+## hỏng cả màn; cái người chơi cần là BIẾT mình sai ở đâu.
+## Dùng lại beg_seconds (= đúng độ dài clip angry) cho thời gian cáu.
+func _complain(customer: Node, text: String) -> void:
+	if not is_instance_valid(customer):
+		return
+	AmThanh.play_sfx("customer_out")
+	customer.beg()
+	_speech_popup(customer, text)
+	await get_tree().create_timer(beg_seconds).timeout
+	if is_instance_valid(customer) and customer.is_inside_tree():
+		customer.calm()
+
+
+## Câu nói đỏ nổi trên đầu khách. Gắn làm CON của khách để đi theo người;
+## mỗi khách chỉ một câu — cáu lần nữa thì thay câu cũ, không chồng chữ.
+func _speech_popup(customer: Node, text: String) -> void:
+	var old := customer.get_node_or_null("ComplaintText")
+	if old != null:
+		old.name = "ComplaintTextOld"
+		old.queue_free()
+	var label := Label3D.new()
+	label.name = "ComplaintText"
+	label.text = text
+	label.font_size = 96
+	label.pixel_size = 0.0035
+	label.billboard = BaseMaterial3D.BILLBOARD_ENABLED
+	label.no_depth_test = true
+	label.modulate = Color("ff5a4a")
+	label.outline_modulate = Color(0.15, 0.0, 0.0)
+	label.outline_size = 24
+	# Cao hơn bong bóng đơn (~2,3) để không đè lên nhau.
+	label.position = Vector3(0.0, 2.9, 0.0)
+	customer.add_child(label)
+	var tw := label.create_tween()
+	tw.tween_interval(2.0)
+	tw.tween_property(label, "modulate:a", 0.0, 0.5)
+	tw.finished.connect(label.queue_free)
 
 
 func _on_ate(customer: Node) -> void:
@@ -1185,6 +1258,12 @@ func _money_popup(spot: Vector3, amount: int, is_perfect: bool) -> void:
 ## Không đụng tới người khách đang có mặt: họ cứ đứng đó cho tới khi đổi màn.
 ## Xoá sạch thì phía sau tấm bảng bỗng thành một cái quán trống trơn.
 ## Thực đơn thật của màn này (đã lọc món bị khoá). Cho kĩ năng đọc.
+## Mọi đơn đang mở (cả khách xếp hàng lẫn khách đã ngồi). Bản sao — sửa
+## mảng trả về không ảnh hưởng gì tới hệ khách.
+func active_orders() -> Array:
+	return _orders.values()
+
+
 func menu_dishes() -> Array[String]:
 	return _actual_menu()
 

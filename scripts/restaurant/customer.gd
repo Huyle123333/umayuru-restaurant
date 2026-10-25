@@ -77,6 +77,10 @@ var _anim_now := ""
 ##            nhau; muốn một khách hiếm thì cho trọng số nhỏ hơn hẳn số còn lại.
 ##   scale  — nhân thêm vào body_scale, cho model có cỡ gốc khác các model
 ##            Umamusume (1,5–1,7 đơn vị).
+##   yaw    — (độ, tuỳ chọn) xoay thêm model quanh trục đứng, cho model xuất ra
+##            nhìn ngược hướng các model còn lại. Xoay node Model con chứ không
+##            xoay node khách: hàm quay mặt theo hướng đi ghi đè rotation.y của
+##            node khách mỗi khung hình.
 ##
 ## Model trong customer.tscn (Akikawa) là dự phòng khi không nạp được cái nào.
 ## Mọi model phải có cùng bốn animation idle / walk / eat / angry.
@@ -92,7 +96,9 @@ const MODELS := [
 	# đúng chiều cao nhân vật chibi người chơi điều khiển.
 	# Rig Biped của 3ds Max, khác hẳn Umamusume, nên animation dựng riêng trong
 	# assets/npc/spiki/spiki_v2.blend, nhưng vẫn cùng bốn tên clip.
-	{"path": "res://assets/models/customer_spiki.glb", "weight": 5.0 / 99.0, "scale": 1.3},
+	{"path": "res://assets/models/customer_spiki.glb", "weight": 5.0 / 99.0, "scale": 1.3,
+		# Spiki xuất ra nhìn về −Z, năm model Uma nhìn về +Z → xoay 180°.
+		"yaw": 180.0},
 ]
 
 ## Animation phải LẶP. glTF không mang được cờ lặp, nên đặt ở đây lúc chạy thay
@@ -101,7 +107,7 @@ const MODELS := [
 const LOOPING_ANIMS := ["idle", "walk", "eat"]
 
 ## Model nạp sẵn, dùng chung cho mọi người khách: mỗi phần tử là
-## {"scene": PackedScene, "weight": float, "scale": float}. static để chỉ load()
+## {"scene": PackedScene, "weight": float, "scale": float, "yaw": float}. static để chỉ load()
 ## một lần cho cả màn chơi chứ không mỗi người khách một lần.
 static var _model_cache: Array[Dictionary] = []
 
@@ -132,7 +138,8 @@ func _pick_model() -> void:
 				if scene != null:
 					_model_cache.append({"scene": scene,
 						"weight": float(entry.get("weight", 1.0)),
-						"scale": float(entry.get("scale", 1.0))})
+						"scale": float(entry.get("scale", 1.0)),
+						"yaw": float(entry.get("yaw", 0.0))})
 	if _model_cache.is_empty():
 		return
 	var picked := _pick_weighted()
@@ -148,6 +155,7 @@ func _pick_model() -> void:
 	fresh.name = "Model"
 	add_child(fresh)
 	move_child(fresh, 2)
+	fresh.rotation.y = deg_to_rad(float(picked.get("yaw", 0.0)))
 	_model_scale = float(picked["scale"])
 
 
@@ -280,6 +288,14 @@ func eat(seconds: float) -> void:
 
 func beg() -> void:
 	_set_anim("angry")
+
+
+## Hết cáu, về đứng yên. CHỈ đổi khi vẫn đang "angry": trong lúc cáu người
+## chơi có thể đã giao đúng món và khách đang ăn — gọi idle vô tư sẽ cắt
+## ngang animation ăn.
+func calm() -> void:
+	if _anim_now == "angry":
+		_set_anim("idle")
 
 
 ## Bong bóng trên đầu (đơn hàng). Nội dung do hệ đơn hàng đổ vào sau.

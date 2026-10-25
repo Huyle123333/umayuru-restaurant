@@ -638,9 +638,15 @@ func _deliver_dish(table: Workstation) -> void:
 		return
 
 	var id: String = _held.item_id
-	if ItemCatalog.price(id) <= 0:
-		return
 	if not table.contents.is_empty():
+		return
+	if ItemCatalog.price(id) <= 0:
+		# (25/10/2026) Trước đây im lặng bỏ qua, nên người chơi cầm steak/ham
+		# chín bấm E mãi không hiểu vì sao bàn không nhận — lỗi hay gặp nhất là
+		# QUÊN ĐĨA. Giờ báo ra: dòng nhắc trên HUD + khách ở bàn nổi cáu.
+		notice.emit(Lang.t("Chưa có đĩa! Ráp món với đĩa ở bàn chế tạo trước."), false)
+		if table.has_signal("delivery_rejected"):
+			table.emit_signal("delivery_rejected", table, "no_plate")
 		return
 
 	table.add_item(id)

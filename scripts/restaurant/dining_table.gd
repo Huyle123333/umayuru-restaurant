@@ -44,6 +44,13 @@ extends Workstation
 @warning_ignore("unused_signal")
 signal dish_delivered(table: Node, dish_id: String)
 
+## Phát khi người chơi bê tới bàn một thứ CHƯA THÀNH MÓN (vd. steak chín mà
+## quên bày ra đĩa). Bàn không nhận, đồ vẫn trên tay; hệ khách nghe tín hiệu
+## này để người khách đang ngồi nổi cáu và nhắc. Cùng lý do với dish_delivered:
+## cái bàn chỉ báo, không cần biết ai nghe.
+@warning_ignore("unused_signal")
+signal delivery_rejected(table: Node, reason: String)
+
 ## Bật/tắt biển số, dùng khi muốn chụp ảnh map cho báo cáo.
 @export var show_number := true:
 	set(v):
