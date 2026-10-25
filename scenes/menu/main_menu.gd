@@ -12,6 +12,7 @@ const CODE_IDLE_ALPHA := 0.55
 
 @onready var _btn_new: Button = %BtnNew
 @onready var _btn_levels: Button = %BtnLevels
+@onready var _btn_endless: Button = %BtnEndless
 @onready var _btn_options: Button = %BtnOptions
 @onready var _btn_quit: Button = %BtnQuit
 
@@ -34,6 +35,7 @@ func _ready() -> void:
 
 	_btn_new.pressed.connect(_on_new_pressed)
 	_btn_levels.pressed.connect(_on_levels_pressed)
+	_btn_endless.pressed.connect(_on_endless_pressed)
 	_btn_options.pressed.connect(_on_options_pressed)
 	_btn_quit.pressed.connect(_on_quit_pressed)
 
@@ -43,7 +45,7 @@ func _ready() -> void:
 	_options.settings_chosen.connect(_on_settings_pressed)
 	_options.credits_chosen.connect(_on_credits_pressed)
 
-	for btn in [_btn_new, _btn_levels, _btn_options, _btn_quit]:
+	for btn in [_btn_new, _btn_levels, _btn_endless, _btn_options, _btn_quit]:
 		_setup_hover(btn)
 
 	# Nút CODE No.7 ở góc dưới phải — công cụ cho người phát triển.
@@ -94,6 +96,15 @@ func _scale_to(btn: Button, target: float) -> void:
 ## sau khi xong (hoặc bỏ qua) tutorial.
 func _on_new_pressed() -> void:
 	get_tree().change_scene_to_file(GameData.start_story_level("prologue"))
+
+
+## Endless Mode: nút riêng ở menu chính (user chốt 25/10/2026), đi thẳng tới
+## màn chọn nhân vật. return_scene = menu chính để nút Quay lại ở màn chọn
+## nhân vật đưa người chơi về đúng chỗ họ vừa bấm.
+func _on_endless_pressed() -> void:
+	GameData.current_level = GameData.ENDLESS_LEVEL
+	GameData.return_scene = scene_file_path
+	get_tree().change_scene_to_file("res://scenes/menu/character_select.tscn")
 
 
 func _on_levels_pressed() -> void:

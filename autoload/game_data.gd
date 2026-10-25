@@ -267,8 +267,61 @@ const RULES_AAA := {
 	],
 }
 
+## ENDLESS MODE (user chốt 25/10/2026).
+##
+## Không có thời lượng cố định: "duration" ở đây là số giây BAN ĐẦU trên đồng
+## hồ. Giao xong mỗi đơn được cộng giờ (endless_mode.gd), hết giờ là thua.
+## Điểm của chế độ này là THỜI GIAN TRỤ ĐƯỢC, không phải hạng — nên không có
+## "rank_thresholds" và "max_left" (khách bỏ về trừ giờ thay vì đếm tới mức thua).
+##
+## Mỗi 3 phút một mốc, mỗi mốc làm đúng HAI việc user chọn: mở thêm món khó
+## hơn (tier_weights) và khách vào dày hơn (interval). Không giảm kiên nhẫn,
+## không giảm giờ cộng: độ khó đến từ khối lượng việc, không phải từ luật
+## khắt khe dần mà người chơi không nhìn thấy.
+##
+## "until" tính theo thời gian ĐÃ TRÔI (level_rules đọc duration − time_left);
+## hud_clock.add_time() cộng vào cả hai nên giờ thưởng không kéo lùi mốc.
+## Chặng cuối "until" rất lớn = từ phút 12 trở đi giữ nguyên độ khó cao nhất.
+const RULES_ENDLESS := {
+	"duration": 150.0,
+	"price_factor": 1.0,
+	"max_customers": 10,
+	"max_tables": 6,
+	"max_queue": 3,
+	"first_wait": 4.0,
+	# Toàn bộ món trong game — cùng danh sách và trọng số với Ngày 3.
+	"menu": [
+		"icecream_vani", "icecream_chocolate", "icecream_strawberry",
+		"mon_ham", "mon_steak", "hambuger",
+		"pizza_mushroom", "pizza_cheese", "pizza_peperoni",
+		"kem_tam_hop", "kem_tam_hop_que", "vegetablesteak",
+		"vegetablebuger", "stew", "dinner",
+	],
+	"weights": {
+		"icecream_vani": 1, "icecream_chocolate": 1, "icecream_strawberry": 1,
+		"mon_ham": 1, "mon_steak": 2, "hambuger": 3,
+		"pizza_mushroom": 2, "pizza_cheese": 2, "pizza_peperoni": 2,
+		"kem_tam_hop": 1, "kem_tam_hop_que": 2, "vegetablesteak": 3,
+		"vegetablebuger": 3, "stew": 3, "dinner": 3,
+	},
+	"stages": [
+		{"until": 180.0, "interval": 14.0, "interval_range": [9.0, 18.0], "tier_weights": {"easy": 100}},
+		{"until": 360.0, "interval": 11.0, "interval_range": [7.0, 15.0], "tier_weights": {"easy": 55, "medium": 45}},
+		{"until": 540.0, "interval": 9.0, "interval_range": [5.0, 13.0], "tier_weights": {"easy": 35, "medium": 50, "hard": 15}},
+		{"until": 720.0, "interval": 7.0, "interval_range": [4.0, 11.0], "tier_weights": {"easy": 20, "medium": 55, "hard": 25}},
+		{"until": 999999.0, "interval": 6.0, "interval_range": [3.0, 9.0], "tier_weights": {"easy": 15, "medium": 50, "hard": 35}},
+	],
+}
+
+## Id của Endless Mode trong LEVELS. Hỏi qua is_endless_mode().
+const ENDLESS_LEVEL := "endless"
+
 ## Id của AAA Mode trong LEVELS. Hỏi qua is_aaa_mode(), đừng so chuỗi tay.
 const AAA_LEVEL := "aaa"
+
+## Hai đoạn kể chuyện của AAA Mode (kịch bản v4). Không bỏ qua được.
+const AAA_INTRO_SCENE := "res://scenes/story/aaa_intro.tscn"
+const AAA_OUTRO_SCENE := "res://scenes/story/aaa_outro.tscn"
 
 ## Toàn bộ màn chơi của game.
 ##   label   — chữ hiện trên nút
@@ -289,6 +342,8 @@ const LEVELS := {
 	"ending": {"label": "Ending", "needs": "d3_sang", "scene": SCENE_ENDING_NORMAL, "story_only": true},
 	# Chế độ phụ, mở sẵn từ đầu (needs rỗng).
 	"aaa": {"label": "AAA Mode", "needs": "", "scene": MAP_RESTAURANT, "rules": RULES_AAA},
+	# Mở sẵn: có nút riêng ở menu chính (user chốt 25/10/2026).
+	"endless": {"label": "Endless Mode", "needs": "", "scene": MAP_RESTAURANT, "rules": RULES_ENDLESS},
 }
 
 ## Các nhân vật. Khóa là id, cũng là tên file ảnh đại diện trong
@@ -878,6 +933,53 @@ func is_aaa_mode() -> bool:
 	return current_level == AAA_LEVEL
 
 
+func is_endless_mode() -> bool:
+	return current_level == ENDLESS_LEVEL
+
+
+## Ghi một lượt Endless vào bảng xếp hạng.
+##
+## Hàm RIÊNG chứ không đi qua record_rank(): Endless xếp theo THỜI GIAN trụ
+## được, còn record_rank sắp theo tiền và có luật dòng ghim của Gold Ship.
+## Nhét thêm một nhánh "nếu là endless thì sắp khác" vào đó là trộn hai luật
+## xếp hạng vào một hàm. Dùng CHUNG kho `leaderboard` nên tab "Endless Mode"
+## có sẵn trên bảng xếp hạng tự hiện dữ liệu.
+##
+## Trả về true nếu lượt này là kỷ lục mới (dài nhất từ trước tới giờ).
+func record_endless(money: int, seconds: float) -> bool:
+	var was_best := seconds > endless_best_time()
+	var list_: Array = leaderboard.get(ENDLESS_LEVEL, [])
+	list_.append({
+		"character": selected_character,
+		"money": money,
+		"time": snappedf(seconds, 0.1),
+		"rank": "",
+	})
+	# Trụ lâu hơn xếp trên; bằng giờ thì ai kiếm nhiều tiền hơn xếp trên.
+	list_.sort_custom(func(a: Dictionary, b: Dictionary) -> bool:
+		var ta := float(a.get("time", 0.0))
+		var tb := float(b.get("time", 0.0))
+		if not is_equal_approx(ta, tb):
+			return ta > tb
+		return int(a.get("money", 0)) > int(b.get("money", 0)))
+	if list_.size() > LEADERBOARD_ROWS:
+		list_.resize(LEADERBOARD_ROWS)
+	leaderboard[ENDLESS_LEVEL] = list_
+	progress_changed.emit()
+	SaveSystem.save_game()
+	return was_best
+
+
+## Thời gian trụ lâu nhất từng ghi (giây). 0 = chưa chơi lượt nào.
+## Đọc thẳng từ bảng xếp hạng (đã sắp sẵn) thay vì lưu một biến riêng: một
+## con số nằm hai chỗ thì sớm muộn hai chỗ nói khác nhau.
+func endless_best_time() -> float:
+	var list_ := level_leaderboard(ENDLESS_LEVEL)
+	if list_.is_empty():
+		return 0.0
+	return float((list_[0] as Dictionary).get("time", 0.0))
+
+
 func is_completed(id: String) -> bool:
 	return bool(completed.get(id, false))
 
@@ -1245,9 +1347,16 @@ func enter_level(id: String) -> String:
 	var target := scene_path(id)
 	if target.is_empty():
 		return ""
-	# AAA Mode vào thẳng map: không đoạn hội ý, không đoạn ra mắt nhân vật —
-	# chế độ phụ không thuộc cốt truyện.
+	# AAA Mode: không đoạn hội ý, không đoạn ra mắt nhân vật (chế độ phụ không
+	# thuộc cốt truyện), mà là đoạn "phim trường" riêng. Dùng chung cờ một lần
+	# _meeting_shown_for với đoạn hội ý: lần gọi đầu trả về đoạn mở đầu, đoạn
+	# đó kể xong gọi lại hàm này thì thấy cờ và đi thẳng vào map. Nút "Chơi
+	# lại" dùng reload_current_scene() nên không phải xem lại.
 	if id == AAA_LEVEL:
+		if _meeting_shown_for != id:
+			_meeting_shown_for = id
+			return AAA_INTRO_SCENE
+		_meeting_shown_for = ""
 		return target
 
 	# Bốn điều kiện chen đoạn ra mắt, xét cho ĐÚNG nhân vật đang được chọn:
@@ -1280,8 +1389,9 @@ func enter_level(id: String) -> String:
 	# Nút "Chơi lại" ở bảng tổng kết dùng reload_current_scene(), không đi qua
 	# hàm này — nên chơi lại KHÔNG phải xem lại đoạn hội ý. Đúng ý: người
 	# chơi lại vừa xem nó vài phút trước.
+	# Endless là chế độ phụ, không thuộc cốt truyện: bỏ đoạn hội ý, vào thẳng.
 	if needs_character_select(id) and not is_story_level(id) \
-			and _meeting_shown_for != id:
+			and id != ENDLESS_LEVEL and _meeting_shown_for != id:
 		_meeting_shown_for = id
 		return KITCHEN_MEETING_SCENE
 

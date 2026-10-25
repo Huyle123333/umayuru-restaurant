@@ -48,6 +48,11 @@ const RUSH_THRESHOLD := 30.0
 
 var time_left: float = 0.0
 
+## Số giây ứng với thanh thời gian ĐẦY. 0 = dùng `duration` như mọi màn.
+## Endless đặt bằng số giây ban đầu, vì ở đó duration tăng mỗi lần được cộng
+## giờ (xem endless_mode.gd). Vượt quá thì thanh đứng ở 100%.
+var bar_full: float = 0.0
+
 ## Tốc độ đếm ngược. 1,0 = một giây thật là một giây màn.
 ## (Sakura Chiyono O — Made in haven: 1,25.)
 var time_scale: float = 1.0
@@ -251,6 +256,15 @@ func add_time(seconds: float) -> void:
 
 ## Đưa đồng hồ về đầy như lúc vào màn. (Sakura Chiyono O — Ambition.)
 func reset_time() -> void:
+	# Endless: "đầy" là số giây BAN ĐẦU (bar_full), không phải duration — ở đó
+	# duration đã phình theo giờ thưởng, gán time_left = duration thì cho
+	# người chơi cả chục phút. Cộng qua add_time để "đã trụ" giữ nguyên, nếu
+	# không độ khó tụt về mốc 1.
+	if bar_full > 0.0:
+		if time_left < bar_full:
+			add_time(bar_full - time_left)
+		_alerted = false
+		return
 	time_left = duration
 	_alerted = false
 	_draw_clock()
@@ -443,8 +457,9 @@ func _draw_clock() -> void:
 	_lbl_clock.text = "%d:%02d" % [minutes, seconds % 60]
 	var rushing := time_left <= RUSH_THRESHOLD
 	_lbl_clock.add_theme_color_override("font_color", COLOR_RUSH if rushing else COLOR_TEXT)
-	if duration > 0.0:
-		_bar.value = time_left / duration * 100.0
+	var full := bar_full if bar_full > 0.0 else duration
+	if full > 0.0:
+		_bar.value = minf(time_left / full, 1.0) * 100.0
 	_fill_style.bg_color = COLOR_RUSH if rushing else COLOR_ORANGE
 
 

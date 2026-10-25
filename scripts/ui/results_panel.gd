@@ -13,6 +13,7 @@ extends CanvasLayer
 const THEME := "res://ui/theme/menu_theme.tres"
 const COIN_ICON := "res://assets/ui/tien/carrot_tien.png"
 const LEVEL_SELECT_SCENE := "res://scenes/menu/level_select.tscn"
+const MAIN_MENU_SCENE := "res://scenes/menu/main_menu.tscn"
 
 const WIDTH := 660.0
 
@@ -50,12 +51,26 @@ func _ready() -> void:
 ## gọi show_results().
 var fail_note := ""
 
+## Endless Mode: số giây trụ được. Âm = không phải Endless (mặc định).
+## level_base gán TRƯỚC khi gọi show_results(), giống fail_note.
+var endless_seconds := -1.0
+
 
 func show_results(money: int, served: int, perfect: int, left_angry: int,
 		ep_hang: String = "") -> void:
 	var level_id := ""
 	if get_node_or_null("/root/GameData") != null:
 		level_id = String(GameData.current_level)
+
+	# Endless: không hạng, không "hoàn thành màn", điểm là thời gian trụ được.
+	# Rẽ nhánh SỚM để không lượt Endless nào lọt vào complete_level() hay
+	# record_rank() (hai hàm đó sắp theo tiền, sai luật của chế độ này).
+	if endless_seconds >= 0.0:
+		var old_best := GameData.endless_best_time()
+		var is_best := GameData.record_endless(money, endless_seconds)
+		_build_endless_ui(money, served, perfect, left_angry, old_best, is_best)
+		_show()
+		return
 
 	var row := ep_hang
 	if row.is_empty():
@@ -94,7 +109,11 @@ func show_results(money: int, served: int, perfect: int, left_angry: int,
 			GameData.record_rank(level_id, money, row)
 
 	_build_ui(money, served, perfect, left_angry, row, old_record, place)
+	_show()
 
+
+## Tạm dừng game và cho bảng bật ra. Dùng chung cho bảng thường và Endless.
+func _show() -> void:
 	get_tree().paused = true
 	Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
 	AmThanh.stop_music()
@@ -127,6 +146,12 @@ var _skill_win := false
 
 func _build_ui(money: int, served: int, perfect: int, left_angry: int,
 		row: String, old_record: int, place: bool) -> void:
+	var col := _make_box()
+	_fill_normal(col, money, served, perfect, left_angry, row, old_record, place)
+
+
+## Nền tối + khung bảng giữa màn hình. Trả về cột để đổ nội dung vào.
+func _make_box() -> VBoxContainer:
 	var bg := ColorRect.new()
 	bg.color = Color(0, 0, 0, 0.55)
 	bg.set_anchors_preset(Control.PRESET_FULL_RECT)
@@ -163,7 +188,11 @@ func _build_ui(money: int, served: int, perfect: int, left_angry: int,
 	var col := VBoxContainer.new()
 	col.add_theme_constant_override("separation", 10)
 	_box.add_child(col)
+	return col
 
+
+func _fill_normal(col: VBoxContainer, money: int, served: int, perfect: int,
+		left_angry: int, row: String, old_record: int, place: bool) -> void:
 	# --- tiêu đề ---
 	var title := Label.new()
 	title.text = Lang.t("HOÀN THÀNH") if place else Lang.t("CHƯA ĐẠT")
@@ -279,6 +308,64 @@ func _build_ui(money: int, served: int, perfect: int, left_angry: int,
 		ending.grab_focus()
 	else:
 		again.grab_focus()
+
+
+## Bảng kết quả của Endless: chữ to ở giữa là THỜI GIAN chứ không phải hạng.
+func _build_endless_ui(money: int, served: int, perfect: int, left_angry: int,
+		old_best: float, is_best: bool) -> void:
+	const EndlessMode := preload("res://scripts/modes/endless/endless_mode.gd")
+	var col := _make_box()
+
+	var title := Label.new()
+	title.text = Lang.t("HẾT GIỜ — ĐÃ TRỤ ĐƯỢC")
+	title.add_theme_font_size_override("font_size", 24)
+	title.add_theme_color_override("font_color", COLOR_DIM)
+	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	col.add_child(title)
+
+	var big := Label.new()
+	big.text = EndlessMode.format_time(endless_seconds)
+	big.add_theme_font_size_override("font_size", 96)
+	big.add_theme_color_override("font_color", COLOR_GRADE["S"] if is_best else COLOR_GRADE["A"])
+	big.add_theme_color_override("font_outline_color", Color(0.22, 0.12, 0.06))
+	big.add_theme_constant_override("outline_size", 10)
+	big.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	col.add_child(big)
+
+	var record := Label.new()
+	if is_best:
+		record.text = Lang.t("KỶ LỤC MỚI!  (cũ: %s)") % EndlessMode.format_time(old_best)
+		record.add_theme_color_override("font_color", COLOR_GRADE["A"])
+	else:
+		record.text = Lang.t("Kỷ lục: %s") % EndlessMode.format_time(old_best)
+		record.add_theme_color_override("font_color", COLOR_DIM)
+	record.add_theme_font_size_override("font_size", 17)
+	record.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	col.add_child(record)
+
+	col.add_child(_divider())
+	col.add_child(_row(Lang.t("Doanh thu"), str(money)))
+	col.add_child(_row(Lang.t("Đơn đã phục vụ"), str(served)))
+	col.add_child(_row(Lang.t("Trong đó hoàn hảo"), str(perfect)))
+	col.add_child(_row(Lang.t("Khách bỏ đi"), str(left_angry)))
+
+	var button_row := HBoxContainer.new()
+	button_row.add_theme_constant_override("separation", 16)
+	button_row.alignment = BoxContainer.ALIGNMENT_CENTER
+	col.add_child(button_row)
+	var again := Button.new()
+	again.text = Lang.t("Chơi lại")
+	again.pressed.connect(_replay)
+	button_row.add_child(again)
+	# Endless vào từ menu chính nên quay về đúng chỗ đó (GameData.return_scene),
+	# không ném người chơi sang màn chọn màn họ chưa hề đi qua.
+	var back := Button.new()
+	back.text = Lang.t("Về menu chính")
+	back.pressed.connect(func() -> void:
+		_leave_pause()
+		get_tree().change_scene_to_file(MAIN_MENU_SCENE))
+	button_row.add_child(back)
+	again.grab_focus()
 
 
 func _row(label: String, value: String) -> HBoxContainer:

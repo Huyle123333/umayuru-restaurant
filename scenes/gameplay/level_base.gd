@@ -364,6 +364,24 @@ func _build_order_hud() -> void:
 	_build_level_intro(clock)
 	_attach_tutorial(clock)
 	_attach_aaa_mode()
+	_attach_endless_mode(clock)
+
+
+## Endless Mode — gắn bộ điều phối cộng/trừ giờ. Gọi SAU _apply_level_rules:
+## nó đọc `duration` ban đầu mà luật màn vừa đặt.
+func _attach_endless_mode(clock: Node) -> void:
+	if get_node_or_null("/root/GameData") == null or not GameData.is_endless_mode():
+		return
+	if customers == null or clock == null:
+		return
+	var cls := load("res://scripts/modes/endless/endless_mode.gd") as GDScript
+	if cls == null:
+		push_warning("Không nạp được Endless Mode — màn chạy như màn thường.")
+		return
+	var endless: Node = cls.new()
+	endless.name = "EndlessMode"
+	add_child(endless)
+	endless.setup(customers, clock)
 
 
 func _is_aaa() -> bool:
@@ -668,6 +686,10 @@ func _end_level(rank: String, fail_note: String = "") -> void:
 
 	var results: Node = cls.new()
 	results.name = "ResultsPanel"
+	# Endless: điểm là thời gian trụ được, bảng kết quả đổi cách hiện theo.
+	var endless := get_node_or_null("EndlessMode")
+	if endless != null:
+		results.endless_seconds = endless.survived_seconds()
 	add_child(results)
 	results.fail_note = fail_note
 	results.show_results(money, done, perfect, leaving, rank)

@@ -144,7 +144,12 @@ func _header_row() -> Control:
 	h.add_child(_cell("#", 46, COLOR_DIM, 17, HORIZONTAL_ALIGNMENT_CENTER))
 	h.add_child(_cell(tr("RANK_COL_CHARACTER"), 0, COLOR_DIM, 17))
 	h.add_child(_cell(tr("RANK_COL_MONEY"), 130, COLOR_DIM, 17, HORIZONTAL_ALIGNMENT_RIGHT))
-	h.add_child(_cell(tr("RANK_COL_PLACE"), 60, COLOR_DIM, 17, HORIZONTAL_ALIGNMENT_CENTER))
+	# Endless xếp theo thời gian trụ được, nên cột cuối là Thời gian chứ không
+	# phải Hạng (chế độ này không có hạng).
+	if _level_shown == GameData.ENDLESS_LEVEL:
+		h.add_child(_cell(Lang.t("Thời gian"), 90, COLOR_DIM, 17, HORIZONTAL_ALIGNMENT_CENTER))
+	else:
+		h.add_child(_cell(tr("RANK_COL_PLACE"), 60, COLOR_DIM, 17, HORIZONTAL_ALIGNMENT_CENTER))
 	return h
 
 
@@ -167,6 +172,12 @@ func _data_row(index: int, record: Dictionary) -> Control:
 
 	h.add_child(_cell(str(int(record.get("money", record.get("tien", 0)))), 130, COLOR_TEXT, 20,
 		HORIZONTAL_ALIGNMENT_RIGHT))
+
+	if _level_shown == GameData.ENDLESS_LEVEL:
+		var s := int(float(record.get("time", 0.0)))
+		@warning_ignore("integer_division")
+		h.add_child(_cell("%d:%02d" % [s / 60, s % 60], 90, COLOR_TEXT, 20, HORIZONTAL_ALIGNMENT_CENTER))
+		return h
 
 	var rank := String(record.get("rank", record.get("hang", "")))
 	var rank_cell: Label = _cell(rank if not rank.is_empty() else "—", 60,
