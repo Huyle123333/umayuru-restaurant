@@ -592,7 +592,7 @@ environment = SubResource("Env_Quan")
 [node name="bocchi bin" type="StaticBody3D" parent="NoiThatBep" groups=["station"]]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.8055229, 0.0073019266, 10.833491)
 script = ExtResource("30_tram")
-display_name = "Mang bo do"
+display_name = "Thùng rác"
 kind = "bin"
 options = PackedStringArray()
 
@@ -605,7 +605,7 @@ shape = SubResource("Shape_ThungRac")
 [node name="crate_buns2" type="StaticBody3D" parent="NoiThatBep" groups=["station"]]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.3, 0, 1.25)
 script = ExtResource("30_tram")
-display_name = "Banh mi"
+display_name = "Bánh mì"
 kind = "ingredient_shelf"
 options = PackedStringArray()
 item_id = "bun"
@@ -619,7 +619,7 @@ shape = SubResource("Shape_Thung")
 [node name="crate_dough2" type="StaticBody3D" parent="NoiThatBep" groups=["station"]]
 transform = Transform3D(1, 0, 0, 0, 0.81915206, -0.57357645, 0, 0.57357645, 0.81915206, 1.3, 2, 1.25)
 script = ExtResource("30_tram")
-display_name = "Bot"
+display_name = "Bột"
 kind = "ingredient_shelf"
 options = PackedStringArray()
 item_id = "dough"
@@ -633,7 +633,7 @@ shape = SubResource("Shape_Thung")
 [node name="crate_lettuce2" type="StaticBody3D" parent="NoiThatBep" groups=["station"]]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 5.3, 0, 1.25)
 script = ExtResource("30_tram")
-display_name = "Xa lach"
+display_name = "Xà lách"
 kind = "ingredient_shelf"
 options = PackedStringArray()
 item_id = "lettuce"
@@ -647,7 +647,7 @@ shape = SubResource("Shape_Thung")
 [node name="crate_carrots2" type="StaticBody3D" parent="NoiThatBep" groups=["station"]]
 transform = Transform3D(1, 0, 0, 0, 0.81915206, -0.57357645, 0, 0.57357645, 0.81915206, 5.3, 2, 1.25)
 script = ExtResource("30_tram")
-display_name = "Ca rot"
+display_name = "Cà rốt"
 kind = "ingredient_shelf"
 options = PackedStringArray()
 item_id = "carrot"
@@ -661,7 +661,7 @@ shape = SubResource("Shape_Thung")
 [node name="crate_potatoes2" type="StaticBody3D" parent="NoiThatBep" groups=["station"]]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 9.3, 0, 1.25)
 script = ExtResource("30_tram")
-display_name = "Khoai tay"
+display_name = "Khoai tây"
 kind = "ingredient_shelf"
 options = PackedStringArray()
 item_id = "potato"
@@ -675,7 +675,7 @@ shape = SubResource("Shape_Thung")
 [node name="crate_tomatoes2" type="StaticBody3D" parent="NoiThatBep" groups=["station"]]
 transform = Transform3D(1, 0, 0, 0, 0.81915206, -0.57357645, 0, 0.57357645, 0.81915206, 9.3, 2, 1.25)
 script = ExtResource("30_tram")
-display_name = "Ca chua"
+display_name = "Cà chua"
 kind = "ingredient_shelf"
 options = PackedStringArray()
 item_id = "tomato"
@@ -689,7 +689,7 @@ shape = SubResource("Shape_Thung")
 [node name="crate_onions2" type="StaticBody3D" parent="NoiThatBep" groups=["station"]]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 13.3, 0, 1.25)
 script = ExtResource("30_tram")
-display_name = "Hanh tay"
+display_name = "Hành tây"
 kind = "ingredient_shelf"
 options = PackedStringArray()
 item_id = "onion"
@@ -703,7 +703,7 @@ shape = SubResource("Shape_Thung")
 [node name="crate_mushrooms2" type="StaticBody3D" parent="NoiThatBep" groups=["station"]]
 transform = Transform3D(1, 0, 0, 0, 0.81915206, -0.57357645, 0, 0.57357645, 0.81915206, 13.3, 2, 1.25)
 script = ExtResource("30_tram")
-display_name = "Nam"
+display_name = "Nấm"
 kind = "ingredient_shelf"
 options = PackedStringArray()
 item_id = "mushroom"
@@ -717,7 +717,7 @@ shape = SubResource("Shape_Thung")
 [node name="fridge_A2" type="StaticBody3D" parent="NoiThatBep" groups=["station"]]
 transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, 1.2, 0.026, 4.7)
 script = ExtResource("30_tram")
-display_name = "Tu lanh"
+display_name = "Tủ lạnh"
 kind = "fridge"
 options = PackedStringArray("ham", "steak", "cheese", "peperoni", "cookiestick")
 use_picker = true
@@ -731,7 +731,7 @@ shape = SubResource("Shape_TuLanh")
 [node name="stove_single2" type="StaticBody3D" parent="NoiThatBep" groups=["station"]]
 transform = Transform3D(-1, 0, -8.742278e-08, 0, 1, 0, 8.742278e-08, 0, -1, 7.5, 0, 10.6)
 script = ExtResource("30_tram")
-display_name = "Bep 1"
+display_name = "Bếp 1"
 kind = "stove"
 options = PackedStringArray()
 
@@ -744,7 +744,7 @@ shape = SubResource("Shape_Bep")
 [node name="stove_single3" type="StaticBody3D" parent="NoiThatBep" groups=["station"]]
 transform = Transform3D(-1, 0, -8.742278e-08, 0, 1, 0, 8.742278e-08, 0, -1, 5.0, 0, 10.6)
 script = ExtResource("30_tram")
-display_name = "Bep 2"
+display_name = "Bếp 2"
 kind = "stove"
 options = PackedStringArray()
 
@@ -757,7 +757,7 @@ shape = SubResource("Shape_Bep")
 [node name="pizza_oven2" type="StaticBody3D" parent="NoiThatBep" groups=["station"]]
 transform = Transform3D(-0.7, 0, -6.119594e-08, 0, 0.7, 0, 6.119594e-08, 0, -0.7, 10.0, 0, 10.9)
 script = ExtResource("30_tram")
-display_name = "Lo nuong"
+display_name = "Lò nướng"
 kind = "oven"
 options = PackedStringArray()
 
@@ -770,7 +770,7 @@ shape = SubResource("Shape_LoPizza")
 [node name="kitchentable_A_large2" type="StaticBody3D" parent="NoiThatBep" groups=["station"]]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 7.071475, 0.0037517548, 6.1255193)
 script = ExtResource("30_tram")
-display_name = "Thot"
+display_name = "Thớt"
 kind = "cutting_board"
 options = PackedStringArray()
 
@@ -792,7 +792,7 @@ transform = Transform3D(0.75, 0, 0, 0, -3.2783543e-08, 0.75, 0, -0.75, -3.278354
 [node name="kitchencounter_straight_A_decorated_styleB2" type="StaticBody3D" parent="NoiThatBep" groups=["station"]]
 transform = Transform3D(-1, 0, -8.742278e-08, 0, 1, 0, 8.742278e-08, 0, -1, 12.5, 0, 10.9)
 script = ExtResource("30_tram")
-display_name = "Chong dia"
+display_name = "Chồng đĩa"
 kind = "plate_stack"
 options = PackedStringArray()
 
@@ -805,7 +805,7 @@ shape = SubResource("Shape_QuayTT")
 [node name="crafting_table" type="StaticBody3D" parent="NoiThatBep" groups=["station"]]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 9.671643, 0, 6.101334)
 script = ExtResource("30_tram")
-display_name = "Ban che tao"
+display_name = "Bàn chế tạo"
 kind = "crafting_table"
 options = PackedStringArray()
 
@@ -818,7 +818,7 @@ shape = SubResource("Shape_QuayGoc")
 [node name="icecream_machine2" type="StaticBody3D" parent="NoiThatBep" groups=["station"]]
 transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, 1.2, 0, 7.7)
 script = ExtResource("30_tram")
-display_name = "May kem"
+display_name = "Máy kem"
 kind = "ice_cream_machine"
 options = PackedStringArray("icecream_vani", "icecream_chocolate", "icecream_strawberry")
 use_picker = true
@@ -834,7 +834,7 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 15.0, 0, 10.700212)
 collision_layer = 4
 collision_mask = 0
 script = ExtResource("30_tram")
-display_name = "Chong noi"
+display_name = "Chồng nồi"
 kind = "pot_stack"
 options = PackedStringArray()
 

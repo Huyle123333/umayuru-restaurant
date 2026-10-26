@@ -16,7 +16,7 @@ extends CanvasLayer
 ## phải của nhà hàng. Gom một chỗ thì muốn chỉnh con số nào cũng chỉ mở một
 ## file, và các màn thường không bị đụng tới một dòng nào.
 ##
-## Là CanvasLayer vì nó tự vẽ dòng "Đã trụ" và chữ "+15s" ngay dưới đồng hồ.
+## Là CanvasLayer vì nó tự vẽ chữ "+15s" cạnh đồng hồ và chữ báo mốc mới.
 
 ## Giây cộng thêm khi giao xong một đơn thường / một đơn hoàn hảo.
 @export var bonus_served := 15.0
@@ -33,8 +33,6 @@ const COLOR_STAGE := Color("ffd76a")
 
 var _clock: Node
 var _customers: Node
-var _lbl_time: Label
-var _lbl_stage: Label
 var _stage := 0
 
 
@@ -49,7 +47,6 @@ func setup(customers: Node, clock: Node) -> void:
 		_clock.bar_full = float(_clock.duration)
 	if _customers != null:
 		_customers.order_finished.connect(_on_order_finished)
-	_build_ui()
 
 
 ## Thời gian đã trụ được (giây). Cùng công thức level_rules dùng để chọn mốc.
@@ -88,12 +85,11 @@ func _give_time(seconds: float) -> void:
 func _process(_delta: float) -> void:
 	if _clock == null:
 		return
-	var t := survived_seconds()
-	_lbl_time.text = Lang.t("Đã trụ  %s") % format_time(t)
-	var stage := int(t / STAGE_SECONDS)
+	# (26/10/2026) Bỏ khung "Đã trụ / Mốc" dưới đồng hồ theo yêu cầu user —
+	# thừa thông tin. Mốc mới vẫn được báo bằng chữ lớn giữa màn hình.
+	var stage := int(survived_seconds() / STAGE_SECONDS)
 	if stage != _stage:
 		_stage = stage
-		_lbl_stage.text = Lang.t("Mốc %d") % (_stage + 1)
 		_announce_stage()
 
 
@@ -105,35 +101,6 @@ static func format_time(seconds: float) -> String:
 
 
 # ------------------------------------------------------------ giao diện ---
-
-func _build_ui() -> void:
-	var root := Control.new()
-	root.set_anchors_preset(Control.PRESET_FULL_RECT)
-	root.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	add_child(root)
-
-	# Ngay dưới khung đồng hồ (hud_clock: lề 28, rộng 300, cao tới y = 188).
-	var frame := PanelContainer.new()
-	frame.set_anchors_preset(Control.PRESET_TOP_RIGHT)
-	frame.offset_right = -28.0
-	frame.offset_left = -328.0
-	frame.offset_top = 196.0
-	frame.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	var style := StyleBoxFlat.new()
-	style.bg_color = Color(0.09, 0.08, 0.07, 0.72)
-	style.set_corner_radius_all(10)
-	style.set_content_margin_all(12)
-	frame.add_theme_stylebox_override("panel", style)
-	root.add_child(frame)
-
-	var row := HBoxContainer.new()
-	frame.add_child(row)
-	_lbl_time = _label("", 22, COLOR_TEXT)
-	_lbl_time.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	row.add_child(_lbl_time)
-	_lbl_stage = _label(Lang.t("Mốc %d") % 1, 22, COLOR_STAGE)
-	row.add_child(_lbl_stage)
-
 
 ## "+15s" bay lên cạnh đồng hồ: người chơi phải thấy NGAY đơn vừa giao đổi
 ## thành bao nhiêu giây, ở đúng chỗ họ nhìn khi lo hết giờ.
