@@ -822,7 +822,6 @@ const EN := {
 	"KỶ LỤC MỚI!  (cũ: %s)": "NEW RECORD!  (old: %s)",
 	"Kỷ lục: %s": "Record: %s",
 	"Doanh thu": "Earnings",
-	"Về menu chính": "Main menu",
 	"Thời gian": "Time",
 	"Nhạc nền có trong Music Pack": "Background music available in the Music Pack",
 	"Bao gồm Characters Pack và Skill Pack. Mua lẻ 22,98$ — mua gói chỉ 9,99$, tiết kiệm hơn 50%! Món hời lớn nhất cửa hàng.": "Includes the Characters Pack and the Skill Pack. $22.98 separately — only $9.99 as a bundle, save over 50%! The best deal in the store.",

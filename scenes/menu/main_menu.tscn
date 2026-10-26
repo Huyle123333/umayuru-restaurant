@@ -118,11 +118,6 @@ unique_name_in_owner = true
 layout_mode = 2
 text = "MENU_LEVEL_SELECT"
 
-[node name="BtnEndless" type="Button" parent="Content/VBox/Menu"]
-unique_name_in_owner = true
-layout_mode = 2
-text = "Endless Mode"
-
 [node name="BtnOptions" type="Button" parent="Content/VBox/Menu"]
 unique_name_in_owner = true
 layout_mode = 2

@@ -13,7 +13,6 @@ extends CanvasLayer
 const THEME := "res://ui/theme/menu_theme.tres"
 const COIN_ICON := "res://assets/ui/tien/carrot_tien.png"
 const LEVEL_SELECT_SCENE := "res://scenes/menu/level_select.tscn"
-const MAIN_MENU_SCENE := "res://scenes/menu/main_menu.tscn"
 
 const WIDTH := 660.0
 
@@ -357,13 +356,10 @@ func _build_endless_ui(money: int, served: int, perfect: int, left_angry: int,
 	again.text = Lang.t("Chơi lại")
 	again.pressed.connect(_replay)
 	button_row.add_child(again)
-	# Endless vào từ menu chính nên quay về đúng chỗ đó (GameData.return_scene),
-	# không ném người chơi sang màn chọn màn họ chưa hề đi qua.
+	# Endless vào từ khung "Chế độ" ở màn chọn màn nên quay về đúng chỗ đó.
 	var back := Button.new()
-	back.text = Lang.t("Về menu chính")
-	back.pressed.connect(func() -> void:
-		_leave_pause()
-		get_tree().change_scene_to_file(MAIN_MENU_SCENE))
+	back.text = Lang.t("Về chọn màn")
+	back.pressed.connect(_go_level_select)
 	button_row.add_child(back)
 	again.grab_focus()
 
