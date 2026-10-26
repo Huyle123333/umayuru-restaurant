@@ -829,7 +829,9 @@ var skill_win_pending: bool = false
 ## "ai kiếm được bao nhiêu", không phải "ai qua màn". Một lượt 300 đồng vẫn là
 ## dữ liệu thật, và nếu lọc đi thì người mới chơi sẽ thấy một cái bảng trống
 ## trơn sau khi vừa chơi xong một màn.
-func record_rank(level_id: String, money: int, rank: String) -> void:
+## `seconds` — chỉ Endless truyền: thời gian trụ được, lưu kèm để hiện thêm
+## cột trên bảng. Không dùng để sắp hạng.
+func record_rank(level_id: String, money: int, rank: String, seconds: float = -1.0) -> void:
 	if not RANKED_LEVELS.has(level_id):
 		return
 	# Hạng của LƯỢT GẦN NHẤT — ghi đè, không giữ cái tốt nhất. Kết ẩn xét đúng
@@ -842,6 +844,8 @@ func record_rank(level_id: String, money: int, rank: String) -> void:
 		"money": money,
 		"rank": rank,
 	}
+	if seconds >= 0.0:
+		entry["time"] = snappedf(seconds, 0.1)
 	# LƯỢT THẮNG BẰNG KĨ NĂNG (Gold Ship — Anchors Aweigh!): mỗi màn chỉ được
 	# lên bảng MỘT lần, và dòng đó ghim ở HẠNG 0, phía trên hạng 1. Dùng kĩ
 	# năng lần nữa thì không ghi thêm gì — muốn ghi lại phải xoá dữ liệu.
@@ -939,45 +943,23 @@ func is_endless_mode() -> bool:
 
 ## Ghi một lượt Endless vào bảng xếp hạng.
 ##
-## Hàm RIÊNG chứ không đi qua record_rank(): Endless xếp theo THỜI GIAN trụ
-## được, còn record_rank sắp theo tiền và có luật dòng ghim của Gold Ship.
-## Nhét thêm một nhánh "nếu là endless thì sắp khác" vào đó là trộn hai luật
-## xếp hạng vào một hàm. Dùng CHUNG kho `leaderboard` nên tab "Endless Mode"
-## có sẵn trên bảng xếp hạng tự hiện dữ liệu.
+## (26/10/2026, user chốt) Endless xếp hạng THEO DOANH THU như mọi màn; thời
+## gian trụ được chỉ là thông tin đi kèm, hiện thêm một cột trên bảng.
+## Vì thế đi thẳng qua record_rank() — dùng chung luật sắp theo tiền và luật
+## dòng ghim của Gold Ship, đồng thời record_rank() là nơi TẮT cờ
+## skill_win_pending. Bản trước có hàm ghi riêng không đụng tới cờ đó: Gold
+## Ship dùng Anchors Aweigh! trong Endless thì cờ còn treo, và lượt màn
+## thường kế tiếp bị tính nhầm là "thắng bằng kĩ năng".
 ##
-## Trả về true nếu lượt này là kỷ lục mới (dài nhất từ trước tới giờ).
+## Kỷ lục (best_money) cập nhật ở đây chứ không qua complete_level(): Endless
+## không có "hoàn thành màn". Lượt thắng bằng kĩ năng không thành kỷ lục,
+## giống complete_level(). Trả về true nếu lượt này là kỷ lục mới.
 func record_endless(money: int, seconds: float) -> bool:
-	var was_best := seconds > endless_best_time()
-	var list_: Array = leaderboard.get(ENDLESS_LEVEL, [])
-	list_.append({
-		"character": selected_character,
-		"money": money,
-		"time": snappedf(seconds, 0.1),
-		"rank": "",
-	})
-	# Trụ lâu hơn xếp trên; bằng giờ thì ai kiếm nhiều tiền hơn xếp trên.
-	list_.sort_custom(func(a: Dictionary, b: Dictionary) -> bool:
-		var ta := float(a.get("time", 0.0))
-		var tb := float(b.get("time", 0.0))
-		if not is_equal_approx(ta, tb):
-			return ta > tb
-		return int(a.get("money", 0)) > int(b.get("money", 0)))
-	if list_.size() > LEADERBOARD_ROWS:
-		list_.resize(LEADERBOARD_ROWS)
-	leaderboard[ENDLESS_LEVEL] = list_
-	progress_changed.emit()
-	SaveSystem.save_game()
-	return was_best
-
-
-## Thời gian trụ lâu nhất từng ghi (giây). 0 = chưa chơi lượt nào.
-## Đọc thẳng từ bảng xếp hạng (đã sắp sẵn) thay vì lưu một biến riêng: một
-## con số nằm hai chỗ thì sớm muộn hai chỗ nói khác nhau.
-func endless_best_time() -> float:
-	var list_ := level_leaderboard(ENDLESS_LEVEL)
-	if list_.is_empty():
-		return 0.0
-	return float((list_[0] as Dictionary).get("time", 0.0))
+	var is_best := money > get_best_money(ENDLESS_LEVEL) and not skill_win_pending
+	if is_best:
+		best_money[ENDLESS_LEVEL] = money
+	record_rank(ENDLESS_LEVEL, money, "", seconds)
+	return is_best
 
 
 func is_completed(id: String) -> bool:

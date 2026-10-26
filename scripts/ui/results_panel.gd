@@ -65,7 +65,7 @@ func show_results(money: int, served: int, perfect: int, left_angry: int,
 	# Rẽ nhánh SỚM để không lượt Endless nào lọt vào complete_level() hay
 	# record_rank() (hai hàm đó sắp theo tiền, sai luật của chế độ này).
 	if endless_seconds >= 0.0:
-		var old_best := GameData.endless_best_time()
+		var old_best := GameData.get_best_money(level_id)
 		var is_best := GameData.record_endless(money, endless_seconds)
 		_build_endless_ui(money, served, perfect, left_angry, old_best, is_best)
 		_show()
@@ -310,40 +310,53 @@ func _fill_normal(col: VBoxContainer, money: int, served: int, perfect: int,
 
 
 ## Bảng kết quả của Endless: chữ to ở giữa là THỜI GIAN chứ không phải hạng.
+## Bảng kết quả của Endless. Điểm là DOANH THU như mọi màn (chữ to ở giữa);
+## thời gian trụ được là một dòng thống kê bổ sung.
 func _build_endless_ui(money: int, served: int, perfect: int, left_angry: int,
-		old_best: float, is_best: bool) -> void:
+		old_best: int, is_best: bool) -> void:
 	const EndlessMode := preload("res://scripts/modes/endless/endless_mode.gd")
 	var col := _make_box()
 
 	var title := Label.new()
-	title.text = Lang.t("HẾT GIỜ — ĐÃ TRỤ ĐƯỢC")
+	title.text = Lang.t("HẾT GIỜ")
 	title.add_theme_font_size_override("font_size", 24)
 	title.add_theme_color_override("font_color", COLOR_DIM)
 	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	col.add_child(title)
 
+	var money_row := HBoxContainer.new()
+	money_row.add_theme_constant_override("separation", 10)
+	money_row.alignment = BoxContainer.ALIGNMENT_CENTER
+	col.add_child(money_row)
+	if ResourceLoader.exists(COIN_ICON):
+		var icon := TextureRect.new()
+		icon.texture = load(COIN_ICON)
+		icon.custom_minimum_size = Vector2(56, 56)
+		icon.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+		icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+		icon.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+		money_row.add_child(icon)
 	var big := Label.new()
-	big.text = EndlessMode.format_time(endless_seconds)
-	big.add_theme_font_size_override("font_size", 96)
-	big.add_theme_color_override("font_color", COLOR_GRADE["S"] if is_best else COLOR_GRADE["A"])
+	big.text = str(money)
+	big.add_theme_font_size_override("font_size", 72)
+	big.add_theme_color_override("font_color", COLOR_GRADE["S"] if is_best else COLOR_TEXT)
 	big.add_theme_color_override("font_outline_color", Color(0.22, 0.12, 0.06))
-	big.add_theme_constant_override("outline_size", 10)
-	big.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	col.add_child(big)
+	big.add_theme_constant_override("outline_size", 8 if is_best else 0)
+	money_row.add_child(big)
 
 	var record := Label.new()
 	if is_best:
-		record.text = Lang.t("KỶ LỤC MỚI!  (cũ: %s)") % EndlessMode.format_time(old_best)
+		record.text = Lang.t("KỶ LỤC MỚI!  (cũ: %d)") % old_best
 		record.add_theme_color_override("font_color", COLOR_GRADE["A"])
 	else:
-		record.text = Lang.t("Kỷ lục: %s") % EndlessMode.format_time(old_best)
+		record.text = Lang.t("Kỷ lục: %d") % old_best
 		record.add_theme_color_override("font_color", COLOR_DIM)
 	record.add_theme_font_size_override("font_size", 17)
 	record.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	col.add_child(record)
 
 	col.add_child(_divider())
-	col.add_child(_row(Lang.t("Doanh thu"), str(money)))
+	col.add_child(_row(Lang.t("Thời gian trụ được"), EndlessMode.format_time(endless_seconds)))
 	col.add_child(_row(Lang.t("Đơn đã phục vụ"), str(served)))
 	col.add_child(_row(Lang.t("Trong đó hoàn hảo"), str(perfect)))
 	col.add_child(_row(Lang.t("Khách bỏ đi"), str(left_angry)))
