@@ -808,7 +808,7 @@ func _on_delivery_rejected(table: Node, reason: String) -> void:
 	if order_ == null or not _waiting_at_table(order_):
 		return
 	if reason == "no_plate":
-		_complain(customer, Lang.t("Món của tôi đâu có đĩa?!"))
+		_complain(customer, Lang.t("Đĩa đâu rồi?!"))
 
 
 ## Khách đã NGỒI vào bàn và đang chờ món. Bàn được giữ chỗ ngay khi khách
@@ -827,7 +827,8 @@ func _waiting_at_table(order_: Order) -> bool:
 func _complain(customer: Node, text: String) -> void:
 	if not is_instance_valid(customer):
 		return
-	AmThanh.play_sfx("customer_out")
+	# Không phát tiếng: tiếng "customer_out" nghĩa là "vừa mất một khách",
+	# dùng ở đây thành báo động giả. Animation + câu nói là đủ.
 	customer.beg()
 	_speech_popup(customer, text)
 	await get_tree().create_timer(beg_seconds).timeout

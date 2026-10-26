@@ -256,15 +256,6 @@ func add_time(seconds: float) -> void:
 
 ## Đưa đồng hồ về đầy như lúc vào màn. (Sakura Chiyono O — Ambition.)
 func reset_time() -> void:
-	# Endless: "đầy" là số giây BAN ĐẦU (bar_full), không phải duration — ở đó
-	# duration đã phình theo giờ thưởng, gán time_left = duration thì cho
-	# người chơi cả chục phút. Cộng qua add_time để "đã trụ" giữ nguyên, nếu
-	# không độ khó tụt về mốc 1.
-	if bar_full > 0.0:
-		if time_left < bar_full:
-			add_time(bar_full - time_left)
-		_alerted = false
-		return
 	time_left = duration
 	_alerted = false
 	_draw_clock()

@@ -790,7 +790,7 @@ const EN := {
 	"Mở khoá kĩ năng của mọi nhân vật. Dù chuyện gì xảy ra, cà rốt vẫn giòn.": "Unlocks every character's skills. Whatever happens, that's the way the carrot crunches.",
 	"Bấm để mua": "Click to buy",
 	"Chưa có đĩa! Ráp món với đĩa ở bàn chế tạo trước.": "No plate! Assemble the dish with a plate at the crafting table first.",
-	"Món của tôi đâu có đĩa?!": "Where's the plate for my food?!",
+	"Đĩa đâu rồi?!": "Where's the plate?!",
 	"Đây không phải món tôi gọi!": "This isn't what I ordered!",
 	"MỐC %d — món khó hơn, khách đông hơn!": "STAGE %d — harder dishes, more customers!",
 	"HẾT GIỜ": "TIME'S UP",
