@@ -71,6 +71,9 @@ var draining: bool = true
 ## Tiền đã chốt lúc GIAO, gồm cả thưởng hoàn hảo. Trả vào ví lúc khách ăn xong.
 var payout: int = 0
 var was_perfect: bool = false
+## Hoàn hảo THẬT (giao lúc kiên nhẫn còn trên nửa), không tính phần kĩ năng ép
+## hoàn hảo (Victory Cheer!). Asian dùng để đếm chuỗi hồi mạng.
+var truly_perfect: bool = false
 
 ## Đơn này có được kĩ năng nhân đôi tiền không. Chỉ để HIỂN THỊ.
 ##

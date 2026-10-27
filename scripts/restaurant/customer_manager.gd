@@ -171,6 +171,22 @@ var _orders_since_hard: int = 0
 ## Đổi model khách khác thì phải đo lại con số này theo clip của model đó.
 @export var beg_seconds: float = 2.0
 
+## Asian Mode: giao NHẦM món thì khách bỏ về ngay (thay vì chỉ cáu và chờ).
+## Tắt ở mọi màn khác — ở đó giao nhầm chỉ tốn thời gian (xem _on_dish_delivered).
+var wrong_dish_leaves: bool = false
+
+## Asian Mode: thuế VAT, trừ theo tỉ lệ trên tiền của MỖI đơn lúc trả vào ví.
+## Trừ ở lúc trả chứ không hạ price_factor: vé đơn vẫn hiện giá thật của món,
+## con số bay lên mới là tiền thực nhận — người chơi THẤY mình bị trừ thuế.
+var vat_rate: float = 0.0
+
+## Asian Mode: kiên nhẫn KHÔNG nạp đầy khi khách ngồi vào bàn. Thanh ở bàn bắt
+## đầu từ đúng tỉ lệ còn lại lúc xếp hàng (user chốt "cách A" 27/10/2026): chờ
+## mất 40% thì ngồi xuống còn 60% thanh của món đó. Giữ TỈ LỆ chứ không giữ số
+## giây, vì kiên nhẫn ở bàn tính theo món — giữ số giây thì món nấu lâu gần như
+## không bao giờ kịp.
+var keep_queue_patience: bool = false
+
 ## Thưởng thêm khi giao lúc kiên nhẫn còn trên 50%. 0,35 = +35%.
 ##
 ## CHỐT 35% (9/9/2026). Vì sao không phải 20% như bản nháp: Hamburger 95 thành
@@ -739,7 +755,16 @@ func _on_dish_delivered(table: Node, dish_id: String) -> void:
 		# khách cáu + nói ra, để người chơi biết ngay là nhầm chứ không tưởng
 		# game bị đơ. Món vẫn nằm trên bàn để nhấc lại như cũ.
 		if _waiting_at_table(order_):
-			_complain(customer, Lang.t("Đây không phải món tôi gọi!"))
+			if wrong_dish_leaves:
+				# Asian: món nhầm bị dọn khỏi bàn, khách nói một câu rồi bỏ về.
+				# _leave_angry() tự đếm customers_lost và phát "left", nên hệ
+				# mạng của Asian trừ mạng mà không cần biết lý do bỏ về.
+				table.clear_all()
+				table.clear_model()
+				_speech_popup(customer, Lang.t("Đây không phải món tôi gọi!"))
+				_leave_angry(order_)
+			else:
+				_complain(customer, Lang.t("Đây không phải món tôi gọi!"))
 		return
 
 	# Chốt tiền NGAY LÚC GIAO, trả vào ví lúc khách ăn xong.
@@ -753,6 +778,7 @@ func _on_dish_delivered(table: Node, dish_id: String) -> void:
 	# là phần nhân đôi âm thầm ăn cả đơn giao muộn — không lỗi, chỉ sai tiền.
 	var truly_perfect := order_.is_perfect()
 	order_.was_perfect = force_perfect or truly_perfect
+	order_.truly_perfect = truly_perfect
 	# Giá gốc của lần giao này: giá đơn, hoặc — khi giao món thế chỗ — giá
 	# của chính món được giao (đã nhân hệ số giá của màn như mọi đơn khác).
 	var base_price: int = order_.price
@@ -872,12 +898,14 @@ func _on_ate(customer: Node) -> void:
 	if order_ != null:
 		_orders.erase(customer)
 		if order_.payout > 0:
-			money += order_.payout
+			# Thuế (Asian). Làm tròn LÊN để đơn nhỏ vẫn chịu ít nhất 1 tiền thuế.
+			var net := order_.payout - int(ceil(order_.payout * vat_rate))
+			money += net
 			var spot: Vector3 = table.global_position if table != null \
 				else customer.global_position
-			money_changed.emit(money, order_.payout, spot)
+			money_changed.emit(money, net, spot)
 			AmThanh.play_sfx("coin")
-			_money_popup(spot, order_.payout, order_.was_perfect)
+			_money_popup(spot, net, order_.was_perfect)
 
 	customer_ate.emit(customer, table, dish_id)
 	if _door != null:
@@ -1099,7 +1127,10 @@ func _seat_at_table(customer: Node, table: Node) -> void:
 			return
 
 	customer.hide_order()
+	var queue_ratio := order_.patience_ratio()
 	order_.sit_at_table(table)
+	if keep_queue_patience:
+		order_.patience_left = order_.patience_max * queue_ratio
 	order_.draining = drain_patience
 	order_created.emit(order_)
 

@@ -39,6 +39,10 @@ signal request_picker(station: Node)
 ## KHÔNG phát cho đĩa và nồi: chúng là đồ đựng, miễn phí — xem ItemCatalog.cost().
 signal ingredient_taken(id: String, at: Vector3)
 
+## Vừa vứt một thứ vào thùng rác. Asian Mode nghe để phạt đồ cháy; các màn khác
+## không ai nghe. Cùng kiểu "chỉ báo, không biết ai nghe" với ingredient_taken.
+signal item_discarded(id: String, station: Node)
+
 ## Hệ thống bếp, do level_base gán vào. Để rỗng thì bếp chỉ là đồ trang trí.
 var cooking: Node = null
 
@@ -534,10 +538,11 @@ func _use_oven(oven: Workstation) -> void:
 ## bằng khi lỡ vứt một củ cà rốt. Bỏ ngoại lệ đi cũng có nghĩa Doro và thùng
 ## rác cư xử giống hệt nhau với MỌI thứ — không còn thứ nào "vứt được ở chỗ
 ## này mà không vứt được ở chỗ kia".
-func _discard(_bin: Workstation) -> void:
+func _discard(bin: Workstation) -> void:
 	if _held == null:
 		return
 	AmThanh.play_sfx("trash")
+	item_discarded.emit(String(_held.item_id), bin)
 	_clear_held()
 
 

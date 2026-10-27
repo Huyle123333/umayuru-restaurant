@@ -365,6 +365,26 @@ func _build_order_hud() -> void:
 	_attach_tutorial(clock)
 	_attach_aaa_mode()
 	_attach_endless_mode(clock)
+	_attach_asian_mode(clock)
+
+
+## Asian Mode — gắn bộ điều phối luật (mạng, vốn, phí, thắng/thua). Gọi SAU
+## _apply_level_rules và _build_level_intro, cùng lý do với Endless.
+func _attach_asian_mode(clock: Node) -> void:
+	if get_node_or_null("/root/GameData") == null or not GameData.is_asian_mode():
+		return
+	if customers == null or clock == null:
+		return
+	var cls := load("res://scripts/modes/asian/asian_mode.gd") as GDScript
+	if cls == null:
+		push_warning("Không nạp được Asian Mode — màn chạy như màn thường.")
+		return
+	var asian: Node = cls.new()
+	asian.name = "AsianMode"
+	add_child(asian)
+	asian.setup(self, customers, clock, get_node_or_null("CookingSystem"),
+		get_node_or_null("PickerMenu"),
+		player.get_node_or_null("Hands") if player != null else null)
 
 
 ## Endless Mode — gắn bộ điều phối cộng/trừ giờ. Gọi SAU _apply_level_rules:
@@ -690,6 +710,10 @@ func _end_level(rank: String, fail_note: String = "") -> void:
 	var endless := get_node_or_null("EndlessMode")
 	if endless != null:
 		results.endless_seconds = endless.survived_seconds()
+	# Asian: thắng/thua do bộ điều phối quyết, bảng chỉ hiện.
+	var asian := get_node_or_null("AsianMode")
+	if asian != null:
+		results.asian_result = asian.result(fail_note)
 	add_child(results)
 	results.fail_note = fail_note
 	results.show_results(money, done, perfect, leaving, rank)
@@ -731,7 +755,11 @@ func _build_level_intro(clock: Node) -> void:
 	add_child(intro)
 	# Bảng thực đơn: mở trong lúc đếm ngược, tự cất khi vào ca, và từ đó người
 	# chơi gọi lại bằng phím (mặc định 2).
-	var menu_panel := _build_menu_panel()
+	# Asian: không có bảng thực đơn — người chơi phải tự nhớ công thức (tài liệu
+	# mục 3.3, "tắt bảng công thức"). Không dựng panel thì phím mở nó cũng mất.
+	var menu_panel: Node = null
+	if get_node_or_null("/root/GameData") == null or not GameData.is_asian_mode():
+		menu_panel = _build_menu_panel()
 	if menu_panel != null:
 		menu_panel.set_open(true)
 	intro.started.connect(func() -> void:
