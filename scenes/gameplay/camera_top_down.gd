@@ -178,7 +178,8 @@ func _unhandled_input(event: InputEvent) -> void:
 		return
 	# Chưa mở khoá thì phím P không làm gì cả — và cũng KHÔNG nuốt sự kiện,
 	# để sau này nếu P được dùng vào việc khác thì không bị chặn ngầm ở đây.
-	if not GameData.third_person_unlocked:
+	# AAA Mode bỏ qua mọi cheat, kể cả góc nhìn thứ 3.
+	if not GameData.third_person_unlocked or GameData.is_aaa_mode():
 		return
 	GameData.toggle_view_mode()
 	get_viewport().set_input_as_handled()

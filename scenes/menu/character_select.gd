@@ -168,15 +168,8 @@ func _cover_dlc_cards() -> void:
 		shade.set_anchors_preset(Control.PRESET_FULL_RECT)
 		# Không chặn chuột: cú bấm vẫn phải tới nút của thẻ để mở quảng cáo.
 		shade.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		var tag := Label.new()
-		tag.text = "DELUXE"
-		tag.add_theme_font_size_override("font_size", 30)
-		tag.add_theme_color_override("font_color", Color(1.0, 0.85, 0.3))
-		tag.set_anchors_preset(Control.PRESET_FULL_RECT)
-		tag.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-		tag.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-		tag.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		shade.add_child(tag)
+		# (21/10/2026, user chốt) Bỏ chữ "DELUXE" trên thẻ: chỉ để lớp đen mờ,
+		# bấm vào mới biết là phải mua.
 		(_cards[id] as Control).add_child(shade)
 
 

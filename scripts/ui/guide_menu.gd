@@ -155,13 +155,13 @@ func _build_left_col() -> Control:
 	col.add_theme_constant_override("separation", 8)
 
 	var lbl_title := Label.new()
-	lbl_title.text = Lang.t("HƯỚNG DẪN")
+	lbl_title.text = "HƯỚNG DẪN"
 	lbl_title.add_theme_font_size_override("font_size", 26)
 	lbl_title.add_theme_color_override("font_color", COLOR_TITLE)
 	col.add_child(lbl_title)
 
 	var key_label := Label.new()
-	key_label.text = Lang.t("F1 hoặc ESC để đóng")
+	key_label.text = "F1 hoặc ESC để đóng"
 	key_label.add_theme_font_size_override("font_size", 14)
 	key_label.add_theme_color_override("font_color", COLOR_DIM)
 	col.add_child(key_label)
@@ -183,7 +183,7 @@ func _build_left_col() -> Control:
 	col.add_child(spacer)
 
 	var button_rows := Button.new()
-	button_rows.text = Lang.t("Đóng")
+	button_rows.text = "Đóng"
 	button_rows.add_theme_font_size_override("font_size", 20)
 	button_rows.pressed.connect(close)
 	col.add_child(button_rows)
@@ -347,10 +347,7 @@ func _add_recipe(kind: String) -> void:
 		var value := String(table_[key_])
 		if ItemCatalog.is_locked(value):
 			continue
-		# Đồ đựng, phần nền rồi nguyên liệu chung đứng trước — xem
-		# ItemCatalog.display_order().
-		_content_col.add_child(_recipe_row(
-			PackedStringArray(ItemCatalog.display_order(Array(String(key_).split("+")))), value))
+		_content_col.add_child(_recipe_row(String(key_).split("+"), value))
 
 
 func _recipe_row(ingredients: PackedStringArray, value: String) -> Control:
@@ -408,16 +405,13 @@ func _marker(text_: String) -> Control:
 
 
 ## Bảng mốc xếp hạng, cũng đọc thẳng từ GameData.
-## (2/10/2026) Trang Đánh giá KHÔNG còn dùng khối "grade_marks" — nó chỉ ghi
-## tên năm hạng, vì mỗi màn một bộ mốc. Hàm giữ lại để khối này vẫn dùng được
-## nếu sau này cần một trang tra cứu mốc của cả ba ngày.
 func _add_grade_marks() -> void:
 	if get_node_or_null("/root/GameData") == null:
 		return
 	# Bảng theo TỪNG NGÀY, đọc thẳng GameData.rank_thresholds_for(): mỗi ngày
 	# có bộ mốc riêng, in một bộ "mặc định" ra đây là in sai cho cả ba ngày.
 	var days := ["d1_sang", "d2_sang", "d3_sang"]
-	var day_names := [Lang.t("Ngày 1"), Lang.t("Ngày 2"), Lang.t("Ngày 3")]
+	var day_names := ["Ngày 1", "Ngày 2", "Ngày 3"]
 	var color := {
 		"S": Color("f2c230"), "A": Color("e8823f"),
 		"B": Color("e27ba0"), "C": Color("4f9d5d"), "D": Color("5b8fb0"),
@@ -427,7 +421,7 @@ func _add_grade_marks() -> void:
 	grid.add_theme_constant_override("h_separation", 36)
 	grid.add_theme_constant_override("v_separation", 6)
 
-	grid.add_child(_grade_cell(Lang.t("Hạng"), COLOR_TEXT, 18))
+	grid.add_child(_grade_cell("Hạng", COLOR_TEXT, 18))
 	for name_ in day_names:
 		grid.add_child(_grade_cell(name_, COLOR_TEXT, 18))
 
@@ -437,7 +431,7 @@ func _add_grade_marks() -> void:
 			var mark: Dictionary = GameData.rank_thresholds_for(id)
 			grid.add_child(_grade_cell(str(int(mark.get(row, 0))), COLOR_TEXT, 18))
 
-	grid.add_child(_grade_cell(Lang.t("Khách bỏ về"), COLOR_TEXT, 18))
+	grid.add_child(_grade_cell("Khách bỏ về", COLOR_TEXT, 18))
 	for id in days:
 		grid.add_child(_grade_cell("≤ %d" % GameData.max_left_for(id), COLOR_TEXT, 18))
 	_content_col.add_child(grid)

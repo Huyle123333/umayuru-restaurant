@@ -66,3 +66,23 @@ const PASSIVE := {
 		"kem_tam_hop_que": 0.5,
 	},
 }
+
+
+## ASIAN MODE (user chốt 27/10/2026, xem thiet_ke_endless_asian_v0.1.docx mục 3.7
+## và các bảng chốt sau đó). Chỉ ghi những khoá KHÁC bản thường; skill_registry
+## trộn đè lên ACTIVE / PASSIVE / SECONDARY khi GameData.is_asian_mode().
+const ASIAN := {
+	# Cộng giờ ở Asian là KÉO DÀI màn (hại người chơi) nên đổi hẳn tác dụng:
+	# mỗi đơn giao xong +5 giây kiên nhẫn cho mọi khách đang có mặt.
+	"active": {
+		"script": "res://scripts/skills/effects/patience_bonus.gd",
+		"bonus_patience": 5.0,
+	},
+	"secondary": {"uses": 2},
+	"passive": {
+		"dish_price_factors": {
+			"icecream_vani": 1.3, "icecream_chocolate": 1.3, "icecream_strawberry": 1.3,
+			"kem_tam_hop": 1.3, "kem_tam_hop_que": 1.3,
+		},
+	},
+}

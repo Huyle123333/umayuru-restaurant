@@ -148,6 +148,8 @@ func _header_row() -> Control:
 	# phải Hạng (chế độ này không có hạng).
 	if _level_shown == GameData.ENDLESS_LEVEL:
 		h.add_child(_cell(Lang.t("Thời gian"), 90, COLOR_DIM, 17, HORIZONTAL_ALIGNMENT_CENTER))
+	elif _level_shown == GameData.ASIAN_LEVEL:
+		h.add_child(_cell(Lang.t("Kết quả"), 90, COLOR_DIM, 17, HORIZONTAL_ALIGNMENT_CENTER))
 	else:
 		h.add_child(_cell(tr("RANK_COL_PLACE"), 60, COLOR_DIM, 17, HORIZONTAL_ALIGNMENT_CENTER))
 	return h
@@ -172,6 +174,15 @@ func _data_row(index: int, record: Dictionary) -> Control:
 
 	h.add_child(_cell(str(int(record.get("money", record.get("tien", 0)))), 130, COLOR_TEXT, 20,
 		HORIZONTAL_ALIGNMENT_RIGHT))
+
+	# Asian: thắng thì ghi "Thắng", thua thì ghi thời gian đã trụ được.
+	if _level_shown == GameData.ASIAN_LEVEL:
+		var won := String(record.get("rank", "")) == "WIN"
+		var t := int(float(record.get("time", 0.0)))
+		@warning_ignore("integer_division")
+		var txt := Lang.t("Thắng") if won else "%d:%02d" % [t / 60, t % 60]
+		h.add_child(_cell(txt, 90, COLOR_GOLD if won else COLOR_TEXT, 20, HORIZONTAL_ALIGNMENT_CENTER))
+		return h
 
 	if _level_shown == GameData.ENDLESS_LEVEL:
 		var s := int(float(record.get("time", 0.0)))

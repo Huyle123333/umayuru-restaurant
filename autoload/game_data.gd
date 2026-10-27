@@ -313,6 +313,46 @@ const RULES_ENDLESS := {
 	],
 }
 
+## ASIAN MODE — đợt 2 (user chốt 27/10/2026, xem thiet_ke_endless_asian_v0.1.docx
+## mục 3). Màn 10 phút cố định, sống sót là thắng; luật mạng / vốn / phí nằm ở
+## scripts/modes/asian/asian_mode.gd, bảng này chỉ giữ phần "nhịp khách".
+##
+## Bốn giai đoạn đúng bảng 3.5 của tài liệu: Mở cửa → Đông khách → Cao điểm →
+## Địa ngục. Không có "rank_thresholds": Asian không xếp hạng S–D, chỉ thắng
+## hoặc thua. Không có "max_left": thay bằng hệ 3 mạng.
+const RULES_ASIAN := {
+	"duration": 600.0,
+	"price_factor": 1.0,
+	"max_customers": 10,
+	"max_tables": 6,
+	"max_queue": 3,
+	"first_wait": 4.0,
+	# Toàn bộ thực đơn mở từ đầu (tài liệu mục 3.5).
+	"menu": [
+		"icecream_vani", "icecream_chocolate", "icecream_strawberry",
+		"mon_ham", "mon_steak", "hambuger",
+		"pizza_mushroom", "pizza_cheese", "pizza_peperoni",
+		"kem_tam_hop", "kem_tam_hop_que", "vegetablesteak",
+		"vegetablebuger", "stew", "dinner",
+	],
+	"weights": {
+		"icecream_vani": 1, "icecream_chocolate": 1, "icecream_strawberry": 1,
+		"mon_ham": 1, "mon_steak": 2, "hambuger": 3,
+		"pizza_mushroom": 2, "pizza_cheese": 2, "pizza_peperoni": 2,
+		"kem_tam_hop": 1, "kem_tam_hop_que": 2, "vegetablesteak": 3,
+		"vegetablebuger": 3, "stew": 3, "dinner": 3,
+	},
+	"stages": [
+		{"until": 120.0, "interval": 10.0, "interval_range": [6.0, 14.0], "tier_weights": {"easy": 60, "medium": 40}},
+		{"until": 300.0, "interval": 7.5, "interval_range": [4.0, 11.0], "tier_weights": {"easy": 40, "medium": 45, "hard": 15}},
+		{"until": 480.0, "interval": 6.0, "interval_range": [3.0, 9.0], "tier_weights": {"easy": 25, "medium": 45, "hard": 30}},
+		{"until": 600.0, "interval": 4.5, "interval_range": [2.0, 7.0], "tier_weights": {"easy": 15, "medium": 45, "hard": 40}},
+	],
+}
+
+## Id của Asian Mode trong LEVELS. Hỏi qua is_asian_mode().
+const ASIAN_LEVEL := "asian"
+
 ## Id của Endless Mode trong LEVELS. Hỏi qua is_endless_mode().
 const ENDLESS_LEVEL := "endless"
 
@@ -344,6 +384,8 @@ const LEVELS := {
 	"aaa": {"label": "AAA Mode", "needs": "", "scene": MAP_RESTAURANT, "rules": RULES_AAA},
 	# Mở sẵn: có nút riêng ở menu chính (user chốt 25/10/2026).
 	"endless": {"label": "Endless Mode", "needs": "", "scene": MAP_RESTAURANT, "rules": RULES_ENDLESS},
+	# Tạm mở sẵn từ đầu (user chốt 27/10/2026).
+	"asian": {"label": "Asian Mode", "needs": "", "scene": MAP_RESTAURANT, "rules": RULES_ASIAN},
 }
 
 ## Các nhân vật. Khóa là id, cũng là tên file ảnh đại diện trong
@@ -652,8 +694,31 @@ func card_image(id: String) -> String:
 ## sửa một bên quên bên kia, và bản khoá lại chính là bản người chơi nhìn
 ## thấy đầu tiên. Một nguồn dữ liệu duy nhất, phần trình bày tự quyết định
 ## che hay không — sai sót kiểu đó không xảy ra được.
+## Mô tả kĩ năng bản ASIAN MODE, theo đúng thứ tự 3 ô ở màn chọn nhân vật
+## (chủ động, bị động 1, bị động 2). null = giữ mô tả bản thường. Số liệu
+## khớp với hằng ASIAN trong scripts/skills/characters/*.gd — sửa một bên thì
+## sửa cả bên kia.
+const ASIAN_SKILL_DESC := {
+	"kitamoi": ["Điều kiện: Hoàn thành 8 đơn hoàn hảo.\nTrong thời gian còn lại của màn chơi, mọi đơn giao ra đều được tính là hoàn hảo bất kể thanh kiên nhẫn. Riêng đơn giao khi kiên nhẫn còn trên một nửa thì được nhân đôi tiền. Đơn được tính hoàn hảo nhờ kĩ năng không tính vào chuỗi hồi mạng.", "Thời gian kiên nhẫn của khách hàng +15%.", "Tiền thưởng từ đơn hoàn hảo +10% (35% → 45%). Đổi lại: món ăn trên bếp hỏng sớm hơn 2 giây."],
+	"hachimi": ["Điều kiện: Đang có 1500 tiền trở lên.\nTừ đó tới hết màn, mỗi đơn giao xong cộng thêm 5 giây kiên nhẫn cho mọi khách đang có mặt.", "Phím 3: mở bảng chọn một món trong thực đơn hôm nay và nhận ngay món đó trên tay. Tối đa 2 lần mỗi màn.", "Các món kem tăng 30% giá trị, nhưng khách gọi kem ít đi một nửa."],
+	"chiyo": ["Điều kiện: Hoàn thành 15 đơn.\nCho toàn bộ khách ra về mà không mất mạng; khách đang ăn vẫn trả tiền. Dùng một lần mỗi màn.", "Giá trị của tất cả món ăn tăng 25%.", null],
+	"mambo": ["Điều kiện: Hoàn thành 20 đơn.\nTrong thời gian còn lại của màn chơi, mỗi đơn pizza hoàn hảo có 36% được nhân ba tiền, 18% được nhân đôi, còn lại giá thường. Đổi lại: trong lúc di chuyển, mỗi giây có 3% bị choáng đứng yên 2 giây.", "Thời gian nấu trên bếp và trong lò nướng giảm 2 giây (bếp 8 → 6, lò 11 → 9).", null],
+	"oui": ["Điều kiện: Màn chơi trôi qua 6 phút.\nBật/tắt bằng phím Space. Khi bật: đồng hồ màn, khách hàng và thanh kiên nhẫn đứng im; nhân vật và khu bếp vẫn hoạt động. Tổng cộng 15 giây cho cả màn. Sự kiện và cơn đói của Doro vẫn chạy.", "Các món pizza tăng 30% giá trị.", null],
+	"tuandb": ["Điều kiện: Giao xong 8 đơn có ham hoặc steak (Ham, Steak, Hamburger, Steak rau củ, Hamburger rau củ, Bữa tối).\nTrong thời gian còn lại của màn chơi, sáu món đó giao được cho MỌI đơn và không tính là giao nhầm. Tiền nhận tính theo giá của món bạn giao.", "Ham, steak và chả rau củ nấu trên bếp nhanh hơn 2 giây (8 → 6 giây).", "Mỗi đơn giao ra có 10% cơ hội được trả gấp 3."],
+	"golshi": ["Điều kiện: Mỗi món trong thực đơn hôm nay đã được giao hoàn hảo ít nhất một lần.\nNhận 1000 tiền và hồi 3 mạng.", "Chỉ bắt đầu với 1 mạng. Mọi đơn giao ra đều được tính là hoàn hảo. Mạng hồi vượt quá tối đa đổi thành 250 tiền mỗi mạng.", "Mỗi lần nấu trên bếp, nướng trong lò hay ghép ở bàn chế tạo có 30% thất bại: ra đồ hỏng và mất nguyên liệu. Đồ cháy vứt vào thùng rác bị trừ gấp đôi tiền nguyên liệu."],
+}
+
 func card_info(id: String) -> Dictionary:
 	var info: Dictionary = CHARACTERS.get(id, {})
+	# Asian Mode: cùng một màn chọn nhân vật, chỉ đổi câu mô tả kĩ năng sang bản
+	# Asian (không dựng màn riêng — cùng cách AAA Mode dùng chung màn này).
+	if is_asian_mode() and ASIAN_SKILL_DESC.has(id) and not is_character_locked(id):
+		info = info.duplicate(true)
+		var descs: Array = ASIAN_SKILL_DESC[id]
+		var slots: Array = info.get("skills", [])
+		for i in mini(descs.size(), slots.size()):
+			if descs[i] != null:
+				(slots[i] as Dictionary)["desc"] = String(descs[i])
 	# Che khi: đang khoá VÀ (nằm trong danh sách nhân vật ẩn HOẶC có cờ
 	# an_khi_khoa). Điều kiện NHAN_VAT_AN được thêm vào để giấu thêm một
 	# nhân vật chỉ tốn một dòng ở bảng đó, không phải nhớ bật thêm cờ trong
@@ -872,6 +937,15 @@ func record_rank(level_id: String, money: int, rank: String, seconds: float = -1
 		var a_pinned := bool(a.get("pinned", false))
 		if a_pinned != bool(b.get("pinned", false)):
 			return a_pinned
+		# Asian: thắng xếp trên thua. Hai lượt thua thì ai TRỤ LÂU hơn xếp
+		# trên (tài liệu mục 1: "nếu thua thì trụ được bao lâu"); hai lượt
+		# thắng thì so tiền như mọi màn.
+		if level_id == ASIAN_LEVEL:
+			var a_won := String(a.get("rank", "")) == "WIN"
+			if a_won != (String(b.get("rank", "")) == "WIN"):
+				return a_won
+			if not a_won:
+				return float(a.get("time", 0.0)) > float(b.get("time", 0.0))
 		return int(a.get("money", a.get("tien", 0))) \
 			> int(b.get("money", b.get("tien", 0))))
 	if list_.size() > LEADERBOARD_ROWS:
@@ -939,6 +1013,17 @@ func is_aaa_mode() -> bool:
 
 func is_endless_mode() -> bool:
 	return current_level == ENDLESS_LEVEL
+
+
+func is_asian_mode() -> bool:
+	return current_level == ASIAN_LEVEL
+
+
+## Ghi một lượt Asian. `rank` = "WIN" nếu thắng, rỗng nếu thua — dùng lại ô
+## "rank" của bản ghi thay vì thêm khoá mới, để bảng xếp hạng không phải biết
+## thêm một kiểu dữ liệu. Thứ tự sắp riêng của Asian nằm trong record_rank().
+func record_asian(won: bool, money: int, seconds: float) -> void:
+	record_rank(ASIAN_LEVEL, money, "WIN" if won else "", seconds)
 
 
 ## Ghi một lượt Endless vào bảng xếp hạng.
@@ -1373,7 +1458,7 @@ func enter_level(id: String) -> String:
 	# chơi lại vừa xem nó vài phút trước.
 	# Endless là chế độ phụ, không thuộc cốt truyện: bỏ đoạn hội ý, vào thẳng.
 	if needs_character_select(id) and not is_story_level(id) \
-			and id != ENDLESS_LEVEL and _meeting_shown_for != id:
+			and id != ENDLESS_LEVEL and id != ASIAN_LEVEL and _meeting_shown_for != id:
 		_meeting_shown_for = id
 		return KITCHEN_MEETING_SCENE
 

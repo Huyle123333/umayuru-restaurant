@@ -54,6 +54,10 @@ var fail_note := ""
 ## level_base gán TRƯỚC khi gọi show_results(), giống fail_note.
 var endless_seconds := -1.0
 
+## Asian Mode: {"won", "note", "seconds", "lives"} do asian_mode.result() trả.
+## Rỗng = không phải Asian. Gán trước show_results(), giống endless_seconds.
+var asian_result: Dictionary = {}
+
 
 func show_results(money: int, served: int, perfect: int, left_angry: int,
 		ep_hang: String = "") -> void:
@@ -64,6 +68,15 @@ func show_results(money: int, served: int, perfect: int, left_angry: int,
 	# Endless: không hạng, không "hoàn thành màn", điểm là thời gian trụ được.
 	# Rẽ nhánh SỚM để không lượt Endless nào lọt vào complete_level() hay
 	# record_rank() (hai hàm đó sắp theo tiền, sai luật của chế độ này).
+	# Asian: không hạng S–D, chỉ THẮNG hoặc THUA. Rẽ sớm như Endless để lượt
+	# Asian không lọt vào complete_level().
+	if not asian_result.is_empty():
+		GameData.record_asian(bool(asian_result["won"]), money,
+			float(asian_result["seconds"]))
+		_build_asian_ui(money, served, perfect, left_angry)
+		_show()
+		return
+
 	if endless_seconds >= 0.0:
 		var old_best := GameData.get_best_money(level_id)
 		var is_best := GameData.record_endless(money, endless_seconds)
@@ -370,6 +383,53 @@ func _build_endless_ui(money: int, served: int, perfect: int, left_angry: int,
 	again.pressed.connect(_replay)
 	button_row.add_child(again)
 	# Endless vào từ khung "Chế độ" ở màn chọn màn nên quay về đúng chỗ đó.
+	var back := Button.new()
+	back.text = Lang.t("Về chọn màn")
+	back.pressed.connect(_go_level_select)
+	button_row.add_child(back)
+	again.grab_focus()
+
+
+## Bảng kết quả Asian: chữ to là THẮNG / THUA, kèm lý do thua.
+func _build_asian_ui(money: int, served: int, perfect: int, left_angry: int) -> void:
+	const EndlessMode := preload("res://scripts/modes/endless/endless_mode.gd")
+	var won := bool(asian_result["won"])
+	var col := _make_box()
+
+	var big := Label.new()
+	big.text = Lang.t("THẮNG") if won else Lang.t("THUA")
+	big.add_theme_font_size_override("font_size", 96)
+	big.add_theme_color_override("font_color", COLOR_GRADE["S"] if won else COLOR_GRADE[""])
+	big.add_theme_color_override("font_outline_color", Color(0.22, 0.12, 0.06))
+	big.add_theme_constant_override("outline_size", 10)
+	big.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	col.add_child(big)
+
+	if not won:
+		var note := Label.new()
+		note.text = String(asian_result["note"])
+		note.add_theme_font_size_override("font_size", 18)
+		note.add_theme_color_override("font_color", COLOR_DIM)
+		note.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		note.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		col.add_child(note)
+
+	col.add_child(_divider())
+	col.add_child(_row(Lang.t("Doanh thu"), str(money)))
+	col.add_child(_row(Lang.t("Thời gian trụ được"), EndlessMode.format_time(float(asian_result["seconds"]))))
+	col.add_child(_row(Lang.t("Mạng còn lại"), str(maxi(int(asian_result["lives"]), 0))))
+	col.add_child(_row(Lang.t("Đơn đã phục vụ"), str(served)))
+	col.add_child(_row(Lang.t("Trong đó hoàn hảo"), str(perfect)))
+	col.add_child(_row(Lang.t("Khách bỏ đi"), str(left_angry)))
+
+	var button_row := HBoxContainer.new()
+	button_row.add_theme_constant_override("separation", 16)
+	button_row.alignment = BoxContainer.ALIGNMENT_CENTER
+	col.add_child(button_row)
+	var again := Button.new()
+	again.text = Lang.t("Chơi lại")
+	again.pressed.connect(_replay)
+	button_row.add_child(again)
 	var back := Button.new()
 	back.text = Lang.t("Về chọn màn")
 	back.pressed.connect(_go_level_select)

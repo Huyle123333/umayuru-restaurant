@@ -13,6 +13,10 @@ func enable(ctx: Dictionary) -> void:
 	if customers != null and customers.has_method("clear_all_customers"):
 		customers.clear_all_customers()
 	var clock: Node = ctx.get("clock")
+	# Asian: CHỈ cho khách ra về, không đụng đồng hồ (đặt lại 10 phút là bắt
+	# chơi lại từ đầu). Khách bị cho về không mất mạng — xem clearing_all.
+	if GameData.is_asian_mode():
+		return
 	# (26/10/2026, user chốt) Endless: đồng hồ về ĐÚNG số giây ban đầu (2:30,
 	# lưu ở clock.bar_full), kể cả khi đang còn nhiều hơn; mốc độ khó GIỮ
 	# NGUYÊN. Không gọi reset_time() vì ở Endless `duration` đã phình theo giờ

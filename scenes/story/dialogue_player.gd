@@ -111,6 +111,24 @@ const PORTRAITS := {
 ## và muốn xem thử một biến thể thì chỉ việc mở đúng scene đó.
 @export var variant: String = ""
 
+## Cho phép bỏ qua (nút "Bỏ qua" và phím Esc). Tắt cho đoạn nào bắt buộc xem
+## hết — hiện là hai đoạn của AAA Mode. Tắt thì kịch bản phải NGẮN: người chơi
+## không có lối thoát, nên mỗi câu thừa là một câu họ bị ép đọc.
+@export var skippable: bool = true
+
+## Tự sang câu sau bao nhiêu giây kể từ lúc câu hiện tại gõ xong. 0 = tắt
+## (phải bấm mới sang câu). Bấm chuột / phím vẫn tua nhanh như thường.
+##
+## Dùng cho đoạn không bỏ qua được (AAA Mode, đặt 5 giây): người chơi không
+## có nút Bỏ qua, nên ít nhất đoạn kể phải tự chạy khi họ buông tay — không
+## bắt ai ngồi bấm qua từng câu một.
+##
+## Đếm từ lúc GÕ XONG chứ không từ lúc câu bắt đầu: câu dài cần nhiều thời
+## gian đọc hơn, đếm từ đầu thì câu dài nhất chỉ còn vài giây để đọc.
+@export var auto_advance_seconds: float = 0.0
+## Còn bao nhiêu giây thì tự sang câu. Âm = không đếm.
+var _auto_left := -1.0
+
 @onready var _background: TextureRect = %Background
 @onready var _tint: ColorRect = %Tint
 @onready var _portrait: TextureRect = %Portrait
@@ -158,6 +176,7 @@ func _ready() -> void:
 	_group_box.modulate.a = 0.0
 	_lbl_line.visible_characters = 0
 	_btn_skip.pressed.connect(_skip)
+	_btn_skip.visible = skippable
 
 	# Mũi tên ▼ nhấp nháy báo "đọc xong rồi, bấm đi". Dùng tween lặp vô hạn
 	# thay vì tự đếm thời gian trong _process: ít code hơn và không tốn gì
@@ -217,6 +236,11 @@ func _cutscene_for_locale(path: String) -> String:
 
 func _process(delta: float) -> void:
 	if not _typing:
+		if _auto_left > 0.0 and not _fading:
+			_auto_left -= delta
+			if _auto_left <= 0.0:
+				_auto_left = -1.0
+				_next_line()
 		return
 	_revealed += type_speed * delta
 	_lbl_line.visible_characters = int(_revealed)
@@ -265,6 +289,8 @@ func _tap() -> void:
 
 func _finish_typing() -> void:
 	_typing = false
+	if auto_advance_seconds > 0.0:
+		_auto_left = auto_advance_seconds
 	_lbl_line.visible_characters = -1  # -1 = hiện tất cả
 	_arrow.show()
 
@@ -325,6 +351,8 @@ func _should_skip(entry: Dictionary) -> bool:
 
 
 func _next_line() -> void:
+	# Bấm tay sang câu thì huỷ bộ đếm tự động của câu cũ.
+	_auto_left = -1.0
 	_index += 1
 	if _index >= _scenes.size():
 		_finish()
@@ -574,7 +602,7 @@ func _reveal_gradually(btn: CanvasItem, show_it: bool) -> void:
 # --------------------------------------------------------------- kết thúc ---
 
 func _skip() -> void:
-	if _fading:
+	if _fading or not skippable:
 		return
 	_finish()
 

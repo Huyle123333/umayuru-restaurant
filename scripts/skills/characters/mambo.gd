@@ -65,3 +65,12 @@ const PASSIVE := {
 		"pizza_peperoni": 1.2,
 	},
 }
+
+
+## ASIAN MODE (user chốt 27/10/2026, xem thiet_ke_endless_asian_v0.1.docx mục 3.7
+## và các bảng chốt sau đó). Chỉ ghi những khoá KHÁC bản thường; skill_registry
+## trộn đè lên ACTIVE / PASSIVE / SECONDARY khi GameData.is_asian_mode().
+const ASIAN := {
+	"active": {"threshold": 20},
+	"passive": {"cook_time_cut": 2.0, "bake_time_cut": 2.0},
+}

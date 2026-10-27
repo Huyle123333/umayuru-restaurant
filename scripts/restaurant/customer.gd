@@ -114,6 +114,11 @@ static var _model_cache: Array[Dictionary] = []
 ## Tỉ lệ riêng của model đang dùng (khoá "scale" trong MODELS).
 var _model_scale := 1.0
 
+## Ép một model cụ thể thay vì bốc ngẫu nhiên: {"path", "scale", "yaw"}. Gán
+## TRƯỚC add_child (model chọn trong _ready). Dùng cho NPC sự kiện Asian:
+## khách VIP Gugugaga và thanh tra Spiki.
+var forced_model: Dictionary = {}
+
 
 func _ready() -> void:
 	if not Engine.is_editor_hint():
@@ -130,6 +135,11 @@ func _ready() -> void:
 
 ## Thay model mặc định bằng một model bốc theo trọng số trong MODELS.
 func _pick_model() -> void:
+	if not forced_model.is_empty() and ResourceLoader.exists(String(forced_model["path"])):
+		_swap_model({"scene": load(String(forced_model["path"])),
+			"scale": float(forced_model.get("scale", 1.0)),
+			"yaw": float(forced_model.get("yaw", 0.0))})
+		return
 	if _model_cache.is_empty():
 		for entry in MODELS:
 			var path := String(entry["path"])
@@ -142,7 +152,10 @@ func _pick_model() -> void:
 						"yaw": float(entry.get("yaw", 0.0))})
 	if _model_cache.is_empty():
 		return
-	var picked := _pick_weighted()
+	_swap_model(_pick_weighted())
+
+
+func _swap_model(picked: Dictionary) -> void:
 	var old := get_node_or_null("Model")
 	var fresh := (picked["scene"] as PackedScene).instantiate() as Node3D
 	if fresh == null:
@@ -286,16 +299,34 @@ func eat(seconds: float) -> void:
 	_eat_left = maxf(seconds, 0.01)
 
 
+## Viền màu quanh model (thanh tra Spiki: viền đỏ cho dễ nhận ra giữa đám khách).
+##
+## Kĩ thuật "vỏ lộn ngược" (inverted hull): vẽ lại mesh lần hai, phình ra theo
+## pháp tuyến và chỉ vẽ MẶT SAU — phần thò ra ngoài viền model thành đường viền.
+## Gắn qua material_overlay nên không đụng vật liệu gốc, và chạy cả với mesh có
+## xương vì shader dịch đỉnh SAU khi skin.
+func set_outline(color: Color, width: float = 0.02) -> void:
+	var sh := Shader.new()
+	sh.code = """
+shader_type spatial;
+render_mode unshaded, cull_front;
+uniform vec4 outline_color : source_color;
+uniform float width;
+void vertex() { VERTEX += NORMAL * width; }
+void fragment() { ALBEDO = outline_color.rgb; }
+"""
+	var mat := ShaderMaterial.new()
+	mat.shader = sh
+	mat.set_shader_parameter("outline_color", color)
+	# Chia cho tỉ lệ model: viền tính trong toạ độ của mesh, model phóng to
+	# thì viền to theo.
+	mat.set_shader_parameter("width", width / maxf(_model_scale * body_scale, 0.01))
+	for m in find_children("*", "MeshInstance3D", true, false):
+		(m as MeshInstance3D).material_overlay = mat
+
+
 func beg() -> void:
 	_set_anim("angry")
-
-
-## Hết cáu, về đứng yên. CHỈ đổi khi vẫn đang "angry": trong lúc cáu người
-## chơi có thể đã giao đúng món và khách đang ăn — gọi idle vô tư sẽ cắt
-## ngang animation ăn.
-func calm() -> void:
-	if _anim_now == "angry":
-		_set_anim("idle")
 
 
 ## Bong bóng trên đầu (đơn hàng). Nội dung do hệ đơn hàng đổ vào sau.

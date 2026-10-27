@@ -64,6 +64,35 @@ var _rest_left := 0.0
 var _moving := false
 var _floor_y := 0.0
 
+## Sự kiện Asian "Trộm chó": Doro tự đi về phía cửa. Bấm vào Doro (E) là giữ
+## lại; tới cửa thì báo escaped và sự kiện quyết định thua.
+signal escaped
+signal escape_stopped
+var _escaping := false
+var _escape_target := Vector3.ZERO
+
+
+func start_escape(door: Vector3) -> void:
+	_escaping = true
+	_escape_target = door
+	_agent.target_position = door
+	_moving = true
+	_set_anim("walk")
+
+
+func stop_escape() -> void:
+	if not _escaping:
+		return
+	_escaping = false
+	_moving = false
+	_rest_left = randf_range(Config.REST_MIN, Config.REST_MAX)
+	_set_anim("idle")
+	escape_stopped.emit()
+
+
+func is_escaping() -> bool:
+	return _escaping
+
 
 ## Dựng Doro. Gọi từ level_base sau khi hệ khách đã nướng xong navmesh.
 ##
@@ -181,6 +210,23 @@ func _physics_process(delta: float) -> void:
 		return
 
 	# 1. Người chơi tới gần -> đứng yên, quay mặt về phía họ.
+	if _escaping:
+		var to_door := _escape_target - global_position
+		to_door.y = 0.0
+		if to_door.length() < 1.2 or _agent.is_navigation_finished():
+			_escaping = false
+			escaped.emit()
+			return
+		var next := _agent.get_next_path_position() - global_position
+		next.y = 0.0
+		if next.length_squared() > 0.0001:
+			next = next.normalized()
+			# Đi CHẬM hơn bình thường: người chơi phải kịp chạy ra giữ lại.
+			global_position += next * Config.SPEED * 0.6 * delta
+			global_position.y = _floor_y
+			_turn_towards(next, delta)
+		return
+
 	if _near_player():
 		if _moving:
 			_moving = false
@@ -330,6 +376,8 @@ func _set_anim(anim_name: String) -> void:
 ## (idle, walk), không có clip "ăn". Một cú nảy 0,18 giây đủ để người chơi biết
 ## thao tác đã ăn — mà đó mới là việc cần làm, không phải diễn cho đẹp.
 func _on_fed(_station: Node, _index: int) -> void:
+	if _escaping:
+		stop_escape()
 	if _body == null:
 		return
 	# KHÔNG phát tiếng ở đây: `hands._discard()` đã phát "vut_rac" khi thật sự

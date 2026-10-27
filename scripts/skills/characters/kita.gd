@@ -133,3 +133,14 @@ const PASSIVE := {
 	# để thêm một món cháy được sau này không phải sửa lại kĩ năng.
 	"burn_time_cut": 2.0,
 }
+
+
+## ASIAN MODE (user chốt 27/10/2026, xem thiet_ke_endless_asian_v0.1.docx mục 3.7
+## và các bảng chốt sau đó). Chỉ ghi những khoá KHÁC bản thường; skill_registry
+## trộn đè lên ACTIVE / PASSIVE / SECONDARY khi GameData.is_asian_mode().
+const ASIAN := {
+	# Đơn được ép hoàn hảo không tính vào chuỗi hồi mạng — asian_mode.gd tự
+	# lo bằng cờ Order.truly_perfect, kĩ năng không cần biết.
+	"active": {"threshold": 8},
+	"passive": {"patience_factor": 1.15, "perfect_bonus_add": 0.10},
+}

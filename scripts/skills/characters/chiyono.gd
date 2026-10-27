@@ -46,3 +46,14 @@ const PASSIVE := {
 	# và bếp chạy nhanh trong khi khách vẫn thong thả.
 	"time_scale": 1.25,
 }
+
+
+## ASIAN MODE (user chốt 27/10/2026, xem thiet_ke_endless_asian_v0.1.docx mục 3.7
+## và các bảng chốt sau đó). Chỉ ghi những khoá KHÁC bản thường; skill_registry
+## trộn đè lên ACTIVE / PASSIVE / SECONDARY khi GameData.is_asian_mode().
+const ASIAN := {
+	# Đặt lại đồng hồ 10 phút = bắt chơi lại từ đầu, nên ở Asian kĩ năng CHỈ
+	# cho khách ra về (level_reset.gd tự bỏ phần đồng hồ). Một lần mỗi màn.
+	"active": {"threshold": 15, "repeat": false, "uses": 1},
+	"passive": {"all_price_factor": 1.25},
+}

@@ -169,7 +169,19 @@ static func passive(character_id: String) -> Dictionary:
 	var entry: Dictionary = constants.get("PASSIVE", {})
 	for key in entry:
 		out[key] = entry[key]
+	_merge_asian(out, constants, "passive")
 	return out
+
+
+## Asian Mode: trộn đè bản chỉnh (hằng ASIAN trong file nhân vật) lên bản
+## thường. Chỉ ghi khoá KHÁC, khoá không nhắc tới giữ nguyên — nhờ vậy mọi chỗ
+## đang đọc ACTIVE/PASSIVE không phải biết Asian tồn tại.
+static func _merge_asian(out: Dictionary, constants: Dictionary, part: String) -> void:
+	if not GameData.is_asian_mode():
+		return
+	var patch: Dictionary = (constants.get("ASIAN", {}) as Dictionary).get(part, {})
+	for key in patch:
+		out[key] = patch[key]
 
 
 ## Mô tả kĩ năng chủ động của một nhân vật, hoặc Dictionary RỖNG nếu nhân vật
@@ -183,7 +195,10 @@ static func active(character_id: String) -> Dictionary:
 	if script_class == null:
 		return {}
 	var constants: Dictionary = script_class.get_script_constant_map()
-	return constants.get("ACTIVE", {})
+	var out: Dictionary = (constants.get("ACTIVE", {}) as Dictionary).duplicate()
+	if not out.is_empty():
+		_merge_asian(out, constants, "active")
+	return out
 
 
 ## Kĩ năng chủ động THỨ HAI của một nhân vật (hằng SECONDARY trong file của
@@ -199,4 +214,7 @@ static func secondary(character_id: String) -> Dictionary:
 	if script_class == null:
 		return {}
 	var constants: Dictionary = script_class.get_script_constant_map()
-	return constants.get("SECONDARY", {})
+	var out: Dictionary = (constants.get("SECONDARY", {}) as Dictionary).duplicate()
+	if not out.is_empty():
+		_merge_asian(out, constants, "secondary")
+	return out

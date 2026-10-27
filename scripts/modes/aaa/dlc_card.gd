@@ -22,6 +22,8 @@ var pack_id := ""
 var _price: RichTextLabel
 var _desc_panel: PanelContainer
 var _shown_refusals := -1
+## Cỡ chữ giá sale (to hơn giá gốc một chút để nổi bật).
+var _sale_size := 16
 
 
 func setup(id: String, width: float) -> void:
@@ -82,7 +84,7 @@ func setup(id: String, width: float) -> void:
 	# chiều rộng gần bằng 0 lúc dựng, rồi bẻ từng chữ một và kéo thẻ dài ngoằng.
 	_price.autowrap_mode = TextServer.AUTOWRAP_OFF
 	_price.add_theme_font_size_override("normal_font_size", 18 if big else 14)
-	_price.add_theme_font_size_override("bold_font_size", 21 if big else 15)
+	_sale_size = 22 if big else 16
 	_price.add_theme_color_override("default_color", Color(0.4, 0.33, 0.27))
 	_price.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	col.add_child(_price)
@@ -100,7 +102,7 @@ func _process(_delta: float) -> void:
 func _refresh_price() -> void:
 	_shown_refusals = DlcCatalog.refusals
 	if _price != null:
-		_price.text = "[center]%s[/center]" % DlcCatalog.price_text(pack_id, true)
+		_price.text = "[center]%s[/center]" % DlcCatalog.price_text(pack_id, true, _sale_size)
 
 
 func _gui_input(event: InputEvent) -> void:

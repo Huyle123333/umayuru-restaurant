@@ -291,6 +291,16 @@ custom_minimum_size = Vector2(230, 64)
 layout_mode = 2
 text = "LEVEL_ASIAN"
 
+[node name="ColAaa" type="VBoxContainer" parent="Content/VBox/ModesPanel/ModesBox/Modes"]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="BtnAaa" type="Button" parent="Content/VBox/ModesPanel/ModesBox/Modes/ColAaa"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(230, 64)
+layout_mode = 2
+text = "LEVEL_AAA"
+
 [node name="Bottom" type="HBoxContainer" parent="Content/VBox"]
 texture_filter = 1
 layout_mode = 2

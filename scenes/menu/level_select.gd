@@ -46,6 +46,7 @@ const DAY_LABELS := {
 @onready var _modes: Dictionary = {
 	"endless": %BtnEndless,
 	"asian": %BtnAsian,
+	"aaa": %BtnAaa,
 }
 
 ## Bảng mô tả CHẾ ĐỘ — chỉ chế độ mới có, màn chính bấm là vào thẳng.
@@ -73,6 +74,7 @@ var _selected := ""
 const MODE_DESC := {
 	"endless": "LEVEL_DESC_ENDLESS",
 	"asian": "LEVEL_DESC_ASIAN",
+	"aaa": "LEVEL_DESC_AAA",
 }
 
 @onready var _btn_back: Button = %BtnBack
@@ -108,7 +110,9 @@ func _ready() -> void:
 
 	for id in _modes:
 		var mode_btn: Button = _modes[id]
-		mode_btn.tooltip_text = tr("LEVEL_COMING_SOON")
+		# Chế độ đã có nội dung thì không gắn chú thích "đang phát triển".
+		if not GameData.LEVELS.has(id):
+			mode_btn.tooltip_text = tr("LEVEL_COMING_SOON")
 		mode_btn.pressed.connect(_open_mode.bind(id))
 
 	_btn_start.pressed.connect(_on_start_pressed)

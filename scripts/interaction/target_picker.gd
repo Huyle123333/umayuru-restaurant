@@ -93,8 +93,8 @@ func _process(delta: float) -> void:
 ## hai lần giống nhau ra hai kết quả khác nhau. Sắp theo góc thì Tab luôn chạy
 ## vòng quanh theo một chiều cố định — đoán trước được.
 func _build_candidates() -> void:
-	var prev_size := _candidates.size()
-	var prev_sel := _selected
+	var prev_sig := _signature()
+	var prev_keys := _keys()
 	_candidates.clear()
 
 	var center_pos := global_position
@@ -113,10 +113,15 @@ func _build_candidates() -> void:
 				"_dist": v.length(),
 			})
 	_candidates.sort_custom(_compare_angle)
+	_keep_previous_order(prev_keys)
 
 	_selected = _find_choice()
 
-	if _candidates.size() != prev_size or _selected != prev_sel:
+	# So "chữ ký" của cả danh sách (trạm nào, mục nào, đang chọn mục nào) chứ
+	# không chỉ so SỐ LƯỢNG và CHỈ SỐ: hai danh sách cùng dài nhưng khác trạm
+	# trước đây lọt qua phép so, còn danh sách y hệt thì lại không được bắn
+	# lại. Chỉ bắn khi thật sự có gì đổi, nên HUD không vẽ lại vô cớ.
+	if _signature() != prev_sig:
 		candidates_changed.emit(_candidates, _selected)
 
 
@@ -152,10 +157,60 @@ func _probe_collisions() -> Array:
 	if _body is CollisionObject3D:
 		query.exclude = [(_body as CollisionObject3D).get_rid()]
 
+	# (20/10/2026) Trần kết quả 12 → MAX_HITS. Mặt nạ dò gồm cả lớp 1 (sàn,
+	# tường, quầy), nên đứng ở góc bếp đông đồ là vượt 12 vật chạm. Vượt trần
+	# thì Godot trả về một tập CON tuỳ ý, mỗi khung một khác — kệ hàng lúc có
+	# lúc không trong danh sách, và mục đang chọn nhấp nháy cứ vài giây.
 	var out: Array = []
-	for r in get_world_3d().direct_space_state.intersect_shape(query, 12):
+	for r in get_world_3d().direct_space_state.intersect_shape(query, MAX_HITS):
 		out.append(r["collider"])
 	return out
+
+
+## Số vật chạm tối đa một lần dò. Dư thừa có chủ ý: chi phí gần như không đổi,
+## còn thiếu thì sinh lỗi nhấp nháy ở trên.
+const MAX_HITS := 64
+
+
+## Khoá (trạm, mục) của từng ứng viên, theo đúng thứ tự trong danh sách.
+func _keys() -> PackedStringArray:
+	var out := PackedStringArray()
+	for c in _candidates:
+		out.append("%d:%d" % [(c["station"] as Object).get_instance_id(), int(c["index"])])
+	return out
+
+
+## Nếu TẬP ứng viên không đổi so với khung trước thì giữ nguyên THỨ TỰ cũ.
+##
+## Đây là gốc của lỗi "đứng yên cạnh kệ mà mục chọn nhấp nháy" (20/10/2026).
+## Danh sách sắp theo góc atan2, mà góc nhảy từ +π sang −π ở ngay sau lưng
+## nhân vật. Hai kệ nằm sát đường nối đó (Bánh mì / Bột) thì chỉ cần nhân vật
+## nhích vài milimet theo animation đứng yên là thứ tự đảo nhau trong đúng một
+## khung hình — HUD vẽ lại, người chơi thấy nhấp nháy, cứ khoảng một giây một
+## lần (đúng nhịp animation Idle). Probe ghi được: ["Banh mi","Bot"] →
+## ["Bot","Banh mi"] → trở lại sau 0,02 giây.
+##
+## Giữ thứ tự cũ khi tập không đổi thì danh sách chỉ sắp lại khi có trạm vào
+## hoặc ra khỏi tầm — lúc đó HUD vẽ lại là ĐÚNG, vì nội dung thật sự đổi.
+func _keep_previous_order(prev_keys: PackedStringArray) -> void:
+	if prev_keys.size() != _candidates.size() or prev_keys.is_empty():
+		return
+	var now := _keys()
+	var by_key := {}
+	for i in _candidates.size():
+		by_key[now[i]] = _candidates[i]
+	for k in prev_keys:
+		if not by_key.has(k):
+			return  # tập đã đổi → dùng thứ tự mới
+	var ordered: Array[Dictionary] = []
+	for k in prev_keys:
+		ordered.append(by_key[k])
+	_candidates = ordered
+
+
+## Chữ ký của danh sách hiện tại, để biết có gì thật sự thay đổi không.
+func _signature() -> String:
+	return "%s|%d" % [",".join(_keys()), _selected]
 
 
 ## Hàm so sánh viết rời thay vì lambda nhiều dòng ngay trong lời gọi.

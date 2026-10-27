@@ -51,3 +51,15 @@ const PASSIVE := {
 	# (4/10/2026) User chốt là BỊ ĐỘNG — bản chốt cũ ghi chủ động phím Z.
 	"refill_stamina_on_order": true,
 }
+
+
+## ASIAN MODE (user chốt 27/10/2026, xem thiet_ke_endless_asian_v0.1.docx mục 3.7
+## và các bảng chốt sau đó). Chỉ ghi những khoá KHÁC bản thường; skill_registry
+## trộn đè lên ACTIVE / PASSIVE / SECONDARY khi GameData.is_asian_mode().
+const ASIAN := {
+	# Sự kiện và cơn đói của Doro KHÔNG dừng theo — phần đó làm cùng bộ sự kiện.
+	"active": {"threshold": 360, "budget_seconds": 15.0},
+	"passive": {
+		"dish_price_factors": {"pizza_cheese": 1.3, "pizza_mushroom": 1.3, "pizza_peperoni": 1.3},
+	},
+}
