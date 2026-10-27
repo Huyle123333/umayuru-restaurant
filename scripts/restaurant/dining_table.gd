@@ -51,6 +51,10 @@ signal dish_delivered(table: Node, dish_id: String)
 @warning_ignore("unused_signal")
 signal delivery_rejected(table: Node, reason: String)
 
+## Asian Mode: người chơi bấm E (tay không) vào bàn đang có tiền khách để lại.
+@warning_ignore("unused_signal")
+signal cash_collected(table: Node)
+
 ## Bật/tắt biển số, dùng khi muốn chụp ảnh map cho báo cáo.
 @export var show_number := true:
 	set(v):

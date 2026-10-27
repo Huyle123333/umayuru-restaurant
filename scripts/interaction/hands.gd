@@ -43,6 +43,10 @@ signal ingredient_taken(id: String, at: Vector3)
 ## không ai nghe. Cùng kiểu "chỉ báo, không biết ai nghe" với ingredient_taken.
 signal item_discarded(id: String, station: Node)
 
+## Nguyên liệu đang HẾT HÀNG (sự kiện Asian). Kệ và tủ lạnh vẫn đứng đó nhưng
+## bấm vào không ra gì — người chơi thấy rõ là thiếu chứ không tưởng kệ hỏng.
+var blocked_items: Array = []
+
 ## Hệ thống bếp, do level_base gán vào. Để rỗng thì bếp chỉ là đồ trang trí.
 var cooking: Node = null
 
@@ -239,6 +243,9 @@ func _on_interact(station: Node, _index: int) -> void:
 			# Thùng nguyên liệu SINH RA một vật phẩm mới mỗi lần bấm — kho
 			# nguyên liệu là vô hạn, đúng như đã chốt khi bỏ cơ chế rửa đĩa.
 			if _held == null:
+				if blocked_items.has(t.item_id):
+					notice.emit(Lang.t("Hết hàng!"), false)
+					return
 				_pick_up(_spawn_item(t.item_id))
 				ingredient_taken.emit(t.item_id, t.global_position)
 		"cutting_board":
@@ -356,6 +363,9 @@ func is_holding() -> bool:
 
 func receive_ingredient(station: Node, id: String) -> void:
 	if _held != null or id.is_empty():
+		return
+	if blocked_items.has(id):
+		notice.emit(Lang.t("Hết hàng!"), false)
 		return
 	_pick_up(_spawn_item(id))
 	# Bảng chọn gửi kèm chính cái trạm, nhờ vậy số tiền bay lên ở đúng cái tủ
@@ -631,6 +641,10 @@ func _put_on_table(table: Workstation) -> void:
 ## thời điểm. Không có luật này thì người chơi chất chồng món lên cùng một
 ## bàn và hệ đơn hàng sau này không biết món nào ứng với đơn nào.
 func _deliver_dish(table: Workstation) -> void:
+	# Asian Mode: bàn còn tiền khách để lại thì tay không bấm E là nhặt tiền.
+	if _held == null and table.has_meta("cash") and table.has_signal("cash_collected"):
+		table.emit_signal("cash_collected", table)
+		return
 	# Tay không: nhấc món đã đặt nhầm ra. Cần thiết vì đặt nhầm bàn là lỗi
 	# rất dễ mắc lúc đang vội, mà không lấy lại được thì mất luôn cả món lẫn
 	# thời gian đã bỏ ra làm nó.

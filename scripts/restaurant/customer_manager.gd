@@ -187,6 +187,28 @@ var vat_rate: float = 0.0
 ## không bao giờ kịp.
 var keep_queue_patience: bool = false
 
+## true trong lúc clear_all_customers() đang chạy. Những "left" phát ra lúc đó
+## là khách bị KĨ NĂNG cho về, không phải bỏ về — Asian đọc cờ này để không trừ mạng.
+var clearing_all: bool = false
+
+## Sự kiện Asian (event_director.gd) vặn hai núm này:
+##   ingredient_cost_factors — {id nguyên liệu: hệ số giá} (Xăng tăng)
+##   event_price_factor      — nhân vào giá đơn MỚI tạo (Review 1 sao)
+var ingredient_cost_factors: Dictionary = {}
+var event_price_factor: float = 1.0
+
+## Asian Mode — TIỀN ĐỂ TRÊN BÀN: khách ăn xong để tiền lại trên bàn thay vì
+## tự vào ví. Người chơi phải ra bấm E (tay không) để nhặt trong CASH_SECONDS
+## giây, không thì mất. Bàn còn tiền thì khách mới không được xếp vào.
+var money_on_table: bool = false
+const CASH_SECONDS := 20.0
+## Bàn -> {"amount", "left", "perfect", "label"}
+var _cash: Dictionary = {}
+
+## Khách VIP: kiên nhẫn bằng 60% bình thường, trả gấp 3 (tài liệu mục 3.6).
+const VIP_PATIENCE := 0.6
+const VIP_PAYOUT := 3.0
+
 ## Thưởng thêm khi giao lúc kiên nhẫn còn trên 50%. 0,35 = +35%.
 ##
 ## CHỐT 35% (9/9/2026). Vì sao không phải 20% như bản nháp: Hamburger 95 thành
@@ -370,6 +392,8 @@ func setup(map: Node3D) -> void:
 			b.dish_delivered.connect(_on_dish_delivered)
 		if b.has_signal("delivery_rejected"):
 			b.delivery_rejected.connect(_on_delivery_rejected)
+		if b.has_signal("cash_collected"):
+			b.cash_collected.connect(_on_cash_collected)
 
 	_bake_navmesh()
 	_spawn_timer = first_wait
@@ -540,7 +564,7 @@ func nav_stats() -> Array:
 
 # --------------------------------------------------------------- vòng đời khách
 
-func spawn_customer() -> Node:
+func spawn_customer(model_override: Dictionary = {}, is_vip: bool = false) -> Node:
 	if _door == null or _queue.is_empty():
 		push_warning("Map thiếu Markers/Entrance hoặc Markers/Queue1 — không sinh khách được.")
 		return null
@@ -550,6 +574,11 @@ func spawn_customer() -> Node:
 
 	var k := CUSTOMER_SCENE.instantiate()
 	k.add_to_group(CUSTOMER_GROUP)
+	# Gán TRƯỚC add_child: model được chọn trong _ready của khách.
+	if not model_override.is_empty():
+		k.forced_model = model_override
+	if is_vip:
+		k.set_meta("vip", true)
 	_map.add_child(k)
 	# Nắn chỗ sinh về navmesh rồi lệch ngẫu nhiên một chút: cửa vào nằm sát
 	# tường đông (x=31,5 so với tường x=32) nên điểm gốc rơi ra ngoài vùng đi
@@ -598,6 +627,7 @@ func _tables_full() -> bool:
 func _process(delta: float) -> void:
 	if _map == null or frozen:
 		return
+	_tick_cash(delta)
 
 	if auto_spawn:
 		_spawn_timer -= delta * time_scale
@@ -723,7 +753,7 @@ func _empty_table():
 		return null
 	var free := []
 	for b in _tables:
-		if not _customer_at.has(b):
+		if not _customer_at.has(b) and not _cash.has(b):
 			free.append(b)
 	if free.is_empty():
 		return null
@@ -807,6 +837,9 @@ func _on_dish_delivered(table: Node, dish_id: String) -> void:
 				order_.payout = int(round(order_.payout * float(entry[1])))
 				break
 
+	if order_.has_meta("vip"):
+		order_.payout = int(round(order_.payout * VIP_PAYOUT))
+
 	if bonus_payout_chance > 0.0 and randf() < bonus_payout_chance:
 		order_.payout = int(round(order_.payout * bonus_payout_multiplier))
 
@@ -888,6 +921,61 @@ func _speech_popup(customer: Node, text: String) -> void:
 	tw.finished.connect(label.queue_free)
 
 
+func _leave_cash(table: Node, amount: int, is_perfect: bool) -> void:
+	var label := Label3D.new()
+	label.font_size = 96
+	label.pixel_size = 0.004
+	label.modulate = Color("ffd76a")
+	label.outline_size = 20
+	label.billboard = BaseMaterial3D.BILLBOARD_ENABLED
+	label.no_depth_test = true
+	label.position = Vector3(0, 1.5, 0)
+	table.add_child(label)
+	table.set_meta("cash", amount)
+	_cash[table] = {"amount": amount, "left": CASH_SECONDS, "perfect": is_perfect, "label": label}
+	AmThanh.play_sfx("coin")
+
+
+func _tick_cash(delta: float) -> void:
+	for table in _cash.keys():
+		var c: Dictionary = _cash[table]
+		c["left"] -= delta
+		var lab: Label3D = c["label"]
+		if is_instance_valid(lab):
+			lab.text = "+%d  (%d)" % [int(c["amount"]), ceili(float(c["left"]))]
+		if c["left"] <= 0.0:
+			var lost := int(c["amount"])
+			_remove_cash(table)
+			# Mất tiền: hiện số đỏ ngay chỗ bàn để người chơi biết vừa để lỡ.
+			_money_popup(table.global_position, -lost, false)
+			if not _in_queue.is_empty() and _in_queue[0] != null:
+				_try_seat(_in_queue[0])
+
+
+func _on_cash_collected(table: Node) -> void:
+	if not _cash.has(table):
+		return
+	var c: Dictionary = _cash[table]
+	_remove_cash(table)
+	var amount := int(c["amount"])
+	money += amount
+	money_changed.emit(money, amount, table.global_position)
+	AmThanh.play_sfx("coin")
+	_money_popup(table.global_position, amount, bool(c["perfect"]))
+	# Bàn vừa trống: người đầu hàng có thể vào ngồi.
+	if not _in_queue.is_empty() and _in_queue[0] != null:
+		_try_seat(_in_queue[0])
+
+
+func _remove_cash(table: Node) -> void:
+	var c: Dictionary = _cash[table]
+	_cash.erase(table)
+	if is_instance_valid(c["label"]):
+		c["label"].queue_free()
+	if is_instance_valid(table):
+		table.remove_meta("cash")
+
+
 func _on_ate(customer: Node) -> void:
 	var table = _table_of.get(customer)
 	var dish_id := str(customer.get_meta("dish", ""))
@@ -900,6 +988,12 @@ func _on_ate(customer: Node) -> void:
 		if order_.payout > 0:
 			# Thuế (Asian). Làm tròn LÊN để đơn nhỏ vẫn chịu ít nhất 1 tiền thuế.
 			var net := order_.payout - int(ceil(order_.payout * vat_rate))
+			if money_on_table and table != null:
+				_leave_cash(table, net, order_.was_perfect)
+				customer_ate.emit(customer, table, dish_id)
+				if _door != null:
+					customer.go_to(_door.global_position, "leave")
+				return
 			money += net
 			var spot: Vector3 = table.global_position if table != null \
 				else customer.global_position
@@ -958,16 +1052,28 @@ func _place_order(customer: Node) -> void:
 	# ngẫu nhiên chứ không sinh ra một đơn không bao giờ giao được.
 	if not force_dish.is_empty() and available.has(force_dish):
 		picked = force_dish
+	# Khách VIP (sự kiện Asian): luôn gọi món KHÓ nếu thực đơn có.
+	var vip := customer.has_meta("vip")
+	if vip:
+		var hard: Array[String] = []
+		for d in available:
+			if ItemCatalog.difficulty(d) == "hard":
+				hard.append(d)
+		if not hard.is_empty():
+			picked = hard.pick_random()
 
 	var order_ := Order.new(customer, picked)
 	# Hệ số giá của màn. Nhân NGAY LÚC TẠO ĐƠN, không phải lúc trả tiền: con
 	# số trên tấm vé là con số người chơi sẽ nhận, và thưởng hoàn hảo (tính
 	# từ order_.price) tự ăn theo mà không cần biết có hệ số.
-	var factor := price_factor * skill_price_factor * float(dish_price_factors.get(picked, 1.0))
+	var factor := price_factor * skill_price_factor * event_price_factor \
+		* float(dish_price_factors.get(picked, 1.0))
 	if not is_equal_approx(factor, 1.0):
 		order_.price = maxi(1, int(round(order_.price * factor)))
 	# Gán hệ số TRƯỚC wait_in_queue(): hàm đó chốt ngân sách kiên nhẫn ngay tại chỗ.
-	order_.patience_factor = patience_factor
+	order_.patience_factor = patience_factor * (VIP_PATIENCE if vip else 1.0)
+	if vip:
+		order_.set_meta("vip", true)
 	order_.wait_in_queue(queue_patience)
 	order_.draining = drain_patience
 	_orders[customer] = order_
@@ -1230,6 +1336,8 @@ func charge_for_ingredient(id: String, at: Vector3) -> void:
 	var amount := ItemCatalog.cost(id)
 	if amount <= 0:
 		return
+	# Làm tròn LÊN: nguyên liệu 4 tiền tăng 20% thành 5, không lặng lẽ giữ 4.
+	amount = int(ceil(amount * float(ingredient_cost_factors.get(id, 1.0))))
 	money -= amount
 	money_changed.emit(money, -amount, at)
 	_money_popup(at, -amount, false)
@@ -1317,13 +1425,16 @@ func add_money(amount: int, spot: Vector3 = Vector3.ZERO) -> void:
 ## giao (xem _on_dish_delivered), chỉ còn chờ họ ăn hết. Kĩ năng ghi "giữ
 ## nguyên số tiền đã kiếm" — nuốt mất khoản đó là trái với chính câu mô tả.
 func clear_all_customers() -> void:
+	clearing_all = true
 	for customer in _orders.keys():
 		var order_: Order = _orders[customer]
 		if order_.payout > 0 and not order_.draining and is_instance_valid(customer) \
 				and customer.has_meta("dish"):
-			add_money(order_.payout, customer.global_position)
+			# Trừ thuế như mọi lần trả tiền khác (Asian; ở màn khác vat_rate = 0).
+			add_money(order_.payout - int(ceil(order_.payout * vat_rate)), customer.global_position)
 		order_finished.emit(order_, "left")
 	_orders.clear()
+	clearing_all = false
 
 	# Bàn có khách đang ăn thì dọn món đi; bàn trống giữ nguyên thứ người chơi
 	# đang để trên đó.

@@ -17,7 +17,9 @@ extends CanvasLayer
 ##   • (27/10) 8 đơn hoàn hảo THẬT liên tiếp hồi 1 mạng (tối đa 3).
 ##   • (27/10) Vứt đồ cháy vào thùng rác: trừ gấp đôi tiền nguyên liệu của nó.
 ## Bỏ hẳn: combo ngược (user bỏ 27/10).
-## Chưa có (đợt sau): sự kiện, Doro đói, kĩ năng bản Asian.
+##   • (27/10) Sự kiện ngẫu nhiên: event_director.gd (con của node này).
+## Chưa có (đợt sau): sự kiện có NPC (thanh tra, trộm chó, khách VIP), cúp điện,
+## Doro đói.
 ##
 ## Vì sao một node riêng (giống aaa_mode / endless_mode): luật của CHẾ ĐỘ
 ## không được rải "if asian" vào customer_manager hay cooking_system. Hai hệ
@@ -36,6 +38,7 @@ const STREAK_FOR_LIFE := 8
 const BURNT_PENALTY_FACTOR := 2
 
 const ItemCatalog := preload("res://scripts/interaction/item_catalog.gd")
+const Registry := preload("res://scripts/skills/skill_registry.gd")
 
 const COLOR_TEXT := Color(1, 1, 1)
 const COLOR_DIM := Color(0.78, 0.74, 0.69)
@@ -54,6 +57,10 @@ var _streak := 0
 ## Tiền đổi cho mỗi mạng hồi VƯỢT tối đa. 0 = bỏ phần dư (mặc định). Kĩ năng
 ## Aura farming của Gold Ship sẽ đặt 250 (bước kĩ năng Asian).
 var overflow_life_money := 0
+## Chuỗi hồi mạng có tính đơn được kĩ năng ÉP hoàn hảo không (Aura farming).
+var _streak_counts_forced := false
+var _max_lives := START_LIVES
+var _events: Node
 
 
 func setup(level: Node, customers: Node, clock: Node, cooking: Node, picker: Node,
@@ -65,9 +72,16 @@ func setup(level: Node, customers: Node, clock: Node, cooking: Node, picker: Nod
 	_picker = picker
 	layer = 6
 
+	# Luật riêng của nhân vật ở Asian (Gold Ship): đọc từ chính bộ bị động của
+	# họ, đã trộn bản Asian (skill_registry).
+	var p := Registry.passive(String(GameData.selected_character))
+	lives = int(p.get("start_lives", START_LIVES))
+	overflow_life_money = int(p.get("overflow_life_money", 0))
+	_streak_counts_forced = bool(p.get("streak_counts_forced", false))
 	_customers.vat_rate = VAT_RATE
 	_customers.wrong_dish_leaves = true
 	_customers.keep_queue_patience = true
+	_customers.money_on_table = true
 	if hands != null and hands.has_signal("item_discarded"):
 		hands.item_discarded.connect(_on_item_discarded)
 	# Vốn: cộng qua add_money() để ví trên HUD cập nhật bằng đúng đường tín
@@ -77,6 +91,12 @@ func setup(level: Node, customers: Node, clock: Node, cooking: Node, picker: Nod
 	_customers.money_changed.connect(_on_money_changed)
 	_customers.order_finished.connect(_on_order_finished)
 	_build_ui()
+	var cls := load("res://scripts/modes/asian/event_director.gd") as GDScript
+	if cls != null:
+		_events = cls.new()
+		_events.name = "EventDirector"
+		add_child(_events)
+		_events.setup(level, customers, clock, hands)
 
 
 ## Thời gian đã trụ được (giây).
@@ -104,7 +124,7 @@ func _on_order_finished(order_: RefCounted, reason: String) -> void:
 	if reason == "served":
 		# Chuỗi chỉ đếm hoàn hảo THẬT: đơn được kĩ năng ép hoàn hảo không
 		# tính, nếu không bật Victory Cheer! xong là hồi mạng liên tục.
-		if bool(order_.truly_perfect):
+		if bool(order_.truly_perfect) or (_streak_counts_forced and bool(order_.was_perfect)):
 			_streak += 1
 			if _streak >= STREAK_FOR_LIFE:
 				_streak = 0
@@ -114,8 +134,17 @@ func _on_order_finished(order_: RefCounted, reason: String) -> void:
 		return
 	if reason != "left":
 		return
+	# Khách bị kĩ năng cho về (Chiyono O) không phải "bỏ về".
+	if bool(_customers.clearing_all):
+		return
 	_streak = 0
 	lives -= 1
+	# Khách VIP bỏ về mất 2 mạng.
+	if order_.has_meta("vip"):
+		lives -= 1
+	# Review 1 sao: tự bật mỗi lần mất một khách (không bốc ngẫu nhiên).
+	if _events != null and lives > 0:
+		_events.trigger("review")
 	_draw_lives(true)
 	if lives <= 0:
 		_lose(Lang.t("Thua: hết mạng."))
@@ -211,8 +240,16 @@ func _process(delta: float) -> void:
 		_customers.add_money(-n)
 
 
+## Thua từ bên ngoài (sự kiện thanh tra, trộm chó).
+func lose(note: String) -> void:
+	if not _ended:
+		_lose(note)
+
+
 func _lose(note: String) -> void:
 	_ended = true
+	if _events != null:
+		_events.stop_all()
 	# Gọi trễ một khung hình: hàm này có thể chạy GIỮA lúc customer_manager
 	# đang phát tín hiệu, mà _end_level dừng cả cây scene.
 	_level.call_deferred("_end_level", "", note)
