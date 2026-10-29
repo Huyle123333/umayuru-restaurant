@@ -202,6 +202,8 @@ var event_price_factor: float = 1.0
 ## giây, không thì mất. Bàn còn tiền thì khách mới không được xếp vào.
 var money_on_table: bool = false
 const CASH_SECONDS := 20.0
+const CASH_ICON := "res://assets/ui/tien/carrot_tien.png"
+const CASH_ICON_HEIGHT := 0.7
 ## Bàn -> {"amount", "left", "perfect", "label"}
 var _cash: Dictionary = {}
 
@@ -929,8 +931,30 @@ func _leave_cash(table: Node, amount: int, is_perfect: bool) -> void:
 	label.outline_size = 20
 	label.billboard = BaseMaterial3D.BILLBOARD_ENABLED
 	label.no_depth_test = true
-	label.position = Vector3(0, 1.5, 0)
+	# Đặt lệch về phía camera (z+) để không đè lên số bàn ở giữa mặt bàn;
+	# canh trái để icon đứng cố định ngay trước chữ dù số tiền dài hay ngắn.
+	label.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
+	label.position = Vector3(-0.9, 1.5, 1.4)
 	table.add_child(label)
+	# Icon cà rốt (đồng tiền của game, cùng ảnh với ví trên HUD) đứng ngay trước
+	# con số. Chỉ có chữ "+80 (12)" thì người chơi dễ đọc nhầm thành số bàn hay
+	# số giây chờ; thêm đúng cái icon họ đã quen ở góc ví là nhận ra ngay "đây
+	# là TIỀN, ra nhặt đi". Gắn làm con của label nên _remove_cash xoá label là
+	# icon đi theo, không cần quản lý riêng.
+	if ResourceLoader.exists(CASH_ICON):
+		var icon := Sprite3D.new()
+		icon.texture = load(CASH_ICON)
+		icon.billboard = BaseMaterial3D.BILLBOARD_ENABLED
+		icon.no_depth_test = true
+		icon.render_priority = 1
+		icon.pixel_size = CASH_ICON_HEIGHT / float(icon.texture.get_height())
+		icon.position = Vector3(-0.4, 0.0, 0)
+		label.add_child(icon)
+		# Nhún nhẹ để hút mắt — tiền có hạn 20 giây, đứng yên thì
+		# dễ lẫn vào cảnh.
+		var tw := icon.create_tween().set_loops()
+		tw.tween_property(icon, "position:y", 0.12, 0.5).set_trans(Tween.TRANS_SINE)
+		tw.tween_property(icon, "position:y", 0.0, 0.5).set_trans(Tween.TRANS_SINE)
 	table.set_meta("cash", amount)
 	_cash[table] = {"amount": amount, "left": CASH_SECONDS, "perfect": is_perfect, "label": label}
 	AmThanh.play_sfx("coin")
