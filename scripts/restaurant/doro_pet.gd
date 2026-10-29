@@ -376,6 +376,9 @@ func _set_anim(anim_name: String) -> void:
 ## (idle, walk), không có clip "ăn". Một cú nảy 0,18 giây đủ để người chơi biết
 ## thao tác đã ăn — mà đó mới là việc cần làm, không phải diễn cho đẹp.
 func _on_fed(_station: Node, _index: int) -> void:
+	# (29/10/2026) Doro kêu mỗi lần được tương tác. Lệch cao độ ngẫu nhiên một
+	# chút để bấm liên tục không nghe như một đoạn băng lặp lại.
+	AmThanh.play_sfx("doro", randf_range(0.95, 1.08))
 	if _escaping:
 		stop_escape()
 	if _body == null:

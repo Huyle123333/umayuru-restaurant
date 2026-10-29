@@ -49,6 +49,7 @@ const FILE_NAMES := {
 	"pick_up":       "pick_up",        # nhấc một vật lên
 	"put_down":      "drop_out",       # đặt vật lên bàn / trạm
 	"trash":         "bin_or_pet",     # vứt đồ vào thùng rác bocchi
+	"doro":          "doro_voice",     # tiếng Doro kêu khi được tương tác / khi đói
 	"craft_ok":      "craft_success",  # bàn chế tạo ráp thành món
 	"craft_fail":    "nope_click",     # bấm F mà không thành món nào
 	"serve":         "serve_dish",     # giao đúng món cho khách
