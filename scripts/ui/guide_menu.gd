@@ -268,12 +268,31 @@ func _paragraph(text_: String) -> Control:
 	t.add_theme_font_size_override("normal_font_size", 18)
 	t.add_theme_font_size_override("bold_font_size", 18)
 	t.add_theme_color_override("default_color", COLOR_TEXT)
+	# Font chữ của game KHÔNG có bản Bold riêng, nên Godot tự "giả đậm" [b]
+	# bằng cách tô dày nét rất mạnh: ở cỡ 18 các nét dính vào nhau, chữ bị bệt
+	# thành khối tối như tô đen. Tự tạo bản đậm từ CHÍNH font thường với độ tô
+	# nhẹ (0.4) — vẫn thấy rõ là in đậm mà mặt chữ không bị nhoè.
+	t.add_theme_font_override("bold_font", _bold_font())
 	# Bề rộng tối thiểu là BẮT BUỘC với mọi nhãn có xuống dòng tự động: không
 	# có nó thì Godot tính chiều cao ở bề rộng 0 — mỗi chữ một dòng — và value
 	# một chiều cao khổng lồ kéo cả trang dài value vô tận.
 	t.custom_minimum_size = Vector2(FRAME_WIDTH - LEFT_COL_WIDTH - 160.0, 0)
 	t.text = text_
 	return t
+
+
+var _bold_cache: FontVariation = null
+
+
+func _bold_font() -> FontVariation:
+	if _bold_cache == null:
+		_bold_cache = FontVariation.new()
+		_bold_cache.base_font = ThemeDB.fallback_font if ThemeDB.get_project_theme() == null \
+				else ThemeDB.get_project_theme().default_font
+		if _bold_cache.base_font == null:
+			_bold_cache.base_font = ThemeDB.fallback_font
+		_bold_cache.variation_embolden = 0.4
+	return _bold_cache
 
 
 func _key_hint(list: Array) -> Control:
@@ -312,9 +331,17 @@ func _add_image(path: String, text_: String) -> void:
 
 	var img := TextureRect.new()
 	img.texture = texture
-	img.expand_mode = TextureRect.EXPAND_FIT_WIDTH_PROPORTIONAL
+	# Đặt KÍCH THƯỚC CỐ ĐỊNH theo tỉ lệ ảnh. Trước đây dùng FIT_WIDTH_PROPORTIONAL
+	# với min size 0: chế độ đó suy BỀ RỘNG từ CHIỀU CAO, mà trong VBox chiều
+	# cao của ảnh lại bằng 0 -> ảnh co về 0x0, tức là "có ảnh mà không thấy".
+	# Ảnh nhỏ giữ nguyên cỡ thật (phóng to sẽ vỡ), ảnh lớn thu về bề rộng cột.
+	var max_w := FRAME_WIDTH - LEFT_COL_WIDTH - 200.0
+	var w := minf(float(texture.get_width()), max_w)
+	var h := w * float(texture.get_height()) / float(texture.get_width())
+	img.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 	img.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
-	img.custom_minimum_size = Vector2(0, 0)
+	img.custom_minimum_size = Vector2(w, h)
+	img.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
 	_content_col.add_child(img)
 
 	if not text_.is_empty():

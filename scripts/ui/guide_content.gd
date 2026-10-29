@@ -35,22 +35,27 @@ const SECTIONS := [
 		"name": "Giao diện",
 		"blocks": [
 			{"p": "Màn hình chia làm bốn góc, mỗi góc trả lời một câu hỏi khác nhau. Biết góc nào trả lời câu gì thì không phải quét cả màn hình."},
+			{"img": IMAGE_DIR + "tong_quan.png", "caption": "Toàn cảnh một màn đang chơi"},
 
-			{"h": "Bên trái — Bảng đơn hàng"},
+			{"h": "Góc trên trái — Bảng đơn hàng"},
 			{"p": "Mỗi tấm vé là một khách [b]đang ngồi bàn[/b]: ảnh món, tên món, giá, [b]số bàn[/b] và bar kiên nhẫn. Vé xếp theo kiên nhẫn còn lại nên [b]vé trên cùng luôn là việc gấp nhất[/b].\n\nBấm [b]1[/b] để đẩy bảng vào cho rộng tầm nhìn. Lúc đóng vẫn còn một cái nhãn nhỏ ở mép trái cho biết đang có mấy đơn, và viền nhãn mang màu của đơn gấp nhất."},
-			{"img": IMAGE_DIR + "bang_don_hang.png", "caption": "Bảng đơn hàng và cái nhãn khi đóng"},
+			{"img": IMAGE_DIR + "bang_don_hang.png", "caption": "Mỗi vé: món, số bàn, giá và bar kiên nhẫn"},
 
 			{"h": "Góc trên phải — Đồng hồ và ví"},
 			{"p": "Thời gian còn lại của màn, và tổng tiền đã kiếm. Dưới 30 giây thì đồng hồ chuyển đỏ. Trong màn hướng dẫn đồng hồ hiện [b]--:--[/b] vì màn đó không tính giờ."},
+			{"img": IMAGE_DIR + "dong_ho.png", "caption": "Thời gian còn lại, tiền và mốc hạng kế tiếp"},
 
 			{"h": "Đáy giữa — Danh sách trạm trong tầm"},
 			{"p": "Những thứ bạn [b]bấm được ngay lúc này[/b], kèm phím tương ứng. Đứng giữa nhiều trạm thì bấm [b]Tab[/b] để đổi mục tiêu, hoặc nhắm thẳng bằng tâm ngắm ở góc nhìn thứ ba."},
+			{"img": IMAGE_DIR + "danh_sach_tram.png", "caption": "Trạm trong tầm và phím để dùng nó"},
 
 			{"h": "Thanh tiến trình — nổi trên từng trạm"},
 			{"p": "Mỗi trạm đang chạy có [b]bar riêng[/b] nổi ngay trên nó: hai cái bếp, lò nướng và thớt. Nhìn bar là biết luôn nó của trạm nào, không phải đọc chữ.\n\nĐi xa thì bar [b]không biến mất[/b] mà bị kẹp lại ở mép màn hình — bar nằm ở mép trái nghĩa là cái trạm đó đang ở bên trái bạn.\n\n[color=#f08a33]Cam, đầy dần[/color] — đang nấu.\n[color=#c4433a]Đỏ, vơi dần[/color] — món đã chín và đang chờ trên bếp, vơi hết là [b]cháy[/b]. Nhấp nháy nghĩa là sắp cháy tới nơi."},
+			{"img": IMAGE_DIR + "tram_bep.png", "caption": "Bếp, lò nướng, chồng đĩa và chồng nồi — bar cam nổi trên trạm đang chạy"},
 
 			{"h": "Góc dưới trái — Bản thân bạn"},
 			{"p": "Thanh thể lực, thứ đang cầm trên tay, và biểu tượng kĩ năng chủ động. Biểu tượng xám nghĩa là chưa đủ điều kiện dùng."},
+			{"img": IMAGE_DIR + "ban_than.png", "caption": "Kĩ năng chủ động và thanh thể lực"},
 
 			{"h": "Phím"},
 			{"key_label": [
@@ -77,7 +82,7 @@ const SECTIONS := [
 		"blocks": [
 			{"h": "Một người khách đi qua bốn chặng"},
 			{"p": "[b]1. Xếp hàng.[/b] Khách vào cửa và đứng vào hàng đợi. Món họ muốn hiện ngay trong bong bóng trên đầu, kể cả khi chưa có bàn nào trống — nhìn cái hàng là biết công việc sắp tới.\n\n[b]2. Ngồi bàn.[/b] Có bàn trống thì người đầu hàng đi vào ngồi. Lúc này tấm vé của họ hiện ra ở bảng bên trái, kèm số bàn.\n\n[b]3. Ăn.[/b] Giao đúng món là xong đơn — tiền đã được chốt ngay lúc đó. Họ ngồi ăn thêm vài giây, và trong lúc đó cái bàn vẫn bị chiếm.\n\n[b]4. Về.[/b] Số tiền bay lên ở chỗ cái bàn, rồi khách đi ra cửa và trả lại bàn."},
-			{"img": IMAGE_DIR + "vong_doi_khach.png", "caption": "Bong bóng đơn trên đầu khách xếp hàng"},
+			{"img": IMAGE_DIR + "vong_doi_khach.png", "caption": "Khách vào ngồi; số trên bàn khớp với số trên vé"},
 
 			{"h": "Hai bar kiên nhẫn, hai chỗ khác nhau"},
 			{"p": "[b]Lúc xếp hàng[/b] — bar nằm trong bong bóng trên đầu khách, [b]45 giây[/b] cho mọi món. Cố định chứ không theo món, vì lúc này khách chưa được phục vụ gì cả nên thời gian chờ dài ngắn theo món là thứ bạn không đoán được.\n\n[b]Lúc ngồi bàn[/b] — bar nằm trên tấm vé, và [b]dài ngắn theo món[/b]: món càng lâu làm thì khách càng kiên nhẫn. Ngồi được vào bàn là bar [b]nạp đầy lại[/b], không mang theo phần đã chờ ở cửa."},
@@ -139,8 +144,8 @@ const SECTIONS := [
 			{"h": "Nồi"},
 			{"p": "Cái nồi là một [b]nguyên liệu bình thường[/b], lấy vô hạn ở chồng nồi y như lấy đĩa ở chồng đĩa. Nó không có luật riêng nào cả.\n\nBa bước làm canh: lấy nồi rỗng → bỏ lên [b]bàn chế tạo[/b] cùng bốn thứ rau củ rồi bấm [b]F[/b] → đặt [b]nồi canh[/b] lên bếp. Nấu xong ra món canh, mang thẳng ra bàn khách."},
 
-			{"h": "Máng bỏ đồ và Doro"},
-			{"p": "Bấm [b]E[/b] để vứt thứ đang cầm. [b]Không có ngoại lệ nào[/b] — mọi thứ đều vứt được, kể cả cái nồi, vì mọi thứ đều lấy lại được.\n\n[b]Doro[/b] — con thú cưng đi lang thang ngoài khu khách — cũng ăn đồ y hệt cái máng. Tiện hơn khi bạn đang đứng xa bếp. Bấm [b]E[/b] lúc tay không thì chỉ là vuốt ticket nó."},
+			{"h": "Thùng rác và Doro"},
+			{"p": "Bấm [b]E[/b] để vứt thứ đang cầm. [b]Không có ngoại lệ nào[/b] — mọi thứ đều vứt được, kể cả cái nồi, vì mọi thứ đều lấy lại được.\n\n[b]Doro[/b] — con thú cưng đi lang thang ngoài khu khách — cũng ăn đồ y hệt thùng rác. Tiện hơn khi bạn đang đứng xa bếp. Bấm [b]E[/b] lúc tay không thì chỉ là vuốt ticket nó."},
 
 			{"h": "Bàn chế tạo"},
 			{"p": "[b]E[/b] đặt xuống · [b]F[/b] ráp · [b]E[/b] tay không nhấc lại thứ cuối cùng. Bảng bên cạnh bàn liệt kê những gì đang có."},
@@ -168,6 +173,30 @@ const SECTIONS := [
 
 			{"h": "Muốn lên hạng thì làm gì"},
 			{"p": "Ba đòn bẩy, theo thứ tự dễ trước:\n\n[b]1. Bớt khách bỏ đi.[/b] Một khách bỏ đi là mất trọn giá món cộng cả thời gian đã bỏ ra làm nó.\n[b]2. Nhắm vạch trắng.[/b] Thêm 35% mỗi đơn cộng dồn nhanh hơn vẻ ngoài.\n[b]3. Làm gối đầu.[/b] Bếp và lò chạy nền trong lúc bạn đi chỗ khác — đứng nhìn bar tiến trình là đang lãng phí thứ đắt nhất."},
+		],
+	},
+
+	# ═════════════════════════════════════════════════════════ CHẾ ĐỘ CHƠI ══
+	# Ba chế độ ngoài cốt truyện. Asian khoá F1 khi đang trong màn (cố ý: chế
+	# độ khó nhất không cho tra cứu giữa chừng), nên trang này là chỗ DUY NHẤT
+	# người chơi đọc được luật của nó — phải đọc ở menu trước khi vào.
+	{
+		"id": "modes",
+		"name": "Chế độ chơi",
+		"blocks": [
+			{"p": "Ngoài các ngày trong cốt truyện còn ba chế độ riêng, mở ở nút [b]Chế độ[/b] trong màn chọn màn."},
+
+			{"h": "AAA Mode"},
+			{"p": "Sẽ ra sao nếu UMAYURU RESTAURANT được đầu tư bởi các hãng game lớn? Một màn chơi châm biếm: trạm bị khoá chờ mua DLC, nhiệm vụ dẫn đường từng bước và đủ thứ \"tính năng\" quen thuộc. Chỉ có một màn."},
+
+			{"h": "Endless Mode"},
+			{"p": "Chơi tới khi đồng hồ về 0.\n\n[b]Bắt đầu với 2:30.[/b] Mỗi đơn giao đúng [b]+15 giây[/b], đơn hoàn hảo [b]+25 giây[/b]. Khách đang ngồi mà bỏ về thì [b]−10 giây[/b].\n\nCứ [b]3 phút[/b] độ khó lên một bậc: món khó hơn, khách vào dày hơn.\n\nBảng xếp hạng tính theo [b]doanh thu[/b]; thời gian trụ được chỉ là thông tin thêm."},
+
+			{"h": "Asian Mode"},
+			{"p": "Chế độ khó nhất. [b]10 phút[/b], toàn bộ thực đơn, và [b]không mở được F1[/b] trong màn — đọc kĩ ở đây trước khi vào."},
+			{"p": "[b]Mạng:[/b] bắt đầu với [b]3 mạng[/b]. Mỗi khách bỏ về mất 1 mạng (khách VIP mất 2). Phục vụ liền [b]8 đơn[/b] không để ai bỏ về thì hồi 1 mạng. Hết mạng là thua.\n\n[b]Tiền:[/b] vốn [b]200[/b]. Nguyên liệu tốn tiền, bếp/lò/tủ lạnh tốn phí theo giây khi chạy, mỗi đơn bị trừ [b]10% thuế[/b], đồ cháy phạt gấp đôi giá nguyên liệu. Tiền về 0 là [b]phá sản[/b].\n\n[b]Tiền để trên bàn[/b]: khách ăn xong để tiền lại trên bàn, phải ra bàn bấm [b]E[/b] thu trong [b]20 giây[/b], không thì mất."},
+			{"p": "[b]Sự kiện[/b] bắt đầu từ phút thứ hai, báo trước 5 giây, về cuối có thể dồn hai cái cùng lúc:\n\n[b]Thanh tra[/b] — đứng ở cửa bếp; nguyên liệu hay món nào nằm dưới sàn [b]trong khu bếp[/b] là thua ngay. Đặt ngoài bếp thì không sao.\n[b]Chó trộm[/b] — Doro tự đi về phía cửa; chạy tới bấm [b]E[/b] vào Doro để giữ lại, để Doro ra tới cửa là thua.\n[b]Khách VIP[/b] — món khó, ít kiên nhẫn, trả gấp ba.\n[b]Mất điện[/b] — màn hình tối dần ở rìa.\n[b]Doro đói[/b] — 15 giây để cho Doro ăn một món, không kịp thì mọi khách đang có mặt bỏ về và mỗi người mất 1 mạng.\nCùng các sự kiện nhỏ: tăng giá gas, đầu bếp mệt, giờ cao điểm, sàn trơn, trời mưa, hết hàng, bị đánh giá xấu."},
+			{"p": "Kĩ năng nhân vật trong Asian được chỉnh riêng — xem mô tả ở màn chọn nhân vật khi đã chọn Asian."},
 		],
 	},
 ]
