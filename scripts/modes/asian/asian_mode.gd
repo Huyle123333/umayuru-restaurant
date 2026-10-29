@@ -59,7 +59,6 @@ var _streak := 0
 var overflow_life_money := 0
 ## Chuỗi hồi mạng có tính đơn được kĩ năng ÉP hoàn hảo không (Aura farming).
 var _streak_counts_forced := false
-var _max_lives := START_LIVES
 var _events: Node
 
 
