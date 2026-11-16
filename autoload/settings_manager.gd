@@ -42,7 +42,9 @@ var fullscreen := false
 ## ngôn ngữ mình không đọc được vẫn nhận ra dòng của mình mà quay lại.
 const LANGUAGES := [
 	{"code": "vi", "name": "Tiếng Việt"},
-	{"code": "en", "name": "English"},
+	# Ghi rõ "(AI translate)": bản tiếng Anh do AI dịch, chưa qua người bản
+	# ngữ duyệt — nói trước để người chơi không tưởng là bản dịch chính thức.
+	{"code": "en", "name": "English (AI translate)"},
 ]
 const DEFAULT_LANGUAGE := "vi"
 
@@ -220,13 +222,13 @@ const REBINDABLE := [
 	{"action": "move_right", "label": "KEY_MOVE_RIGHT"},
 	{"action": "interact", "label": "KEY_INTERACT"},
 	{"action": "assemble", "label": "KEY_ASSEMBLE"},
-	{"action": "drop_item", "label": "KEY_DROP"},
 	{"action": "dash", "label": "KEY_DASH"},
 	{"action": "skill", "label": "KEY_SKILL"},
 	{"action": "cycle_target", "label": "KEY_CYCLE_TARGET"},
 	{"action": "cancel_menu", "label": "KEY_CANCEL_MENU"},
 	{"action": "toggle_orders", "label": "KEY_TOGGLE_ORDERS"},
-	{"action": "toggle_menu", "label": "KEY_TOGGLE_MENU"},
+	# (16/11/2026) Bỏ "toggle_menu" (phím 2) khỏi bảng đổi phím: bảng thực đơn
+	# không còn, công thức in trên vé đơn hàng.
 	{"action": "skill_alt", "label": "KEY_SKILL_ALT"},
 ]
 

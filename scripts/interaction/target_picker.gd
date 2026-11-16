@@ -98,10 +98,17 @@ func _build_candidates() -> void:
 	_candidates.clear()
 
 	var center_pos := global_position
+	var seen := {}
 	for body in _probe_collisions():
 		var station := body as Workstation
-		if station == null:
+		if station != null and station.has_reach():
+			# Trạm có vùng tương tác riêng: chạm khối vật lý KHÔNG tính.
 			continue
+		if station == null and body is Node and (body as Node).name == "Reach":
+			station = (body as Node).get_parent() as Workstation
+		if station == null or seen.has(station):
+			continue
+		seen[station] = true
 		var v := station.aim_position() - center_pos
 		var angle := atan2(v.x, v.z)
 		for i in station.target_count():
@@ -270,7 +277,26 @@ func _find_choice() -> int:
 
 # ---------------------------------------------------------------- nhập ---
 
+## Khoá mọi tương tác (E/F/Tab). Màn hướng dẫn bật trong lúc người chơi chưa
+## được dạy gì — nhặt được đồ mà chưa biết vứt ở đâu thì kẹt tay ngay bước đầu.
+var locked := false
+
+## Màn hướng dẫn: chỉ cho bấm vào các loại trạm trong danh sách này (rỗng =
+## không giới hạn). Bấm trạm khác thì phát `blocked` để màn hướng dẫn nhắc.
+var allowed_kinds: Array = []
+signal blocked(station: Node)
+
+
+func _allowed(station: Workstation) -> bool:
+	if allowed_kinds.is_empty() or allowed_kinds.has(String(station.kind)):
+		return true
+	blocked.emit(station)
+	return false
+
+
 func _unhandled_input(event: InputEvent) -> void:
+	if locked:
+		return
 	if _candidates.is_empty():
 		return
 
@@ -317,6 +343,8 @@ func _activate() -> void:
 	if _selected < 0 or _selected >= _candidates.size():
 		return
 	var m := _candidates[_selected]
+	if not _allowed(m["station"] as Workstation):
+		return
 	(m["station"] as Workstation).interact(m["index"])
 
 
@@ -324,6 +352,8 @@ func _activate_alt() -> void:
 	if _selected < 0 or _selected >= _candidates.size():
 		return
 	var m := _candidates[_selected]
+	if not _allowed(m["station"] as Workstation):
+		return
 	(m["station"] as Workstation).interact_alt(m["index"])
 
 

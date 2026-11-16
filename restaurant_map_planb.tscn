@@ -30,6 +30,9 @@
 [ext_resource type="PackedScene" uid="uid://dr06c6stvx8wi" path="res://assets/gltf/table_round_A.gltf" id="29_nu63k"]
 [ext_resource type="Script" uid="uid://b6tuyh33rtbwm" path="res://scripts/interaction/workstation.gd" id="30_tram"]
 [ext_resource type="Script" uid="uid://dypk2j6rjr26h" path="res://scripts/restaurant/dining_table.gd" id="31_ban"]
+[ext_resource type="PackedScene" path="res://assets/gltf/kitchencounter_straight_A_styleB.gltf" id="40_counter"]
+[ext_resource type="PackedScene" path="res://assets/gltf/crate.gltf" id="41_crate"]
+[ext_resource type="PackedScene" path="res://assets/gltf/crate_lid.gltf" id="42_cratelid"]
 
 [sub_resource type="CapsuleShape3D" id="Cap_player"]
 radius = 0.45
@@ -49,17 +52,24 @@ _bundled = {
 }
 
 [sub_resource type="BoxMesh" id="Mesh_San"]
-size = Vector3(32, 0.5, 24)
+size = Vector3(32, 0.5, 28)
 
 [sub_resource type="StandardMaterial3D" id="Mat_San"]
 albedo_color = Color(0.803922, 0.72549, 0.596078, 1)
 roughness = 0.95
 
 [sub_resource type="BoxShape3D" id="Shape_San"]
-size = Vector3(32, 0.5, 24)
+size = Vector3(32, 0.5, 28)
 
 [sub_resource type="PlaneMesh" id="Mesh_SanBep"]
-size = Vector2(16, 12)
+size = Vector2(16, 16)
+
+[sub_resource type="PlaneMesh" id="Mesh_SanSau"]
+size = Vector2(16, 4)
+
+[sub_resource type="StandardMaterial3D" id="Mat_SanSau"]
+albedo_color = Color(0.36, 0.33, 0.3, 1)
+roughness = 1.0
 
 [sub_resource type="Shader" id="Shader_CaRo"]
 code = "shader_type spatial;
@@ -159,8 +169,17 @@ size = Vector3(2, 0.9, 2)
 [sub_resource type="BoxShape3D" id="Shape_TuLanh"]
 size = Vector3(2, 2.5, 2.24)
 
+[sub_resource type="BoxShape3D" id="Shape_BepHep"]
+size = Vector3(1.4, 1.21, 2.29)
+
+[sub_resource type="BoxShape3D" id="Shape_LoHep"]
+size = Vector3(1.5, 1.449, 2.289)
+
 [sub_resource type="BoxShape3D" id="Shape_Bep"]
 size = Vector3(2, 1.21, 2.29)
+
+[sub_resource type="BoxShape3D" id="Shape_LoPizza2"]
+size = Vector3(2.1, 1.449, 2.290)
 
 [sub_resource type="BoxShape3D" id="Shape_LoPizza"]
 size = Vector3(3, 2.07, 2.35)
@@ -170,6 +189,9 @@ size = Vector3(3, 1, 2)
 
 [sub_resource type="BoxShape3D" id="Shape_QuayTT"]
 size = Vector3(2.01, 2.1, 2.26)
+
+[sub_resource type="BoxShape3D" id="Shape_Counter"]
+size = Vector3(1.4, 1, 1.4)
 
 [sub_resource type="BoxShape3D" id="Shape_QuayGoc"]
 size = Vector3(2, 1, 2)
@@ -194,23 +216,28 @@ player_scene = SubResource("PackedScene_yqu5o")
 [node name="San" type="StaticBody3D" parent="."]
 
 [node name="MatSan" type="MeshInstance3D" parent="San"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 16, -0.25, 12)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 16, -0.25, 10)
 mesh = SubResource("Mesh_San")
 surface_material_override/0 = SubResource("Mat_San")
 
 [node name="VaCham" type="CollisionShape3D" parent="San"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 16, -0.25, 12)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 16, -0.25, 10)
 shape = SubResource("Shape_San")
 
 [node name="SanBep" type="MeshInstance3D" parent="San"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 8, 0.01, 6)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 8, 0.01, 4)
 mesh = SubResource("Mesh_SanBep")
 surface_material_override/0 = SubResource("Mat_SanBep")
+
+[node name="SanSau" type="MeshInstance3D" parent="San"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 24, 0.01, -2)
+mesh = SubResource("Mesh_SanSau")
+surface_material_override/0 = SubResource("Mat_SanSau")
 
 [node name="Tuong" type="Node3D" parent="."]
 
 [node name="Bac0" type="StaticBody3D" parent="Tuong"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2, 0, 0)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2, 0, -4)
 
 [node name="Mesh" parent="Tuong/Bac0" instance=ExtResource("5_wall")]
 
@@ -219,7 +246,7 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2, 0)
 shape = SubResource("Shape_Tuong")
 
 [node name="Bac1" type="StaticBody3D" parent="Tuong"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 6, 0, 0)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 6, 0, -4)
 
 [node name="Mesh" parent="Tuong/Bac1" instance=ExtResource("5_wall")]
 
@@ -228,7 +255,7 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2, 0)
 shape = SubResource("Shape_Tuong")
 
 [node name="Bac2" type="StaticBody3D" parent="Tuong"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 10, 0, 0)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 10, 0, -4)
 
 [node name="Mesh" parent="Tuong/Bac2" instance=ExtResource("5_wall")]
 
@@ -237,7 +264,7 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2, 0)
 shape = SubResource("Shape_Tuong")
 
 [node name="Bac3" type="StaticBody3D" parent="Tuong"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 14, 0, 0)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 14, 0, -4)
 
 [node name="Mesh" parent="Tuong/Bac3" instance=ExtResource("5_wall")]
 
@@ -533,6 +560,70 @@ cast_shadow = 0
 mesh = SubResource("Mesh_TuongKinh")
 surface_material_override/0 = SubResource("Mat_TuongKinh")
 
+
+[node name="TayBac" type="StaticBody3D" parent="Tuong"]
+transform = Transform3D(0, 0, -1, 0, 1, 0, 1, 0, 0, 0, 0, -2)
+
+[node name="Mesh" parent="Tuong/TayBac" instance=ExtResource("5_wall")]
+
+[node name="Col" type="CollisionShape3D" parent="Tuong/TayBac"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2, 0)
+shape = SubResource("Shape_Tuong")
+
+[node name="BepSauNgan" type="StaticBody3D" parent="Tuong"]
+transform = Transform3D(0, 0, -1, 0, 1, 0, 1, 0, 0, 16.25, 0, -2)
+
+[node name="Mesh" parent="Tuong/BepSauNgan" instance=ExtResource("5_wall")]
+
+[node name="Col" type="CollisionShape3D" parent="Tuong/BepSauNgan"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2, 0)
+shape = SubResource("Shape_Tuong")
+
+[node name="SauDong" type="StaticBody3D" parent="Tuong"]
+transform = Transform3D(0, 0, -1, 0, 1, 0, 1, 0, 0, 32, 0, -2)
+
+[node name="Mesh" parent="Tuong/SauDong" instance=ExtResource("5_wall")]
+
+[node name="Col" type="CollisionShape3D" parent="Tuong/SauDong"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2, 0)
+shape = SubResource("Shape_Tuong")
+
+[node name="SauBac0" type="StaticBody3D" parent="Tuong"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 18, 0, -4)
+
+[node name="Mesh" parent="Tuong/SauBac0" instance=ExtResource("5_wall")]
+
+[node name="Col" type="CollisionShape3D" parent="Tuong/SauBac0"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2, 0)
+shape = SubResource("Shape_Tuong")
+
+[node name="SauBac1" type="StaticBody3D" parent="Tuong"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 22, 0, -4)
+
+[node name="Mesh" parent="Tuong/SauBac1" instance=ExtResource("5_wall")]
+
+[node name="Col" type="CollisionShape3D" parent="Tuong/SauBac1"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2, 0)
+shape = SubResource("Shape_Tuong")
+
+[node name="SauBac2" type="StaticBody3D" parent="Tuong"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 26, 0, -4)
+
+[node name="Mesh" parent="Tuong/SauBac2" instance=ExtResource("5_wall")]
+
+[node name="Col" type="CollisionShape3D" parent="Tuong/SauBac2"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2, 0)
+shape = SubResource("Shape_Tuong")
+
+[node name="SauBac3" type="StaticBody3D" parent="Tuong"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 30, 0, -4)
+
+[node name="Mesh" parent="Tuong/SauBac3" instance=ExtResource("5_wall")]
+
+[node name="Col" type="CollisionShape3D" parent="Tuong/SauBac3"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2, 0)
+shape = SubResource("Shape_Tuong")
+
 [node name="Markers" type="Node3D" parent="."]
 
 [node name="OrderDrop" type="Marker3D" parent="Markers"]
@@ -569,6 +660,7 @@ current = true
 size = 11.0
 far = 90.0
 script = ExtResource("3_cam")
+map_min_z = -4.0
 
 [node name="DirectionalLight3D" type="DirectionalLight3D" parent="."]
 transform = Transform3D(0.8829, 0, 0.4695, 0.4465, 0.309, -0.8397, -0.1451, 0.9511, 0.2728, 16, 18, 12)
@@ -603,7 +695,7 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.683, 0)
 shape = SubResource("Shape_ThungRac")
 
 [node name="crate_buns2" type="StaticBody3D" parent="NoiThatBep" groups=["station"]]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.3, 0, 1.25)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.3, 0, -2.75)
 script = ExtResource("30_tram")
 display_name = "Bánh mì"
 kind = "ingredient_shelf"
@@ -617,7 +709,7 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.45, 0)
 shape = SubResource("Shape_Thung")
 
 [node name="crate_dough2" type="StaticBody3D" parent="NoiThatBep" groups=["station"]]
-transform = Transform3D(1, 0, 0, 0, 0.81915206, -0.57357645, 0, 0.57357645, 0.81915206, 1.3, 2, 1.25)
+transform = Transform3D(1, 0, 0, 0, 0.81915206, -0.57357645, 0, 0.57357645, 0.81915206, 1.3, 2, -2.75)
 script = ExtResource("30_tram")
 display_name = "Bột"
 kind = "ingredient_shelf"
@@ -631,7 +723,7 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.45, 0)
 shape = SubResource("Shape_Thung")
 
 [node name="crate_lettuce2" type="StaticBody3D" parent="NoiThatBep" groups=["station"]]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 5.3, 0, 1.25)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 5.3, 0, -2.75)
 script = ExtResource("30_tram")
 display_name = "Xà lách"
 kind = "ingredient_shelf"
@@ -645,7 +737,7 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.45, 0)
 shape = SubResource("Shape_Thung")
 
 [node name="crate_carrots2" type="StaticBody3D" parent="NoiThatBep" groups=["station"]]
-transform = Transform3D(1, 0, 0, 0, 0.81915206, -0.57357645, 0, 0.57357645, 0.81915206, 5.3, 2, 1.25)
+transform = Transform3D(1, 0, 0, 0, 0.81915206, -0.57357645, 0, 0.57357645, 0.81915206, 5.3, 2, -2.75)
 script = ExtResource("30_tram")
 display_name = "Cà rốt"
 kind = "ingredient_shelf"
@@ -659,7 +751,7 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.45, 0)
 shape = SubResource("Shape_Thung")
 
 [node name="crate_potatoes2" type="StaticBody3D" parent="NoiThatBep" groups=["station"]]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 9.3, 0, 1.25)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 9.3, 0, -2.75)
 script = ExtResource("30_tram")
 display_name = "Khoai tây"
 kind = "ingredient_shelf"
@@ -673,7 +765,7 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.45, 0)
 shape = SubResource("Shape_Thung")
 
 [node name="crate_tomatoes2" type="StaticBody3D" parent="NoiThatBep" groups=["station"]]
-transform = Transform3D(1, 0, 0, 0, 0.81915206, -0.57357645, 0, 0.57357645, 0.81915206, 9.3, 2, 1.25)
+transform = Transform3D(1, 0, 0, 0, 0.81915206, -0.57357645, 0, 0.57357645, 0.81915206, 9.3, 2, -2.75)
 script = ExtResource("30_tram")
 display_name = "Cà chua"
 kind = "ingredient_shelf"
@@ -687,7 +779,7 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.45, 0)
 shape = SubResource("Shape_Thung")
 
 [node name="crate_onions2" type="StaticBody3D" parent="NoiThatBep" groups=["station"]]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 13.3, 0, 1.25)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 13.3, 0, -2.75)
 script = ExtResource("30_tram")
 display_name = "Hành tây"
 kind = "ingredient_shelf"
@@ -701,7 +793,7 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.45, 0)
 shape = SubResource("Shape_Thung")
 
 [node name="crate_mushrooms2" type="StaticBody3D" parent="NoiThatBep" groups=["station"]]
-transform = Transform3D(1, 0, 0, 0, 0.81915206, -0.57357645, 0, 0.57357645, 0.81915206, 13.3, 2, 1.25)
+transform = Transform3D(1, 0, 0, 0, 0.81915206, -0.57357645, 0, 0.57357645, 0.81915206, 13.3, 2, -2.75)
 script = ExtResource("30_tram")
 display_name = "Nấm"
 kind = "ingredient_shelf"
@@ -729,11 +821,13 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.25, 0.12)
 shape = SubResource("Shape_TuLanh")
 
 [node name="stove_single2" type="StaticBody3D" parent="NoiThatBep" groups=["station"]]
-transform = Transform3D(-1, 0, -8.742278e-08, 0, 1, 0, 8.742278e-08, 0, -1, 7.5, 0, 10.6)
+transform = Transform3D(-1, 0, -8.742278e-08, 0, 1, 0, 8.742278e-08, 0, -1, 7.0, 0, 10.6)
 script = ExtResource("30_tram")
-display_name = "Bếp 1"
+display_name = "Bếp 2"
 kind = "stove"
 options = PackedStringArray()
+reach_size = Vector3(1.0, 1.21, 2.29)
+reach_offset = Vector3(0, 0.605, 0.11)
 
 [node name="Mesh" parent="NoiThatBep/stove_single2" instance=ExtResource("17_ddgsb")]
 
@@ -744,9 +838,11 @@ shape = SubResource("Shape_Bep")
 [node name="stove_single3" type="StaticBody3D" parent="NoiThatBep" groups=["station"]]
 transform = Transform3D(-1, 0, -8.742278e-08, 0, 1, 0, 8.742278e-08, 0, -1, 5.0, 0, 10.6)
 script = ExtResource("30_tram")
-display_name = "Bếp 2"
+display_name = "Bếp 1"
 kind = "stove"
 options = PackedStringArray()
+reach_size = Vector3(1.0, 1.21, 2.29)
+reach_offset = Vector3(0, 0.605, 0.11)
 
 [node name="Mesh" parent="NoiThatBep/stove_single3" instance=ExtResource("17_ddgsb")]
 
@@ -755,17 +851,20 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.605, 0.11)
 shape = SubResource("Shape_Bep")
 
 [node name="pizza_oven2" type="StaticBody3D" parent="NoiThatBep" groups=["station"]]
-transform = Transform3D(-0.7, 0, -6.119594e-08, 0, 0.7, 0, 6.119594e-08, 0, -0.7, 10.0, 0, 10.9)
+transform = Transform3D(-1, 0, -8.742278e-08, 0, 1, 0, 8.742278e-08, 0, -1, 9.05, 0, 10.6264)
 script = ExtResource("30_tram")
 display_name = "Lò nướng"
 kind = "oven"
 options = PackedStringArray()
+reach_size = Vector3(1.1, 1.449, 2.289)
+reach_offset = Vector3(0, 0.7245, 0.1364)
 
 [node name="Mesh" parent="NoiThatBep/pizza_oven2" instance=ExtResource("18_va5r0")]
+transform = Transform3D(0.7, 0, 0, 0, 0.7, 0, 0, 0, 0.9745, 0, 0, 0)
 
 [node name="Col" type="CollisionShape3D" parent="NoiThatBep/pizza_oven2"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.035, 0.14)
-shape = SubResource("Shape_LoPizza")
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.7245, 0.1364)
+shape = SubResource("Shape_LoPizza2")
 
 [node name="kitchentable_A_large2" type="StaticBody3D" parent="NoiThatBep" groups=["station"]]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 7.071475, 0.0037517548, 6.1255193)
@@ -790,7 +889,7 @@ transform = Transform3D(1.25, 0, 0, 0, 1.25, 0, 0, 0, 1.25, 1.6114826, 0.2485927
 transform = Transform3D(0.75, 0, 0, 0, -3.2783543e-08, 0.75, 0, -0.75, -3.2783543e-08, 0.5988903, 0.3253882, 0.36463928)
 
 [node name="kitchencounter_straight_A_decorated_styleB2" type="StaticBody3D" parent="NoiThatBep" groups=["station"]]
-transform = Transform3D(-1, 0, -8.742278e-08, 0, 1, 0, 8.742278e-08, 0, -1, 12.5, 0, 10.9)
+transform = Transform3D(-1, 0, -8.742278e-08, 0, 1, 0, 8.742278e-08, 0, -1, 13.3, 0, 10.61)
 script = ExtResource("30_tram")
 display_name = "Chồng đĩa"
 kind = "plate_stack"
@@ -830,7 +929,7 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.2, -0.02)
 shape = SubResource("Shape_MayKem")
 
 [node name="Noi" type="StaticBody3D" parent="NoiThatBep" groups=["station"]]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 15.0, 0, 10.700212)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 15.4, 0, 9.8)
 collision_layer = 4
 collision_mask = 0
 script = ExtResource("30_tram")
@@ -1063,3 +1162,65 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 2.15)
 
 [node name="ChoDung2" type="Marker3D" parent="BanAn/Ban6"]
 transform = Transform3D(-1, 0, 0, 0, 1, 0, 0, 0, -1, 0, 0, -2.15)
+
+[node name="counter_1" type="StaticBody3D" parent="NoiThatBep" groups=["station"]]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 5.3, 0, 1.25)
+script = ExtResource("30_tram")
+display_name = "Quầy để đồ"
+kind = "counter"
+options = PackedStringArray()
+reach_size = Vector3(1.0, 1, 1.4)
+reach_offset = Vector3(0, 0.5, 0)
+
+[node name="Mesh" parent="NoiThatBep/counter_1" instance=ExtResource("40_counter")]
+
+[node name="Col" type="CollisionShape3D" parent="NoiThatBep/counter_1"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.5, 0)
+shape = SubResource("Shape_QuayGoc")
+
+[node name="counter_2" type="StaticBody3D" parent="NoiThatBep" groups=["station"]]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 7.3, 0, 1.25)
+script = ExtResource("30_tram")
+display_name = "Quầy để đồ"
+kind = "counter"
+options = PackedStringArray()
+reach_size = Vector3(1.0, 1, 1.4)
+reach_offset = Vector3(0, 0.5, 0)
+
+[node name="Mesh" parent="NoiThatBep/counter_2" instance=ExtResource("40_counter")]
+
+[node name="Col" type="CollisionShape3D" parent="NoiThatBep/counter_2"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.5, 0)
+shape = SubResource("Shape_QuayGoc")
+
+[node name="counter_3" type="StaticBody3D" parent="NoiThatBep" groups=["station"]]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 9.3, 0, 1.25)
+script = ExtResource("30_tram")
+display_name = "Quầy để đồ"
+kind = "counter"
+options = PackedStringArray()
+reach_size = Vector3(1.0, 1, 1.4)
+reach_offset = Vector3(0, 0.5, 0)
+
+[node name="Mesh" parent="NoiThatBep/counter_3" instance=ExtResource("40_counter")]
+
+[node name="Col" type="CollisionShape3D" parent="NoiThatBep/counter_3"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.5, 0)
+shape = SubResource("Shape_QuayGoc")
+
+[node name="SanSauTrangTri" type="Node3D" parent="."]
+
+[node name="Deco0" parent="SanSauTrangTri" instance=ExtResource("41_crate")]
+transform = Transform3D(1.0000, 0, 0.0000, 0, 1, 0, -0.0000, 0, 1.0000, 19, 0, -2.6)
+
+[node name="Deco1" parent="SanSauTrangTri" instance=ExtResource("41_crate")]
+transform = Transform3D(0.9211, 0, 0.3894, 0, 1, 0, -0.3894, 0, 0.9211, 20.3, 0, -2.9)
+
+[node name="Deco2" parent="SanSauTrangTri" instance=ExtResource("42_cratelid")]
+transform = Transform3D(0.9553, 0, 0.2955, 0, 1, 0, -0.2955, 0, 0.9553, 19.6, 0, -1.2)
+
+[node name="Deco3" parent="SanSauTrangTri" instance=ExtResource("41_crate")]
+transform = Transform3D(0.9801, 0, -0.1987, 0, 1, 0, 0.1987, 0, 0.9801, 29.5, 0, -2.8)
+
+[node name="Deco4" parent="SanSauTrangTri" instance=ExtResource("41_crate")]
+transform = Transform3D(1.0000, 0, 0.0000, 0, 1, 0, -0.0000, 0, 1.0000, 29.5, 1.0, -2.8)

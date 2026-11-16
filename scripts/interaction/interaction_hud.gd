@@ -464,7 +464,7 @@ func _on_held_changed(item_name: String) -> void:
 	# Nhắc phím Q ngay trên dòng "đang cầm" chứ không nhét vào bảng hướng
 	# dẫn riêng: nhắc đúng lúc người chơi CÓ THỂ dùng nó thì họ đọc, còn
 	# một bảng phím tắt mở ra lúc đầu màn thì không ai nhớ.
-	_lbl_hands.text = Lang.t("Đang cầm: %s   (Q: bỏ xuống)") % item_name if not item_name.is_empty() else ""
+	_lbl_hands.text = Lang.t("Đang cầm: %s") % item_name if not item_name.is_empty() else ""
 
 
 func _redraw_table(table: Workstation) -> void:
@@ -488,7 +488,7 @@ func _redraw_table(table: Workstation) -> void:
 	# người chơi đang nhìn lúc nhận ra mình bỏ nhầm. Nhắc ở bảng phím tắt đầu
 	# màn thì tới lúc cần chẳng ai nhớ.
 	var lift := Label.new()
-	lift.text = Lang.t("E (tay không): lấy lại thứ vừa bỏ")
+	lift.text = Lang.t("E (tay không): chọn thứ để lấy ra")
 	lift.add_theme_color_override("font_color", COLOR_KEY)
 	lift.add_theme_font_size_override("font_size", SIZE_KEY)
 	_table_column.add_child(lift)

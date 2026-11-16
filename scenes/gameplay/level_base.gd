@@ -73,6 +73,7 @@ func _spawn_player() -> void:
 		return
 
 	player = character_scene.instantiate() as CharacterBody3D
+	_apply_skin(player)
 	# Thêm vào cây scene TRƯỚC, gán vị trí SAU. Làm ngược lại thì toạ độ
 	# toàn cục được tính khi node còn chưa nằm trong cây, kết quả sai.
 	add_child(player)
@@ -85,6 +86,31 @@ func _spawn_player() -> void:
 	player.collision_mask = 1 | PLAYER_ONLY_WALL_LAYER
 
 	_build_interaction()
+
+
+## Thay node "Model" bằng model ngoại trang nếu người chơi đang mặc skin.
+##
+## Làm TRƯỚC add_child: kitachibi_player.gd lấy $Model và tìm AnimationPlayer
+## trong _ready(), mà _ready chạy lúc node vào cây. Thay sau đó thì script vẫn
+## giữ tham chiếu tới model cũ đã bị xoá.
+##
+## Giữ nguyên transform của Model cũ (scale 1.6) và tên "Model": skin được xuất
+## cùng tỉ lệ và cùng tên animation với model gốc, nên script nhân vật không
+## phân biệt được — không phải sửa dòng nào trong đó.
+func _apply_skin(p: Node) -> void:
+	var path := GameData.equipped_model_for(String(GameData.selected_character))
+	if path.is_empty() or not ResourceLoader.exists(path):
+		return
+	var old := p.get_node_or_null("Model") as Node3D
+	if old == null:
+		return
+	var skin := (load(path) as PackedScene).instantiate() as Node3D
+	skin.transform = old.transform
+	p.remove_child(old)
+	old.free()
+	skin.name = "Model"
+	p.add_child(skin)
+	p.move_child(skin, 0)
 
 
 ## Chọn scene nhân vật để sinh ra.
@@ -238,7 +264,10 @@ func _build_interaction() -> void:
 		if hands_node != null and hands_node.has_signal("ingredient_taken"):
 			hands_node.ingredient_taken.connect(customers.charge_for_ingredient)
 		# AAA Mode bỏ qua cheat nguyên liệu miễn phí.
-		customers.free_ingredients = GameData.cheat_free_ingredients and not _is_aaa()
+		# Tiền nguyên liệu CHỈ còn ở Asian (user chốt 12/11/2026). Các màn khác
+		# lấy nguyên liệu miễn phí: doanh thu là tiền khách trả, không trừ vốn.
+		customers.free_ingredients = not GameData.is_asian_mode() \
+			or (GameData.cheat_free_ingredients and not _is_aaa())
 		customers.never_leave = _is_aaa()
 
 		_build_order_hud()
@@ -729,8 +758,10 @@ func _end_level(rank: String, fail_note: String = "") -> void:
 ## Màn hướng dẫn KHÔNG có màn mở đầu: ở đó trainer đã dẫn từng bước, chèn thêm
 ## một lớp chữ nữa chỉ làm loãng.
 func _build_level_intro(clock: Node) -> void:
+	# Tutorial và chế độ thử nghiệm B: không đếm ngược. Thử nghiệm B tự quản
+	# khách và đồng hồ (recipe_plan_b_test.gd) — người thử vào là làm ngay.
 	if get_node_or_null("/root/GameData") != null \
-			and String(GameData.current_level) == "tutorial":
+			and ["tutorial", "plan_b"].has(String(GameData.current_level)):
 		return
 
 	var cls := load("res://scripts/ui/level_intro.gd") as GDScript
@@ -757,9 +788,13 @@ func _build_level_intro(clock: Node) -> void:
 	# chơi gọi lại bằng phím (mặc định 2).
 	# Asian: không có bảng thực đơn — người chơi phải tự nhớ công thức (tài liệu
 	# mục 3.3, "tắt bảng công thức"). Không dựng panel thì phím mở nó cũng mất.
+	#
+	# (16/11/2026) BỎ bảng thực đơn ở mọi màn. Công thức giờ in ngay dưới mỗi
+	# vé đơn hàng (nguyên liệu + kí hiệu chảo / nồi / lò, kiểu Overcooked), nên
+	# một bảng thứ hai liệt kê lại đúng thông tin đó chỉ che màn hình. Asian
+	# vẫn không thấy công thức: vé của Asian không in phần công thức (xem
+	# order_ticket.gd).
 	var menu_panel: Node = null
-	if get_node_or_null("/root/GameData") == null or not GameData.is_asian_mode():
-		menu_panel = _build_menu_panel()
 	if menu_panel != null:
 		menu_panel.set_open(true)
 	intro.started.connect(func() -> void:

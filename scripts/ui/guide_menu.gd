@@ -101,10 +101,15 @@ func open() -> void:
 	_select_section(_current_section)
 
 
+## Phát khi bảng đóng — màn hướng dẫn chờ tín hiệu này rồi mới bắt đầu dạy.
+signal closed
+
+
 func close() -> void:
 	if not is_open:
 		return
 	is_open = false
+	closed.emit.call_deferred()
 	_bg.hide()
 	get_tree().paused = _was_paused
 	if _old_mouse_mode != Input.MOUSE_MODE_VISIBLE:
@@ -249,6 +254,27 @@ func _build_block(block: Dictionary) -> void:
 		_add_recipe(String(block["recipe"]))
 	elif block.has("grade_marks"):
 		_add_grade_marks()
+	elif block.has("chop_list"):
+		_add_chop_list()
+
+
+## Hàng icon mọi nguyên liệu phải qua thớt, mỗi icon có dấu con dao — tự sinh
+## từ ItemCatalog như bảng công thức, nên không bao giờ lệch với luật thật.
+func _add_chop_list() -> void:
+	var row := HFlowContainer.new()
+	row.add_theme_constant_override("h_separation", 14)
+	row.add_theme_constant_override("v_separation", 8)
+	for id in ItemCatalog.chop_items():
+		var cell := VBoxContainer.new()
+		cell.add_child(_item_cells(id))
+		var l := Label.new()
+		l.text = ItemCatalog.display_name(id)
+		l.add_theme_font_size_override("font_size", 14)
+		l.add_theme_color_override("font_color", COLOR_DIM)
+		l.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		cell.add_child(l)
+		row.add_child(cell)
+	_content_col.add_child(row)
 
 
 func _small_title(text_: String) -> Control:
@@ -363,11 +389,11 @@ func _add_image(path: String, text_: String) -> void:
 func _add_recipe(kind: String) -> void:
 	var table_: Dictionary = {}
 	match kind:
-		"table": table_ = ItemCatalog.TABLE_RECIPES
+		"table": table_ = ItemCatalog.table_recipes()
 		# (Đã bỏ) "pot": OVEN_RECIPES riêng cho nồi. Bảng công thức nồi không
 		# còn tồn tại — công thức nấu canh giờ nằm trong TABLE_RECIPES như mọi
 		# món khác, nên trang hướng dẫn tự có nó ở mục "table".
-		"oven": table_ = ItemCatalog.OVEN_RECIPES
+		"oven": table_ = ItemCatalog.oven_recipes()
 		_: return
 
 	for key_ in table_:
@@ -412,6 +438,8 @@ func _item_cells(id: String) -> Control:
 		img.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 		img.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 		img.tooltip_text = ItemCatalog.display_name(id)
+		# (16/11/2026) Bỏ huy hiệu dao: bộ B gần như mọi thứ đều phải thái,
+		# huy hiệu chung cho mọi ảnh thì không còn nói thêm điều gì.
 		return img
 
 	var l := Label.new()

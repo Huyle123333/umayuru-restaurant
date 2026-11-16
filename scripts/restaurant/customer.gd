@@ -84,21 +84,28 @@ var _anim_now := ""
 ##
 ## Model trong customer.tscn (Akikawa) là dự phòng khi không nạp được cái nào.
 ## Mọi model phải có cùng bốn animation idle / walk / eat / angry.
+## Trọng số của mỗi khách hiếm — xem giải thích trong MODELS.
+const RARE_WEIGHT := 5.0 / 18.0
+
 const MODELS := [
 	{"path": "res://assets/models/khach_akikawa.glb", "weight": 1.0, "scale": 1.0},
 	{"path": "res://assets/models/khach_tazuna.glb", "weight": 1.0, "scale": 1.0},
 	{"path": "res://assets/models/khach_hello.glb", "weight": 1.0, "scale": 1.0},
 	{"path": "res://assets/models/khach_riko.glb", "weight": 1.0, "scale": 1.0},
 	{"path": "res://assets/models/khach_etsuko.glb", "weight": 1.0, "scale": 1.0},
-	# KHÁCH HIẾM: Spiki (Trickcal). 1% = 1 phần trong 100, mà năm model trên đã
-	# chiếm 5 phần, nên trọng số của Spiki là 5 / 99 ≈ 0,0505.
-	# scale 1,3: model chibi cao 0,75, nhân body_scale 2 và 1,3 thành ~1,95 —
-	# đúng chiều cao nhân vật chibi người chơi điều khiển.
-	# Rig Biped của 3ds Max, khác hẳn Umamusume, nên animation dựng riêng trong
-	# assets/npc/spiki/spiki_v2.blend, nhưng vẫn cùng bốn tên clip.
-	{"path": "res://assets/models/customer_spiki.glb", "weight": 5.0 / 99.0, "scale": 1.3,
+	# KHÁCH HIẾM: Spiki (Trickcal) và Gugugaga, MỖI con 5% (user chốt 6/11/2026).
+	# Gọi trọng số mỗi con là w: w / (5 + 2w) = 0,05 -> w = 0,25 / 0,9 = 5/18
+	# ≈ 0,278. Năm model Uma chia đều 90% còn lại (18% mỗi model).
+	# Spiki: scale 1,3 — model chibi cao 0,75, nhân body_scale 2 và 1,3 thành
+	# ~1,95, đúng chiều cao nhân vật chibi người chơi điều khiển. Rig Biped của
+	# 3ds Max nên animation dựng riêng trong assets/npc/spiki/spiki_v2.blend,
+	# nhưng vẫn cùng bốn tên clip.
+	{"path": "res://assets/models/customer_spiki.glb", "weight": RARE_WEIGHT, "scale": 1.3,
 		# Spiki xuất ra nhìn về −Z, năm model Uma nhìn về +Z → xoay 180°.
 		"yaw": 180.0},
+	# Gugugaga: cùng model với khách VIP của Asian (scale 1,5 như vip_guest.gd),
+	# đã có đủ bốn clip idle / walk / eat / angry.
+	{"path": "res://assets/models/customer_gugugaga.glb", "weight": RARE_WEIGHT, "scale": 1.5},
 ]
 
 ## Animation phải LẶP. glTF không mang được cờ lặp, nên đặt ở đây lúc chạy thay
@@ -327,6 +334,16 @@ void fragment() { ALBEDO = outline_color.rgb; }
 
 func beg() -> void:
 	_set_anim("angry")
+
+
+## Hết cáu, về lại tư thế trước đó.
+##
+## (16/11/2026) Hàm này THIẾU từ trước: customer_manager._complain() gọi
+## calm() sau 2 giây cáu vì giao nhầm món, gọi vào hàm không tồn tại là lỗi
+## lúc chạy — chạy từ editor thì debugger dừng cả game ("giao sai món thì game
+## bị pause"). Khách đang ăn thì về animation ăn, còn lại thì đứng/ngồi yên.
+func calm() -> void:
+	_set_anim("eat" if _eat_left > 0.0 else "idle")
 
 
 ## Bong bóng trên đầu (đơn hàng). Nội dung do hệ đơn hàng đổ vào sau.

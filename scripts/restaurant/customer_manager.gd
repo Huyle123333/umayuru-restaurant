@@ -566,7 +566,15 @@ func nav_stats() -> Array:
 
 # --------------------------------------------------------------- vòng đời khách
 
+## Hỏi trước khi cho khách vào (16/11/2026): level_base nối vào
+## order_board.has_room — dải vé hết chỗ thì không nhận thêm khách.
+## Để trống = không giới hạn (màn nào không có dải vé vẫn chạy như cũ).
+var can_accept: Callable = Callable()
+
+
 func spawn_customer(model_override: Dictionary = {}, is_vip: bool = false) -> Node:
+	if can_accept.is_valid() and not bool(can_accept.call()):
+		return null
 	if _door == null or _queue.is_empty():
 		push_warning("Map thiếu Markers/Entrance hoặc Markers/Queue1 — không sinh khách được.")
 		return null
@@ -1094,6 +1102,10 @@ func _place_order(customer: Node) -> void:
 		* float(dish_price_factors.get(picked, 1.0))
 	if not is_equal_approx(factor, 1.0):
 		order_.price = maxi(1, int(round(order_.price * factor)))
+	# price_factor = 0 nghĩa là ĐƠN MIỄN PHÍ (phần tự làm thử của màn hướng
+	# dẫn) — không để maxi(1, …) ở trên làm tròn lên thành 1 đồng.
+	if is_zero_approx(price_factor):
+		order_.price = 0
 	# Gán hệ số TRƯỚC wait_in_queue(): hàm đó chốt ngân sách kiên nhẫn ngay tại chỗ.
 	order_.patience_factor = patience_factor * (VIP_PATIENCE if vip else 1.0)
 	if vip:

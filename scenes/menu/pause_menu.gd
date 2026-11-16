@@ -28,9 +28,26 @@ func _ready() -> void:
 	_btn_resume.pressed.connect(resume)
 	_btn_settings.pressed.connect(_on_settings_pressed)
 	_btn_menu.pressed.connect(_ask_leave.bind("res://scenes/menu/main_menu.tscn"))
+	_add_restart_button()
 	_confirm.confirmed.connect(_on_leave_confirmed)
 
 	_root.visible = false
+
+
+## Nút "Chơi lại" (16/11/2026) — chơi lại ĐÚNG màn này với ĐÚNG nhân vật
+## đang chọn, không phải ra menu chọn màn rồi chọn nhân vật lại.
+##
+## Dựng bằng code, nhân bản nút Tiếp tục cho cùng kiểu dáng, đặt ngay dưới nó,
+## thay vì sửa pause_menu.tscn — file scene sửa tay rất dễ hỏng.
+## Đi qua hộp xác nhận như nút Về menu: chơi lại cũng làm mất tiến trình màn.
+func _add_restart_button() -> void:
+	var btn := _btn_resume.duplicate(0) as Button
+	btn.unique_name_in_owner = false
+	btn.name = "BtnRestart"
+	btn.text = Lang.t("Chơi lại")
+	_btn_resume.add_sibling(btn)
+	# "" = nạp lại chính màn đang chơi (xem _on_leave_confirmed).
+	btn.pressed.connect(_ask_leave.bind(""))
 
 
 func _unhandled_input(event: InputEvent) -> void:
@@ -72,6 +89,17 @@ func _on_settings_pressed() -> void:
 
 func _ask_leave(target_scene: String) -> void:
 	_pending_scene = target_scene
+	# Một hộp xác nhận cho cả hai nút, chỉ đổi chữ. Nhớ chữ gốc (của nút Về
+	# menu) lần đầu để đổi qua lại không bị mất.
+	if not _confirm.has_meta("leave_text"):
+		_confirm.set_meta("leave_text", _confirm.dialog_text)
+		_confirm.set_meta("leave_ok", _confirm.ok_button_text)
+	if target_scene.is_empty():
+		_confirm.dialog_text = Lang.t("Chơi lại từ đầu? Tiến trình màn đang chơi sẽ mất.")
+		_confirm.ok_button_text = Lang.t("Chơi lại")
+	else:
+		_confirm.dialog_text = String(_confirm.get_meta("leave_text"))
+		_confirm.ok_button_text = String(_confirm.get_meta("leave_ok"))
 	_confirm.popup_centered()
 
 
@@ -80,6 +108,11 @@ func _on_leave_confirmed() -> void:
 	# của cây, quên dòng này thì menu chính hiện ra nhưng bấm gì cũng không ăn.
 	get_tree().paused = false
 	Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
+	if _pending_scene.is_empty():
+		# Nạp lại scene hiện tại: current_level và nhân vật đang chọn nằm ở
+		# GameData (autoload) nên giữ nguyên, màn dựng lại từ đầu y như lúc vào.
+		get_tree().reload_current_scene()
+		return
 	get_tree().change_scene_to_file(_pending_scene)
 
 

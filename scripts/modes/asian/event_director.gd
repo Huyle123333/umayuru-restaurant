@@ -43,7 +43,7 @@ const EVENTS := {
 }
 ## Sự kiện bốc ngẫu nhiên. "review" không nằm đây: nó tự bật khi mất khách.
 const RANDOM_POOL := ["fuel", "burnout", "rush", "slippery", "rain", "stockout",
-	"inspector", "dog_thief", "vip", "blackout"]
+	"dog_thief", "vip", "blackout"]  # bỏ "inspector" 12/11/2026: không còn đồ dưới sàn
 
 ## Sự kiện có file riêng đang chạy: id -> thực thể (RefCounted có start/stop/tick).
 var _scripted: Dictionary = {}
@@ -210,7 +210,7 @@ func _apply(id: String) -> void:
 	match id:
 		"fuel":
 			var pool: Array = []
-			for item in ItemCatalog.ITEMS:
+			for item in ItemCatalog.items():
 				if ItemCatalog.cost(String(item)) > 0 and not ItemCatalog.is_locked(String(item)):
 					pool.append(String(item))
 			pool.shuffle()

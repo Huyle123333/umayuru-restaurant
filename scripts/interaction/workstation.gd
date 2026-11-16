@@ -22,8 +22,12 @@ const _ItemCatalog := preload("res://scripts/interaction/item_catalog.gd")
 ## cân bằng thời gian di chuyển đều dựa trên bố cục đó.
 const LAYER_ITEM := 1 << 2
 
-## Mặt nạ cho bộ chọn mục tiêu: nhìn thấy CẢ nội thất lẫn vật phẩm.
-const STATION_MASK := 1 | LAYER_ITEM
+## Lớp của VÙNG TƯƠNG TÁC tách riêng (xem reach_size). Nhân vật không va
+## chạm với lớp này, chỉ bộ chọn mục tiêu nhìn thấy.
+const LAYER_REACH := 1 << 9
+
+## Mặt nạ cho bộ chọn mục tiêu: nhìn thấy nội thất, vật phẩm và vùng tương tác.
+const STATION_MASK := 1 | LAYER_ITEM | LAYER_REACH
 ## Một trạm người chơi tương tác được: kệ nguyên liệu, tủ lạnh, thớt, bếp,
 ## chồng đĩa, máng bỏ đồ.
 ##
@@ -165,6 +169,39 @@ var _model_node: Node3D = null
 
 ## Model bày cao bao nhiêu so với gốc trạm. Mặt bàn/quầy KayKit cao 1 đơn vị.
 @export var place_height := 1.02
+
+## TÁCH khối vật lý và khối tương tác (12/11/2026).
+##
+## Khối vật lý (CollisionShape3D con của trạm) giữ ĐÚNG kích thước model để
+## nhân vật không đi xuyên. Nhưng các trạm đặt sát nhau (2 bếp + lò, 3 quầy)
+## thì khối vật lý chạm nhau, và hộp dò của nhân vật đứng ở bếp 1 vẫn chạm
+## mép bếp 2 — hiện cả hai trong danh sách.
+##
+## Đặt reach_size khác 0 thì trạm tự dựng thêm một vùng tương tác HẸP ở lớp
+## LAYER_REACH, và bộ chọn mục tiêu CHỈ tính vùng này cho trạm đó (bỏ qua
+## khối vật lý). Hai việc — chặn đường và bấm được — giờ có hai hình riêng.
+@export var reach_size := Vector3.ZERO
+@export var reach_offset := Vector3(0, 0.5, 0)
+
+## Có vùng tương tác riêng thì bộ chọn bỏ qua khối vật lý của trạm.
+func has_reach() -> bool:
+	return reach_size != Vector3.ZERO
+
+
+func _ready() -> void:
+	if not has_reach():
+		return
+	var area := StaticBody3D.new()
+	area.name = "Reach"
+	area.collision_layer = LAYER_REACH
+	area.collision_mask = 0
+	var shape := CollisionShape3D.new()
+	var box := BoxShape3D.new()
+	box.size = reach_size
+	shape.shape = box
+	shape.position = reach_offset
+	area.add_child(shape)
+	add_child(area)
 
 
 ## Bày một vật phẩm lên mặt trạm. Truyền "" để dọn sạch.

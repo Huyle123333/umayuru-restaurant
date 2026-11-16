@@ -58,6 +58,9 @@ var endless_seconds := -1.0
 ## Rỗng = không phải Asian. Gán trước show_results(), giống endless_seconds.
 var asian_result: Dictionary = {}
 
+## Tiền shop vừa nhận ở lượt này (0 = không nhận, không in dòng).
+var _shop_gain := 0
+
 
 func show_results(money: int, served: int, perfect: int, left_angry: int,
 		ep_hang: String = "") -> void:
@@ -73,6 +76,10 @@ func show_results(money: int, served: int, perfect: int, left_angry: int,
 	if not asian_result.is_empty():
 		GameData.record_asian(bool(asian_result["won"]), money,
 			float(asian_result["seconds"]))
+		# Asian chỉ thưởng khi THẮNG: thua cũng có thì vào rồi bỏ cuộc sớm
+		# vẫn cày được tiền (user chốt 29/10/2026).
+		if bool(asian_result["won"]):
+			_shop_gain = GameData.award_shop_coins(money)
 		_build_asian_ui(money, served, perfect, left_angry)
 		_show()
 		return
@@ -80,6 +87,8 @@ func show_results(money: int, served: int, perfect: int, left_angry: int,
 	if endless_seconds >= 0.0:
 		var old_best := GameData.get_best_money(level_id)
 		var is_best := GameData.record_endless(money, endless_seconds)
+		# Endless không có thắng/thua — mỗi lần hết giờ đều là "hoàn thành".
+		_shop_gain = GameData.award_shop_coins(money)
 		_build_endless_ui(money, served, perfect, left_angry, old_best, is_best)
 		_show()
 		return
@@ -107,6 +116,12 @@ func show_results(money: int, served: int, perfect: int, left_angry: int,
 		# cũ" trên bảng luôn bằng đúng số vừa kiếm được.
 		if place:
 			GameData.complete_level(level_id, money)
+			# Tiền shop: chỉ lượt QUA MÀN thật. Loại ra: hướng dẫn (ep_hang
+			# ép hạng), AAA (chế độ đùa, không lưu gì), và lượt thắng bằng kĩ
+			# năng Gold Ship — 9.999.999 doanh thu sẽ thành ~1 triệu tiền shop,
+			# mua sạch cửa hàng trong một lần bấm.
+			if ep_hang.is_empty() and not _skill_win and level_id != GameData.AAA_LEVEL:
+				_shop_gain = GameData.award_shop_coins(money)
 		# Bảng xếp hạng ghi MỌI lượt, kể cả lượt trượt hạng — xem giải thích
 		# ở GameData.ghi_xep_hang(). Gọi SAU complete_level vì hàm kia mới là
 		# nơi quyết định tiến trình; nếu có lỗi thì lỗi ở cái phụ, không phải
@@ -272,6 +287,8 @@ func _fill_normal(col: VBoxContainer, money: int, served: int, perfect: int,
 	# đổi, gõ lại ở đây là dựng thêm một nguồn sự thật thứ hai để sau này lệch.
 	col.add_child(_row(Lang.t("Trong đó hoàn hảo"), str(perfect)))
 	col.add_child(_row(Lang.t("Khách bỏ đi"), str(left_angry)))
+	if _shop_gain > 0:
+		col.add_child(_row(Lang.t("Tiền shop nhận được"), "+%d" % _shop_gain))
 
 	# Chưa đạt thì nói rõ còn thiếu bao nhiêu. Chỉ hiện "CHƯA ĐẠT" mà không nói
 	# thiếu gì thì người chơi không biết lần sau phải cố thêm bao nhiêu.
@@ -373,6 +390,8 @@ func _build_endless_ui(money: int, served: int, perfect: int, left_angry: int,
 	col.add_child(_row(Lang.t("Đơn đã phục vụ"), str(served)))
 	col.add_child(_row(Lang.t("Trong đó hoàn hảo"), str(perfect)))
 	col.add_child(_row(Lang.t("Khách bỏ đi"), str(left_angry)))
+	if _shop_gain > 0:
+		col.add_child(_row(Lang.t("Tiền shop nhận được"), "+%d" % _shop_gain))
 
 	var button_row := HBoxContainer.new()
 	button_row.add_theme_constant_override("separation", 16)
@@ -421,6 +440,8 @@ func _build_asian_ui(money: int, served: int, perfect: int, left_angry: int) -> 
 	col.add_child(_row(Lang.t("Đơn đã phục vụ"), str(served)))
 	col.add_child(_row(Lang.t("Trong đó hoàn hảo"), str(perfect)))
 	col.add_child(_row(Lang.t("Khách bỏ đi"), str(left_angry)))
+	if _shop_gain > 0:
+		col.add_child(_row(Lang.t("Tiền shop nhận được"), "+%d" % _shop_gain))
 
 	var button_row := HBoxContainer.new()
 	button_row.add_theme_constant_override("separation", 16)

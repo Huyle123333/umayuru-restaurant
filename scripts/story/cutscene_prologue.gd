@@ -119,9 +119,9 @@ const SCENES: Array[Dictionary] = [
 	},
 	{
 		"portrait": "mambo",
-		# Viết trống không, KHÔNG dấu — cố ý, đây là kiểu nói của Mambo.
+		# Câu ngắn, cụt — kiểu nói của Mambo (user sửa 12/11/2026).
 		"speaker": "@",
-		"line": "toi dong tinh.",
+		"line": "chị tán thành.",
 	},
 	{
 		"portrait": "tuandb",

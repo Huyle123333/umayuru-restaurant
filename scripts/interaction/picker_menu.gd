@@ -87,11 +87,19 @@ func _build_ui() -> void:
 
 # ------------------------------------------------------------- mở / đóng ---
 
+## Bàn chế tạo dùng chung bảng này để LẤY RA một thứ đang nằm trên bàn:
+## danh sách là những gì đang có trên mặt bàn (station.contents) thay vì danh
+## mục cố định của tủ lạnh/máy kem (station.options). Một bảng, hai nguồn —
+## người chơi đã quen W/S + E ở tủ lạnh nên không phải học thao tác mới.
 func open(station: Workstation) -> void:
-	if station == null or station.options.is_empty():
+	if station == null:
+		return
+	var list_ := PackedStringArray(station.contents) if station.kind == "crafting_table" \
+		else station.options
+	if list_.is_empty():
 		return
 	_station = station
-	_entries = station.options
+	_entries = list_
 	_index = 0
 	_redraw()
 	show()
@@ -212,6 +220,8 @@ func _build_icon(item_name: String, selected: bool) -> Control:
 		icon.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 		icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 		icon.modulate.a = 1.0 if selected else 0.7
+		# (16/11/2026) Bỏ huy hiệu dao: công thức đã in trên vé đơn hàng, ảnh
+		# trong tủ lạnh chỉ cần cho biết đây là nguyên liệu gì.
 		return icon
 
 	var cell := PanelContainer.new()

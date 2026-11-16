@@ -136,7 +136,9 @@ const RULES_D1 := {
 	"first_wait": 4.0,
 	"menu": [
 		"icecream_vani", "icecream_chocolate", "icecream_strawberry",
-		"mon_ham", "mon_steak", "hambuger",
+		# (16/11/2026) Thực đơn theo họ món (phương án B): Ngày 1 chỉ có món
+		# MỘT nguyên liệu chính — đùi nướng, steak, burger thường.
+		"mon_ham", "mon_steak", "burger_plain",
 		# (5/10/2026) Thêm MỘT loại pizza ngay từ Ngày 1, theo yêu cầu user:
 		# người chơi làm quen với cái lò sớm, và các kĩ năng xoay quanh pizza
 		# (Oguri, Mambo) có đất dùng từ ngày đầu. Chọn pizza nấm — ít nguyên
@@ -145,7 +147,7 @@ const RULES_D1 := {
 	],
 	"weights": {
 		"icecream_vani": 1, "icecream_chocolate": 1, "icecream_strawberry": 1,
-		"mon_ham": 3, "mon_steak": 4, "hambuger": 3,
+		"mon_ham": 3, "mon_steak": 4, "burger_plain": 3,
 		"pizza_mushroom": 2,
 	},
 	"stages": [
@@ -187,15 +189,17 @@ const RULES_D2 := {
 	"first_wait": 4.0,
 	"menu": [
 		"icecream_vani", "icecream_chocolate", "icecream_strawberry",
-		"mon_ham", "mon_steak", "hambuger",
-		"pizza_mushroom", "kem_tam_hop", "vegetablesteak",
-		"vegetablebuger", "stew",
+		"mon_ham", "mon_steak", "burger_plain",
+		# Ngày 2 mở thêm biến thể của các họ: burger phô mai / xà lách, đùi
+		# nướng cà rốt, soup đầu tiên (cà rốt).
+		"burger_cheese", "burger_lettuce", "dinner", "soup_carrot",
+		"pizza_mushroom", "kem_tam_hop",
 	],
 	"weights": {
 		"icecream_vani": 1, "icecream_chocolate": 1, "icecream_strawberry": 1,
-		"mon_ham": 2, "mon_steak": 3, "hambuger": 3,
-		"pizza_mushroom": 3, "kem_tam_hop": 2, "vegetablesteak": 3,
-		"vegetablebuger": 1, "stew": 1,
+		"mon_ham": 2, "mon_steak": 3, "burger_plain": 2,
+		"burger_cheese": 3, "burger_lettuce": 2, "dinner": 3, "soup_carrot": 1,
+		"pizza_mushroom": 3, "kem_tam_hop": 2,
 	},
 	"stages": [
 		# (2/10/2026, user chốt) Tỉ lệ món khó GIẢM MỘT NỬA so với bản trước
@@ -224,17 +228,19 @@ const RULES_D3 := {
 	"first_wait": 4.0,
 	"menu": [
 		"icecream_vani", "icecream_chocolate", "icecream_strawberry",
-		"mon_ham", "mon_steak", "hambuger",
+		"mon_ham", "mon_steak", "dinner",
+		"burger_plain", "burger_cheese", "burger_lettuce", "hambuger",
+		"soup_carrot", "soup_onion", "soup_potato",
 		"pizza_mushroom", "pizza_cheese", "pizza_peperoni",
-		"kem_tam_hop", "kem_tam_hop_que", "vegetablesteak",
-		"vegetablebuger", "stew", "dinner",
+		"kem_tam_hop", "kem_tam_hop_que",
 	],
 	"weights": {
 		"icecream_vani": 1, "icecream_chocolate": 1, "icecream_strawberry": 1,
-		"mon_ham": 1, "mon_steak": 2, "hambuger": 3,
+		"mon_ham": 1, "mon_steak": 2, "dinner": 2,
+		"burger_plain": 1, "burger_cheese": 2, "burger_lettuce": 2, "hambuger": 3,
+		"soup_carrot": 2, "soup_onion": 2, "soup_potato": 2,
 		"pizza_mushroom": 2, "pizza_cheese": 2, "pizza_peperoni": 2,
-		"kem_tam_hop": 1, "kem_tam_hop_que": 2, "vegetablesteak": 3,
-		"vegetablebuger": 3, "stew": 3, "dinner": 3,
+		"kem_tam_hop": 1, "kem_tam_hop_que": 2,
 	},
 	"stages": [
 		# (2/10/2026) Món khó giảm một nửa như Ngày 2: 10% -> 5%, 40% -> 20%,
@@ -292,17 +298,19 @@ const RULES_ENDLESS := {
 	# Toàn bộ món trong game — cùng danh sách và trọng số với Ngày 3.
 	"menu": [
 		"icecream_vani", "icecream_chocolate", "icecream_strawberry",
-		"mon_ham", "mon_steak", "hambuger",
+		"mon_ham", "mon_steak", "dinner",
+		"burger_plain", "burger_cheese", "burger_lettuce", "hambuger",
+		"soup_carrot", "soup_onion", "soup_potato",
 		"pizza_mushroom", "pizza_cheese", "pizza_peperoni",
-		"kem_tam_hop", "kem_tam_hop_que", "vegetablesteak",
-		"vegetablebuger", "stew", "dinner",
+		"kem_tam_hop", "kem_tam_hop_que",
 	],
 	"weights": {
 		"icecream_vani": 1, "icecream_chocolate": 1, "icecream_strawberry": 1,
-		"mon_ham": 1, "mon_steak": 2, "hambuger": 3,
+		"mon_ham": 1, "mon_steak": 2, "dinner": 2,
+		"burger_plain": 1, "burger_cheese": 2, "burger_lettuce": 2, "hambuger": 3,
+		"soup_carrot": 2, "soup_onion": 2, "soup_potato": 2,
 		"pizza_mushroom": 2, "pizza_cheese": 2, "pizza_peperoni": 2,
-		"kem_tam_hop": 1, "kem_tam_hop_que": 2, "vegetablesteak": 3,
-		"vegetablebuger": 3, "stew": 3, "dinner": 3,
+		"kem_tam_hop": 1, "kem_tam_hop_que": 2,
 	},
 	"stages": [
 		{"until": 180.0, "interval": 14.0, "interval_range": [9.0, 18.0], "tier_weights": {"easy": 100}},
@@ -330,17 +338,19 @@ const RULES_ASIAN := {
 	# Toàn bộ thực đơn mở từ đầu (tài liệu mục 3.5).
 	"menu": [
 		"icecream_vani", "icecream_chocolate", "icecream_strawberry",
-		"mon_ham", "mon_steak", "hambuger",
+		"mon_ham", "mon_steak", "dinner",
+		"burger_plain", "burger_cheese", "burger_lettuce", "hambuger",
+		"soup_carrot", "soup_onion", "soup_potato",
 		"pizza_mushroom", "pizza_cheese", "pizza_peperoni",
-		"kem_tam_hop", "kem_tam_hop_que", "vegetablesteak",
-		"vegetablebuger", "stew", "dinner",
+		"kem_tam_hop", "kem_tam_hop_que",
 	],
 	"weights": {
 		"icecream_vani": 1, "icecream_chocolate": 1, "icecream_strawberry": 1,
-		"mon_ham": 1, "mon_steak": 2, "hambuger": 3,
+		"mon_ham": 1, "mon_steak": 2, "dinner": 2,
+		"burger_plain": 1, "burger_cheese": 2, "burger_lettuce": 2, "hambuger": 3,
+		"soup_carrot": 2, "soup_onion": 2, "soup_potato": 2,
 		"pizza_mushroom": 2, "pizza_cheese": 2, "pizza_peperoni": 2,
-		"kem_tam_hop": 1, "kem_tam_hop_que": 2, "vegetablesteak": 3,
-		"vegetablebuger": 3, "stew": 3, "dinner": 3,
+		"kem_tam_hop": 1, "kem_tam_hop_que": 2,
 	},
 	"stages": [
 		{"until": 120.0, "interval": 10.0, "interval_range": [6.0, 14.0], "tier_weights": {"easy": 60, "medium": 40}},
@@ -386,6 +396,9 @@ const LEVELS := {
 	"endless": {"label": "Endless Mode", "needs": "", "scene": MAP_RESTAURANT, "rules": RULES_ENDLESS},
 	# Tạm mở sẵn từ đầu (user chốt 27/10/2026).
 	"asian": {"label": "Asian Mode", "needs": "", "scene": MAP_RESTAURANT, "rules": RULES_ASIAN},
+	# Chế độ thử bộ công thức B. Scene riêng bật công tắc ItemCatalog.plan_b
+	# rồi dựng lại map thường; không luật màn nên thực đơn = mọi món của bộ B.
+	"plan_b": {"label": "Thử nghiệm B", "needs": "", "scene": "res://scenes/test/recipe_plan_b_test.tscn"},
 }
 
 ## Các nhân vật. Khóa là id, cũng là tên file ảnh đại diện trong
@@ -1475,8 +1488,180 @@ const KITCHEN_MEETING_SCENE := "res://scenes/story/kitchen_meeting.tscn"
 var _meeting_shown_for := ""
 
 
+# ═══════════════════════════════════════════════════════════════ SHOP ══
+# Ví shop TÁCH RIÊNG khỏi doanh thu màn: doanh thu là ĐIỂM của một lượt (dùng
+# cho hạng, kỷ lục, bảng xếp hạng), còn ví shop là thứ TÍCH LUỸ qua nhiều lượt
+# để tiêu. Dùng chung một con số thì mua đồ xong kỷ lục cũng tụt — sai nghĩa.
+#
+# Đồ bán trong shop KHÔNG có cờ "đã mua" riêng: mua Teio là bật đúng cờ
+# unlocked_characters["hachimi"] mà bảng CODE No.7 vẫn bật. Một nguồn sự thật
+# duy nhất cho "đã mở hay chưa" — không bao giờ có cảnh shop bảo "đã có" mà
+# màn chọn nhân vật vẫn khoá, hay ngược lại.
+
+signal shop_coins_changed(total: int)
+
+## 10% doanh thu trên bảng tổng kết, bỏ phần lẻ (user chốt 29/10/2026).
+const SHOP_RATE := 0.1
+
+## Giá tạm chốt 29/10/2026. Mốc giá bám theo tiến trình: góc nhìn thứ 3 mua
+## được sau 1–2 ngày, Teio ≈ một lượt phá đảo ở hạng B, Chiyono cần chơi thêm.
+## Gold Ship KHÔNG bán — giữ là bí mật chỉ mở qua CODE No.7.
+const SHOP_ITEMS := {
+	"third_person": {"price": 150, "name": "Góc nhìn thứ 3", "icon": "",
+		"desc": "Bấm P trong màn chơi để đổi sang camera bám sau lưng nhân vật."},
+	# Nhân vật: CHƯA mua thì shop chỉ hiện ảnh bóng (thidden/chidden) và tên
+	# "Nhân tố T/C" — người chơi mua vì tò mò, mua xong mới thấy mặt thật.
+	# Dùng lại đúng hai ảnh khoá của màn chọn nhân vật cho thống nhất.
+	"hachimi": {"price": 400, "name": "Tokai Teio", "icon": "res://assets/ui/characters/hachimi.png",
+		"hidden_name": "Nhân tố T", "hidden_icon": "res://assets/ui/characters/thidden.png",
+		"desc": "Một thành viên bí ẩn của team 0rca."},
+	"chiyo": {"price": 600, "name": "Sakura Chiyono O", "icon": "res://assets/ui/characters/chiyo.png",
+		"hidden_name": "Nhân tố C", "hidden_icon": "res://assets/ui/characters/chidden.png",
+		"desc": "Một thành viên bí ẩn khác của team 0rca."},
+}
+const SHOP_ORDER := ["third_person", "hachimi", "chiyo"]
+
+var shop_coins: int = 0
+
+# ── Ngoại trang (skin) ──────────────────────────────────────────────────
+# Mỗi skin là một file .glb riêng, xuất từ Blender với CÙNG ba animation
+# Idle / Run / Run_Carry như model gốc (chép xương sang bằng skin_pipeline.py
+# trong D:\Game do an\assets\main). Nhờ cùng tên animation, kitachibi_player.gd
+# không cần biết đang chạy model nào — thay node Model là xong.
+const SKIN_PRICE := 250
+const SKINS := {
+	"kita_white": {"character": "kitamoi", "name": "Kitasan Black — Trắng"},
+	"teio_anime": {"character": "hachimi", "name": "Tokai Teio — Anime",
+		"hidden_name": "Ngoại trang Nhân tố T", "need": "Cần mở Nhân tố T"},
+	"chiyono_dress": {"character": "chiyo", "name": "Sakura Chiyono O — Váy",
+		"hidden_name": "Ngoại trang Nhân tố C", "need": "Cần mở Nhân tố C"},
+	"mambo_race": {"character": "mambo", "name": "Matikanetannhauser — Đua"},
+	"oguri_xmas": {"character": "oui", "name": "Oguri Cap — Giáng sinh"},
+	"spe_commander": {"character": "tuandb", "name": "Special Week — Chỉ huy"},
+	"golshi_summer": {"character": "golshi", "name": "Gold Ship — Mùa hè"},
+}
+const SKIN_ORDER := ["kita_white", "teio_anime", "chiyono_dress", "mambo_race",
+	"oguri_xmas", "spe_commander", "golshi_summer"]
+const SKIN_DIR := "res://assets/models/skins/"
+
+## skin_id -> true khi đã mua.
+var owned_skins: Dictionary = {}
+## character_id -> skin_id đang mặc. Không có khoá = mặc đồ gốc.
+var equipped_skins: Dictionary = {}
+
+
+func skin_model_path(skin_id: String) -> String:
+	return SKIN_DIR + skin_id + ".glb"
+
+
+## Skin chỉ mua được khi đã có nhân vật: mua đồ cho nhân vật còn khoá thì
+## không mặc được, lại còn làm lộ nhân vật ẩn qua tên skin.
+func skin_available(skin_id: String) -> bool:
+	return not is_character_locked(String(SKINS[skin_id]["character"]))
+
+
+## Skin có HIỆN trong shop không. Skin của nhân vật đang khoá vẫn hiện (dạng
+## bóng đen) nếu nhân vật đó bán trong shop, để người chơi biết còn thứ để
+## nhắm tới. Riêng nhân vật không có "hidden_name" mà đang khoá (Gold Ship)
+## thì ẩn hẳn: Gold Ship chỉ mở bằng CODE No.7, hiện cả bóng đen cũng là
+## tiết lộ có nhân vật thứ bảy.
+func skin_visible(skin_id: String) -> bool:
+	return skin_available(skin_id) or SKINS[skin_id].has("hidden_name")
+
+
+func buy_skin(skin_id: String) -> bool:
+	if not SKINS.has(skin_id) or owned_skins.has(skin_id) or not skin_available(skin_id):
+		return false
+	if shop_coins < SKIN_PRICE:
+		return false
+	shop_coins -= SKIN_PRICE
+	owned_skins[skin_id] = true
+	# Mua xong mặc luôn: người chơi mua vì muốn thấy ngay, bắt bấm thêm một
+	# nút "Mặc" nữa chỉ là một bước thừa.
+	equipped_skins[String(SKINS[skin_id]["character"])] = skin_id
+	shop_coins_changed.emit(shop_coins)
+	SaveSystem.save_game()
+	return true
+
+
+## Bật/tắt skin cho nhân vật của nó. Gọi lại với skin đang mặc = cởi ra.
+func toggle_skin(skin_id: String) -> void:
+	if not owned_skins.has(skin_id):
+		return
+	var ch := String(SKINS[skin_id]["character"])
+	if String(equipped_skins.get(ch, "")) == skin_id:
+		equipped_skins.erase(ch)
+	else:
+		equipped_skins[ch] = skin_id
+	SaveSystem.save_game()
+
+
+## Đường dẫn model nhân vật sẽ mặc; "" = dùng model gốc trong scene nhân vật.
+func equipped_model_for(character_id: String) -> String:
+	var skin := String(equipped_skins.get(character_id, ""))
+	if skin.is_empty() or not owned_skins.has(skin):
+		return ""
+	return skin_model_path(skin)
+
+
+## Số tiền shop nhận được từ một doanh thu. floori chứ không int(): doanh thu
+## âm (Asian phá sản) thì int() làm tròn về 0, floori làm tròn xuống — ở đây
+## đã chặn âm bằng maxi nên hai cách như nhau, nhưng floori nói rõ ý "bỏ lẻ".
+func shop_reward_for(money: int) -> int:
+	return floori(float(maxi(money, 0)) * SHOP_RATE)
+
+
+## Cộng tiền shop từ một lượt chơi, lưu ngay, trả về số vừa cộng để bảng tổng
+## kết in ra. Nơi gọi tự quyết lượt đó CÓ được thưởng không (qua màn, thắng
+## Asian...) — hàm này chỉ lo phần tính và cất.
+func award_shop_coins(money: int) -> int:
+	var gain := shop_reward_for(money)
+	if gain <= 0:
+		return 0
+	shop_coins += gain
+	shop_coins_changed.emit(shop_coins)
+	SaveSystem.save_game()
+	return gain
+
+
+## Cộng thẳng một số tiền shop (không qua tỉ lệ 10%). Chỉ bảng CODE No.7 gọi,
+## để demo shop trước hội đồng mà không phải chơi nhiều màn cho đủ tiền.
+func add_shop_coins(amount: int) -> void:
+	shop_coins = maxi(shop_coins + amount, 0)
+	shop_coins_changed.emit(shop_coins)
+	SaveSystem.save_game()
+
+
+func shop_owned(item: String) -> bool:
+	if item == "third_person":
+		return third_person_unlocked
+	return is_character_unlocked(item)
+
+
+## Trả về true nếu mua thành công. Kiểm tra đủ ba điều kiện Ở ĐÂY chứ không
+## tin vào nút bấm đã bị làm xám: giao diện chỉ là lớp trình bày, luật phải
+## nằm ở chỗ giữ dữ liệu.
+func buy_shop_item(item: String) -> bool:
+	if not SHOP_ITEMS.has(item) or shop_owned(item):
+		return false
+	var price := int(SHOP_ITEMS[item]["price"])
+	if shop_coins < price:
+		return false
+	shop_coins -= price
+	if item == "third_person":
+		set_third_person_unlocked(true)
+	else:
+		set_character_unlocked(item, true)
+	shop_coins_changed.emit(shop_coins)
+	SaveSystem.save_game()
+	return true
+
+
 ## Xóa sạch tiến trình, quay về trạng thái mới cài.
 func reset() -> void:
+	shop_coins = 0
+	owned_skins.clear()
+	equipped_skins.clear()
 	completed.clear()
 	best_money.clear()
 	current_level = ""
@@ -1508,6 +1693,9 @@ func to_dict() -> Dictionary:
 		"last_rank": last_rank,
 		"cheat_time_skip": cheat_time_skip,
 		"cheat_free_ingredients": cheat_free_ingredients,
+		"shop_coins": shop_coins,
+		"owned_skins": owned_skins,
+		"equipped_skins": equipped_skins,
 	}
 
 
@@ -1542,6 +1730,12 @@ func from_dict(data: Dictionary) -> void:
 	var last_raw: Variant = data.get("last_rank", {})
 	last_rank = last_raw if last_raw is Dictionary else {}
 	cheat_time_skip = bool(data.get("cheat_time_skip", data.get("cheat_tua_gio", false)))
+	# Khoá mới từ 29/10/2026 — save cũ không có thì ví bắt đầu từ 0.
+	shop_coins = maxi(int(data.get("shop_coins", 0)), 0)
+	var os_raw: Variant = data.get("owned_skins", {})
+	owned_skins = os_raw if os_raw is Dictionary else {}
+	var es_raw: Variant = data.get("equipped_skins", {})
+	equipped_skins = es_raw if es_raw is Dictionary else {}
 	# Khoá mới từ 26/9/2026, không có tên tiếng Việt cũ nên không cần đọc lùi.
 	cheat_free_ingredients = bool(data.get("cheat_free_ingredients", false))
 	# Save cũ chỉ có một cờ bool cho Gold Ship — chuyển sang từ điển để người

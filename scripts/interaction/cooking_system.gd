@@ -148,7 +148,9 @@ func _process(delta: float) -> void:
 			_finish(station, store, mode)
 			# Món lẻ nấu xong vẫn nằm trên bếp và VẪN ĐẾM TIẾP, để quá lâu
 			# thì cháy. Các kiểu khác dừng hẳn ở đây.
-			if mode != "cook" or ItemCatalog.burnt_state(String(m["source_id"])).is_empty():
+			# (16/11/2026) Lò cũng vậy khi món có trạng thái cháy (pizza bộ B).
+			if not ["cook", "bake"].has(mode) \
+					or ItemCatalog.burnt_state(String(m["source_id"])).is_empty():
 				_running.erase(station)
 				# Phát 0 Ở ĐÂY chứ không ở _finish: chỉ khi mẻ thật sự kết
 				# thúc mới được ẩn thanh. Phát trong _finish thì món còn
@@ -231,7 +233,9 @@ func start_oven(oven: Workstation, id: String = ItemCatalog.PIZZA_BASE) -> bool:
 	if oven == null or _running.has(oven) or not oven.contents.is_empty():
 		return false
 	oven.add_item(id)
-	_running[oven] = {"store": oven, "elapsed": 0.0, "mode": "bake", "source_id": ""}
+	# source_id = chính thứ bỏ vào: pizza sống có khoá "burnt" thì lò biết nó
+	# cháy thành gì. Đế bánh trần (đường cũ) không có khoá đó nên không cháy.
+	_running[oven] = {"store": oven, "elapsed": 0.0, "mode": "bake", "source_id": id}
 	progress_changed.emit(oven, 0.0)
 	return true
 

@@ -22,6 +22,10 @@ const CODE_IDLE_ALPHA := 0.55
 @onready var _options: Control = %OptionsPanel
 @onready var _settings: Control = %SettingsPanel
 
+const ShopPanel := preload("res://scenes/menu/shop_panel.gd")
+var _btn_shop: Button
+var _shop: Control
+
 
 func _ready() -> void:
 	# Nhạc menu: bốc ngẫu nhiên MỘT lần cho cả cụm menu.
@@ -43,7 +47,19 @@ func _ready() -> void:
 	_options.settings_chosen.connect(_on_settings_pressed)
 	_options.credits_chosen.connect(_on_credits_pressed)
 
-	for btn in [_btn_new, _btn_levels, _btn_options, _btn_quit]:
+	# Nút Shop và bảng Shop dựng bằng code, không thêm vào main_menu.tscn:
+	# editor Godot hay ghi đè file .tscn đang mở bằng bản cũ trong bộ nhớ,
+	# còn node sinh lúc chạy thì không có gì để ghi đè. Chèn ngay sau "Chọn
+	# màn" để thứ tự nút đọc theo luồng chơi: chơi → chọn màn → tiêu tiền.
+	_btn_shop = Button.new()
+	_btn_shop.text = Lang.t("Cửa hàng")
+	_btn_levels.get_parent().add_child(_btn_shop)
+	_btn_levels.get_parent().move_child(_btn_shop, _btn_levels.get_index() + 1)
+	_btn_shop.pressed.connect(_on_shop_pressed)
+	_shop = ShopPanel.new()
+	add_child(_shop)
+
+	for btn in [_btn_new, _btn_levels, _btn_shop, _btn_options, _btn_quit]:
 		_setup_hover(btn)
 
 	# Nút CODE No.7 ở góc dưới phải — công cụ cho người phát triển.
@@ -94,6 +110,10 @@ func _scale_to(btn: Button, target: float) -> void:
 ## sau khi xong (hoặc bỏ qua) tutorial.
 func _on_new_pressed() -> void:
 	get_tree().change_scene_to_file(GameData.start_story_level("prologue"))
+
+
+func _on_shop_pressed() -> void:
+	_shop.open(_btn_shop)
 
 
 func _on_levels_pressed() -> void:

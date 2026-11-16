@@ -13,7 +13,8 @@ extends CanvasLayer
 ##     tức mất 1 mạng qua đúng đường "khách bỏ về".
 ##   • Không có bảng thực đơn (level_base không dựng menu_panel ở Asian).
 ##   • Hết 10 phút mà còn mạng là THẮNG; đóng quán sớm là THUA.
-##   • (27/10) Kiên nhẫn không hồi khi ngồi bàn (customer_manager.keep_queue_patience).
+##   • (27/10) Kiên nhẫn không hồi khi ngồi bàn — BỎ ngày 6/11: thanh kiên nhẫn
+##     về như mọi chế độ khác (ngồi bàn là nạp đầy lại).
 ##   • (27/10) 8 đơn hoàn hảo THẬT liên tiếp hồi 1 mạng (tối đa 3).
 ##   • (27/10) Vứt đồ cháy vào thùng rác: trừ gấp đôi tiền nguyên liệu của nó.
 ## Bỏ hẳn: combo ngược (user bỏ 27/10).
@@ -79,7 +80,7 @@ func setup(level: Node, customers: Node, clock: Node, cooking: Node, picker: Nod
 	_streak_counts_forced = bool(p.get("streak_counts_forced", false))
 	_customers.vat_rate = VAT_RATE
 	_customers.wrong_dish_leaves = true
-	_customers.keep_queue_patience = true
+	# Không bật keep_queue_patience (bỏ 6/11): kiên nhẫn giống các chế độ khác.
 	_customers.money_on_table = true
 	if hands != null and hands.has_signal("item_discarded"):
 		hands.item_discarded.connect(_on_item_discarded)
@@ -186,7 +187,7 @@ func _on_item_discarded(id: String, station: Node) -> void:
 
 ## Thứ mà để cháy thì ra `id` (vd. "ham_cooked_fail" <- "ham"), hoặc rỗng.
 func _burnt_source(id: String) -> String:
-	for src in ItemCatalog.ITEMS:
+	for src in ItemCatalog.items():
 		if ItemCatalog.burnt_state(String(src)) == id:
 			return String(src)
 	return ""

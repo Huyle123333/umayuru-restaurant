@@ -48,7 +48,9 @@ const COLOR_RED := Color("c4433a")
 var is_open: bool = true
 
 var _board: Control
-var _row: HBoxContainer
+## Dải vé kiểu BĂNG CHUYỀN (16/11/2026) — một Control trơn, các vé tự xếp
+## trong _layout_conveyor() thay vì để HBoxContainer xếp.
+var _row: Control
 var _label: PanelContainer
 var _lbl_counter: Label
 var _label_style: StyleBoxFlat
@@ -93,10 +95,11 @@ func _build_ui() -> void:
 	_board.size = Vector2(design_width - MARGIN - RIGHT_RESERVED, OrderTicket.HEIGHT)
 	_board.position = Vector2(MARGIN, _y_closed())
 	_board.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	# Cắt vé tràn ra ngoài mép phải (băng chuyền) thay vì để đè lên đồng hồ.
+	_board.clip_contents = true
 	root.add_child(_board)
 
-	_row = HBoxContainer.new()
-	_row.add_theme_constant_override("separation", GAP)
+	_row = Control.new()
 	_row.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	_row.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_board.add_child(_row)
@@ -194,10 +197,27 @@ func add_order(order: RefCounted) -> void:
 		return
 	var v := OrderTicket.new()
 	_row.add_child(v)
+	# Vé mới xuất hiện ở CUỐI băng chuyền, không bay từ mép trái sang.
+	v.position.x = _conveyor_end()
 	v.build(order, _coin_icon)
 	v.slide_in()
 	_ticket[order] = v
 	_update_label()
+
+
+## Còn chỗ cho thêm MỘT vé nữa không (16/11/2026).
+##
+## Vé giờ rộng theo số nguyên liệu, nên dải có thể tràn ra ngoài màn hình khi
+## nhiều đơn dài cùng lúc. Hệ khách hỏi hàm này trước khi cho khách mới vào:
+## hết chỗ thì không nhận khách — quán chỉ có 6 bàn, mà một vé nằm ngoài màn
+## hình là một đơn người chơi không thấy, chắc chắn mất khách.
+## Tính chỗ cho vé TO NHẤT có thể, vì lúc hỏi chưa biết khách sẽ gọi món gì.
+func has_room() -> bool:
+	var used := 0.0
+	for v in _ticket.values():
+		if is_instance_valid(v):
+			used += float(v.custom_minimum_size.x) + GAP
+	return used + OrderTicket.width_for(OrderTicket.MAX_PARTS) <= _board.size.x
 
 
 func _on_order_finished(order: RefCounted, _reason: String) -> void:
@@ -214,7 +234,44 @@ func remove_order(order: RefCounted) -> void:
 	_update_label()
 
 
-func _process(_delta: float) -> void:
+## Mép phải của vé cuối cùng đang nằm trên băng — chỗ vé mới đặt vào.
+func _conveyor_end() -> float:
+	var end := 0.0
+	for c in _row.get_children():
+		var t := c as Control
+		if t != null:
+			end = maxf(end, t.position.x + t.custom_minimum_size.x + GAP)
+	return end
+
+
+## BĂNG CHUYỀN — vé xếp cạnh nhau bình thường, đơn CŨ NHẤT đứng đầu bên
+## trái. Hết chỗ thì vé sau nằm tiếp ra ngoài mép phải của dải và bị CẮT đi
+## (_board.clip_contents) — chỉ hiện phần còn trong dải, như hàng vé đang chờ
+## trên băng chuyền.
+##
+## Vị trí trượt dần về chỗ đích mỗi khung hình (lerp), nên khi vé đầu xong
+## và rút đi, cả hàng TRÔI sang trái lấp chỗ, vé bị cắt dần lộ ra hết. Vé
+## đang rút vẫn thu bề ngang về 0 (order_ticket.slide_out), nên phần lấp chỗ
+## mượt chứ không giật.
+##
+## Không chặn khách khi tràn: quán có 6 bàn + hàng đợi giới hạn sẵn số khách.
+const CONVEYOR_SPEED := 12.0
+
+func _layout_conveyor(delta: float) -> void:
+	var x := 0.0
+	var k := minf(1.0, delta * CONVEYOR_SPEED)
+	for c in _row.get_children():
+		var t := c as Control
+		if t == null or t.is_queued_for_deletion():
+			continue
+		t.size = Vector2(t.custom_minimum_size.x, OrderTicket.HEIGHT)
+		t.position.x = lerpf(t.position.x, x, k)
+		t.position.y = 0.0
+		x += t.custom_minimum_size.x + GAP
+
+
+func _process(delta: float) -> void:
+	_layout_conveyor(delta)
 	# Chỉ cập nhật nhãn khi bảng đang ĐÓNG: lúc mở thì mọi thứ nhãn nói đều
 	# đã hiện rõ trên từng tấm vé, tính lại mỗi frame hình là việc thừa.
 	if not is_open:

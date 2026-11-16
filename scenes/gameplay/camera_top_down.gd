@@ -22,6 +22,11 @@ extends Camera3D
 ## Dùng để chặn camera không trôi ra ngoài tường, xem _chan_trong_map().
 @export var map_size := Vector2(32.0, 24.0)
 
+## Mép BẮC của bản đồ (z nhỏ nhất). Map hình chữ L từ 12/11/2026: bếp kéo dài
+## lên z = -4, phần phía bắc khu khách là sân sau trang trí — nên camera được
+## phép nhìn lên tới -4 trên cả chiều ngang mà không lộ khoảng trống.
+@export var map_min_z: float = 0.0
+
 ## Độ mượt khi bám. Càng lớn càng bám sát, càng nhỏ càng "trôi" theo sau.
 ##
 ## 6.0 là mức camera theo kịp nhịp đi bộ mà vẫn còn một chút trễ — chút trễ
@@ -141,7 +146,7 @@ func _clamp_to_map(center: Vector3) -> Vector3:
 
 	# Cận trên (phía z nhỏ) lùi thêm `no_them_mep_tren` — xem chú thích của ô
 	# đó để biết vì sao chỉ một phía.
-	var top_limit := half_depth - extra_top
+	var top_limit := map_min_z + half_depth - extra_top
 	var bottom_limit := map_size.y - half_depth
 	if top_limit >= bottom_limit:
 		# Khung hình sâu hơn bản đồ: khoá cứng vào giữa. Không có nhánh này

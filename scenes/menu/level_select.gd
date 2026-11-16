@@ -75,6 +75,8 @@ const MODE_DESC := {
 	"endless": "LEVEL_DESC_ENDLESS",
 	"asian": "LEVEL_DESC_ASIAN",
 	"aaa": "LEVEL_DESC_AAA",
+	# Chữ thẳng chứ không khoá dịch: chế độ thử nghiệm nội bộ, không ra bản chính.
+	"plan_b": "Thử bộ công thức mới (phương án B): thực đơn chia theo họ món.\n\nKhông đếm ngược, không hết giờ, khách chỉ vào khi bạn gọi.\n\nPhím tắt trong màn:\n  F5  mở bảng chọn món (chọn xong khách vào ngay)\n  F6  về món ngẫu nhiên\n  F7  đổi loại khách\n  F8  gọi một khách vào ngay",
 }
 
 @onready var _btn_back: Button = %BtnBack
@@ -108,6 +110,7 @@ func _ready() -> void:
 		btn.set_meta("base_text", btn.text)
 		btn.pressed.connect(_on_level_pressed.bind(id))
 
+	_add_plan_b_button()
 	for id in _modes:
 		var mode_btn: Button = _modes[id]
 		# Chế độ đã có nội dung thì không gắn chú thích "đang phát triển".
@@ -284,3 +287,18 @@ func _on_wipe_confirmed() -> void:
 	GameData.reset()
 	# reset() phát tín hiệu progress_changed nên _refresh() tự chạy,
 	# mọi nút lập tức khóa lại trừ Prologue.
+
+
+## Nút "Thử nghiệm B" — chế độ thử bộ công thức theo họ món (16/11/2026).
+##
+## Dựng bằng code, nhân bản nút AAA ngay cạnh nó, thay vì sửa file .tscn: đây
+## là chế độ tạm, bỏ đi thì xoá hàm này là xong, không phải mở scene ra gỡ.
+## Nhân bản nút có sẵn để nút mới mang đúng kiểu chữ, kích thước, theme.
+func _add_plan_b_button() -> void:
+	var src: Button = _modes["aaa"]
+	var btn := src.duplicate(0) as Button
+	btn.unique_name_in_owner = false
+	btn.name = "BtnPlanB"
+	btn.text = "Thử nghiệm B"
+	src.add_sibling(btn)
+	_modes["plan_b"] = btn

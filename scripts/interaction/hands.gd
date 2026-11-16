@@ -191,18 +191,11 @@ func _process(_delta: float) -> void:
 	_hand_point.rotation.y = origin
 
 
-func _unhandled_input(event: InputEvent) -> void:
-	# Q = vứt vật đang cầm xuống đất.
-	#
-	# Tách hẳn khỏi phím E: nếu dùng "E khi không có mục tiêu" thì E phụ
-	# thuộc chỗ đứng — cạnh bàn là đặt lên bàn, lùi một bước là vứt xuống
-	# đất. Cùng một phím cho hai kết quả tuỳ vị trí là thứ người chơi không
-	# đoán trước được, mà trong bếp chật thì họ đứng cạnh thứ gì đó liên tục.
-	if _held == null:
-		return
-	if event.is_action_pressed("drop_item"):
-		_throw_out()
-		get_viewport().set_input_as_handled()
+# (Đã bỏ 12/11/2026) Phím Q vứt đồ xuống sàn, cùng hàm _unhandled_input rỗng
+# còn sót lại sau khi bỏ (16/11/2026 — nó chỉ còn sinh cảnh báo "event không
+# dùng"). Sàn từng là "thùng rác miễn phí": người chơi né được thùng rác và cả
+# tiền phạt đồ cháy của Asian. Giờ muốn bỏ đồ phải ra thùng rác / cho Doro ăn;
+# muốn đặt tạm thì dùng 3 quầy để đồ phía bắc bếp (kind "counter").
 
 
 # ------------------------------------------------------------ tương tác ---
@@ -273,6 +266,8 @@ func _on_interact(station: Node, _index: int) -> void:
 			_discard(t)
 		"crafting_table", "prep_table":
 			_put_on_table(t)
+		"counter":
+			_use_counter(t)
 		"guest_table":
 			_deliver_dish(t)
 		_:
@@ -361,8 +356,29 @@ func is_holding() -> bool:
 	return _held != null
 
 
+## Màn hướng dẫn: tủ lạnh chỉ cho lấy đúng món đang dạy ("" = không giới hạn).
+var tutorial_item := ""
+
+
 func receive_ingredient(station: Node, id: String) -> void:
 	if _held != null or id.is_empty():
+		return
+	if not tutorial_item.is_empty() and id != tutorial_item \
+			and (station as Workstation) != null and (station as Workstation).kind != "crafting_table":
+		notice.emit(Lang.t("Lấy đúng %s theo hướng dẫn nhé") % ItemCatalog.display_name(tutorial_item), false)
+		return
+	# Bảng chọn mở từ BÀN CHẾ TẠO: lấy thứ đó RA KHỎI bàn chứ không sinh mới.
+	# Không đi qua nhánh dưới vì nhánh đó tính là lấy nguyên liệu từ kho
+	# (ingredient_taken -> Asian trừ tiền nguyên liệu lần nữa).
+	var ws := station as Workstation
+	if ws != null and ws.kind == "crafting_table":
+		var at_ := ws.contents.find(id)
+		if at_ < 0:
+			return
+		ws.contents.remove_at(at_)
+		ws.contents_changed.emit(ws)
+		ws.show_stack(ws.contents)
+		_pick_up(_spawn_item(id))
 		return
 	if blocked_items.has(id):
 		notice.emit(Lang.t("Hết hàng!"), false)
@@ -517,7 +533,8 @@ func _use_oven(oven: Workstation) -> void:
 
 	if _held != null:
 		var id: String = _held.item_id
-		if id == ItemCatalog.PIZZA_BASE and oven.contents.is_empty():
+		if id == ItemCatalog.PIZZA_BASE and oven.contents.is_empty() \
+				and ItemCatalog.oven_takes_base():
 			if cooking.start_oven(oven):
 				_clear_held()
 		# Pizza sống ghép sẵn ở bàn chế tạo: bỏ vào là nướng luôn.
@@ -532,8 +549,12 @@ func _use_oven(oven: Workstation) -> void:
 	# Lò đã xong: lấy thành phẩm ra. Còn đang chạy thì không lấy được — dở
 	# dang mà bốc ra thì chẳng khác gì huỷ mẻ, mà huỷ mẻ đã có nút khác.
 	if not cooking.is_burning(oven) and not oven.contents.is_empty():
-		var id: String = String(oven.contents[0])
-		oven.clear_all()
+		# Lấy qua cooking.take_out() chứ không tự xoá: pizza bộ B nướng xong
+		# vẫn nằm trong bảng đang-nấu để đếm tới lúc cháy. Tự clear_all() thì
+		# bảng đó còn giữ cái lò, và mẻ sau không bật lò lên được nữa.
+		var id: String = cooking.take_out(oven)
+		if id.is_empty():
+			return
 		_pick_up(_spawn_item(id))
 
 
@@ -624,6 +645,33 @@ func _put_on_table(table: Workstation) -> void:
 	table.show_stack(table.contents)
 
 
+## Quầy để đồ: chỗ đặt tạm ĐÚNG MỘT món.
+##
+## Một món chứ không chồng nhiều như bàn chế tạo: cả lý do có quầy là để
+## "đặt xuống rồi lấy lại đúng thứ đó" — chứa nhiều thì lại thành bài toán
+## lục tìm như bàn chế tạo. Nhìn quầy là biết ngay trên đó có gì.
+func _use_counter(t: Workstation) -> void:
+	if _held != null:
+		if not t.contents.is_empty():
+			notice.emit(Lang.t("Quầy đã có đồ"), false)
+			return
+		var id: String = _held.item_id
+		if id.is_empty():
+			id = _held.display_name
+		if ItemCatalog.is_locked(id):
+			return
+		t.add_item(id)
+		t.show_model(id)
+		_clear_held()
+		AmThanh.play_sfx("put_down", randf_range(0.94, 1.06))
+		return
+	if t.contents.is_empty():
+		return
+	var taken := t.pop_last()
+	t.clear_model()
+	_pick_up(_spawn_item(taken))
+
+
 ## Giao món cho một bàn khách.
 ##
 ## Chỉ nhận thứ BÁN ĐƯỢC, tức có giá trong danh mục.
@@ -695,6 +743,13 @@ func _take_dish_from_table(table: Workstation) -> void:
 	if table.contents.is_empty():
 		return
 
+	# Từ 2 thứ trở lên: mở bảng chọn để lấy ĐÚNG thứ cần, thay vì chỉ nhấc
+	# được thứ bỏ vào sau cùng (muốn lấy món ở dưới phải nhấc từng món một).
+	# Chỉ 1 thứ thì nhấc luôn — mở bảng cho một lựa chọn duy nhất là bấm thừa.
+	if table.kind == "crafting_table" and table.contents.size() >= 2:
+		request_picker.emit(table)
+		return
+
 	var id: String = table.pop_last()
 
 	# Bày lại mặt bàn. Không còn phải phân biệt "món hoàn chỉnh" với "đang ghép
@@ -721,6 +776,28 @@ func _release() -> void:
 	_orig_parent = null
 	_body.carrying = false
 	_draw_sign()
+
+
+var _knife: Sprite3D = null
+
+
+## Dấu con dao nhỏ ở góc biển trên đầu: món đang cầm phải qua thớt.
+## Là CON của biển nên biển ẩn thì dấu ẩn theo.
+func _draw_knife(on: bool) -> void:
+	if _knife == null:
+		if not ResourceLoader.exists(ItemCatalog.KNIFE_BADGE):
+			return
+		_knife = Sprite3D.new()
+		_knife.texture = load(ItemCatalog.KNIFE_BADGE)
+		_knife.billboard = BaseMaterial3D.BILLBOARD_ENABLED
+		_knife.shaded = false
+		_knife.no_depth_test = true
+		_knife.render_priority = 11
+		_sign.add_child(_knife)
+	var size_ := sign_width * 0.45
+	_knife.pixel_size = size_ / float(_knife.texture.get_width())
+	_knife.position = Vector3(sign_width * 0.35, -sign_width * 0.3, 0.0)
+	_knife.visible = on
 
 
 ## Vẽ lại tấm ảnh trên đầu theo thứ đang cầm.
@@ -751,6 +828,8 @@ func _draw_sign() -> void:
 		var w := float(_sign.texture.get_width())
 		_sign.pixel_size = sign_width / maxf(w, 1.0)
 		_sign.show()
+		# (16/11/2026) Không vẽ dao trên ảnh vật đang cầm nữa — xem guide_menu.
+		_draw_knife(false)
 	else:
 		_sign.hide()
 	held_name_changed.emit(label)

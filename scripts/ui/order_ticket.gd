@@ -24,7 +24,24 @@ extends Control
 ## hàng giờ nằm ngang ở mép trên, nên bề NGANG của một vé là thứ quyết định
 ## xếp được mấy vé — 148 thì vừa 10 vé, đúng số đơn tối đa của Ngày 3.
 const WIDTH := 148.0
-const HEIGHT := 112.0
+## Chiều cao vé CÓ hàng công thức (16/11/2026). Dải đơn hàng dùng số này để
+## tính chỗ trượt lên khi đóng, nên nó phải là chiều cao LỚN NHẤT.
+const HEIGHT := 190.0
+## Vé không in công thức (Asian): giữ đúng chiều cao cũ, khỏi chừa ô trống.
+const HEIGHT_PLAIN := 112.0
+## Ô ảnh nguyên liệu và kí hiệu nơi nấu bên dưới nó.
+##
+## (16/11/2026) Phóng to kiểu Overcooked: ô nguyên liệu 50 px, kí hiệu 40 px —
+## bản 28/18 nhỏ tới mức kí hiệu chảo/nồi gần như không đọc được. Vé không
+## còn rộng cố định nữa mà RỘNG THEO SỐ NGUYÊN LIỆU (width_for), như vé của
+## Overcooked: món 1 nguyên liệu thì vé hẹp, burger đầy đủ thì vé dài.
+const PART_SIZE := 50.0
+const BADGE_SIZE := 40.0
+const PART_GAP := 4.0
+## Số nguyên liệu nhiều nhất của một món (Hamburger, kem tam hợp que = 4) cộng
+## dư một. Dải đơn hàng dùng để biết còn chỗ cho vé tiếp theo không.
+const MAX_PARTS := 5
+const ItemCatalog := preload("res://scripts/interaction/item_catalog.gd")
 const SLIDE_SECONDS := 0.30
 
 ## Bảng màu giấy: lấy tông vé giấy nâu-kem cho khớp phong cách quán ăn, không
@@ -54,6 +71,9 @@ const COLOR_WAIT := Color("b9ab93")
 const NO_TABLE_YET := "—"
 
 var order: RefCounted = null
+## Chiều cao thật của vé này — HEIGHT hoặc HEIGHT_PLAIN.
+var _h := HEIGHT
+var _w := WIDTH
 
 var _card: PanelContainer
 var _bar: ProgressBar
@@ -62,18 +82,35 @@ var _fill_style: StyleBoxFlat
 var _lbl_number: Label
 
 
+## Asian: không in công thức — chế độ khó bắt người chơi tự nhớ (tài liệu
+## Asian mục 3.3). Mọi chế độ khác đều in.
+static func _shows_recipe() -> bool:
+	var gd = Engine.get_main_loop().root.get_node_or_null("/root/GameData") \
+		if Engine.get_main_loop() is SceneTree else null
+	return gd == null or not gd.is_asian_mode()
+
+
+## Bề ngang vé cho món có `n` nguyên liệu.
+static func width_for(n: int) -> float:
+	return maxf(WIDTH, n * (PART_SIZE + PART_GAP) + 20.0)
+
+
 func _init() -> void:
-	custom_minimum_size = Vector2(WIDTH, HEIGHT)
+	_h = HEIGHT if _shows_recipe() else HEIGHT_PLAIN
+	custom_minimum_size = Vector2(WIDTH, _h)
 	clip_contents = true
 	mouse_filter = Control.MOUSE_FILTER_IGNORE
 
 
 func build(order_: RefCounted, coin_icon: Texture2D) -> void:
 	order = order_
+	if _h == HEIGHT:
+		_w = width_for(ItemCatalog.ticket_parts(String(order_.dish)).size())
+		custom_minimum_size.x = _w
 
 	_card = PanelContainer.new()
-	_card.size = Vector2(WIDTH, HEIGHT)
-	_card.position = Vector2(0.0, -HEIGHT - 12.0)   # nằm sẵn phía trên, ngoài khung
+	_card.size = Vector2(_w, _h)
+	_card.position = Vector2(0.0, -_h - 12.0)   # nằm sẵn phía trên, ngoài khung
 	_card.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_card.add_theme_stylebox_override("panel", _paper_frame())
 	add_child(_card)
@@ -148,10 +185,19 @@ func build(order_: RefCounted, coin_icon: Texture2D) -> void:
 	# trên đã nói đủ món nào; tên chỉ là phần xác nhận.
 	lbl_name.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
 	lbl_name.clip_text = true
-	col.add_child(lbl_name)
+	# Vé có công thức thì bỏ tên món, như Overcooked: ảnh món + hàng nguyên
+	# liệu đã nói đủ, tên chỉ tốn một dòng chiều cao. Vé Asian (không công
+	# thức) vẫn giữ tên.
+	if _h != HEIGHT:
+		col.add_child(lbl_name)
+	else:
+		lbl_name.free()
 
 	_bar = _make_bar()
 	col.add_child(_bar)
+
+	if _h == HEIGHT:
+		col.add_child(_recipe_row(String(order_.dish)))
 
 	_draw_table_no()
 	_draw_bar()
@@ -170,7 +216,7 @@ func slide_out() -> void:
 	# khoảng trống, và những vé bên phải nhảy cóc sang khi node bị xoá.
 	var tween := create_tween().set_parallel(true) \
 		.set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_IN)
-	tween.tween_property(_card, "position:y", -HEIGHT - 12.0, SLIDE_SECONDS)
+	tween.tween_property(_card, "position:y", -_h - 12.0, SLIDE_SECONDS)
 	tween.tween_property(self, "custom_minimum_size:x", 0.0, SLIDE_SECONDS)
 	tween.finished.connect(queue_free)
 
@@ -279,4 +325,43 @@ func _make_bar() -> ProgressBar:
 	tick.offset_top = -1.0
 	tick.offset_bottom = 1.0
 	t.add_child(tick)
+	return t
+
+
+## Hàng công thức kiểu Overcooked: mỗi nguyên liệu một ô [ảnh / kí hiệu nơi
+## nấu]. Món có nhiều nguyên liệu thì thu nhỏ ô lại cho vừa bề ngang vé thay
+## vì xuống dòng — vé cao cố định.
+func _recipe_row(dish: String) -> Control:
+	var row := HBoxContainer.new()
+	row.alignment = BoxContainer.ALIGNMENT_CENTER
+	row.add_theme_constant_override("separation", int(PART_GAP))
+	row.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	var parts := ItemCatalog.ticket_parts(dish)
+	if parts.is_empty():
+		return row
+	var room := _w - 16.0
+	var size_ := minf(PART_SIZE, room / parts.size() - PART_GAP)
+	for part in parts:
+		var cell := VBoxContainer.new()
+		cell.add_theme_constant_override("separation", 0)
+		cell.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		cell.add_child(_icon(ItemCatalog.icon_path(part), size_))
+		var badge := ItemCatalog.cook_badge(dish, part)
+		# Ô trống cùng cỡ khi không có kí hiệu, để các ảnh nguyên liệu vẫn
+		# thẳng hàng với nhau.
+		cell.add_child(_icon("" if badge.is_empty() else ItemCatalog.badge_path(badge),
+			minf(BADGE_SIZE, size_)))
+		row.add_child(cell)
+	return row
+
+
+func _icon(path_: String, px: float) -> TextureRect:
+	var t := TextureRect.new()
+	t.custom_minimum_size = Vector2(px, px)
+	t.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	t.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	t.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+	t.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	if not path_.is_empty() and ResourceLoader.exists(path_):
+		t.texture = load(path_)
 	return t

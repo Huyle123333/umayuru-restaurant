@@ -91,6 +91,9 @@ var _base_labels: Dictionary = {}
 var _character_buttons: Dictionary = {}
 
 
+var _btn_shop_coins: Button
+
+
 func _ready() -> void:
 	hide()
 	_btn_ok.pressed.connect(_try_login)
@@ -121,6 +124,9 @@ func _ready() -> void:
 	# Không đi qua _redraw() nên phải tự gán chữ, nếu không nút giữ nguyên chữ
 	# của nút gốc mà _make_button() nhân bản ra.
 	_btn_replay_intro.text = String(_base_labels[_btn_replay_intro])
+	_btn_shop_coins = _make_button(
+		"BtnShopCoins", Lang.t("+1000 tiền shop"), _on_shop_coins_pressed)
+	_btn_shop_coins.text = String(_base_labels[_btn_shop_coins])
 	_btn_secret_ending = _make_button(
 		"BtnSecretEnding", Lang.t("Ending: luôn chiếu kết ẩn"), _on_secret_ending_pressed)
 	# Gõ mật khẩu xong bấm Enter cũng vào được, không bắt phải rê chuột.
@@ -264,6 +270,18 @@ func _on_replay_intro_pressed() -> void:
 	if is_instance_valid(_btn_replay_intro):
 		_btn_replay_intro.text = base
 		_btn_replay_intro.disabled = false
+
+
+## Nút bấm một lần như "Xem lại đoạn ra mắt", KHÔNG có dấu tích: cộng tiền
+## không phải trạng thái bật/tắt. Chữ trên nút đổi 1 giây để báo số dư mới —
+## không có phản hồi thì bấm xong không biết đã cộng chưa, dễ bấm thêm nhiều lần.
+func _on_shop_coins_pressed() -> void:
+	GameData.add_shop_coins(1000)
+	var base := String(_base_labels.get(_btn_shop_coins, ""))
+	_btn_shop_coins.text = Lang.t("Ví shop: %d") % GameData.shop_coins
+	await get_tree().create_timer(1.0).timeout
+	if is_instance_valid(_btn_shop_coins):
+		_btn_shop_coins.text = base
 
 
 ## Bật: nút Ending luôn vào kết ẩn. Tắt: quay về luật thật (ba chữ S).
