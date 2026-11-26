@@ -1,46 +1,12 @@
 @tool
 extends CharacterBody3D
-## Một người khách. CHỈ biết đi và diễn: đi tới một điểm, đứng chờ, ăn, rồi về.
-##
-## Không biết đơn hàng, không biết tiền, không biết bàn nào còn trống — tất cả
-## những thứ đó do customer_manager.gd quyết rồi RA LỆNH xuống đây. Lý do tách:
-## luật nhà hàng (ai ngồi bàn nào, đơn nào khớp món nào) sẽ còn đổi rất nhiều,
-## còn "đi từ A tới B rồi phát tín hiệu đã tới" thì gần như không đổi. Trộn hai
-## thứ vào một file thì mỗi lần sửa luật lại phải đọc qua cả phần điều khiển.
-##
-## KHÔNG đặt class_name: level_base nạp mọi hệ thống bằng load() lúc chạy để
-## một lỗi cú pháp ở đây không kéo sập cả màn chơi. class_name phân giải lúc
-## biên dịch nên sẽ phá mất lớp bảo vệ đó.
 
 ## Đi tới nơi rồi. `viec` là chuỗi do người ra lệnh gửi kèm lúc gọi go_to(),
-## trả lại nguyên vẹn để bên đó biết đây là chuyến nào — nhờ vậy máy trạng
-## thái NẰM Ở quản lý, còn ở đây chỉ có "đang đi" và "đứng yên".
 signal arrived(customer: Node, task: String)
 ## Ăn xong.
 signal ate(customer: Node)
 
 ## Cỡ người khách. 1,0 = đúng cỡ model gốc (cao 1,52 đơn vị).
-##
-## ĐÂY LÀ Ô DUY NHẤT CẦN CHỈNH. Mở scenes/restaurant/customer.tscn, chọn node gốc
-## "Khach", sửa số này trong Inspector — model, hộp va chạm, bán kính agent và
-## độ cao bong bóng đều đổi theo cùng lúc.
-##
-## Vì sao không kéo thẳng scale của node Model: scale chỉ đổi phần NHÌN THẤY.
-## Hộp va chạm và agent giữ nguyên cỡ cũ, nên một người khách to gấp rưỡi vẫn
-## lách qua khe hẹp như người tí hon, còn navmesh thì được nướng theo bán kính
-## agent chứ không theo model. Sai lệch kiểu đó không có lỗi nào báo, chỉ thấy
-## khách thỉnh thoảng lún vào bàn.
-##
-## Cũng KHÔNG scale node gốc: Godot khuyến cáo không scale CharacterBody3D,
-## vì máy vật lý dùng hình va chạm chứ không dùng transform của thân.
-##
-## Nhân vật người chơi (model chibi) cao khoảng 1,94 sau khi phóng 1,6; để
-## khách cao ngang thì tỉ lệ khoảng 1,3.
-##
-## (1/10/2026) Đổi tên từ `patience_ratio`. Tên cũ là lỗi của đợt đổi tên sang
-## tiếng Anh: "tỉ lệ" bị dịch theo nghĩa của order.patience_ratio() (tỉ lệ
-## kiên nhẫn còn lại), trong khi số này là CỠ THÂN. Đọc tên cũ thì tưởng
-## khách to ra là khách kiên nhẫn hơn.
 @export var body_scale: float = 1.3:
 	set(v):
 		body_scale = maxf(0.1, v)
@@ -69,22 +35,6 @@ var _anim_now := ""
 
 
 ## Các model khách. Mỗi người khách bốc NGẪU NHIÊN một model khi sinh ra.
-##
-##   path   — file .glb. Đường dẫn dạng CHUỖI rồi load() lúc chạy, chứ không kéo
-##            PackedScene vào scene: thiếu một file (chưa xuất xong) thì model
-##            đó tự bị bỏ qua thay vì làm hỏng cả scene khách.
-##   weight — trọng số bốc, tính theo TỈ LỆ trên tổng. Hiện năm model bằng
-##            nhau; muốn một khách hiếm thì cho trọng số nhỏ hơn hẳn số còn lại.
-##   scale  — nhân thêm vào body_scale, cho model có cỡ gốc khác các model
-##            Umamusume (1,5–1,7 đơn vị).
-##   yaw    — (độ, tuỳ chọn) xoay thêm model quanh trục đứng, cho model xuất ra
-##            nhìn ngược hướng các model còn lại. Xoay node Model con chứ không
-##            xoay node khách: hàm quay mặt theo hướng đi ghi đè rotation.y của
-##            node khách mỗi khung hình.
-##
-## Model trong customer.tscn (Akikawa) là dự phòng khi không nạp được cái nào.
-## Mọi model phải có cùng bốn animation idle / walk / eat / angry.
-## Trọng số của mỗi khách hiếm — xem giải thích trong MODELS.
 const RARE_WEIGHT := 5.0 / 18.0
 
 const MODELS := [
@@ -93,37 +43,21 @@ const MODELS := [
 	{"path": "res://assets/models/khach_hello.glb", "weight": 1.0, "scale": 1.0},
 	{"path": "res://assets/models/khach_riko.glb", "weight": 1.0, "scale": 1.0},
 	{"path": "res://assets/models/khach_etsuko.glb", "weight": 1.0, "scale": 1.0},
-	# KHÁCH HIẾM: Spiki (Trickcal) và Gugugaga, MỖI con 5% (user chốt 6/11/2026).
-	# Gọi trọng số mỗi con là w: w / (5 + 2w) = 0,05 -> w = 0,25 / 0,9 = 5/18
-	# ≈ 0,278. Năm model Uma chia đều 90% còn lại (18% mỗi model).
-	# Spiki: scale 1,3 — model chibi cao 0,75, nhân body_scale 2 và 1,3 thành
-	# ~1,95, đúng chiều cao nhân vật chibi người chơi điều khiển. Rig Biped của
-	# 3ds Max nên animation dựng riêng trong assets/npc/spiki/spiki_v2.blend,
-	# nhưng vẫn cùng bốn tên clip.
 	{"path": "res://assets/models/customer_spiki.glb", "weight": RARE_WEIGHT, "scale": 1.3,
-		# Spiki xuất ra nhìn về −Z, năm model Uma nhìn về +Z → xoay 180°.
 		"yaw": 180.0},
-	# Gugugaga: cùng model với khách VIP của Asian (scale 1,5 như vip_guest.gd),
-	# đã có đủ bốn clip idle / walk / eat / angry.
 	{"path": "res://assets/models/customer_gugugaga.glb", "weight": RARE_WEIGHT, "scale": 1.5},
 ]
 
 ## Animation phải LẶP. glTF không mang được cờ lặp, nên đặt ở đây lúc chạy thay
-## vì sửa tay file .import của từng model — thêm model mới không phải nhớ bước
-## đó. `angry` cố ý không lặp: cáu là cử chỉ diễn một lần.
 const LOOPING_ANIMS := ["idle", "walk", "eat"]
 
 ## Model nạp sẵn, dùng chung cho mọi người khách: mỗi phần tử là
-## {"scene": PackedScene, "weight": float, "scale": float, "yaw": float}. static để chỉ load()
-## một lần cho cả màn chơi chứ không mỗi người khách một lần.
 static var _model_cache: Array[Dictionary] = []
 
 ## Tỉ lệ riêng của model đang dùng (khoá "scale" trong MODELS).
 var _model_scale := 1.0
 
 ## Ép một model cụ thể thay vì bốc ngẫu nhiên: {"path", "scale", "yaw"}. Gán
-## TRƯỚC add_child (model chọn trong _ready). Dùng cho NPC sự kiện Asian:
-## khách VIP Gugugaga và thanh tra Spiki.
 var forced_model: Dictionary = {}
 
 
@@ -168,8 +102,6 @@ func _swap_model(picked: Dictionary) -> void:
 	if fresh == null:
 		return
 	if old != null:
-		# remove_child TRƯỚC queue_free: queue_free chỉ xoá ở cuối khung hình,
-		# trong lúc đó hai node cùng tên "Model" và get_node lấy nhầm cái cũ.
 		remove_child(old)
 		old.queue_free()
 	fresh.name = "Model"
@@ -180,10 +112,6 @@ func _swap_model(picked: Dictionary) -> void:
 
 
 ## Bốc theo trọng số: gieo một số trong [0, tổng) rồi trừ dần.
-##
-## Không dùng pick_random(): nó chia đều, không cho khách nào hiếm hơn. Trọng số
-## tính trên các model ĐÃ NẠP ĐƯỢC, nên thiếu một file thì phần của nó chia
-## đều cho số còn lại thay vì làm lệch tỉ lệ.
 func _pick_weighted() -> Dictionary:
 	var total := 0.0
 	for entry in _model_cache:
@@ -205,10 +133,6 @@ func _make_loops() -> void:
 
 
 ## Áp tỉ lệ cho model, hộp va chạm, agent và bong bóng.
-##
-## is_node_ready() chặn lần gọi đầu: setter của @export chạy NGAY LÚC NẠP
-## SCENE, sớm hơn @onready, nên lúc đó _agent và _bubble còn là null. _ready()
-## gọi lại một lần nữa nên không mất giá trị nào.
 func _apply_scale() -> void:
 	if not is_node_ready():
 		return
@@ -221,8 +145,6 @@ func _apply_scale() -> void:
 		var shape := col.shape as CapsuleShape3D
 		shape.radius = BASE_RADIUS * body_scale
 		shape.height = BASE_HEIGHT * body_scale
-		# Capsule lấy gốc ở TÂM, nên phải nâng lên nửa chiều cao thì chân mới
-		# chạm sàn. Quên bước này là nhân vật lún nửa người xuống đất.
 		col.position.y = BASE_HEIGHT * 0.5 * body_scale
 
 	if _agent != null:
@@ -233,12 +155,6 @@ func _apply_scale() -> void:
 
 
 ## Ra lệnh đi tới một vị trí.
-##
-## Điểm đích được NẮN về navmesh trước khi giao cho agent. Bắt buộc: mấy cái
-## Marker3D trong map do người kê bằng mắt, có cái nằm sát tường (CuaVao ở
-## x=31,5 trong khi tường ở x=32) nên rơi ra NGOÀI vùng đi được sau khi navmesh
-## co vào theo bán kính agent. Giao thẳng điểm ngoài mesh thì agent tìm đường
-## tới chỗ gần nhất rồi loay hoay không bao giờ báo "đã tới".
 func go_to(dest: Vector3, task: String, final_dir: Vector3 = Vector3.ZERO) -> void:
 	_task = task
 	_face_dir = final_dir
@@ -249,40 +165,17 @@ func go_to(dest: Vector3, task: String, final_dir: Vector3 = Vector3.ZERO) -> vo
 
 
 ## Đứng lại tại chỗ, quay mặt về một hướng nếu có.
-## Nắn một điểm bất kỳ về điểm gần nhất còn nằm trên vùng đi được.
-##
-## Hai cái bẫy đã đo được lúc chạy, cả hai đều HỎNG LẶNG LẼ:
-##  1. `agent.get_navigation_map()` của một agent vừa mới vào cây scene chưa
-##     chắc đã trỏ đúng bản đồ có sẵn các vùng. Hỏi qua world_3d thì luôn là
-##     bản đồ mà quản lý khách đã gắn vùng vào.
-##  2. Truy vấn hỏng KHÔNG báo lỗi mà trả về đúng (0,0,0). Người khách đầu tiên
-##     vì thế nhận đích là gốc toạ độ, đứng chết ngay cửa, và hai người sinh
-##     sau chồng lên rồi kẹt cả đám. Nên phải coi (0,0,0) là "hỏng" và giữ
-##     nguyên điểm gốc — trừ khi bản thân điểm cần nắn vốn đã là gốc toạ độ.
 static func snap_to_navmesh(nav_map: RID, point: Vector3) -> Vector3:
 	if not nav_map.is_valid() or NavigationServer3D.map_get_iteration_id(nav_map) == 0:
 		return point
 	var nearest := NavigationServer3D.map_get_closest_point(nav_map, point)
 	if nearest.is_equal_approx(Vector3.ZERO) and not point.is_equal_approx(Vector3.ZERO):
 		return point
-	# Chỉ lấy phần NGANG, giữ nguyên độ cao gốc.
-	#
-	# Điểm nắn ra nằm trên mặt navmesh, mà mặt đó cao hơn sàn nửa mét (Recast
-	# rasterize theo ô cao cell_height). Nếu để nguyên độ cao đó làm đích thì
-	# khoảng cách từ người khách (y=0) tới đích không bao giờ nhỏ hơn 0,5 —
-	# tức là target_desired_distance 0,45 KHÔNG BAO GIỜ thoả và người khách
-	# đứng dí một chỗ dù vẫn có vận tốc. Sàn quán phẳng tuyệt đối nên bỏ trục
-	# đứng đi là đúng, không mất gì.
 	nearest.y = point.y
 	return nearest
 
 
 ## Khai báo mặt navmesh cao hơn chân nhân vật bao nhiêu.
-##
-## NavigationAgent3D trừ con số này khỏi trục Y ở CẢ điểm đường trả về LẪN phép
-## đo "đã tới điểm giữa chưa". Không khai thì agent thấy mỗi điểm đường luôn
-## cách nó ít nhất 0,5 theo trục đứng, không bao giờ nhích sang điểm kế tiếp,
-## và người khách đi mãi về phía một cái mốc ngay dưới chân mình.
 func set_height_offset(icon_height: float) -> void:
 	_agent.path_height_offset = icon_height
 
@@ -299,19 +192,10 @@ func eat(seconds: float) -> void:
 	_moving = false
 	velocity = Vector3(0.0, velocity.y, 0.0)
 	_set_anim("eat")
-	# Đếm bằng bộ đếm RIÊNG trong _physics_process, không dùng
-	# get_tree().create_timer(): đồng hồ của cây scene không dừng theo node,
-	# nên khi kĩ năng dừng thời gian đóng băng người khách này (tắt xử lý của
-	# node) thì bữa ăn vẫn "xong" và tiền vẫn rơi ra giữa lúc mọi thứ đứng im.
 	_eat_left = maxf(seconds, 0.01)
 
 
 ## Viền màu quanh model (thanh tra Spiki: viền đỏ cho dễ nhận ra giữa đám khách).
-##
-## Kĩ thuật "vỏ lộn ngược" (inverted hull): vẽ lại mesh lần hai, phình ra theo
-## pháp tuyến và chỉ vẽ MẶT SAU — phần thò ra ngoài viền model thành đường viền.
-## Gắn qua material_overlay nên không đụng vật liệu gốc, và chạy cả với mesh có
-## xương vì shader dịch đỉnh SAU khi skin.
 func set_outline(color: Color, width: float = 0.02) -> void:
 	var sh := Shader.new()
 	sh.code = """
@@ -325,8 +209,6 @@ void fragment() { ALBEDO = outline_color.rgb; }
 	var mat := ShaderMaterial.new()
 	mat.shader = sh
 	mat.set_shader_parameter("outline_color", color)
-	# Chia cho tỉ lệ model: viền tính trong toạ độ của mesh, model phóng to
-	# thì viền to theo.
 	mat.set_shader_parameter("width", width / maxf(_model_scale * body_scale, 0.01))
 	for m in find_children("*", "MeshInstance3D", true, false):
 		(m as MeshInstance3D).material_overlay = mat
@@ -337,11 +219,6 @@ func beg() -> void:
 
 
 ## Hết cáu, về lại tư thế trước đó.
-##
-## (16/11/2026) Hàm này THIẾU từ trước: customer_manager._complain() gọi
-## calm() sau 2 giây cáu vì giao nhầm món, gọi vào hàm không tồn tại là lỗi
-## lúc chạy — chạy từ editor thì debugger dừng cả game ("giao sai món thì game
-## bị pause"). Khách đang ăn thì về animation ăn, còn lại thì đứng/ngồi yên.
 func calm() -> void:
 	_set_anim("eat" if _eat_left > 0.0 else "idle")
 
@@ -354,25 +231,10 @@ func bubble() -> Node3D:
 # ---------------------------------------------------------- bong bóng đơn ---
 
 ## Bề rộng thanh chờ tính bằng ĐIỂM ẢNH của tấm ảnh sinh ra lúc chạy.
-##
-## Vì sao vẽ thanh bằng một tấm ảnh 64×10 tự sinh chứ không dùng hai cái quad
-## rồi co giãn cái bên trong: co giãn KHÔNG ĐỀU một node đang bật billboard là
-## chuyện dễ hỏng — billboard thay hệ trục của model bằng hệ trục camera trong
-## shader, nên phần scale méo đi theo góc nhìn. Vẽ thẳng vào ảnh thì hình luôn
-## đúng, bất kể camera ở đâu, và không phải căn chỉnh gốc co giãn.
-##
-## Rẻ hơn vẻ ngoài của nó: ảnh chỉ 640 điểm ảnh, và chỉ vẽ lại khi số cột đã
-## tô THAY ĐỔI — tức nhiều nhất 64 lần cho trọn một lần đếm ngược, chứ không
-## phải mỗi khung hình.
 const BAR_WIDTH := 64
 const BAR_HEIGHT := 10
 
 ## Chiều cao mong muốn của ảnh món trong không gian 3D, đơn vị Godot.
-##
-## pixel_size của Sprite3D tính theo TỪNG điểm ảnh, mà ảnh nguyên liệu là ảnh
-## 512 px. Để nguyên pixel_size 0,004 như trong scene thì bong bóng cao hơn 2
-## đơn vị — to hơn cả người khách. Nên phải suy pixel_size ngược từ chiều cao
-## mong muốn, và như vậy ảnh to nhỏ khác nhau vẫn hiện cùng một cỡ.
 const DISH_ICON_HEIGHT := 0.55
 
 const BAR_BG := Color(0.10, 0.08, 0.07, 0.85)
@@ -397,8 +259,6 @@ func _build_bubble() -> void:
 	_bar.billboard = BaseMaterial3D.BILLBOARD_ENABLED
 	_bar.shaded = false
 	_bar.no_depth_test = true
-	# Lọc điểm ảnh KIỂU GẦN NHẤT: ảnh chỉ 64 px mà kéo rộng ra, lọc mượt sẽ
-	# làm mép thanh nhoè thành một vệt chuyển màu, đọc không ra mốc.
 	_bar.texture_filter = BaseMaterial3D.TEXTURE_FILTER_NEAREST
 	_bar.pixel_size = 0.6 / float(BAR_WIDTH)
 	_bar.position.y = -DISH_ICON_HEIGHT * 0.5 - 0.08
@@ -429,10 +289,6 @@ func hide_order() -> void:
 
 
 ## Cập nhật thanh chờ. `ti` là phần kiên nhẫn còn lại, 0…1.
-##
-## Tham số tên `ti` chứ không phải `body_scale`: lớp này đã có @export `body_scale` (cỡ
-## người khách), trùng tên thì tham số che mất biến thành viên — Godot cảnh
-## báo, và kiểu nhầm đó rất khó thấy khi đọc lại.
 func set_patience_bar(ratio: float) -> void:
 	if _bubble == null or not _bubble.visible:
 		return
@@ -447,8 +303,6 @@ func _draw_bar(ratio: float) -> void:
 		return
 	_last_col = filled_px
 
-	# Ba bậc màu theo ngưỡng, khớp đúng ba bậc trên tấm vé ở HUD. Cùng một
-	# thông tin thì phải cùng một mã màu, dù vẽ ở hai chỗ khác nhau.
 	var color_ := COLOR_GREEN
 	if ratio <= 0.2:
 		color_ = COLOR_RED
@@ -474,8 +328,6 @@ func _physics_process(delta: float) -> void:
 			_eat_left = 0.0
 			_set_anim("idle")
 			ate.emit(self)
-	# Giữ dính sàn. Sàn phẳng tuyệt đối nhưng vẫn cần trọng lực: nhân vật được
-	# sinh ra hơi cao hơn mặt sàn, không có trọng lực thì lơ lửng mãi.
 	if not is_on_floor():
 		velocity.y -= GRAVITY * delta
 	else:
@@ -503,23 +355,14 @@ func _physics_process(delta: float) -> void:
 
 
 ## Xoay thân về một hướng nằm ngang.
-##
-## Xoay CẢ CharacterBody3D chứ không xoay riêng node Model như bên nhân vật
-## người chơi: khách không có camera gắn vào nên không có lý do gì phải tách
-## thân và model, mà xoay thẳng thân thì hướng nhìn và hướng va chạm luôn khớp.
 func _turn_towards(dir_: Vector3, delta: float) -> void:
 	if dir_.length_squared() < 0.0001:
 		return
-	# Model nhìn về −Z, đúng quy ước của Godot, nên atan2 lấy thẳng góc.
 	var target_yaw := atan2(dir_.x, dir_.z)
 	rotation.y = rotate_toward(rotation.y, target_yaw, TURN_SPEED * delta)
 
 
 ## Đổi animation, bỏ qua nếu đang chạy đúng cái đó.
-##
-## Kiểm trùng chứ không gọi play() vô tư: play() cùng tên vẫn khởi động lại
-## từ đầu, nên gọi mỗi khung hình thì animation đứng mãi ở khung 0 — đúng kiểu
-## lỗi nhìn như "model bị đơ" mà không có dòng lỗi nào.
 func _set_anim(anim_name: String) -> void:
 	if _anim_now == anim_name:
 		return

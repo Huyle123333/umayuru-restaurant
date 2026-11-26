@@ -1,25 +1,10 @@
 extends CanvasLayer
-## AAA MODE — BẢNG QUẢNG CÁO DLC (giả).
-##
-## Hai kiểu hiện:
-##   • show_offer(kind)      — bảng giữa màn hình, chặn mọi thứ phía sau. Dùng
-##     khi bấm vào thẻ nhân vật bị khoá, trạm bị khoá, phím kĩ năng, hoặc khi
-##     trainer gạ "để tôi làm hộ".
-##   • show_sale_banner(sec) — dải quảng cáo mép trái trong lúc đếm ngược đầu
-##     màn, KHÔNG chặn gì: người chơi vẫn phải đi dạo bếp được (xem
-##     level_intro.gd), quảng cáo chỉ được phép làm phiền chứ không được cản.
-##
-## Không có giao dịch thật nào. Nút "Mua ngay" chỉ đổi chữ trong bảng.
-##
-## Một script cho mọi gói thay vì mỗi gói một scene: các gói chỉ khác nhau
-## chữ, nên chữ nằm trong bảng OFFERS — thêm gói mới là thêm một dòng.
 
 signal closed
 
 const DlcCatalog := preload("res://scripts/modes/aaa/dlc_catalog.gd")
 
 ## Quảng cáo nào trùng một gói trong DlcCatalog thì hiện bằng bảng của gói đó,
-## để giá ở đây cũng nhảy theo số lần từ chối như mọi chỗ khác.
 const OFFER_TO_PACK := {"kitchen": "cooking", "skill": "skill", "deluxe": "characters"}
 
 const THEME := "res://ui/theme/menu_theme.tres"
@@ -70,7 +55,6 @@ var _bought := false
 
 func _ready() -> void:
 	layer = 40
-	# Phải chạy cả khi cây scene đang tạm dừng: bảng modal TỰ tạm dừng game.
 	process_mode = Node.PROCESS_MODE_ALWAYS
 
 
@@ -191,8 +175,6 @@ func _on_buy() -> void:
 
 
 func close() -> void:
-	# (21/10/2026) Đóng bảng KHÔNG còn làm giảm giá: bấm "Để sau" liên tục ở
-	# màn chọn nhân vật sẽ thành mẹo ép giá về −99%. Giá chỉ giảm khi vào màn.
 	if _modal:
 		get_tree().paused = _was_paused
 		Input.mouse_mode = _old_mouse

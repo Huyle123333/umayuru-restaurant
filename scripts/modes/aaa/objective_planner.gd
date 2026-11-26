@@ -1,25 +1,8 @@
 extends RefCounted
-## AAA MODE — BỘ SUY RA BƯỚC TIẾP THEO.
-##
-## Nhận trạng thái hiện tại (đơn đang nhắm, thứ đang cầm, đồ trên các trạm)
-## và trả về ĐÚNG MỘT bước người chơi nên làm ngay bây giờ.
-##
-## Vì sao là một hàm thuần (không node, không tín hiệu): dòng nhiệm vụ, vạch
-## dẫn, nhãn trên trạm và lời trainer đều đọc từ MỘT kết quả này. Bốn nơi tự
-## suy luận riêng thì sớm muộn sẽ chỉ bốn hướng khác nhau. Hàm thuần còn thử
-## được bằng probe mà không cần dựng cả màn chơi.
-##
-## Bảng luật xét TỪ TRÊN XUỐNG, gặp luật đúng đầu tiên thì dừng. Thứ tự ưu
-## tiên việc GẦN XONG NHẤT: đang cầm đúng món thì giao trước, chứ không bảo
-## người chơi đi lấy nguyên liệu cho đơn sau khi món đã nằm sẵn trên tay.
-##
-## Chỉ hỗ trợ món ráp ở BÀN CHẾ TẠO (công thức trong TABLE_RECIPES). Thực đơn
-## AAA Mode cố ý chỉ gồm những món như vậy — xem GameData.RULES_AAA.
 
 const ItemCatalog := preload("res://scripts/interaction/item_catalog.gd")
 
 ## Tên trạm hiển thị, theo `kind`. Không dùng display_name trong file map vì
-## chữ ở đó viết không dấu ("Tu lanh") cho bộ chọn mục tiêu.
 const STATION_NAMES := {
 	"crafting_table": "Bàn chế tạo",
 	"cutting_board": "Thớt",
@@ -31,14 +14,6 @@ const STATION_NAMES := {
 
 
 ## Kết quả là một Dictionary:
-##   text   — câu bước hiện tại, đã dịch
-##   tip    — câu "mẹo" hiển nhiên, đã dịch
-##   target — Workstation cần tới (có thể null)
-##   key    — phím cần bấm ở trạm đó ("E" / "F" / "")
-##   step / total — để hiện "Bước 2/5"
-##
-## `stations` do aaa_mode.gd gom sẵn: {kind: Workstation} cho các trạm đơn,
-## "shelves": {item_id: Workstation}, "tables": {số bàn: Workstation}.
 static func plan(order_: Object, held: String, stations: Dictionary) -> Dictionary:
 	if order_ == null:
 		return _result(Lang.t("Chờ khách gọi món"), Lang.t("Mẹo: khách sẽ tới nếu bạn chờ."), null, "", 0, 0)
@@ -146,7 +121,6 @@ static func _subtract(a: Array[String], b: Array[String]) -> Array[String]:
 
 
 ## Thứ đang cầm, đem thái hoặc nấu (một hay nhiều lần), có thành thứ đang
-## thiếu không. Có thì trả về trạm của BƯỚC ĐẦU TIÊN ("cutting_board" / "stove").
 static func _process_kind_toward(id: String, missing: Array[String]) -> String:
 	var first := ""
 	var x := id

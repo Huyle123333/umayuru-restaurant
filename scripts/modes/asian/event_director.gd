@@ -1,19 +1,4 @@
 extends CanvasLayer
-## ASIAN MODE — bộ điều phối SỰ KIỆN (bước 3, user chốt 27/10/2026).
-##
-## Việc của node này: lên lịch, báo trước 5 giây, bật hiệu ứng, đếm giờ, tắt.
-## Sự kiện bốc NGẪU NHIÊN và ĐƯỢC LẶP LẠI (user chốt). Nhịp theo bảng 3.5 của
-## tài liệu:
-##   phút 0–2   không có sự kiện
-##   phút 2–5   mỗi 60–80 giây một sự kiện
-##   phút 5–10  mỗi 45–60 giây; từ phút 8 có 50% bật hai sự kiện cùng lúc
-##
-## Bảy sự kiện ở bước này đều chỉ ĐỔI THÔNG SỐ của hệ có sẵn (giá nguyên liệu,
-## nhịp khách, tốc độ chạy, trượt...). Gom vào một file với hai hàm _apply /
-## _revert thay vì mỗi sự kiện một file: mỗi cái chỉ vài dòng, và hai sự kiện
-## cùng đụng nhịp khách (Giờ cao điểm, Trời mưa) cần tính lại CHUNG — tách file
-## thì file này tắt sẽ xoá mất tác dụng của file kia đang bật.
-## Sự kiện có NPC (thanh tra, trộm chó, khách VIP) sẽ làm file riêng ở bước 4.
 
 const WARN_SECONDS := 5.0
 
@@ -26,8 +11,6 @@ const EVENTS := {
 	"rain": {"name": "Trời mưa", "desc": "Khách đến ít hẳn", "duration": 30.0},
 	"stockout": {"name": "Hết hàng", "desc": "%s tạm hết", "duration": 45.0},
 	"review": {"name": "Review 1 sao", "desc": "Giá mọi món −15%", "duration": 60.0},
-	# Sự kiện có NPC / hiệu ứng hình: mỗi cái một file trong events/, tự kết
-	# thúc bằng finish(). "duration" chỉ là trần an toàn.
 	"inspector": {"name": "Thanh tra", "desc": "Không để đồ ăn dưới sàn bếp!", "duration": 120.0,
 		"script": "res://scripts/modes/asian/events/inspector.gd"},
 	"dog_thief": {"name": "Trộm chó", "desc": "Bấm vào Doro trước khi nó ra tới cửa!", "duration": 120.0,
@@ -36,14 +19,12 @@ const EVENTS := {
 		"script": "res://scripts/modes/asian/events/vip_guest.gd"},
 	"blackout": {"name": "Cúp điện", "desc": "Chỉ thấy quanh nhân vật", "duration": 20.0,
 		"script": "res://scripts/modes/asian/events/blackout.gd"},
-	# Không nằm trong vòng bốc ngẫu nhiên: có lịch riêng (mỗi 70–120 giây) và
-	# KHÔNG báo trước 5 giây — 15 giây đếm ngược của chính nó đã là lời báo.
 	"doro_hunger": {"name": "Doro đói", "desc": "Cho Doro ăn một món hoàn chỉnh!", "duration": 16.0,
 		"script": "res://scripts/modes/asian/events/doro_hunger.gd"},
 }
 ## Sự kiện bốc ngẫu nhiên. "review" không nằm đây: nó tự bật khi mất khách.
 const RANDOM_POOL := ["fuel", "burnout", "rush", "slippery", "rain", "stockout",
-	"dog_thief", "vip", "blackout"]  # bỏ "inspector" 12/11/2026: không còn đồ dưới sàn
+	"dog_thief", "vip", "blackout"]
 
 ## Sự kiện có file riêng đang chạy: id -> thực thể (RefCounted có start/stop/tick).
 var _scripted: Dictionary = {}
@@ -99,9 +80,6 @@ func _elapsed() -> float:
 
 
 func _process(delta: float) -> void:
-	# Bắt đầu đếm khi ca làm việc bắt đầu (hết màn đếm ngược mở đầu). Sau đó
-	# chạy theo giờ THẬT, không theo đồng hồ màn: kĩ năng dừng thời gian của
-	# Oguri không được dừng sự kiện (bản Asian của kĩ năng đã ghi rõ).
 	if not _started:
 		if not bool(_clock.counting_down):
 			return
@@ -160,10 +138,7 @@ func _queue(id: String) -> void:
 
 func _start(id: String) -> void:
 	var info: Dictionary = EVENTS[id]
-	# Đang chạy rồi mà bốc trúng lần nữa (được lặp lại): chỉ nạp lại thời lượng.
 	var again := _active.has(id)
-	# Sự kiện có NPC đang chạy thì không chồng thêm bản thứ hai (hai thanh tra,
-	# hai con Doro... không có nghĩa) — bỏ qua lần bốc trùng.
 	if again and info.has("script"):
 		return
 	_active[id] = float(info["duration"])
@@ -264,9 +239,6 @@ func _revert(id: String) -> void:
 
 
 ## Nhịp khách = nhịp của giai đoạn hiện tại, rồi Giờ cao điểm / Trời mưa đè lên.
-## Luôn tính lại TỪ ĐẦU (nhờ level_rules áp lại giai đoạn), nên tắt sự kiện này
-## không xoá tác dụng của sự kiện kia đang còn chạy. Hai cái cùng bật thì Giờ
-## cao điểm thắng — đông khách là thứ người chơi phải xử lý gấp hơn.
 func _refresh_spawn() -> void:
 	if _rules != null:
 		_rules._go_to_stage(int(_rules._index))
@@ -282,7 +254,6 @@ func _refresh_spawn() -> void:
 
 
 ## Nguyên liệu có thật trong bếp (kệ + tủ lạnh) để khoá — khoá thứ không có
-## trên map thì sự kiện vô nghĩa.
 func _pick_stock_item() -> String:
 	var pool: Array = []
 	for st in _level._find_stations(_level):

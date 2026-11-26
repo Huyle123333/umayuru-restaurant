@@ -1,26 +1,5 @@
 extends RefCounted
-## Đoạn HỘI Ý trước mỗi ngày: trainer và cả team chốt ai đứng bếp hôm nay.
-##
-## Chiếu sau màn chọn nhân vật, trước khi vào map — với MỌI màn chơi thật,
-## trừ prologue và tutorial (hai màn đó luôn là Kitasan, xem
-## GameData.STORY_CHARACTER). Cách chen vào: GameData.enter_level().
-##
-## Nhân vật ẩn chọn LẦN ĐẦU thì không thấy đoạn này — đoạn ra mắt riêng của họ
-## (cutscene_golshi / teio / chiyono) chiếu thay. Từ lần thứ hai trở đi họ
-## dùng chung đoạn này như mọi người.
-##
 ## ------------------------------------------------------- CÁCH VIẾT
-## Cùng định dạng với cutscene_prologue.gd, thêm hai khoá (bộ máy hiểu ở
-## dialogue_player._pick_line()):
-##   "line_by_player" — câu RIÊNG theo nhân vật người chơi chọn. Nhân vật
-##                      không có mục thì dùng "line".
-##   "line_by_level"  — câu riêng theo màn (Ngày 1 / 2 / 3).
-##   "only_for_player" — mảng id; dòng này CHỈ hiện khi người chơi là một
-##                      trong các nhân vật đó, còn lại bộ máy bỏ qua hẳn.
-##
-## Mọi câu nói của người đứng bếp dùng "portrait": "player" + "speaker": "@",
-## nên mặt và tên luôn khớp với nhân vật vừa chọn. Câu của đồng đội dùng
-## "other" — bốc một người KHÁC người chơi, giữ nguyên suốt đoạn.
 
 
 const BG_RESTAURANT := "res://assets/ui/backgrounds/quan_an.png"
@@ -69,9 +48,6 @@ const SCENES: Array[Dictionary] = [
 	},
 
 	{
-		# Câu thứ hai CHỈ của Kitasan — tách riêng một lần bấm để câu "xin
-		# phép phục vụ" có nhịp của riêng nó, như một lời chào sân khấu.
-		# Nhân vật khác bỏ qua hẳn dòng này (khoá only_for_player).
 		"only_for_player": ["kitamoi"],
 		"portrait": "player",
 		"speaker": "@",
@@ -92,9 +68,6 @@ const SCENES: Array[Dictionary] = [
 		},
 	},
 	{
-		# CHỈ cho hai người hay "ăn một ít" (Oguri, Special Week): trainer nhắc
-		# lại chuyện 564 phần hamburger ở prologue. Nhân vật khác bỏ qua hẳn
-		# dòng này — nhắc người không ăn vụng thì câu đùa mất nghĩa.
 		"only_for_player": ["oui", "tuandb"],
 		"portrait": "trainer2",
 		"speaker": "0rca's Trainer",
@@ -128,3 +101,6 @@ const SCENES: Array[Dictionary] = [
 		"line": "Quán mở cửa.",
 	},
 ]
+
+## Tóm tắt hiện khi người chơi bấm "Bỏ qua".
+const SUMMARY := "Ba mươi phút trước giờ mở cửa, cả team chốt người đứng bếp hôm nay. Những người còn lại lo ngoài sảnh. Quán mở cửa."

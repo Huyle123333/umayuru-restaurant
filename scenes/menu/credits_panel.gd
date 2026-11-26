@@ -1,6 +1,4 @@
 extends Control
-## Bảng Credits. Là một Control phủ toàn màn hình chứ không phải cửa sổ riêng,
-## nên nhét được vào bất kỳ scene nào cần — menu chính, hay menu Pause sau này.
 
 @onready var _btn_close: Button = %BtnClose
 
@@ -26,8 +24,6 @@ func close() -> void:
 
 
 func _unhandled_input(event: InputEvent) -> void:
-	# Báo cho Godot là phím ESC đã được xử lý, để sau này menu Pause
-	# không mở ra cùng lúc với việc đóng bảng này.
 	if visible and event.is_action_pressed("ui_cancel"):
 		close()
 		get_viewport().set_input_as_handled()

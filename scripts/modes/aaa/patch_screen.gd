@@ -1,9 +1,4 @@
 extends CanvasLayer
-## AAA MODE — MÀN "ĐANG TẢI BẢN VÁ NGÀY ĐẦU" (giả).
-##
-## Chạy tới 99% rồi đứng 3 giây, rồi mới nhảy 100%. Tạm dừng cả game trong
-## lúc chạy, nên đồng hồ đếm ngược đầu màn cũng đứng chờ — đúng như bản vá
-## thật: chưa vá xong thì chưa được chơi. Không bấm bỏ qua được.
 
 signal finished
 

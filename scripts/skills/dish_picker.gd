@@ -1,18 +1,4 @@
 extends Node
-## KĨ NĂNG PHỤ: Fan tê liệt (Tokai Teio) — bảng chọn một món để nhận ngay.
-##
-## Bấm phím "skill_alt" (mặc định 3) → game tạm dừng, hiện bảng các món trong
-## thực đơn hôm nay → chọn một món → món đó nằm sẵn trên tay. Số lần dùng mỗi
-## màn khai ở khoá "uses" của SECONDARY trong teio.gd.
-##
-## Vì sao TẠM DỪNG lúc mở bảng: bảng che giữa màn hình và dùng chuột/phím mũi
-## tên để chọn — đúng những phím đang điều khiển nhân vật. Để game chạy tiếp
-## thì nhân vật trôi đi trong lúc người chơi dò món, và mỗi lần mở bảng là một
-## lần đánh cược với thanh kiên nhẫn.
-##
-## Vì sao là node riêng chứ không nằm trong skill_manager: nó có phím riêng,
-## giao diện riêng, bộ đếm lượt riêng và không dùng thứ gì của kĩ năng Space
-## (điều kiện, cut-in, thanh tiến độ).
 
 const ItemCatalog := preload("res://scripts/interaction/item_catalog.gd")
 
@@ -33,8 +19,6 @@ func setup(data: Dictionary, customers: Node, manager: Node) -> void:
 	_customers = customers
 	_manager = manager
 	_uses_left = int(data.get("uses", 0))
-	# Phải nhận phím cả khi cây scene đang dừng: chính bảng này dừng game, và
-	# nó phải tự đóng lại được.
 	process_mode = Node.PROCESS_MODE_ALWAYS
 
 
@@ -48,7 +32,6 @@ func is_open() -> bool:
 
 func _input(event: InputEvent) -> void:
 	if _layer != null:
-		# Đang mở: nuốt phím đóng ở đây, trước khi ESC kịp mở menu tạm dừng.
 		if event.is_action_pressed(ACTION) or event.is_action_pressed("ui_cancel"):
 			get_viewport().set_input_as_handled()
 			close()
@@ -61,8 +44,6 @@ func _input(event: InputEvent) -> void:
 func open() -> void:
 	if _layer != null or _customers == null or _manager == null:
 		return
-	# Game đang dừng vì thứ khác (menu tạm dừng, phim cut-in, bảng kết quả),
-	# hoặc chưa vào ca: không mở.
 	if get_tree().paused:
 		return
 	var level := _manager.get_parent()
@@ -172,7 +153,5 @@ func _build_ui() -> void:
 		grid.add_child(btn)
 		if first == null:
 			first = btn
-	# Đặt tiêu điểm sẵn vào món đầu: chọn được bằng mũi tên + Enter mà không
-	# phải với tay sang chuột.
 	if first != null:
 		first.grab_focus.call_deferred()

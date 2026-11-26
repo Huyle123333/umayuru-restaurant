@@ -1,12 +1,4 @@
 extends CanvasLayer
-## AAA MODE — BẢNG ĐIỂM CUỐI MÀN, kiểu trang tổng hợp đánh giá.
-##
-## Thay cho results_panel.gd của màn thường. Không xếp hạng, KHÔNG ghi gì vào
-## file lưu (không hoàn thành màn, không kỷ lục, không bảng xếp hạng): đây là
-## chế độ chơi cho vui, chơi xong là thôi.
-##
-## Con số thật duy nhất là doanh thu và số lần bị trainer nhắc. Điểm "nhà phê
-## bình" cố định 9,6 — đó chính là câu đùa.
 
 const THEME := "res://ui/theme/menu_theme.tres"
 const COLOR_TEXT := Color(0.29, 0.153, 0.071)
@@ -66,7 +58,6 @@ func show_review(money: int, served: int, nags: int) -> void:
 
 
 ## Câu bình luận người chơi theo số lần bị nhắc: bị nhắc càng nhiều thì càng
-## thấy mình không được chơi.
 func _player_quote(nags: int) -> String:
 	if nags < 3:
 		return Lang.t("“Hướng dẫn hơi nhiều.”")
@@ -81,7 +72,6 @@ func _replay() -> void:
 
 
 ## Rời màn: chiếu đoạn kết "đóng máy" (aaa_outro.tscn). Thông báo của nhà
-## phát triển nằm ở câu cuối đoạn đó; kể xong nó tự về màn chọn màn.
 func _shutdown() -> void:
 	get_tree().paused = false
 	get_tree().change_scene_to_file(GameData.AAA_OUTRO_SCENE)

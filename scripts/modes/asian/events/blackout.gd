@@ -1,11 +1,4 @@
 extends RefCounted
-## SỰ KIỆN ASIAN: CÚP ĐIỆN (20 giây).
-##
-## Phủ một lớp tối lên màn hình, chừa một vòng sáng quanh nhân vật. Bếp và lò
-## vẫn chạy (không đụng tới hệ nào), HUD vẫn đọc được (lớp tối nằm DƯỚI HUD).
-##
-## Vòng sáng bám theo nhân vật bằng cách chiếu vị trí 3D của nhân vật ra toạ
-## độ màn hình mỗi khung hình (Camera3D.unproject_position).
 
 const RADIUS := 230.0
 
@@ -18,7 +11,6 @@ var _mat: ShaderMaterial
 func start(director: Node) -> void:
 	_d = director
 	_layer = CanvasLayer.new()
-	# Dưới đồng hồ (5) và các bảng Asian, trên thế giới 3D.
 	_layer.layer = 4
 	_rect = ColorRect.new()
 	_rect.set_anchors_preset(Control.PRESET_FULL_RECT)

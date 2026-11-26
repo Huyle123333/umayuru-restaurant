@@ -1,19 +1,4 @@
 extends CanvasLayer
-## Menu hướng dẫn đầy đủ — phím F1. Cột nút bên trái, nội dung cuộn ở giữa.
-##
-## LÀ AUTOLOAD, không phải node của một màn chơi.
-##
-## Lý do: F1 phải bấm được ở MỌI nơi — trong bếp, ở menu chính, ở màn chọn màn,
-## và nhất là ở màn hướng dẫn nơi trainer vừa nhắc "bấm F1 lúc nào cũng được".
-## Gắn vào từng scene thì có bao nhiêu scene là bấy nhiêu chỗ phải nhớ gắn, và
-## quên một chỗ thì F1 im lặng không làm gì — người chơi kết luận là game hỏng.
-## Autoload thì nó tồn tại một lần, sống suốt phiên chơi, và luôn có mặt.
-##
-## Giá phải trả: node này tồn tại cả ở những màn không cần tới. Nhưng lúc đóng
-## nó chỉ là một CanvasLayer ẩn, không _process, không vẽ gì — gần như không
-## tốn gì. Đổi lại là một lời hứa không bao giờ lỡ.
-##
-## TOÀN BỘ NỘI DUNG nằm ở guide_content.gd. File này chỉ biết VẼ.
 
 const GuideContent := preload("res://scripts/ui/guide_content.gd")
 const ItemCatalog := preload("res://scripts/interaction/item_catalog.gd")
@@ -41,9 +26,7 @@ var _old_mouse_mode := Input.MOUSE_MODE_VISIBLE
 
 
 func _ready() -> void:
-	layer = 40   # trên mọi HUD và cả bảng tổng kết (20)
-	# Phải chạy được TRONG LÚC cây scene bị tạm dừng — chính menu này là thứ
-	# tạm dừng game, nên nếu nó cũng bị dừng thì không bấm được nút nào cả.
+	layer = 40
 	process_mode = Node.PROCESS_MODE_ALWAYS
 	_build_ui()
 	_day_row()
@@ -59,10 +42,6 @@ func _unhandled_key_input(event: InputEvent) -> void:
 		toggle()
 		get_viewport().set_input_as_handled()
 		return
-	# ESC chỉ đóng menu khi menu ĐANG MỞ, và nuốt luôn phím đó.
-	#
-	# Không nuốt thì ESC vừa đóng menu vừa bật bảng tạm dừng phía sau — người
-	# chơi bấm một lần mà nhận hai kết quả.
 	if is_open and key_label.keycode == KEY_ESCAPE:
 		close()
 		get_viewport().set_input_as_handled()
@@ -80,11 +59,6 @@ func open() -> void:
 		return
 	is_open = true
 
-	# NHỚ trạng thái cũ rồi mới đổi, chứ không đặt cứng false lúc đóng.
-	#
-	# F1 bấm được cả khi đang ở bảng tạm dừng hoặc bảng tổng kết — hai thứ đó
-	# cũng đang giữ get_tree().paused = true. Đóng menu mà đặt cứng false thì
-	# game chạy tiếp phía sau một bảng lẽ value vẫn đang dừng.
 	_was_paused = get_tree().paused
 	_old_mouse_mode = Input.mouse_mode
 	get_tree().paused = true
@@ -133,9 +107,6 @@ func _build_ui() -> void:
 	_frame = PanelContainer.new()
 	_frame.set_anchors_preset(Control.PRESET_CENTER)
 	_frame.custom_minimum_size = Vector2(FRAME_WIDTH, FRAME_HEIGHT)
-	# Nở đều hai phía quanh điểm neo. PRESET_CENTER một mình chỉ ghim GÓC
-	# TRÊN-TRÁI vào tâm màn hình, nên frame sẽ lệch xuống dưới-phải đúng nửa
-	# kích thước của nó.
 	_frame.grow_horizontal = Control.GROW_DIRECTION_BOTH
 	_frame.grow_vertical = Control.GROW_DIRECTION_BOTH
 	if ResourceLoader.exists(THEME):
@@ -207,8 +178,6 @@ func _build_right_col() -> Control:
 
 	var scroll := ScrollContainer.new()
 	scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	# Cuộn DỌC thôi. Cho cuộn ngang thì một tấm ảnh rộng quá sẽ kéo cả trang
-	# lệch sang phải, và chữ bị đẩy value ngoài frame nhìn.
 	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
 	col.add_child(scroll)
 
@@ -227,9 +196,6 @@ func _select_section(i: int) -> void:
 	_current_section = i
 
 	for k in _buttons.size():
-		# Đánh dấu mục đang xem bằng ĐỘ SÁNG chứ không đổi StyleBox: nút gỗ
-		# lấy từ theme chung, tự vẽ một style riêng cho trạng thái chọn thì
-		# đổi theme một cái là cái nút này lạc lõng ngay.
 		_buttons[k].modulate = Color(1.25, 1.15, 1.0) if k == i else Color.WHITE
 
 	var entry: Dictionary = GuideContent.SECTIONS[i]
@@ -259,7 +225,6 @@ func _build_block(block: Dictionary) -> void:
 
 
 ## Hàng icon mọi nguyên liệu phải qua thớt, mỗi icon có dấu con dao — tự sinh
-## từ ItemCatalog như bảng công thức, nên không bao giờ lệch với luật thật.
 func _add_chop_list() -> void:
 	var row := HFlowContainer.new()
 	row.add_theme_constant_override("h_separation", 14)
@@ -294,14 +259,7 @@ func _paragraph(text_: String) -> Control:
 	t.add_theme_font_size_override("normal_font_size", 18)
 	t.add_theme_font_size_override("bold_font_size", 18)
 	t.add_theme_color_override("default_color", COLOR_TEXT)
-	# Font chữ của game KHÔNG có bản Bold riêng, nên Godot tự "giả đậm" [b]
-	# bằng cách tô dày nét rất mạnh: ở cỡ 18 các nét dính vào nhau, chữ bị bệt
-	# thành khối tối như tô đen. Tự tạo bản đậm từ CHÍNH font thường với độ tô
-	# nhẹ (0.4) — vẫn thấy rõ là in đậm mà mặt chữ không bị nhoè.
 	t.add_theme_font_override("bold_font", _bold_font())
-	# Bề rộng tối thiểu là BẮT BUỘC với mọi nhãn có xuống dòng tự động: không
-	# có nó thì Godot tính chiều cao ở bề rộng 0 — mỗi chữ một dòng — và value
-	# một chiều cao khổng lồ kéo cả trang dài value vô tận.
 	t.custom_minimum_size = Vector2(FRAME_WIDTH - LEFT_COL_WIDTH - 160.0, 0)
 	t.text = text_
 	return t
@@ -344,10 +302,6 @@ func _key_hint(list: Array) -> Control:
 
 
 ## Thiếu ảnh thì BỎ QUA cả khối, không để lại ô trống và không báo lỗi.
-##
-## Ảnh minh hoạ là thứ bổ sung dần: khai sẵn đường dẫn trong bảng nội dung rồi
-## chụp ảnh sau lúc nào cũng được, và trang hướng dẫn vẫn đọc được ngay từ bây
-## giờ. Nếu để một ô trống hay một dòng "thiếu ảnh" thì trang trông như hỏng.
 func _add_image(path: String, text_: String) -> void:
 	if not ResourceLoader.exists(path):
 		return
@@ -357,10 +311,6 @@ func _add_image(path: String, text_: String) -> void:
 
 	var img := TextureRect.new()
 	img.texture = texture
-	# Đặt KÍCH THƯỚC CỐ ĐỊNH theo tỉ lệ ảnh. Trước đây dùng FIT_WIDTH_PROPORTIONAL
-	# với min size 0: chế độ đó suy BỀ RỘNG từ CHIỀU CAO, mà trong VBox chiều
-	# cao của ảnh lại bằng 0 -> ảnh co về 0x0, tức là "có ảnh mà không thấy".
-	# Ảnh nhỏ giữ nguyên cỡ thật (phóng to sẽ vỡ), ảnh lớn thu về bề rộng cột.
 	var max_w := FRAME_WIDTH - LEFT_COL_WIDTH - 200.0
 	var w := minf(float(texture.get_width()), max_w)
 	var h := w * float(texture.get_height()) / float(texture.get_width())
@@ -382,17 +332,10 @@ func _add_image(path: String, text_: String) -> void:
 # ------------------------------------------------------ bảng tự sinh ---
 
 ## Bảng công thức dựng THẲNG từ ItemCatalog, không gõ tay.
-##
-## Đây là điểm đáng nói nhất của cả menu này: trang hướng dẫn không thể nói sai
-## được, vì nó đọc đúng cái bảng mà luật chơi đang dùng. Món bị khoá thì tự
-## biến mất khỏi trang; thêm một công thức là trang tự có thêm một dòng.
 func _add_recipe(kind: String) -> void:
 	var table_: Dictionary = {}
 	match kind:
 		"table": table_ = ItemCatalog.table_recipes()
-		# (Đã bỏ) "pot": OVEN_RECIPES riêng cho nồi. Bảng công thức nồi không
-		# còn tồn tại — công thức nấu canh giờ nằm trong TABLE_RECIPES như mọi
-		# món khác, nên trang hướng dẫn tự có nó ở mục "table".
 		"oven": table_ = ItemCatalog.oven_recipes()
 		_: return
 
@@ -426,9 +369,6 @@ func _recipe_row(ingredients: PackedStringArray, value: String) -> Control:
 
 
 ## Một ô nguyên liệu: ảnh nếu có, không thì chữ.
-##
-## Lùi về CHỮ chứ không bỏ trống: bộ ảnh chưa đủ cho mọi id, mà một công thức
-## thiếu mất một ô thì đọc thành công thức khác.
 func _item_cells(id: String) -> Control:
 	var path_ := ItemCatalog.icon_path(id)
 	if ResourceLoader.exists(path_):
@@ -438,8 +378,6 @@ func _item_cells(id: String) -> Control:
 		img.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 		img.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 		img.tooltip_text = ItemCatalog.display_name(id)
-		# (16/11/2026) Bỏ huy hiệu dao: bộ B gần như mọi thứ đều phải thái,
-		# huy hiệu chung cho mọi ảnh thì không còn nói thêm điều gì.
 		return img
 
 	var l := Label.new()
@@ -463,8 +401,6 @@ func _marker(text_: String) -> Control:
 func _add_grade_marks() -> void:
 	if get_node_or_null("/root/GameData") == null:
 		return
-	# Bảng theo TỪNG NGÀY, đọc thẳng GameData.rank_thresholds_for(): mỗi ngày
-	# có bộ mốc riêng, in một bộ "mặc định" ra đây là in sai cho cả ba ngày.
 	var days := ["d1_sang", "d2_sang", "d3_sang"]
 	var day_names := ["Ngày 1", "Ngày 2", "Ngày 3"]
 	var color := {

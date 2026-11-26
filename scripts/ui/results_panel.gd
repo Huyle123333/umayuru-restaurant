@@ -1,14 +1,4 @@
 extends CanvasLayer
-## Bảng tổng kết cuối màn: xếp hạng, doanh thu, thống kê, hai cái nút.
-##
-## Vì sao node này TỰ dựng chứ không phải một file .tscn: nó phải sống trên
-## MỌI màn chơi, mà tám màn dùng chung một file map. Đặt sẵn trong map thì nó
-## là một node luôn tồn tại và luôn phải nhớ ẩn đi; dựng lúc cần thì lúc chưa
-## cần nó không tồn tại, không có gì để quên.
-##
-## TẠM DỪNG CẢ CÂY SCENE khi hiện bảng. Bắt buộc, không phải cho đẹp: hết giờ
-## mà bếp vẫn chạy thì nồi vẫn sôi, khách vẫn đi lại phía sau tấm bảng, và
-## người chơi vẫn điều khiển được nhân vật trong lúc đang đọc kết quả.
 
 const THEME := "res://ui/theme/menu_theme.tres"
 const COIN_ICON := "res://assets/ui/tien/carrot_tien.png"
@@ -17,8 +7,6 @@ const LEVEL_SELECT_SCENE := "res://scenes/menu/level_select.tscn"
 const WIDTH := 660.0
 
 ## Màu của từng hạng. Đúng bảng màu người dùng chốt: S vàng, A orange, B hồng,
-## C xanh lá. Chưa đạt thì xám — không dùng đỏ, vì đỏ đọc thành "hỏng" trong
-## khi thật ra chỉ là chưa đủ tiền.
 const COLOR_GRADE := {
 	"S": Color("f2c230"),
 	"A": Color("e8823f"),
@@ -35,27 +23,17 @@ var _box: PanelContainer
 
 
 func _ready() -> void:
-	layer = 20   # trên mọi HUD khác
-	# Bảng phải chạy được TRONG LÚC cây scene bị tạm dừng, nếu không hai cái
-	# nút bấm không ăn và hiệu ứng hiện ra đứng hình ở frame đầu.
+	layer = 20
 	process_mode = Node.PROCESS_MODE_ALWAYS
 
 
 ## Dựng và hiện bảng.
-##   money        — doanh thu lượt này
-##   xong, hoan_hao, bo_di — thống kê
-##   ep_hang     — ép cứng một hạng (màn hướng dẫn luôn là "S"). Rỗng = tự xếp.
-## Lý do THUA ÉP (ví dụ quá nhiều khách bỏ về). Khác rỗng thì lượt này trượt
-## bất kể doanh thu, và câu này thay cho dòng "cần thêm N nữa". Gán TRƯỚC khi
-## gọi show_results().
 var fail_note := ""
 
 ## Endless Mode: số giây trụ được. Âm = không phải Endless (mặc định).
-## level_base gán TRƯỚC khi gọi show_results(), giống fail_note.
 var endless_seconds := -1.0
 
 ## Asian Mode: {"won", "note", "seconds", "lives"} do asian_mode.result() trả.
-## Rỗng = không phải Asian. Gán trước show_results(), giống endless_seconds.
 var asian_result: Dictionary = {}
 
 ## Tiền shop vừa nhận ở lượt này (0 = không nhận, không in dòng).
@@ -68,16 +46,9 @@ func show_results(money: int, served: int, perfect: int, left_angry: int,
 	if get_node_or_null("/root/GameData") != null:
 		level_id = String(GameData.current_level)
 
-	# Endless: không hạng, không "hoàn thành màn", điểm là thời gian trụ được.
-	# Rẽ nhánh SỚM để không lượt Endless nào lọt vào complete_level() hay
-	# record_rank() (hai hàm đó sắp theo tiền, sai luật của chế độ này).
-	# Asian: không hạng S–D, chỉ THẮNG hoặc THUA. Rẽ sớm như Endless để lượt
-	# Asian không lọt vào complete_level().
 	if not asian_result.is_empty():
 		GameData.record_asian(bool(asian_result["won"]), money,
 			float(asian_result["seconds"]))
-		# Asian chỉ thưởng khi THẮNG: thua cũng có thì vào rồi bỏ cuộc sớm
-		# vẫn cày được tiền (user chốt 29/10/2026).
 		if bool(asian_result["won"]):
 			_shop_gain = GameData.award_shop_coins(money)
 		_build_asian_ui(money, served, perfect, left_angry)
@@ -87,7 +58,6 @@ func show_results(money: int, served: int, perfect: int, left_angry: int,
 	if endless_seconds >= 0.0:
 		var old_best := GameData.get_best_money(level_id)
 		var is_best := GameData.record_endless(money, endless_seconds)
-		# Endless không có thắng/thua — mỗi lần hết giờ đều là "hoàn thành".
 		_shop_gain = GameData.award_shop_coins(money)
 		_build_endless_ui(money, served, perfect, left_angry, old_best, is_best)
 		_show()
@@ -97,41 +67,18 @@ func show_results(money: int, served: int, perfect: int, left_angry: int,
 	if row.is_empty():
 		row = GameData.rank_for(level_id, money) if not level_id.is_empty() else ""
 
-	# Thua ép thắng mọi mốc điểm: đủ tiền hạng S mà để khách bỏ về quá giới
-	# hạn thì vẫn là trượt. Xoá hạng ở ĐÂY, trước khi tính `place`, để mọi thứ
-	# phía dưới (không đánh dấu hoàn thành, chữ CHƯA ĐẠT) tự đúng theo.
 	if not fail_note.is_empty():
 		row = ""
 
 	var old_record := 0
 	var place := not row.is_empty()
-	# Đọc cờ TRƯỚC khi gọi record_rank(): hàm đó tắt cờ sau khi dùng.
 	_skill_win = GameData.skill_win_pending
 	if not level_id.is_empty():
 		old_record = GameData.get_best_money(level_id)
-		# Chỉ ghi nhận hoàn thành khi ĐẠT ÍT NHẤT HẠNG C.
-		#
-		# complete_level cũng là chỗ cập nhật kỷ lục, nên phải đọc kỷ lục CŨ
-		# trước rồi mới gọi — gọi trước thì kỷ lục đã bị ghi đè và dòng "kỷ lục
-		# cũ" trên bảng luôn bằng đúng số vừa kiếm được.
 		if place:
 			GameData.complete_level(level_id, money)
-			# Tiền shop: chỉ lượt QUA MÀN thật. Loại ra: hướng dẫn (ep_hang
-			# ép hạng), AAA (chế độ đùa, không lưu gì), và lượt thắng bằng kĩ
-			# năng Gold Ship — 9.999.999 doanh thu sẽ thành ~1 triệu tiền shop,
-			# mua sạch cửa hàng trong một lần bấm.
 			if ep_hang.is_empty() and not _skill_win and level_id != GameData.AAA_LEVEL:
 				_shop_gain = GameData.award_shop_coins(money)
-		# Bảng xếp hạng ghi MỌI lượt, kể cả lượt trượt hạng — xem giải thích
-		# ở GameData.ghi_xep_hang(). Gọi SAU complete_level vì hàm kia mới là
-		# nơi quyết định tiến trình; nếu có lỗi thì lỗi ở cái phụ, không phải
-		# ở cái chính.
-		#
-		# Không ghi khi ep_hang có giá trị: đó là màn hướng dẫn tự ép hạng S
-		# với vài chục đồng tiền học việc, đứng chung bảng với màn chơi thật
-		# thì con số vô nghĩa. (Hiện "tutorial" cũng không nằm trong
-		# MAN_XEP_HANG nên có hai lớp chặn — cố ý, vì lớp thứ hai là thứ còn
-		# đúng khi sau này thêm màn mới.)
 		if ep_hang.is_empty():
 			GameData.record_rank(level_id, money, row)
 
@@ -146,18 +93,10 @@ func _show() -> void:
 	AmThanh.stop_music()
 	AmThanh.play_sfx("results")
 
-	# Tâm phóng to phải là TÂM BẢNG, không phải góc trên-trái (mặc định).
-	#
-	# Bám theo `resized` chứ không gán một lần: lúc này bảng vẫn đang được
-	# container tính kích thước, `size` còn là 0 — gán ngay thì tâm phóng to
-	# nằm ở góc và cái bảng bung ra từ góc trên-trái, lệch hẳn khỏi giữa trong
-	# suốt 0,28 giây hiệu ứng.
 	_box.resized.connect(func() -> void:
 		_box.pivot_offset = _box.size * 0.5)
 	_box.pivot_offset = _box.size * 0.5
 
-	# Hiện bằng cách phóng to nhẹ từ 0,9: bảng bật ra đột ngột giữa màn hình
-	# thì giật mắt, còn trượt vào thì chậm quá cho một thứ kết thúc màn chơi.
 	_box.scale = Vector2(0.9, 0.9)
 	_box.modulate.a = 0.0
 	var tween := create_tween().set_parallel(true) \
@@ -182,8 +121,6 @@ func _make_box() -> VBoxContainer:
 	var bg := ColorRect.new()
 	bg.color = Color(0, 0, 0, 0.55)
 	bg.set_anchors_preset(Control.PRESET_FULL_RECT)
-	# Chặn chuột: nền tối phải nuốt mọi cú bấm, không cho lọt xuống HUD phía
-	# dưới. Bảng kết quả là một cửa sổ chặn, không phải một lớp trang trí.
 	bg.mouse_filter = Control.MOUSE_FILTER_STOP
 	add_child(bg)
 
@@ -191,19 +128,6 @@ func _make_box() -> VBoxContainer:
 	_box.set_anchors_preset(Control.PRESET_CENTER)
 	_box.custom_minimum_size = Vector2(WIDTH, 0.0)
 
-	# HAI DÒNG NÀY MỚI LÀ THỨ ĐẶT BẢNG VÀO GIỮA.
-	#
-	# PRESET_CENTER chỉ đưa bốn cái neo về 0,5 — tức ghim GÓC TRÊN-TRÁI của
-	# bảng vào tâm màn hình, chứ không phải tâm bảng. Lúc gọi preset thì bảng
-	# còn rỗng (cao 0, rộng 0) nên offset tính ra cũng bằng 0; sau đó container
-	# nở ra tới kích thước tối thiểu, và mặc định nó nở về phía DƯỚI-PHẢI. Kết
-	# quả: bảng nằm lệch hẳn xuống góc phần tư dưới-phải, tâm bảng cách tâm màn
-	# hình đúng nửa bề rộng và nửa chiều cao của nó.
-	#
-	# GROW_DIRECTION_BOTH bắt nó nở đều về HAI phía quanh điểm neo, nên tâm
-	# bảng trùng tâm màn hình dù nội dung dài ngắn thế nào. Đây cũng là lý do
-	# không gõ cứng offset âm bằng nửa kích thước: chiều cao bảng thay đổi theo
-	# nội dung (có thêm dòng "cần thêm N nữa" khi chưa đạt), gõ cứng là lệch.
 	_box.grow_horizontal = Control.GROW_DIRECTION_BOTH
 	_box.grow_vertical = Control.GROW_DIRECTION_BOTH
 	if ResourceLoader.exists(THEME):
@@ -263,12 +187,6 @@ func _fill_normal(col: VBoxContainer, money: int, served: int, perfect: int,
 	money_row.add_child(amount)
 
 	var record := Label.new()
-	# Chỉ khoe kỷ lục khi lượt này ĐẠT: kỷ lục chỉ được lưu trong
-	# complete_level(), mà lượt trượt thì không gọi hàm đó. Không có vế
-	# `place` thì một lượt thua vì khách bỏ về vẫn hiện "KỶ LỤC MỚI!" cho một
-	# con số không hề được lưu.
-	# Lượt thắng bằng kĩ năng không ghi kỷ lục (xem GameData.complete_level),
-	# nên cũng không được khoe "kỷ lục mới".
 	if money > old_record and place and not _skill_win:
 		record.text = Lang.t("KỶ LỤC MỚI!  (cũ: %d)") % old_record
 		record.add_theme_color_override("font_color", COLOR_GRADE["A"])
@@ -283,15 +201,11 @@ func _fill_normal(col: VBoxContainer, money: int, served: int, perfect: int,
 
 	# --- thống kê ---
 	col.add_child(_row(Lang.t("Đơn đã phục vụ"), str(served)))
-	# Chỉ hiện SỐ, không kèm "+35%": tỉ lệ thưởng nằm ở customer_manager và có thể
-	# đổi, gõ lại ở đây là dựng thêm một nguồn sự thật thứ hai để sau này lệch.
 	col.add_child(_row(Lang.t("Trong đó hoàn hảo"), str(perfect)))
 	col.add_child(_row(Lang.t("Khách bỏ đi"), str(left_angry)))
 	if _shop_gain > 0:
 		col.add_child(_row(Lang.t("Tiền shop nhận được"), "+%d" % _shop_gain))
 
-	# Chưa đạt thì nói rõ còn thiếu bao nhiêu. Chỉ hiện "CHƯA ĐẠT" mà không nói
-	# thiếu gì thì người chơi không biết lần sau phải cố thêm bao nhiêu.
 	if not place and get_node_or_null("/root/GameData") != null:
 		var mark: Dictionary = GameData.rank_thresholds_for(String(GameData.current_level))
 		var missing := int(mark.get(GameData.MIN_RANK, 0)) - money
@@ -320,10 +234,6 @@ func _fill_normal(col: VBoxContainer, money: int, served: int, perfect: int,
 	ticket.pressed.connect(_go_level_select)
 	button_row.add_child(ticket)
 
-	# Vừa QUA màn cuối cùng trước màn kết (Ngày 3): thêm nút sang thẳng Ending
-	# và đặt focus vào nó. Hỏi GameData "màn kết cần màn nào" chứ không so cứng
-	# với "d3_sang" — đổi điều kiện mở màn kết ở LEVELS là nút này tự theo.
-	# Nút y hệt nhau cho cả hai kết: không lộ kết ẩn.
 	var ending_needs := ""
 	var here := ""
 	if get_node_or_null("/root/GameData") != null:
@@ -340,8 +250,6 @@ func _fill_normal(col: VBoxContainer, money: int, served: int, perfect: int,
 
 
 ## Bảng kết quả của Endless: chữ to ở giữa là THỜI GIAN chứ không phải hạng.
-## Bảng kết quả của Endless. Điểm là DOANH THU như mọi màn (chữ to ở giữa);
-## thời gian trụ được là một dòng thống kê bổ sung.
 func _build_endless_ui(money: int, served: int, perfect: int, left_angry: int,
 		old_best: int, is_best: bool) -> void:
 	const EndlessMode := preload("res://scripts/modes/endless/endless_mode.gd")
@@ -401,7 +309,6 @@ func _build_endless_ui(money: int, served: int, perfect: int, left_angry: int,
 	again.text = Lang.t("Chơi lại")
 	again.pressed.connect(_replay)
 	button_row.add_child(again)
-	# Endless vào từ khung "Chế độ" ở màn chọn màn nên quay về đúng chỗ đó.
 	var back := Button.new()
 	back.text = Lang.t("Về chọn màn")
 	back.pressed.connect(_go_level_select)
@@ -485,10 +392,6 @@ func _divider() -> Control:
 # ---------------------------------------------------------------- nút ---
 
 ## Bỏ tạm dừng TRƯỚC khi đổi màn.
-##
-## get_tree().paused là cờ TOÀN CỤC, nó không tự tắt khi scene bị thay. Quên
-## bỏ thì màn mới hiện ra và đứng hình hoàn toàn, mà không có lỗi nào báo —
-## đúng kiểu bug làm người ta tưởng game bị treo.
 func _replay() -> void:
 	_leave_pause()
 	get_tree().reload_current_scene()

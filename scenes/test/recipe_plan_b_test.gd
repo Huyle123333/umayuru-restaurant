@@ -1,32 +1,4 @@
 extends Node
-## CHẾ ĐỘ THỬ NGHIỆM phương án B (thực đơn theo họ món).
-##
-## Vào từ màn Chọn màn → nút "Thử nghiệm B" → chọn nhân vật, như mọi chế độ
-## khác (khai trong GameData.LEVELS, id "plan_b"). Mở thẳng scene này rồi F6
-## trong editor cũng được.
-##
-## Không phải một map mới: scene bật công tắc ItemCatalog.plan_b rồi dựng lại
-## đúng cái map đang dùng. Mọi hệ thống (bàn chế tạo, bếp, lò, khách gọi món,
-## vé đơn, F1) đọc công thức qua ItemCatalog, nên bật một công tắc là cả nhà
-## hàng chạy theo bộ công thức B.
-##
-## Thứ tự quan trọng: bật công tắc TRƯỚC khi thêm map vào cây. Map dựng hệ
-## khách trong _ready của nó — dựng trước khi bật thì khách gọi món bộ cũ.
-##
-## Màn thử KHÔNG đếm ngược (level_base bỏ qua màn mở đầu cho "plan_b"), KHÔNG
-## cho khách tự vào và KHÔNG chạy đồng hồ: người thử gọi từng khách bằng tay
-## để thử từng món, không bị hết giờ giữa chừng.
-##
-## PHÍM TẮT (phím F vì không đụng phím điều khiển nào):
-##   F5  mở BẢNG CHỌN MÓN dạng lưới — WASD / phím mũi tên / chuột để chọn,
-##       E hoặc click để xác nhận, Esc để đóng. Chọn xong: khách sau gọi đúng
-##       món đó, và một khách được gọi vào ngay.
-##   F6  về món ngẫu nhiên
-##   F7  đổi loại khách (Ngẫu nhiên → từng model)
-##   F8  gọi một khách vào NGAY
-##
-## (Bỏ F9 "bật/tắt khách tự đến": màn thử không cho khách tự vào nữa, và F9
-## trùng phím tạm dừng khi chạy từ editor.)
 
 const ItemCatalog := preload("res://scripts/interaction/item_catalog.gd")
 const CustomerScript := preload("res://scripts/restaurant/customer.gd")
@@ -41,8 +13,8 @@ const COLOR_TEXT := Color("fbecd2")
 
 var _map: Node
 var _dishes: Array[String] = []
-var _dish := ""            # "" = ngẫu nhiên
-var _model_i := 0          # 0 = ngẫu nhiên, i>0 = MODELS[i-1]
+var _dish := ""
+var _model_i := 0
 var _label: Label
 var _grid_layer: CanvasLayer
 var _grid: GridContainer
@@ -63,8 +35,6 @@ func _ready() -> void:
 
 
 ## Tắt công tắc khi rời scene (về menu) để các màn thường không dính bộ công
-## thức B — biến static sống suốt phiên chạy game.
-## (16/11/2026) Không tắt nữa: bộ B giờ là bộ công thức của game gốc.
 func _exit_tree() -> void:
 	pass
 
@@ -117,7 +87,6 @@ func _unhandled_key_input(event: InputEvent) -> void:
 
 
 ## Lúc lưới mở: bắt phím ở _input (chạy TRƯỚC đôi tay và bộ chọn mục tiêu)
-## để E không nhặt đồ và WASD không làm gì ngoài di chuyển ô chọn.
 func _input(event: InputEvent) -> void:
 	if _grid_layer == null or not _grid_layer.visible:
 		return
@@ -127,8 +96,6 @@ func _input(event: InputEvent) -> void:
 	elif event.is_action_pressed("interact") and focus is Button:
 		(focus as Button).pressed.emit()
 	elif focus != null:
-		# WASD đi theo đúng hàng xóm mà Godot tự tính cho lưới (phím mũi tên
-		# thì Godot tự xử lý sẵn) — không phải tự đếm hàng/cột.
 		var side := -1
 		if event.is_action_pressed("move_up"): side = SIDE_TOP
 		elif event.is_action_pressed("move_down"): side = SIDE_BOTTOM
@@ -147,8 +114,6 @@ func _input(event: InputEvent) -> void:
 # ------------------------------------------------------------ lưới món ---
 
 ## Lưới chọn món: mỗi ô [ảnh món + tên]. Dạng lưới thay cho danh sách dọc
-## của tủ lạnh: 16 món xếp dọc phải bấm S mười lần mới tới cuối, lưới 4×4 thì
-## món nào cũng cách tối đa vài bước, và nhìn được hết một lúc.
 func _build_grid() -> void:
 	_grid_layer = CanvasLayer.new()
 	_grid_layer.layer = 40
@@ -220,7 +185,6 @@ func _dish_cell(dish: String) -> Button:
 func _open_grid() -> void:
 	_grid_layer.show()
 	_lock(true)
-	# Đặt sẵn ô chọn vào món đang ép (nếu có), không thì ô đầu tiên.
 	var at := maxi(_dishes.find(_dish), 0)
 	if _grid.get_child_count() > at:
 		(_grid.get_child(at) as Control).grab_focus()
@@ -247,8 +211,6 @@ func _lock(is_open: bool) -> void:
 # ---------------------------------------------------------- bảng phím ---
 
 ## Ghi lựa chọn vào hệ khách và vẽ lại bảng. force_dish là ô ép món sẵn có
-## của customer_manager (vốn dùng cho màn hướng dẫn): khách nào NGỒI XUỐNG sau
-## khi đổi sẽ gọi đúng món đang chọn.
 func _refresh() -> void:
 	var cm := _customers()
 	if cm != null:

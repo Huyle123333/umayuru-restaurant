@@ -1,28 +1,5 @@
 extends RefCounted
-## Màn ra mắt của Sakura Chiyono O — đoạn cắt cảnh chen giữa "bấm Chơi" và
-## "vào bếp".
-##
-## Một trong BA đoạn ra mắt của ba nhân vật ẩn (Teio, Chiyono O, Gold Ship).
-## Chạy khi: đã mở khoá trong bảng CODE No.7, đang thật sự chọn Chiyono, chưa
-## xem lần nào, và màn sắp vào là một màn chơi thật (không phải prologue).
-##
 ## ------------------------------------------------------- Ý ĐỒ THIẾT KẾ
-##
-## BA ĐOẠN NÀY ĐỘC LẬP VỚI NHAU — xem giải thích đầy đủ ở kich_ban_teio.gd.
-## Tóm tắt: ba người được mở khoá theo thứ tự bất kỳ, nên không đoạn nào được
-## phép nhắc tới hai đoạn kia.
-##
-## TÍNH CÁCH CHIYONO: ngoan ngoãn, tốt bụng. Ba nhân vật ẩn cùng một tình
-## huống (tới quán, tự giới thiệu, xin vào làm) nhưng phải KHÁC NHAU ở cách
-## họ bước qua cái cửa — nếu không thì làm ba đoạn cũng như làm một.
-##
-##   Gold Ship  đạp cửa, không hỏi ai.
-##   Teio       hỏi dồn, tự trả lời hộ luôn.
-##   Chiyono O  đứng ngoài đợi tới lượt, và xin phép trước từng bước một.
-##
-## Đoạn của Chiyono vì thế phải NGẮN và LẶNG hơn hai đoạn kia. Cô ấy nói ít,
-## nhưng đã chuẩn bị kỹ hơn cả hai người cộng lại — và chi tiết đó (cái hộp
-## bánh) làm việc thay cho một đoạn thoại dài.
 
 const BG_RESTAURANT := "res://assets/ui/backgrounds/quan_an.png"
 
@@ -32,14 +9,13 @@ const SCENES: Array[Dictionary] = [
 		"line": "Bảy giờ sáng. Quán chưa sáng đèn.",
 	},
 	{
-		"line": "Có một cô bé đứng ngoài cửa. Đã đứng đó một lúc, ngập ngừng định vào nhưng lại thôi.",
+		"line": "Có một cô bé đứng ngoài cửa, ngập ngừng định vào nhưng lại thôi.",
 	},
-	{
-		"portrait": "kitamoi",
+	{"emotion": "surprise", "portrait": "kitamoi",
 		"speaker": "Kitasan Black",
-		"line": "Ơ Chiyo-san? Tại sao chị chỉ đứng nhìn!",
+		"line": "Ơ Chiyo-san? Sao chị chỉ đứng nhìn vậy!",
 	},
-	{
+	{"emotion": "nervous", 
 		"portrait": "chiyo",
 		"speaker": "Sakura Chiyono O",
 		"line": "A... x-xin lỗi! Trong đó đang bận nên chị nghĩ mình nên đợi.",
@@ -49,7 +25,7 @@ const SCENES: Array[Dictionary] = [
 		"speaker": "0rca's Trainer",
 		"line": "Có việc gì không em?",
 	},
-	{
+	{"emotion": "shy", 
 		"portrait": "chiyo",
 		"speaker": "Sakura Chiyono O",
 		"line": "Em... nghe nói quán đang tìm người. Em cũng biết một chút nấu nướng. Không giỏi lắm, nhưng làm được.",
@@ -57,12 +33,11 @@ const SCENES: Array[Dictionary] = [
 	{
 		"line": "Cô đưa ra một cái hộp giấy buộc dây cẩn thận. Bên trong là bánh — vừa mới ra lò sáng nay.",
 	},
-	{
-		"portrait": "tuandb",
+	{"emotion": "surprise", "portrait": "tuandb",
 		"speaker": "Special Week",
-		"line": "...Ngon quá! Cái này ngon thật này!",
+		"line": "...Vỏ giòn, nhân không ngọt gắt. Mẹ em cũng không làm được thế này đâu!",
 	},
-	{
+	{"emotion": "nervous", 
 		"portrait": "chiyo",
 		"speaker": "Sakura Chiyono O",
 		"line": "T-thật ạ? Vậy... vậy em làm thêm được không? Em hứa sẽ cố hết sức!",
@@ -70,6 +45,9 @@ const SCENES: Array[Dictionary] = [
 	{
 		"portrait": "",
 		"speaker": "",
-		"line": "Không ai kịp nói rằng cô đã được nhận từ miếng bánh thứ nhất.",
+		"line": "Trước khi Trainer kịp trả lời, Kitasan đã đưa cho cô một chiếc tạp dề.",
 	},
 ]
+
+## Tóm tắt hiện khi người chơi bấm "Bỏ qua".
+const SUMMARY := "Sáng sớm, Sakura Chiyono O rụt rè đứng ngoài cửa quán. Cô mang tới một hộp bánh tự làm và xin được phụ bếp. Bánh ngon tới mức Kitasan đưa ngay cho cô một chiếc tạp dề."

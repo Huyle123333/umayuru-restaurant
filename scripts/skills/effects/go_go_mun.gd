@@ -1,16 +1,4 @@
 extends RefCounted
-## HIỆU ỨNG: Go, Go, Mun! — kĩ năng chủ động của Matikanetannhauser (Mambo).
-##
-## Hai nửa, một may một rủi, đúng tính cách nhân vật:
-##   • MAY: đơn pizza hoàn hảo được gieo thưởng (36% × 3, 18% × 2).
-##   • RỦI: trong lúc DI CHUYỂN, mỗi giây có 3% bị choáng đứng yên 2 giây.
-##
-## Các con số nằm ở mambo.gd (khoá "perfect_roll", "stun_chance_per_second",
-## "stun_seconds"); file này chỉ thi hành.
-##
-## Vì sao là file riêng: nửa "rủi" diễn ra theo THỜI GIAN (phải đếm giây di
-## chuyển, phải đếm ngược lúc choáng) nên cần hàm tick() — thứ một hiệu ứng
-## "vặn một con số" không có.
 
 ## Giây di chuyển đã dồn lại, chưa đủ một giây để gieo.
 var _moving_bank := 0.0
@@ -44,15 +32,10 @@ func tick(delta: float, ctx: Dictionary) -> void:
 			_release(character)
 		return
 
-	# "Đang di chuyển" đo bằng vận tốc ngang THẬT của nhân vật chứ không bằng
-	# phím đang giữ: đứng tì vào tường mà giữ W thì không đi được bước nào,
-	# không có lý gì bị gieo choáng.
 	var v: Vector3 = character.velocity
 	if Vector2(v.x, v.z).length() < 0.5:
 		return
 	_moving_bank += delta
-	# Gieo theo từng GIÂY TRÒN di chuyển, không gieo mỗi khung hình: gieo mỗi
-	# khung thì xác suất thật phụ thuộc FPS của máy người chơi.
 	while _moving_bank >= 1.0:
 		_moving_bank -= 1.0
 		if randf() < float(data.get("stun_chance_per_second", 0.0)):
@@ -65,7 +48,6 @@ func _stun(character: Node, seconds: float) -> void:
 	_moving_bank = 0.0
 	if "movement_locked" in character:
 		character.movement_locked = true
-	# Phần hiển thị (sao quanh đầu, đầu đảo vòng) do nhân vật tự lo.
 	if character.has_method("set_dizzy"):
 		character.set_dizzy(true)
 	AmThanh.play_sfx("craft_fail")

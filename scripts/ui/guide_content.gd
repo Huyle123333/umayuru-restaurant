@@ -1,38 +1,8 @@
 extends RefCounted
-## Nội dung của menu hướng dẫn (F1) — DỮ LIỆU thuần, không có logic vẽ.
-##
-## Cùng lối viết với cutscene_prologue.gd và cutscene_tutorial.gd: sửa nội dung
-## là sửa bảng này, không đụng tới file dựng giao diện. Ba file kịch bản của
-## game giờ đọc giống nhau, nên người sửa chữ chỉ phải học MỘT quy ước.
-##
-## MỖI MỤC là một Dictionary {id, name, blocks}. `blocks` là danh sách các khối nội
-## build, mỗi khối một loại:
-##
-##   {"h":   "Tiêu đề nhỏ"}
-##   {"p":   "Đoạn văn, có BBCode"}
-##   {"key_label": [["E", "việc"], ...]}      bảng phím hai cột
-##   {"img": "res://...png", "caption": ""} ảnh minh hoạ kèm chú thích
-##   {"recipe": "table"|"oven"}           bảng công thức TỰ SINH từ ItemCatalog
-##   {"chop_list": true}                 các nguyên liệu cần thái (tự sinh)
-##
-## Vì sao có loại khối "recipe" thay vì gõ tay danh sách món:
-##
-## Công thức là thứ đổi nhiều nhất trong cả game — riêng tuần này đã thêm ba
-## món và khoá/mở một nhánh cơ chế. Gõ tay vào đây thì trang hướng dẫn sẽ nói
-## sai ngay lần sửa công thức đầu tiên, mà nó nói sai một cách IM LẶNG: không
-## có lỗi nào báo, chỉ có người chơi làm theo rồi không ra món. Sinh thẳng từ
-## ItemCatalog thì trang này không bao giờ lệch được với luật thật.
-##
-## ẢNH: đặt ở res://assets/ui/huong_dan/<tên>.png. Thiếu ảnh thì khối đó tự bỏ
-## qua, không báo lỗi và không để lại ô trống — nên khai sẵn đường dẫn rồi bổ
-## sung ảnh sau lúc nào cũng được.
 
 const IMAGE_DIR := "res://assets/ui/huong_dan/"
 
 const SECTIONS := [
-	# ══════════════════════════════════════════════════════════ GIAO DIỆN ══
-	# Viết lại 12/11/2026: chỉ nêu thông tin người chơi cần, bỏ phần giải
-	# thích lý do thiết kế (lý do nằm trong chú thích code, không nằm ở đây).
 	{
 		"id": "interface",
 		"name": "Giao diện",
@@ -76,7 +46,6 @@ const SECTIONS := [
 		],
 	},
 
-	# ═════════════════════════════════════════════════════════ KHÁCH HÀNG ══
 	{
 		"id": "customers",
 		"name": "Khách hàng",
@@ -96,7 +65,6 @@ const SECTIONS := [
 		],
 	},
 
-	# ══════════════════════════════════════════════════════════ CÔNG THỨC ══
 	{
 		"id": "recipe",
 		"name": "Công thức",
@@ -120,7 +88,6 @@ const SECTIONS := [
 		],
 	},
 
-	# ═══════════════════════════════════════════════════════ CHỨC NĂNG BẾP ══
 	{
 		"id": "kitchen",
 		"name": "Chức năng bếp",
@@ -145,7 +112,6 @@ const SECTIONS := [
 		],
 	},
 
-	# ═══════════════════════════════════════════════════════════ ĐÁNH GIÁ ══
 	{
 		"id": "grading",
 		"name": "Đánh giá",
@@ -153,7 +119,6 @@ const SECTIONS := [
 			{"p": "Hết giờ thì màn kết thúc. Hạng tính theo [b]tổng doanh thu[/b]."},
 
 			{"h": "Hạng"},
-			# Chỉ ghi tên năm hạng, không in con số: mỗi màn có mốc riêng.
 			{"p": "Từ thấp lên cao: [color=#5b8fb0][b]D[/b][/color] · [color=#4f9d5d][b]C[/b][/color] · [color=#e27ba0][b]B[/b][/color] · [color=#e8823f][b]A[/b][/color] · [color=#f2c230][b]S[/b][/color]."},
 			{"p": "Mốc doanh thu của từng màn xem ở màn hình [b]Chọn màn[/b]; trong lúc chơi, mốc kế tiếp hiện cạnh số tiền.\nKhông đạt hạng [b]D[/b] thì chưa qua màn."},
 
@@ -165,8 +130,6 @@ const SECTIONS := [
 		],
 	},
 
-	# ═════════════════════════════════════════════════════════ CHẾ ĐỘ CHƠI ══
-	# Asian khoá F1 khi đang trong màn, nên trang này là chỗ duy nhất có luật.
 	{
 		"id": "modes",
 		"name": "Chế độ chơi",

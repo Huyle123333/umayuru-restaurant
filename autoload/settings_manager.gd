@@ -1,34 +1,12 @@
 extends Node
-## SettingsManager — mọi tùy chọn của người chơi (Autoload).
-##
-## Giữ giá trị, áp dụng chúng vào engine, và lưu xuống user://settings.cfg.
-## Cửa sổ Cài đặt chỉ đọc/ghi qua đây chứ không tự đụng vào AudioServer,
-## nhờ vậy menu Pause sau này dùng lại được y nguyên mà không lặp code.
 
 signal settings_changed
 
 const CONFIG_PATH := "user://settings.cfg"
 ## Bốn bus âm thanh của game.
-##
-## "Video" là bus RIÊNG cho tiếng của các đoạn phim (intro khởi động, intro
-## trước prologue). Trước đây chúng phát chung bus "Music", nên kéo thanh
-## Nhạc nền xuống để bớt ồn lúc chơi cũng làm tắt luôn lời thoại trong phim —
-## hai thứ chẳng liên quan gì nhau bị buộc chung một cái núm.
-##
-## Vì sao là BUS RIÊNG chứ không phải đặt volume_db thẳng trên node video:
-## đặt trên node thì mỗi scene video phải tự nhớ con số của mình, và thêm một
-## đoạn phim mới là thêm một chỗ có thể quên. Bus thì khai một lần, mọi video
-## trỏ vào đó, và sau này muốn có thanh trượt riêng cho lời thoại phim thì đã
-## sẵn chỗ để cắm.
-##
-## Bus "Video" gửi thẳng vào Master nên vẫn chịu thanh Tổng — đúng ý: tắt
-## tiếng cả game thì phim cũng phải im.
 const BUSES := ["Master", "Music", "SFX", "Video"]
 
 ## Âm lượng 0.0 → 1.0 cho từng bus.
-##
-## Video mặc định 1.0 (nguyên bản): tiếng trong phim đã được trộn sẵn lúc dựng
-## phim, game không có lý do gì để chỉnh lại.
 var volumes := {"Master": 0.8, "Music": 0.7, "SFX": 0.9, "Video": 1.0}
 ## Độ sáng màn hình: 0.5 (tối) → 1.5 (sáng), 1.0 là nguyên bản.
 var brightness := 1.0
@@ -37,13 +15,8 @@ var mouse_sensitivity := 1.0
 var fullscreen := false
 
 ## --- Ngôn ngữ ------------------------------------------------------------
-## Danh sách ngôn ngữ game hỗ trợ. Tên hiển thị CỐ Ý viết bằng chính ngôn
-## ngữ đó ("Tiếng Việt", "English") và KHÔNG cho dịch: người lỡ chọn nhầm
-## ngôn ngữ mình không đọc được vẫn nhận ra dòng của mình mà quay lại.
 const LANGUAGES := [
 	{"code": "vi", "name": "Tiếng Việt"},
-	# Ghi rõ "(AI translate)": bản tiếng Anh do AI dịch, chưa qua người bản
-	# ngữ duyệt — nói trước để người chơi không tưởng là bản dịch chính thức.
 	{"code": "en", "name": "English (AI translate)"},
 ]
 const DEFAULT_LANGUAGE := "vi"
@@ -57,11 +30,6 @@ var _brightness_rect: ColorRect
 func _ready() -> void:
 	process_mode = Node.PROCESS_MODE_ALWAYS
 	_build_brightness_layer()
-	# Chụp phím MẶC ĐỊNH trước khi load_settings() ghi đè bằng phím đã lưu.
-	# Đảo hai dòng này là "mặc định" thành chính bộ phím người chơi đã đổi,
-	# và nút Đặt lại mặc định không còn đặt lại được gì.
-	# Nạp bảng tiếng Anh (khoá = câu tiếng Việt gốc) TRƯỚC load_settings():
-	# load_settings() đặt locale, và mọi scene mở sau đó phải tìm thấy bản dịch.
 	TranslationServer.add_translation(Lang.build_english())
 	_register_extra_actions()
 	_remember_default_keys()
@@ -69,10 +37,6 @@ func _ready() -> void:
 
 
 ## --- Độ sáng -------------------------------------------------------------
-## Dựng một lớp phủ toàn màn hình bằng code, đặt ở CanvasLayer 200 để luôn
-## nằm trên mọi thứ. Lớp này dùng shader đọc lại ảnh màn hình rồi nhân với
-## hệ số sáng — nhờ vậy vừa làm tối được vừa làm sáng lên được. Nếu chỉ phủ
-## một tấm đen mờ thì chỉ giảm sáng chứ không bao giờ tăng sáng được.
 func _build_brightness_layer() -> void:
 	var layer := CanvasLayer.new()
 	layer.layer = 200
@@ -97,7 +61,6 @@ void fragment() {
 	_brightness_rect = ColorRect.new()
 	_brightness_rect.material = material_
 	_brightness_rect.set_anchors_preset(Control.PRESET_FULL_RECT)
-	# Bắt buộc: nếu không Ignore thì tấm phủ này nuốt hết chuột của cả game.
 	_brightness_rect.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	layer.add_child(_brightness_rect)
 
@@ -105,7 +68,6 @@ void fragment() {
 func set_brightness(value: float) -> void:
 	brightness = clampf(value, 0.5, 1.5)
 	if _brightness_rect:
-		# Bằng 1.0 thì tắt hẳn lớp phủ đi cho đỡ tốn một lượt vẽ mỗi khung hình.
 		_brightness_rect.visible = not is_equal_approx(brightness, 1.0)
 		(_brightness_rect.material as ShaderMaterial).set_shader_parameter("brightness", brightness)
 	settings_changed.emit()
@@ -118,7 +80,6 @@ func get_volume(bus_name: String) -> float:
 
 
 ## value 0.0 → 1.0. Tai người nghe theo thang logarit nên phải đổi sang
-## decibel bằng linear_to_db, không gán thẳng số của thanh trượt.
 func set_volume(bus_name: String, value: float) -> void:
 	value = clampf(value, 0.0, 1.0)
 	volumes[bus_name] = value
@@ -127,7 +88,6 @@ func set_volume(bus_name: String, value: float) -> void:
 		push_warning("Chưa có audio bus tên '%s'." % bus_name)
 		return
 	AudioServer.set_bus_volume_db(idx, linear_to_db(value))
-	# value = 0 thì linear_to_db trả về -inf; tắt tiếng hẳn cho chắc.
 	AudioServer.set_bus_mute(idx, is_zero_approx(value))
 	settings_changed.emit()
 
@@ -149,13 +109,6 @@ func language_name(code_: String) -> String:
 
 
 ## Đổi ngôn ngữ hiển thị của toàn game.
-##
-## Chỉ cần một dòng TranslationServer.set_locale() là đủ cho phần lớn giao
-## diện: Godot gửi thông báo NOTIFICATION_TRANSLATION_CHANGED xuống cả cây
-## scene, và mọi node Control có auto_translate (mặc định bật) tự dịch lại
-## text của nó. Nghĩa là các nhãn/nút đặt sẵn trong file .tscn đổi ngay lập
-## tức mà không cần chạy lại scene — chỉ những chuỗi do CODE gán vào .text
-## mới phải tự vẽ lại, và đó là lý do vẫn phát signal settings_changed.
 func set_language(code_: String) -> void:
 	if not has_language(code_):
 		push_warning("Không có ngôn ngữ '%s', giữ nguyên '%s'." % [code_, language])
@@ -183,11 +136,6 @@ func set_fullscreen(on: bool) -> void:
 ## --- Lưu / nạp -----------------------------------------------------------
 
 ## Trả mọi tùy chọn về mặc định — TRỪ ngôn ngữ.
-##
-## Cố ý bỏ ngôn ngữ ra ngoài: người chơi bấm "Mặc định" là để sửa lại âm
-## lượng / độ sáng mình vừa kéo hỏng, không ai mong giao diện đột ngột nhảy
-## sang tiếng Việt. Nút reset mà đổi cả ngôn ngữ thì với người chơi tiếng
-## Anh nó biến thành một cái bẫy chứ không phải nút cứu.
 func reset_to_default() -> void:
 	set_volume("Master", 0.8)
 	set_volume("Music", 0.7)
@@ -199,22 +147,7 @@ func reset_to_default() -> void:
 	save_settings()
 
 
-# ══════════════════════════════════════════════ GÁN PHÍM (2/10/2026)
-#
-# Người chơi tự đổi phím cho các hành động trong REBINDABLE. Phím lưu trong
-# settings.cfg (mục "keys") — cùng file với âm lượng, vì đây là thói quen của
-# NGƯỜI NGỒI MÁY chứ không phải tiến trình chơi: xoá save không được làm mất
-# bộ phím đã quen tay.
-#
-# Lưu và so bằng physical_keycode (VỊ TRÍ phím trên bàn phím), giống hệt cách
-# project.godot đang khai: người dùng bàn phím AZERTY vẫn có cụm WASD nằm
-# đúng chỗ tay trái.
-
 ## Các hành động cho phép đổi phím, theo thứ tự hiện trên bảng. "label" là
-## khoá dịch trong locale/translations.csv.
-##
-## KHÔNG có "pause" (ESC) và "toggle_view" (P): ESC còn là phím đóng mọi
-## bảng, đổi nó đi là có thể tự nhốt mình trong một cái bảng; P là phím cheat.
 const REBINDABLE := [
 	{"action": "move_up", "label": "KEY_MOVE_UP"},
 	{"action": "move_down", "label": "KEY_MOVE_DOWN"},
@@ -227,19 +160,10 @@ const REBINDABLE := [
 	{"action": "cycle_target", "label": "KEY_CYCLE_TARGET"},
 	{"action": "cancel_menu", "label": "KEY_CANCEL_MENU"},
 	{"action": "toggle_orders", "label": "KEY_TOGGLE_ORDERS"},
-	# (16/11/2026) Bỏ "toggle_menu" (phím 2) khỏi bảng đổi phím: bảng thực đơn
-	# không còn, công thức in trên vé đơn hàng.
 	{"action": "skill_alt", "label": "KEY_SKILL_ALT"},
 ]
 
 ## Hành động KHAI BẰNG CODE thay vì trong project.godot: action -> phím mặc định.
-##
-## Vì sao không khai trong project.godot như mười một hành động kia: mục input
-## của file đó là các đối tượng InputEventKey tuần tự hoá, chỉ editor ghi cho
-## đúng được — sửa tay sai một trường là cả bảng phím hỏng. Hai hành động này
-## chỉ là phím tắt HUD, không node nào trong scene tham chiếu tới, nên đăng ký
-## lúc khởi động là đủ và an toàn. Autoload này chạy trước mọi scene, nên tới
-## lúc HUD hỏi thì hành động đã tồn tại.
 const EXTRA_ACTIONS := {
 	"toggle_orders": KEY_1,
 	"toggle_menu": KEY_2,
@@ -256,10 +180,6 @@ func _register_extra_actions() -> void:
 		InputMap.action_add_event(action, ev)
 
 ## Phím KHÔNG được gán vì game đang bắt cứng ở chỗ khác: ESC (tạm dừng / đóng
-## bảng), F1 (hướng dẫn), 0 và P (cheat).
-##
-## Phím 1 đã ra khỏi danh sách này: bảng đơn hàng giờ đọc hành động
-## "toggle_orders" chứ không bắt cứng KEY_1, nên nó đổi được như mọi phím khác.
 const RESERVED_KEYS := [KEY_ESCAPE, KEY_F1, KEY_0, KEY_P]
 
 ## Phím mặc định: action -> physical_keycode. Chụp lúc khởi động.
@@ -273,7 +193,6 @@ func _remember_default_keys() -> void:
 
 
 ## Phím CHÍNH của một hành động (phím bàn phím đầu tiên trong InputMap).
-## 0 = hành động không có phím nào.
 func key_of(action: String) -> int:
 	if not InputMap.has_action(action):
 		return 0
@@ -294,11 +213,6 @@ func is_reserved_key(code_: int) -> bool:
 
 
 ## Gán phím mới cho một hành động. Trả về false nếu phím bị cấm.
-##
-## Phím đó đang thuộc hành động KHÁC thì hai hành động ĐỔI CHỖ phím cho nhau.
-## Đổi chỗ chứ không từ chối và cũng không để trùng: từ chối thì muốn hoán
-## hai phím phải đi qua một phím thứ ba; để trùng thì một lần bấm làm hai
-## việc (vừa nhặt đồ vừa vứt đồ) — lỗi mà người chơi không hiểu tại sao.
 func set_key(action: String, code_: int) -> bool:
 	if is_reserved_key(code_) or code_ == 0:
 		return false
@@ -322,8 +236,6 @@ func reset_keys() -> void:
 
 
 ## Thay phím CHÍNH của hành động, giữ nguyên các phím phụ (mũi tên của bốn
-## hướng đi). Xoá hết rồi thêm lại theo thứ tự "phím mới trước" để key_of()
-## — vốn lấy phím đầu tiên — luôn trả về đúng phím vừa gán.
 func _write_key(action: String, code_: int) -> void:
 	if not InputMap.has_action(action) or code_ == 0:
 		return
@@ -339,7 +251,6 @@ func _write_key(action: String, code_: int) -> void:
 	fresh.physical_keycode = code_ as Key
 	InputMap.action_add_event(action, fresh)
 	for ev in keep:
-		# Phím phụ trùng phím mới thì bỏ, khỏi khai một phím hai lần.
 		if ev is InputEventKey and int((ev as InputEventKey).physical_keycode) == code_:
 			continue
 		InputMap.action_add_event(action, ev)
@@ -361,7 +272,6 @@ func save_settings() -> void:
 func load_settings() -> void:
 	var cfg := ConfigFile.new()
 	if cfg.load(CONFIG_PATH) != OK:
-		# Lần chạy đầu chưa có file: áp giá trị mặc định rồi tạo file luôn.
 		_apply_all()
 		save_settings()
 		return
@@ -370,12 +280,8 @@ func load_settings() -> void:
 	brightness = float(cfg.get_value("video", "brightness", 1.0))
 	fullscreen = bool(cfg.get_value("video", "fullscreen", false))
 	mouse_sensitivity = float(cfg.get_value("input", "mouse_sensitivity", 1.0))
-	# Khoá cũ "ngon_ngu" vẫn đọc được để không mất lựa chọn ngôn ngữ đã lưu.
 	language = String(cfg.get_value("locale", "language",
 		cfg.get_value("locale", "ngon_ngu", DEFAULT_LANGUAGE)))
-	# Phím đã lưu. Chỉ đọc những hành động CÒN trong REBINDABLE và bỏ qua phím
-	# bị cấm: file cấu hình là thứ người chơi sửa tay được, và bản game sau có
-	# thể đổi danh sách.
 	for entry in REBINDABLE:
 		var action := String(entry["action"])
 		if cfg.has_section_key("keys", action):

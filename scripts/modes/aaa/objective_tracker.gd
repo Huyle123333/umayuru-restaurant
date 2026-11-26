@@ -1,8 +1,4 @@
 extends CanvasLayer
-## AAA MODE — DÒNG NHIỆM VỤ KHÔNG BAO GIỜ TẮT, giữa mép trên màn hình.
-##
-## Ba dòng: nhiệm vụ, bước hiện tại kèm khoảng cách, và một "mẹo" luôn nói
-## điều hiển nhiên — chính sự hiển nhiên đó là câu đùa.
 
 const THEME := "res://ui/theme/menu_theme.tres"
 

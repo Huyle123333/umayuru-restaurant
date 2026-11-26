@@ -1,16 +1,4 @@
 extends Node
-## AAA MODE — TRAINER HƯỚNG DẪN LIÊN TỤC.
-##
-## Đứng yên hơn IDLE_SECONDS, hoặc quá STUCK_SECONDS mà không tiến thêm bước
-## nào, thì hộp thoại trainer trượt vào với một lời nhắc. Lời nhắc LEO THANG
-## theo số lần: lần đầu còn tử tế, lần thứ năm thì gạ mua DLC "làm hộ".
-##
-## Trainer chỉ HƯỚNG DẪN THAO TÁC (đi đâu, bấm gì) — không nói về màu sắc hay
-## dấu hiệu trên màn hình. Mọi lời nhắc đều điền đúng tên trạm, hướng và
-## khoảng cách thật: vừa đúng vừa thừa, đó là chỗ buồn cười.
-##
-## Dùng lại guide_panel.gd của màn hướng dẫn thay vì dựng hộp thoại mới: cùng
-## một trainer, cùng một cái hộp — người chơi nhận ra ngay "lại là ông ấy".
 
 signal offer_requested
 
@@ -69,7 +57,6 @@ func _process(delta: float) -> void:
 		if _visible_left <= 0.0 and not _asking:
 			_panel.close()
 		return
-	# Chưa có bước nào gắn với một trạm (đang chờ khách) thì chưa có gì để nhắc.
 	if _player == null or _station.is_empty():
 		return
 	var v := _player.velocity

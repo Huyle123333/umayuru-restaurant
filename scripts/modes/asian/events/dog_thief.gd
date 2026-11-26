@@ -1,9 +1,4 @@
 extends RefCounted
-## SỰ KIỆN ASIAN: TRỘM CHÓ (user chốt 27/10/2026).
-##
-## Doro tự đi về phía cửa chính (chậm hơn bình thường). Người chơi bấm vào
-## Doro (E) là giữ lại, sự kiện kết thúc. Doro ra tới cửa là THUA ngay.
-## Phần di chuyển nằm trong doro_pet.gd (start_escape); file này chỉ nối luật.
 
 var _d: Node
 var _doro: Node

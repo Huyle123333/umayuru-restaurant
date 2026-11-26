@@ -1,20 +1,9 @@
 class_name DizzyHeadModifier
 extends SkeletonModifier3D
-## Lắc đầu theo vòng tròn khi nhân vật bị choáng (stun).
-##
-## Vì sao là SkeletonModifier3D chứ không đặt xoay xương trong _process():
-## AnimationPlayer ghi đè TƯ THẾ mọi xương mỗi khung hình. Đặt xoay trong
-## _process() thì tuỳ thứ tự chạy, lúc thấy lúc không, giật từng khung.
-## Modifier được Skeleton3D gọi SAU khi animation đã áp xong, nên phần lắc
-## cộng THÊM lên tư thế Idle: người vẫn thở theo Idle, đầu thì đảo vòng.
-##
-## Bật/tắt bằng `active` (có sẵn của SkeletonModifier3D). Thêm `fade` để
-## đầu từ từ vào vòng và từ từ dừng chứ không giật về thẳng.
 
 ## Tên xương đầu. Model Uma đều tên "Head"; để export cho model khác dùng lại.
 @export var head_bone := "Head"
 ## Biên độ nghiêng tối đa (radian). 0.14 ≈ 8° — đủ thấy là choáng, chưa đến
-## mức trông như gãy cổ.
 @export var tilt := 0.14
 ## Số vòng đầu đảo mỗi giây.
 @export var turns_per_second := 1.1
@@ -43,10 +32,6 @@ func _process_modification() -> void:
 		return
 	var skeleton := get_skeleton()
 	var angle := _time * TAU * turns_per_second
-	# Nghiêng quanh hai trục ngang lệch pha 90° → đỉnh đầu vẽ một vòng tròn.
-	# Xoay trong KHÔNG GIAN SKELETON chứ không trong không gian xương: xương
-	# Head của model Uma có tư thế nghỉ xoay 180°, xoay theo trục cục bộ của
-	# nó thì "nghiêng trái" có thể thành "ngửa ra sau".
 	var wobble := Basis.from_euler(Vector3(
 		sin(angle) * tilt * _fade, 0.0, cos(angle) * tilt * _fade))
 	var global_pose := skeleton.get_bone_global_pose(_bone)

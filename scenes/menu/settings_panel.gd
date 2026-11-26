@@ -1,9 +1,4 @@
 extends Control
-## Cửa sổ Cài đặt. Dùng lại được ở menu chính và menu Pause sau này.
-##
-## Panel này KHÔNG tự đụng vào AudioServer hay DisplayServer — mọi thứ đi qua
-## SettingsManager. Nhờ vậy chỉ có một nơi biết cách áp dụng cài đặt, và mở
-## panel này ở đâu cũng cho kết quả giống nhau.
 
 const ROW := {
 	"Master": "SldMaster",
@@ -29,7 +24,6 @@ const ROW := {
 @onready var _btn_keybinds: Button = %BtnKeybinds
 
 ## Bảng gán phím — dựng bằng code, nằm chồng lên bảng cài đặt. Xem
-## keybind_panel.gd.
 const KeybindPanel := preload("res://scenes/menu/keybind_panel.gd")
 var _keybinds: Control = null
 @onready var _btn_close: Button = %BtnClose
@@ -39,7 +33,6 @@ var _focus_on_close: Control = null
 
 func _ready() -> void:
 	hide()
-	# Panel phải chạy được cả khi game đang tạm dừng, để dùng trong menu Pause.
 	process_mode = Node.PROCESS_MODE_ALWAYS
 
 	_sld_master.value_changed.connect(_on_volume_changed.bind("Master"))
@@ -54,9 +47,6 @@ func _ready() -> void:
 
 	_btn_default.pressed.connect(_on_default_pressed)
 
-	# Bảng gán phím là một bảng RIÊNG mở từ nút này, không nhét thẳng mười một
-	# hàng phím vào đây: bảng cài đặt đã cao gần kín màn hình 720p, thêm nữa
-	# là nút Đóng rơi ra ngoài khung hình.
 	_keybinds = KeybindPanel.new()
 	_keybinds.name = "KeybindPanel"
 	add_child(_keybinds)
@@ -65,14 +55,6 @@ func _ready() -> void:
 
 
 ## Đổ danh sách ngôn ngữ vào OptionButton.
-##
-## Danh sách lấy từ SettingsManager.NGON_NGU chứ không gõ cứng ở đây: thêm
-## một ngôn ngữ thứ ba sau này chỉ phải sửa đúng một chỗ, và cái chỗ đó nằm
-## cạnh nơi thật sự biết cách áp dụng ngôn ngữ.
-##
-## set_item_metadata: nhét mã ngôn ngữ ("vi"/"en") vào từng mục thay vì dựa
-## vào thứ tự index. Nếu dựa vào index, chỉ cần đảo thứ tự trong danh sách
-## là file cài đặt cũ của người chơi trỏ sang ngôn ngữ khác.
 func _build_language_list() -> void:
 	_opt_language.clear()
 	for i in SettingsManager.LANGUAGES.size():
@@ -100,7 +82,6 @@ func open(focus_on_close: Control = null) -> void:
 
 
 func close() -> void:
-	# Lưu một lần lúc đóng, thay vì ghi file mỗi lần kéo thanh trượt.
 	SettingsManager.save_settings()
 	hide()
 	if is_instance_valid(_focus_on_close):
@@ -108,8 +89,6 @@ func close() -> void:
 
 
 func _unhandled_input(event: InputEvent) -> void:
-	# Bảng gán phím đang mở thì ESC là của nó (đóng nó trước, không đóng cả
-	# bảng cài đặt).
 	if _keybinds != null and _keybinds.visible:
 		return
 	if visible and event.is_action_pressed("ui_cancel"):
@@ -118,8 +97,6 @@ func _unhandled_input(event: InputEvent) -> void:
 
 
 ## Nạp giá trị hiện tại vào giao diện.
-## set_value_no_signal: đặt giá trị mà KHÔNG phát tín hiệu value_changed —
-## nếu không, việc nạp giá trị lại tự kích hoạt hàm xử lý, ghi đè lung tung.
 func _pull_from_settings() -> void:
 	_sld_master.set_value_no_signal(SettingsManager.get_volume("Master"))
 	_sld_music.set_value_no_signal(SettingsManager.get_volume("Music"))

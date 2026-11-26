@@ -1,70 +1,34 @@
 extends Control
-## MỘT tấm vé đơn hàng trên HUD.
-##
-## Cấu trúc hai lớp, và đây là điểm quan trọng nhất của file này:
-##
-##     Ve (Control, clip_contents = true)   ← con của HBoxContainer
-##       └── _card (PanelContainer)          ← KHÔNG do container xếp
-##
-## Vì sao phải tách hai lớp thay vì cho thẳng tấm thẻ vào VBox: hiệu ứng
-## "thả từ trên xuống" cần đổi `position.y` của tấm thẻ, mà HBoxContainer thì
-## GHI ĐÈ vị trí mọi node con của nó ở mỗi lần bố trí lại. Tween sẽ chạy được
-## đúng một frame hình rồi bị container kéo về chỗ cũ. Lớp ngoài nhận việc bị
-## container xếp; lớp trong tự do vì nó không phải con của container nào cả.
-##
-## `clip_contents` trên lớp ngoài chính là cái cắt phần thẻ còn thò ra ngoài
-## lúc đang trượt, nên vé không đè lên vé bên cạnh trong lúc chạy hiệu ứng.
-##
-## Neo của lớp trong để nguyên góc trên-trái (mọi anchor = 0) và ta gán `size`
-## bằng tay. KHÔNG dùng PRESET_FULL_RECT rồi tween position: neo full-rect tính
-## lại rect từ anchor + offset mỗi lần bố trí, nên nó đánh nhau với position và
-## cái rect phình ra thêm mỗi frame hình.
 
 ## (2/10/2026) Vé DỌC và hẹp: 148 × 112, thay cho vé ngang 330 × 110. Dải đơn
-## hàng giờ nằm ngang ở mép trên, nên bề NGANG của một vé là thứ quyết định
-## xếp được mấy vé — 148 thì vừa 10 vé, đúng số đơn tối đa của Ngày 3.
 const WIDTH := 148.0
 ## Chiều cao vé CÓ hàng công thức (16/11/2026). Dải đơn hàng dùng số này để
-## tính chỗ trượt lên khi đóng, nên nó phải là chiều cao LỚN NHẤT.
 const HEIGHT := 190.0
 ## Vé không in công thức (Asian): giữ đúng chiều cao cũ, khỏi chừa ô trống.
 const HEIGHT_PLAIN := 112.0
 ## Ô ảnh nguyên liệu và kí hiệu nơi nấu bên dưới nó.
-##
-## (16/11/2026) Phóng to kiểu Overcooked: ô nguyên liệu 50 px, kí hiệu 40 px —
-## bản 28/18 nhỏ tới mức kí hiệu chảo/nồi gần như không đọc được. Vé không
-## còn rộng cố định nữa mà RỘNG THEO SỐ NGUYÊN LIỆU (width_for), như vé của
-## Overcooked: món 1 nguyên liệu thì vé hẹp, burger đầy đủ thì vé dài.
 const PART_SIZE := 50.0
 const BADGE_SIZE := 40.0
 const PART_GAP := 4.0
 ## Số nguyên liệu nhiều nhất của một món (Hamburger, kem tam hợp que = 4) cộng
-## dư một. Dải đơn hàng dùng để biết còn chỗ cho vé tiếp theo không.
 const MAX_PARTS := 5
 const ItemCatalog := preload("res://scripts/interaction/item_catalog.gd")
 const SLIDE_SECONDS := 0.30
 
 ## Bảng màu giấy: lấy tông vé giấy nâu-kem cho khớp phong cách quán ăn, không
-## dùng panel xám mặc định của Godot.
 const COLOR_PAPER := Color("f3e6cd")
 const COLOR_BORDER := Color("c2a173")
 const COLOR_TEXT := Color("4a3421")
 const COLOR_DIM := Color("8a7355")
 
 ## Ba mức màu của bar kiên nhẫn. Đổi màu THEO NGƯỠNG chứ không nội suy dần:
-## chuyển màu mượt thì mắt không bắt được thời điểm "sắp mất khách", còn ba
-## bậc rõ ràng thì đọc được bằng thị giác ngoại vi, lúc đang bận nhìn chỗ khác.
 const COLOR_GREEN := Color("4f9d5d")
 const COLOR_YELLOW := Color("d9a520")
 const COLOR_RED := Color("c4433a")
-const YELLOW_THRESHOLD := 0.5   # bằng đúng ngưỡng đơn hoàn hảo
+const YELLOW_THRESHOLD := 0.5
 const RED_THRESHOLD := 0.2
 
 ## Màu bar khi khách còn ĐANG XẾP HÀNG: xám nhạt, đầy, đứng yên.
-##
-## Phải khác hẳn ba màu kia chứ không dùng màu xanh: xanh nghĩa là "còn nhiều
-## thời gian", mà ở đây thì không có thời gian nào đang chạy cả. Một màu thứ
-## tư, nhạt hơn, đọc ra đúng thứ nó là — chưa bắt đầu.
 const COLOR_WAIT := Color("b9ab93")
 
 ## Chữ trên ô số bàn khi khách chưa có bàn.
@@ -83,7 +47,6 @@ var _lbl_number: Label
 
 
 ## Asian: không in công thức — chế độ khó bắt người chơi tự nhớ (tài liệu
-## Asian mục 3.3). Mọi chế độ khác đều in.
 static func _shows_recipe() -> bool:
 	var gd = Engine.get_main_loop().root.get_node_or_null("/root/GameData") \
 		if Engine.get_main_loop() is SceneTree else null
@@ -110,12 +73,11 @@ func build(order_: RefCounted, coin_icon: Texture2D) -> void:
 
 	_card = PanelContainer.new()
 	_card.size = Vector2(_w, _h)
-	_card.position = Vector2(0.0, -_h - 12.0)   # nằm sẵn phía trên, ngoài khung
+	_card.position = Vector2(0.0, -_h - 12.0)
 	_card.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_card.add_theme_stylebox_override("panel", _paper_frame())
 	add_child(_card)
 
-	# Ba tầng từ trên xuống: [ảnh món | số bàn + giá] / tên món / bar kiên nhẫn.
 	var col := VBoxContainer.new()
 	col.add_theme_constant_override("separation", 3)
 	_card.add_child(col)
@@ -143,10 +105,6 @@ func build(order_: RefCounted, coin_icon: Texture2D) -> void:
 	top.add_child(side)
 
 	# --- số bàn ---
-	#
-	# Giữ tham chiếu chứ không gán một lần rồi thôi: vé hiện từ lúc khách còn
-	# ĐỨNG XẾP HÀNG, khi chưa có bàn nào. Số bàn chỉ có sau, nên ô này phải
-	# đổi được giữa chừng.
 	_lbl_number = Label.new()
 	_lbl_number.add_theme_font_size_override("font_size", 34)
 	_lbl_number.add_theme_color_override("font_color", COLOR_TEXT)
@@ -180,14 +138,8 @@ func build(order_: RefCounted, coin_icon: Texture2D) -> void:
 	lbl_name.add_theme_font_size_override("font_size", 15)
 	lbl_name.add_theme_color_override("font_color", COLOR_TEXT)
 	lbl_name.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	# Cắt bằng dấu … chứ không xuống dòng: tấm vé cao cố định, cho phép xuống
-	# dòng thì một cái tên dài đẩy bar kiên nhẫn ra khỏi thẻ. Ảnh món ở ngay
-	# trên đã nói đủ món nào; tên chỉ là phần xác nhận.
 	lbl_name.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
 	lbl_name.clip_text = true
-	# Vé có công thức thì bỏ tên món, như Overcooked: ảnh món + hàng nguyên
-	# liệu đã nói đủ, tên chỉ tốn một dòng chiều cao. Vé Asian (không công
-	# thức) vẫn giữ tên.
 	if _h != HEIGHT:
 		col.add_child(lbl_name)
 	else:
@@ -211,9 +163,6 @@ func slide_in() -> void:
 ## Trượt ngược ra rồi tự xoá. Trả về tween để bên gọi await nếu cần.
 func slide_out() -> void:
 	order = null
-	# Hai thứ chạy SONG SONG: thẻ rút lên trên, đồng thời ô chứa nó xẹp bề
-	# NGANG về 0. Chỉ rút không thôi thì cái vé biến mất nhưng để lại một
-	# khoảng trống, và những vé bên phải nhảy cóc sang khi node bị xoá.
 	var tween := create_tween().set_parallel(true) \
 		.set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_IN)
 	tween.tween_property(_card, "position:y", -_h - 12.0, SLIDE_SECONDS)
@@ -229,9 +178,6 @@ func _process(_delta: float) -> void:
 
 
 ## Ô số bàn: dấu gạch khi khách còn đứng xếp hàng, số thật khi đã ngồi.
-##
-## So sánh trước khi gán: hàm này chạy mỗi frame hình, mà gán `text` bằng đúng
-## chuỗi cũ vẫn bắt Label tính lại bố cục.
 func _draw_table_no() -> void:
 	if order == null or _lbl_number == null:
 		return
@@ -242,17 +188,6 @@ func _draw_table_no() -> void:
 
 
 ## Thanh kiên nhẫn.
-##
-## KHÁCH ĐANG XẾP HÀNG thì bar ĐẦY và ĐỨNG YÊN, màu chờ.
-##
-## Không vẽ kiên nhẫn hàng đợi lên đây dù đơn vẫn đang đếm nó: hai giai đoạn
-## có hai ngân sách riêng và hai chỗ hiển thị riêng — bar chờ nằm trong bong
-## bóng trên đầu khách, bar phục vụ nằm ở đây. Vẽ cả hai vào cùng một chỗ
-## thì người chơi thấy bar tụt rồi bỗng đầy lại lúc khách ngồi xuống, và họ
-## sẽ tưởng là lỗi.
-##
-## Vé này hiện sớm CHỈ để người chơi biết trước phải nấu gì. Thứ nó hứa là
-## "món kế tiếp", không phải "đang đếm giờ" — nên nó không được đếm giờ.
 func _draw_bar() -> void:
 	if order == null or _bar == null:
 		return
@@ -301,19 +236,11 @@ func _make_bar() -> ProgressBar:
 	bg.set_corner_radius_all(6)
 	t.add_theme_stylebox_override("background", bg)
 
-	# StyleBox riêng cho TỪNG vé, không dùng chung: đổi bg_color của một
-	# StyleBox dùng chung thì mọi vé đổi màu theo, và cả sáu vé sẽ luôn mang
-	# màu của vé cập nhật sau cùng.
 	_fill_style = StyleBoxFlat.new()
 	_fill_style.bg_color = COLOR_GREEN
 	_fill_style.set_corner_radius_all(6)
 	t.add_theme_stylebox_override("fill", _fill_style)
 
-	# Vạch trắng ở đúng 50% — ngưỡng "đơn hoàn hảo".
-	#
-	# Luật cân bằng đã chốt: giao khi kiên nhẫn còn trên một nửa thì được
-	# thưởng. Một luật mà người chơi không nhìn thấy mốc thì không nhắm vào
-	# được, nên cái mốc phải nằm ngay trên bar chứ không nằm trong tài liệu.
 	var tick := ColorRect.new()
 	tick.color = Color(1, 1, 1, 0.9)
 	tick.mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -329,8 +256,6 @@ func _make_bar() -> ProgressBar:
 
 
 ## Hàng công thức kiểu Overcooked: mỗi nguyên liệu một ô [ảnh / kí hiệu nơi
-## nấu]. Món có nhiều nguyên liệu thì thu nhỏ ô lại cho vừa bề ngang vé thay
-## vì xuống dòng — vé cao cố định.
 func _recipe_row(dish: String) -> Control:
 	var row := HBoxContainer.new()
 	row.alignment = BoxContainer.ALIGNMENT_CENTER
@@ -347,8 +272,6 @@ func _recipe_row(dish: String) -> Control:
 		cell.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		cell.add_child(_icon(ItemCatalog.icon_path(part), size_))
 		var badge := ItemCatalog.cook_badge(dish, part)
-		# Ô trống cùng cỡ khi không có kí hiệu, để các ảnh nguyên liệu vẫn
-		# thẳng hàng với nhau.
 		cell.add_child(_icon("" if badge.is_empty() else ItemCatalog.badge_path(badge),
 			minf(BADGE_SIZE, size_)))
 		row.add_child(cell)

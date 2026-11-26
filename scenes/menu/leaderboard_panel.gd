@@ -1,30 +1,11 @@
 extends Control
-## Bảng xếp hạng — năm tab (Màn 1, Màn 2, Màn 3, Endless Mode, Asian Mode), mỗi tab là danh
-## sách các lượt chơi đã ghi: nhân vật, doanh thu, hạng.
-##
 ## ─────────────────────────────────────────────── VÌ SAO LÀM NHƯ THẾ NÀY
-##
-## Dữ liệu nằm ở GameData.bang_xep_hang chứ không ở đây. Màn hình này KHÔNG
-## tự nhớ gì cả: mở ra thì hỏi, đóng lại thì quên. Nhờ vậy nó không thể lệch
-## với file save, và về sau muốn hiện bảng xếp hạng ở chỗ khác (cuối màn
-## chẳng hạn) thì chỉ việc hỏi cùng một hàm.
-##
-## CÁC DÒNG DỰNG BẰNG CODE, không đặt sẵn trong .tscn. Số dòng thay đổi theo
-## dữ liệu (0 đến 10), mà mười hàng đặt sẵn rồi ẩn bớt thì lúc nào cũng phải
-## nhớ ẩn đúng số còn thừa — một việc dễ quên và khó nhìn ra khi sai. Dựng
-## lại từ đầu mỗi lần đổi tab thì trạng thái trên màn hình luôn đúng bằng dữ
-## liệu, không có đường nào sai.
-##
-## TAB DÙNG ButtonGroup: bốn nút cùng nhóm thì Godot tự lo phần "bấm cái này
-## thì cái kia nhả ra". Tự viết bằng tay là bốn dòng set_pressed_no_signal
-## rải rác, và chỉ cần thêm tab thứ năm là quên một dòng.
 
 const COLOR_TEXT := Color(0.29, 0.153, 0.071)
 const COLOR_DIM := Color(0.52, 0.38, 0.22)
 const COLOR_GOLD := Color("f2c230")
 
 ## Màu của từng hạng — GIỮ ĐÚNG bảng màu của bang_ket_qua.gd để người chơi
-## thấy chữ "S" vàng ở đây và chữ "S" vàng ở bảng tổng kết là cùng một thứ.
 const COLOR_RANK := {
 	"S": Color("f2c230"),
 	"A": Color("e8823f"),
@@ -35,8 +16,6 @@ const COLOR_RANK := {
 }
 
 ## Ba huy chương cho ba dòng đầu. Không dùng ảnh: ba ký tự này có sẵn trong
-## font, không phải nạp thêm tài nguyên nào, và ở cỡ chữ 20 thì nhìn rõ hơn
-## một cái icon 20×20 bị thu nhỏ.
 const MEDALS: Array[String] = ["🥇", "🥈", "🥉"]
 
 @onready var _tabs: HBoxContainer = %Tabs
@@ -56,10 +35,6 @@ func _ready() -> void:
 
 
 ## Dựng bốn nút tab từ GameData.MAN_XEP_HANG.
-##
-## Vòng lặp trên bảng dữ liệu chứ không viết tay bốn nút: thêm chế độ chơi
-## thứ năm là thêm một dòng trong GameData, màn hình này tự có thêm tab —
-## không phải mở .tscn ra kéo node rồi nối tín hiệu.
 func _build_tabs() -> void:
 	for id in GameData.RANKED_LEVELS:
 		var code_ := String(id)
@@ -73,12 +48,9 @@ func _build_tabs() -> void:
 
 
 ## Mở bảng. `focus_on_close` là nút sẽ được trả lại focus lúc đóng, để chơi
-## bằng bàn phím không bị mất dấu con trỏ.
 func open(focus_on_close: Control = null) -> void:
 	_focus_on_close = focus_on_close
 	show()
-	# Luôn mở ở tab đầu tiên: người mở bảng đang muốn xem, không đang tiếp tục
-	# một việc dở — nhớ tab cũ chỉ làm họ phải kiểm tra xem mình đang ở đâu.
 	var first := String(GameData.RANKED_LEVELS[0])
 	var first_btn := _tabs.get_child(0) as Button
 	first_btn.button_pressed = true
@@ -106,9 +78,6 @@ func _select_level(level_id: String) -> void:
 
 
 func _draw_table() -> void:
-	# Xoá sạch rồi dựng lại. queue_free() KHÔNG xoá ngay trong khung hình này
-	# — node vẫn còn trong cây tới cuối khung — nên phải remove_child() trước,
-	# nếu không mấy dòng cũ vẫn kịp hiện chồng lên dòng mới một nhịp.
 	for child in _table.get_children():
 		_table.remove_child(child)
 		child.queue_free()
@@ -116,18 +85,12 @@ func _draw_table() -> void:
 	var list_ := GameData.level_leaderboard(_level_shown)
 	if list_.is_empty():
 		_lbl_empty.show()
-		# Chế độ chưa làm (Endless Mode, Asian Mode) thì nói rõ là "chưa có
-		# chế độ", chứ không nói "chưa ai chơi" — hai câu đó dẫn người đọc đi
-		# hai hướng khác nhau. Hỏi GameData.LEVELS chứ không so tên từng chế
-		# độ: chế độ nào được thêm vào LEVELS là tab của nó tự đổi câu.
 		var is_real := GameData.LEVELS.has(_level_shown)
 		_lbl_empty.text = tr("RANK_EMPTY") if is_real else tr("LEVEL_COMING_SOON")
 		return
 
 	_lbl_empty.hide()
 	_table.add_child(_header_row())
-	# Dòng ghim (Gold Ship) hiện là hạng 0 và KHÔNG chiếm chỗ: dòng ngay sau nó
-	# vẫn là hạng 1 với huy chương vàng.
 	var place := 0
 	for i in list_.size():
 		var record: Dictionary = list_[i]
@@ -144,8 +107,6 @@ func _header_row() -> Control:
 	h.add_child(_cell("#", 46, COLOR_DIM, 17, HORIZONTAL_ALIGNMENT_CENTER))
 	h.add_child(_cell(tr("RANK_COL_CHARACTER"), 0, COLOR_DIM, 17))
 	h.add_child(_cell(tr("RANK_COL_MONEY"), 130, COLOR_DIM, 17, HORIZONTAL_ALIGNMENT_RIGHT))
-	# Endless xếp theo thời gian trụ được, nên cột cuối là Thời gian chứ không
-	# phải Hạng (chế độ này không có hạng).
 	if _level_shown == GameData.ENDLESS_LEVEL:
 		h.add_child(_cell(Lang.t("Thời gian"), 90, COLOR_DIM, 17, HORIZONTAL_ALIGNMENT_CENTER))
 	elif _level_shown == GameData.ASIAN_LEVEL:
@@ -159,16 +120,12 @@ func _data_row(index: int, record: Dictionary) -> Control:
 	var h := HBoxContainer.new()
 	h.add_theme_constant_override("separation", 12)
 
-	# Kiểu ghi rõ ràng, không dùng ":=": HUY_CHUONG là hằng mảng, và giá trị
-	# lấy ra từ mảng hằng bị GDScript coi là Variant nên không suy ra được kiểu.
 	var place: String = "0"
 	if index >= 0:
 		place = MEDALS[index] if index < MEDALS.size() else str(index + 1)
 	h.add_child(_cell(place, 46, COLOR_TEXT, 20, HORIZONTAL_ALIGNMENT_CENTER))
 
 	var name_ := GameData.character_name(String(record.get("character", record.get("nv", ""))))
-	# Ba dòng đầu tô vàng: mắt phải bắt được "ai đang dẫn đầu" trước khi đọc
-	# tới cột tiền.
 	var name_color: Color = COLOR_GOLD if index == 0 else COLOR_TEXT
 	h.add_child(_cell(name_, 0, name_color, 20))
 
@@ -198,8 +155,6 @@ func _data_row(index: int, record: Dictionary) -> Control:
 
 
 ## Một ô chữ trong bảng. `rong` = 0 nghĩa là ô co giãn chiếm hết chỗ trống —
-## đúng một ô như thế mỗi hàng (cột tên), nhờ vậy ba cột còn lại có bề rộng
-## cố định và các hàng thẳng cột với nhau mà không cần GridContainer.
 func _cell(text_: String, width: int, color_: Color, size_: int,
 		can: HorizontalAlignment = HORIZONTAL_ALIGNMENT_LEFT) -> Label:
 	var l := Label.new()

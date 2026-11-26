@@ -1,14 +1,4 @@
 extends RefCounted
-## ASIAN MODE: CƠN ĐÓI CỦA DORO (luật đã chốt từ bản thiết kế, mục 3.4).
-##
-## Mỗi 70–120 giây Doro đói: kêu, hiện chữ "ĐÓI!" kèm đếm ngược 15 giây trên
-## đầu. Cho Doro ăn BẤT KỲ món hoàn chỉnh nào (món có giá) là hết đói — tức mỗi
-## cơn đói tốn một món lẽ ra bán được.
-## Hết 15 giây chưa cho ăn: Doro đuổi TOÀN BỘ khách đang có (ngồi bàn lẫn xếp
-## hàng), mỗi khách 1 mạng (đã chốt). Có từ 3 khách trở lên là thua ngay.
-##
-## Cho ăn đi qua đúng đường "vứt vào Doro" có sẵn (hands.item_discarded), nên
-## không phải thêm thao tác mới.
 
 const ItemCatalog := preload("res://scripts/interaction/item_catalog.gd")
 const SECONDS := 15.0
@@ -18,8 +8,6 @@ var _doro: Node3D
 var _left := SECONDS
 var _label: Label3D
 ## Doro kêu LIÊN TỤC suốt lúc đói (user yêu cầu 29/10/2026): người chơi đang
-## cắm mặt trong bếp vẫn nghe được là có chuyện, không cần nhìn chữ trên đầu.
-## Nhịp 1,3 giây ≈ độ dài tiếng kêu (1,07 s) + một quãng nghỉ ngắn.
 const CRY_EVERY := 1.3
 var _cry_in := 0.0
 
@@ -57,12 +45,10 @@ func tick(delta: float) -> void:
 	_cry_in -= delta
 	if _cry_in <= 0.0:
 		_cry_in = CRY_EVERY
-		# Cao độ nhích lên dần khi sắp hết giờ: càng gần lúc đuổi khách càng gấp.
 		AmThanh.play_sfx("doro", 1.0 + 0.2 * (1.0 - clampf(_left / SECONDS, 0.0, 1.0)))
 	_label.text = Lang.t("ĐÓI!  %d") % ceili(maxf(_left, 0.0))
 	if _left > 0.0:
 		return
-	# Doro đuổi hết khách: mỗi khách đang có mặt mất 1 mạng.
 	var cm: Node = _d._customers
 	var count := int(cm._orders.size())
 	cm.clear_all_customers()

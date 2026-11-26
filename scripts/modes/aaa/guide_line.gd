@@ -1,14 +1,4 @@
 extends Node3D
-## AAA MODE — VẠCH TRẮNG NHẤP NHÁY dưới sàn + NHÃN trên trạm cần tới.
-##
-## Vạch nối THẲNG từ chân nhân vật tới trạm đích, dựng lại mỗi khung bằng
-## ImmediateMesh (vài chục tam giác — rẻ). Vì sao đường thẳng chứ không đi
-## theo navmesh: navmesh của quán được nướng cho KHÁCH, và khu bếp là một hòn
-## đảo bị chắn riêng (xem customer_manager), nên hỏi đường từ bếp ra bàn khách
-## sẽ không có lời đáp. Bếp lại nhỏ, đường thẳng đã đủ chỉ hướng.
-##
-## Nét đứt chứ không liền: nét đứt đọc ra ngay là "đường chỉ dẫn", còn một dải
-## trắng liền dễ bị nhìn nhầm thành vạch sơn của sàn nhà.
 
 const DASH := 0.35
 const GAP := 0.2
@@ -52,7 +42,6 @@ func follow(player: Node3D) -> void:
 
 
 ## Đổi trạm đích. `arrow_target` là bàn của khách đang được nhắm — mũi tên
-## luôn treo trên bàn đó, kể cả khi bước hiện tại là đi lấy nguyên liệu.
 func point_to(target: Node3D, key: String, arrow_target: Node3D) -> void:
 	_target = target
 	_key = key
@@ -91,8 +80,6 @@ func _draw_dashes(a: Vector3, b: Vector3) -> void:
 		return
 	var dir := (end - start) / length
 	var side := dir.cross(Vector3.UP).normalized() * WIDTH * 0.5
-	# Các nét đứt TRÔI về phía đích theo thời gian, như dấu chỉ đường GPS —
-	# nhìn là biết chiều đi, không cần mũi tên trên vạch.
 	var offset := fmod(_time * 1.5, DASH + GAP)
 	_mesh.surface_begin(Mesh.PRIMITIVE_TRIANGLES)
 	var s := offset - (DASH + GAP)

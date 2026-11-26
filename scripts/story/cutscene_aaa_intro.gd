@@ -1,15 +1,4 @@
 extends RefCounted
-## AAA MODE — đoạn mở đầu "phim trường" (kịch bản v4, 21/10/2026).
-##
-## KHÔNG BỎ QUA ĐƯỢC (aaa_intro.tscn đặt skippable = false), nên cố ý ngắn:
-## khoảng một phút, mỗi câu một ý. Bản dài hơn nằm trong các file docx
-## kich_ban_aaa_mode_v1–v3, không đưa vào game.
-##
-## Chữ in nghiêng [i]…[/i] là câu Kitasan đang ĐỌC từ xấp kịch bản, để người
-## chơi phân biệt với lời cô tự nói.
-##
-## Xưng hô: Trainer "tôi"/"em"; Kita "em", gọi "Machi-tan"; Spe xưng "mình";
-## ê kíp gọi Oguri là "Oguri".
 
 const BG_RESTAURANT := "res://assets/ui/backgrounds/quan_an.png"
 
@@ -30,34 +19,37 @@ const SCENES: Array[Dictionary] = [
 		"line": "Quán mình được một hãng lớn mua bản quyền, giờ là siêu phẩm AAA. Kịch bản đây."},
 	{"portrait": "kitamoi", "speaker": "Kitasan Black",
 		"line": "[i]\"Định mệnh của nhà hàng… nằm trong đôi tay này!\"[/i]"},
-	{"portrait": "kitamoi", "speaker": "Kitasan Black",
+	{"emotion": "nervous", "portrait": "kitamoi", "speaker": "Kitasan Black",
 		"line": "…Em phải nói câu này thật à?"},
-	{"portrait": "trainer2", "speaker": "0rca's Trainer",
-		"line": "Một hội đồng mười hai người viết đấy. Không ai nhận là mình viết."},
-	{"portrait": "tuandb", "speaker": "Special Week",
+	{"portrait": "", "line": "Tổ biên kịch không ai dám nhìn vào mắt cô."},
+	{"emotion": "surprise", "portrait": "tuandb", "speaker": "Special Week",
 		"line": "Xin lỗi, sao kịch bản của mình trắng tinh vậy…"},
 	{"portrait": "", "speaker": AD,
 		"line": "À, vai của em với vai của Oguri thuộc gói Deluxe Edition."},
 	{"portrait": "oui", "speaker": "Oguri Cap",
-		"line": "…Thế còn được ăn không?"},
+		"line": "…Thế bản thường thì em làm gì."},
 	{"portrait": "", "speaker": PUB,
-		"line": "Ăn là một tính năng trả phí."},
+		"line": "Đứng nền. Có mặt trong trailer là được."},
 	{"portrait": "oui", "speaker": "Oguri Cap",
-		"line": "Vậy em xin chuyển sang tổ hậu cần. Ở đó có cơm hộp."},
+		"line": "…Vậy diễn xong vai thì em có được lãnh cơm hộp không."},
 	{"portrait": "kitamoi", "speaker": "Kitasan Black",
 		"line": "Còn Machi-tan đâu ạ?"},
 	{"portrait": "trainer", "speaker": "0rca's Trainer",
 		"line": "Hết cát xê. Đang xách nước bổ cam cho đoàn."},
+	{"portrait": "", "line": "Từ sau cánh gà, Machi-tan ôm thùng đạo cụ, lén vẫy vẫy tay về phía mọi người."},
 	{"portrait": "", "speaker": PUB,
 		"line": "Nhớ nhé, loot box đợi qua hạn hoàn tiền rồi mới thêm vào. Để người chơi không refund được."},
 	{"portrait": "trainer2", "speaker": "0rca's Trainer",
 		"line": "…Chơi mất dạy thật."},
 	{"portrait": "", "speaker": AD,
 		"line": "Máy… chạy! Diễn!"},
-	{"portrait": "kitamoi", "speaker": "Kitasan Black",
+	{"emotion": "happy", "portrait": "kitamoi", "speaker": "Kitasan Black",
 		"line": "Wasshoi!"},
 	{"portrait": "", "speaker": SPEAKER,
 		"line": "Câu đó khó bản địa hoá. Thay bằng câu đã duyệt: \"Let's cook!\""},
 	{"portrait": "kitamoi", "speaker": "Kitasan Black",
 		"line": "…Let's cook."},
 ]
+
+## Tóm tắt hiện khi người chơi bấm "Bỏ qua".
+const SUMMARY := "Quán bỗng thành phim trường của một \"siêu phẩm AAA\". Kitasan bị đẩy vào vai chính, vai của Oguri nằm trong gói Deluxe Edition, còn Machi-tan hết cát xê nên đi xách nước. Đoàn làm phim bắt đầu quay: Let's cook."

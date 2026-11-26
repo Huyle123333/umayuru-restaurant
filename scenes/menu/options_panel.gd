@@ -1,29 +1,6 @@
 extends Control
-## Bảng TUỲ CHỌN — một ngăn kéo gom ba mục ít dùng của menu chính:
-## Hướng dẫn, Cài đặt, Credits.
-##
 ## ─────────────────────────────────────────────── VÌ SAO GOM LẠI
-##
-## Menu chính trước đây có bảy dòng: Chơi mới, Chọn màn, Bảng xếp hạng, Hướng
-## dẫn, Cài đặt, Credits, Thoát. Bảy dòng bằng nhau về kích thước và màu sắc
-## thì mắt phải đọc hết cả bảy mới tìm ra dòng mình cần — trong khi thực tế
-## người chơi mở game lên là bấm một trong hai dòng đầu.
-##
-## Ba mục gom vào đây đều là loại "mở một lần rồi thôi": xem hướng dẫn trước
-## khi chơi, chỉnh âm lượng lần đầu, đọc credits một lần. Đẩy chúng xuống một
-## tầng thì menu chính còn bốn dòng, và bốn dòng đó đúng là bốn việc người
-## chơi thật sự làm.
-##
 ## ─────────────────────────────────────── VÌ SAO DÙNG TÍN HIỆU, KHÔNG TỰ MỞ
-##
-## Bảng này KHÔNG giữ tham chiếu tới bảng Cài đặt hay Credits. Nó chỉ phát
-## tín hiệu "người dùng chọn mục X", còn ai mở cái gì là việc của menu chính.
-##
-## Lý do: ba bảng kia là node CON CỦA MENU CHÍNH, không phải con của bảng này.
-## Nếu bảng này tự đi tìm chúng thì nó phải biết cấu trúc cây scene của cha
-## mình (get_parent().get_node("SettingsPanel")...) — kiểu phụ thuộc gãy im
-## lặng ngay khi ai đó đổi tên hoặc di chuyển một node. Phát tín hiệu thì bảng
-## này dùng lại được ở menu Pause mà không sửa một dòng nào.
 
 signal guide_chosen
 signal settings_chosen
@@ -36,6 +13,10 @@ signal credits_chosen
 
 var _focus_on_close: Control = null
 
+## Trang báo cáo lỗi (Google Form: loại lỗi, mô tả, ảnh chụp màn hình).
+const BUG_REPORT_URL := "https://docs.google.com/forms/d/1zMtnpmOHxI8myLD-acP5d5yIE2QB2FDSZXqiiimh8ow/viewform"
+var _btn_report: Button
+
 
 func _ready() -> void:
 	hide()
@@ -43,6 +24,21 @@ func _ready() -> void:
 	_btn_settings.pressed.connect(func() -> void: settings_chosen.emit())
 	_btn_credits.pressed.connect(func() -> void: credits_chosen.emit())
 	_btn_close.pressed.connect(close)
+	_add_report_button()
+
+
+## Nút "Báo cáo lỗi" — dựng bằng code, nhân bản nút Credits cho cùng kiểu
+func _add_report_button() -> void:
+	_btn_report = _btn_credits.duplicate(0) as Button
+	_btn_report.unique_name_in_owner = false
+	_btn_report.name = "BtnReport"
+	_btn_report.text = Lang.t("Báo cáo lỗi")
+	_btn_credits.add_sibling(_btn_report)
+	if BUG_REPORT_URL.is_empty():
+		_btn_report.disabled = true
+		_btn_report.tooltip_text = Lang.t("Chưa có trang báo cáo")
+		return
+	_btn_report.pressed.connect(func() -> void: OS.shell_open(BUG_REPORT_URL))
 
 
 func open(focus_on_close: Control = null) -> void:

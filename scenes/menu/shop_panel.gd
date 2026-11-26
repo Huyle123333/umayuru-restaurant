@@ -1,21 +1,4 @@
 extends Control
-## Cửa hàng — mở từ nút "Cửa hàng" ở menu chính.
-##
-## DỰNG TOÀN BỘ BẰNG CODE, không có .tscn đi kèm. Danh sách món lấy từ
-## GameData.SHOP_ITEMS: thêm một món bán là thêm một dòng dữ liệu ở đó, màn
-## hình này tự có thêm một hàng.
-##
-## BỐ CỤC DANH SÁCH CUỘN DỌC (user chốt 29/10/2026) thay cho lưới thẻ ngang:
-## mỗi món một hàng [ảnh | tên + mô tả | nút giá]. Thêm món chỉ làm danh sách
-## dài ra và cuộn được, còn lưới ngang thì tới thẻ thứ năm là tràn màn hình.
-##
-## NỀN NÂU ĐẶC thay cho khung giấy sáng của theme: ảnh bóng nhân vật khoá và
-## icon cà rốt đều nhạt màu, đặt trên nền giấy kem thì chìm; chữ kem trên nền
-## nâu đậm thì tương phản cao, đọc dễ hơn.
-##
-## Màn hình này KHÔNG giữ tiền hay trạng thái "đã mua". Mỗi lần mở hoặc mua
-## xong là hỏi lại GameData rồi vẽ lại danh sách, nên không thể lệch với file
-## save (ví dụ vừa bật Teio bằng CODE No.7 thì shop tự hiện "Đã có").
 
 const COLOR_BG := Color("4a2f1f")
 const COLOR_ROW := Color("6b4530")
@@ -80,8 +63,6 @@ func _build() -> void:
 
 	col.add_child(_text(Lang.t("CỬA HÀNG"), 36, COLOR_TEXT, true))
 
-	# Ví: icon cà rốt giống hệt HUD trong màn — người chơi nhận ra ngay đây
-	# là thứ tiền họ vừa kiếm được ở bảng tổng kết.
 	var wallet := HBoxContainer.new()
 	wallet.alignment = BoxContainer.ALIGNMENT_CENTER
 	wallet.add_theme_constant_override("separation", 8)
@@ -93,9 +74,6 @@ func _build() -> void:
 	col.add_child(_text(Lang.t("Hoàn thành màn chơi để nhận 10% doanh thu vào ví."),
 		16, COLOR_DIM, true))
 
-	# ScrollContainer cần chiều cao cố định (SIZE_EXPAND_FILL trong panel có
-	# custom_minimum_size) — không có thì nó giãn theo nội dung và không bao
-	# giờ cuộn. Tắt cuộn ngang để hàng luôn vừa bề rộng.
 	var scroll := ScrollContainer.new()
 	scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
@@ -121,12 +99,7 @@ func _refresh() -> void:
 		c.queue_free()
 	for id in GameData.SHOP_ORDER:
 		_list.add_child(_item_row(String(id)))
-	# Ngoại trang: tiêu đề nhóm rồi tới từng bộ. Skin của nhân vật CHƯA mở thì
-	# ẩn hẳn chứ không hiện khoá — tên skin ghi tên thật nhân vật, hiện ra là
-	# lộ bí mật mà shop vừa che bằng "Nhân tố T/C".
 	_list.add_child(_text(Lang.t("NGOẠI TRANG"), 24, COLOR_DIM, true))
-	# Hai lượt: skin mua được trước, skin đang khoá xuống cuối — để danh sách
-	# không lẫn hàng khoá xen giữa hàng mua được.
 	for pass_locked in [false, true]:
 		for sid in GameData.SKIN_ORDER:
 			var s := String(sid)
@@ -139,8 +112,6 @@ func _item_row(id: String) -> Control:
 	var price := int(info["price"])
 	var owned := GameData.shop_owned(id)
 
-	# Chưa mua: tên và ảnh giả ("Nhân tố T" + bóng đen). Đã mua: lộ mặt thật.
-	# Món không có bản giả (góc nhìn thứ 3) thì luôn hiện thật.
 	var name_ := String(info["name"])
 	var icon_path := String(info.get("icon", ""))
 	if not owned and info.has("hidden_name"):
@@ -153,8 +124,6 @@ func _item_row(id: String) -> Control:
 		btn.text = Lang.t("Đã có")
 		btn.disabled = true
 	else:
-		# Giá nằm ngay trên nút. Không đủ tiền thì nút xám nhưng VẪN hiện giá
-		# — người chơi biết còn thiếu bao nhiêu.
 		btn.text = "%d" % price
 		if ResourceLoader.exists(COIN_ICON):
 			btn.icon = load(COIN_ICON)
@@ -177,7 +146,6 @@ func _skin_row(sid: String) -> Control:
 	var btn := Button.new()
 	btn.custom_minimum_size = Vector2(140, 52)
 	if locked:
-		# Nhân vật chưa mở: bóng đen + tên giả, nút xám nói rõ phải làm gì.
 		btn.text = Lang.t(String(info["need"]))
 		btn.disabled = true
 	elif not owned:
@@ -188,14 +156,11 @@ func _skin_row(sid: String) -> Control:
 		btn.disabled = GameData.shop_coins < GameData.SKIN_PRICE
 		btn.pressed.connect(_on_buy_skin.bind(sid))
 	else:
-		# Đã mua: nút thành công tắc mặc/cởi, để quay về đồ gốc lúc nào cũng được.
 		btn.text = Lang.t("Đang mặc") if worn else Lang.t("Mặc")
 		btn.pressed.connect(_on_toggle_skin.bind(sid))
 	var tex: Texture2D = null
 	var pic := "res://assets/ui/skins/%s%s.png" % [sid, "_hidden" if locked else ""]
 	if not ResourceLoader.exists(pic):
-		# Dự phòng khi ảnh chưa import: nhân vật khoá thì dùng thẻ bóng đen,
-		# tuyệt đối không rơi về thẻ mặt thật.
 		pic = "res://assets/ui/characters/%s.png" % (
 			GameData.HIDDEN_CHARACTERS.get(ch, ch) if locked else ch)
 	if ResourceLoader.exists(pic):
@@ -272,7 +237,6 @@ func _text(t: String, size_: int, color_: Color, centered: bool) -> Label:
 	l.text = t
 	l.add_theme_font_size_override("font_size", size_)
 	l.add_theme_color_override("font_color", color_)
-	# Theme chung đặt viền chữ nâu đậm; trên nền nâu thì viền đó làm chữ bết.
 	l.add_theme_constant_override("outline_size", 0)
 	if centered:
 		l.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER

@@ -1,31 +1,4 @@
 extends CanvasLayer
-## ASIAN MODE — bộ điều phối luật (đợt 2, user chốt 27/10/2026).
-##
-## Thiết kế: D:\Game do an\thiet_ke_endless_asian_v0.1.docx, mục 3.
-##
-## Đợt này có:
-##   • 3 mạng. Mỗi khách bỏ về (kể cả khách đang xếp hàng) mất 1 mạng.
-##   • Vốn ban đầu 200; tiền về 0 là PHÁ SẢN, thua ngay.
-##   • Thuế VAT 10% mỗi đơn (customer_manager.vat_rate).
-##   • Phí bếp 1 tiền/giây, lò 2 tiền/giây khi đang nấu; tủ lạnh 1 tiền/giây
-##     khi đang mở bảng chọn của tủ.
-##   • Giao nhầm món: khách bỏ về ngay (customer_manager.wrong_dish_leaves),
-##     tức mất 1 mạng qua đúng đường "khách bỏ về".
-##   • Không có bảng thực đơn (level_base không dựng menu_panel ở Asian).
-##   • Hết 10 phút mà còn mạng là THẮNG; đóng quán sớm là THUA.
-##   • (27/10) Kiên nhẫn không hồi khi ngồi bàn — BỎ ngày 6/11: thanh kiên nhẫn
-##     về như mọi chế độ khác (ngồi bàn là nạp đầy lại).
-##   • (27/10) 8 đơn hoàn hảo THẬT liên tiếp hồi 1 mạng (tối đa 3).
-##   • (27/10) Vứt đồ cháy vào thùng rác: trừ gấp đôi tiền nguyên liệu của nó.
-## Bỏ hẳn: combo ngược (user bỏ 27/10).
-##   • (27/10) Sự kiện ngẫu nhiên: event_director.gd (con của node này).
-## Chưa có (đợt sau): sự kiện có NPC (thanh tra, trộm chó, khách VIP), cúp điện,
-## Doro đói.
-##
-## Vì sao một node riêng (giống aaa_mode / endless_mode): luật của CHẾ ĐỘ
-## không được rải "if asian" vào customer_manager hay cooking_system. Hai hệ
-## đó chỉ mở thêm đúng hai cái núm chung (vat_rate, wrong_dish_leaves); mọi
-## quyết định "khi nào thua" nằm ở đây.
 
 const START_LIVES := 3
 const START_MONEY := 200
@@ -56,7 +29,6 @@ var _ended := false
 var _lbl_lives: Label
 var _streak := 0
 ## Tiền đổi cho mỗi mạng hồi VƯỢT tối đa. 0 = bỏ phần dư (mặc định). Kĩ năng
-## Aura farming của Gold Ship sẽ đặt 250 (bước kĩ năng Asian).
 var overflow_life_money := 0
 ## Chuỗi hồi mạng có tính đơn được kĩ năng ÉP hoàn hảo không (Aura farming).
 var _streak_counts_forced := false
@@ -72,22 +44,16 @@ func setup(level: Node, customers: Node, clock: Node, cooking: Node, picker: Nod
 	_picker = picker
 	layer = 6
 
-	# Luật riêng của nhân vật ở Asian (Gold Ship): đọc từ chính bộ bị động của
-	# họ, đã trộn bản Asian (skill_registry).
 	var p := Registry.passive(String(GameData.selected_character))
 	lives = int(p.get("start_lives", START_LIVES))
 	overflow_life_money = int(p.get("overflow_life_money", 0))
 	_streak_counts_forced = bool(p.get("streak_counts_forced", false))
 	_customers.vat_rate = VAT_RATE
 	_customers.wrong_dish_leaves = true
-	# Không bật keep_queue_patience (bỏ 6/11): kiên nhẫn giống các chế độ khác.
 	_customers.money_on_table = true
 	if hands != null and hands.has_signal("item_discarded"):
 		hands.item_discarded.connect(_on_item_discarded)
-	# Vốn: cộng qua add_money() để ví trên HUD cập nhật bằng đúng đường tín
-	# hiệu như mọi lần tiền đổi, không gán thẳng biến.
 	_customers.add_money(START_MONEY - int(_customers.money))
-	# Nối SAU khi đã có vốn, nếu không lần cộng vốn (từ 0) bị coi là phá sản.
 	_customers.money_changed.connect(_on_money_changed)
 	_customers.order_finished.connect(_on_order_finished)
 	_build_ui()
@@ -107,7 +73,6 @@ func survived_seconds() -> float:
 ## Kết quả cho bảng tổng kết. `fail_note` là lý do thua level_base nhận được.
 func result(fail_note: String) -> Dictionary:
 	var note := fail_note
-	# Không có lý do thua nào mà đồng hồ chưa hết: người chơi đóng quán sớm.
 	if note.is_empty() and float(_clock.time_left) > 0.0:
 		note = Lang.t("Đóng quán sớm — Asian Mode chỉ thắng khi trụ đủ 10 phút.")
 	return {
@@ -122,8 +87,6 @@ func _on_order_finished(order_: RefCounted, reason: String) -> void:
 	if _ended:
 		return
 	if reason == "served":
-		# Chuỗi chỉ đếm hoàn hảo THẬT: đơn được kĩ năng ép hoàn hảo không
-		# tính, nếu không bật Victory Cheer! xong là hồi mạng liên tục.
 		if bool(order_.truly_perfect) or (_streak_counts_forced and bool(order_.was_perfect)):
 			_streak += 1
 			if _streak >= STREAK_FOR_LIFE:
@@ -134,15 +97,12 @@ func _on_order_finished(order_: RefCounted, reason: String) -> void:
 		return
 	if reason != "left":
 		return
-	# Khách bị kĩ năng cho về (Chiyono O) không phải "bỏ về".
 	if bool(_customers.clearing_all):
 		return
 	_streak = 0
 	lives -= 1
-	# Khách VIP bỏ về mất 2 mạng.
 	if order_.has_meta("vip"):
 		lives -= 1
-	# Review 1 sao: tự bật mỗi lần mất một khách (không bốc ngẫu nhiên).
 	if _events != null and lives > 0:
 		_events.trigger("review")
 	_draw_lives(true)
@@ -151,8 +111,6 @@ func _on_order_finished(order_: RefCounted, reason: String) -> void:
 
 
 ## Hồi `n` mạng, tối đa START_LIVES. Mọi nguồn hồi mạng (chuỗi hoàn hảo, kĩ
-## năng Gold Ship) đều đi qua đây, để luật "mạng dư đổi ra tiền" của Aura
-## farming tự áp cho tất cả mà không nguồn nào phải biết tới nó.
 func restore_lives(n: int) -> void:
 	var gained := mini(n, START_LIVES - lives)
 	lives += gained
@@ -165,14 +123,9 @@ func restore_lives(n: int) -> void:
 
 
 ## Vứt đồ CHÁY vào thùng rác: trừ thêm gấp đôi tiền nguyên liệu của nó.
-## Món tốt hay nguyên liệu sống vứt đi thì không phạt thêm (tiền đã trả lúc
-## lấy nguyên liệu rồi). Đồ hỏng chung "do_hong" không truy được nguồn gốc nên
-## không phạt.
 func _on_item_discarded(id: String, station: Node) -> void:
 	if _ended or station == null:
 		return
-	# Doro cũng là trạm loại "bin" (cho ăn đồ hỏng lấy tip). Cho Doro ăn KHÔNG
-	# bị phạt — đó chính là phần thưởng của việc nuôi pet; chỉ thùng rác thật mới phạt.
 	if station.has_method("_on_fed"):
 		return
 	var at: Vector3 = station.global_position
@@ -194,7 +147,6 @@ func _burnt_source(id: String) -> String:
 
 
 ## Tổng tiền nguyên liệu THÔ tạo nên `id`: lần ngược công thức / sơ chế / nấu
-## giống ItemCatalog._count_raw, nhưng cộng giá thay vì đếm.
 func _raw_cost(id: String, depth: int) -> int:
 	if depth > 8:
 		return 0
@@ -223,7 +175,6 @@ func _process(delta: float) -> void:
 	if _cooking != null:
 		for station in _cooking._running:
 			var batch: Dictionary = _cooking._running[station]
-			# Chỉ tính lúc ĐANG nấu: món chín nằm chờ trên bếp không tốn phí.
 			if not bool(batch.get("done", false)):
 				rate += float(FEE_PER_SECOND.get(String(batch.get("mode", "")), 0.0))
 	if _picker != null and _picker.is_open() and _picker._station != null \
@@ -231,8 +182,6 @@ func _process(delta: float) -> void:
 		rate += FRIDGE_FEE_PER_SECOND
 	if rate <= 0.0:
 		return
-	# Gom phí lại rồi trừ theo từng đồng nguyên, không trừ lẻ mỗi khung hình:
-	# ví là số nguyên, và trừ mỗi khung hình thì số tiền trên HUD nảy liên tục.
 	_fee_debt += rate * delta
 	if _fee_debt >= 1.0:
 		var n := int(_fee_debt)
@@ -250,15 +199,12 @@ func _lose(note: String) -> void:
 	_ended = true
 	if _events != null:
 		_events.stop_all()
-	# Gọi trễ một khung hình: hàm này có thể chạy GIỮA lúc customer_manager
-	# đang phát tín hiệu, mà _end_level dừng cả cây scene.
 	_level.call_deferred("_end_level", "", note)
 
 
 # ------------------------------------------------------------ giao diện ---
 
 func _build_ui() -> void:
-	# Ngay dưới khung đồng hồ (hud_clock: lề 28, rộng 300, cao tới y = 188).
 	var frame := PanelContainer.new()
 	frame.set_anchors_preset(Control.PRESET_TOP_RIGHT)
 	frame.offset_right = -28.0
@@ -282,7 +228,6 @@ func _draw_lives(flash: bool) -> void:
 	_lbl_lives.text = Lang.t("MẠNG  %d / %d") % [maxi(lives, 0), START_LIVES]
 	_lbl_lives.add_theme_color_override("font_color", COLOR_BAD if lives <= 1 else COLOR_TEXT)
 	if flash:
-		# Mất mạng phải giật mắt: đây là luật thua chính của chế độ.
 		_lbl_lives.pivot_offset = _lbl_lives.size * 0.5
 		var tw := create_tween()
 		tw.tween_property(_lbl_lives, "scale", Vector2(1.35, 1.35), 0.1)

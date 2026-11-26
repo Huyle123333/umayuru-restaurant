@@ -1,11 +1,10 @@
 extends Control
-## Menu chính của UMAYURU RESTAURANT.
-## Chỉ làm hai việc: nối các nút với hành động, và tạo hiệu ứng rê chuột.
-## Nội dung của từng bảng (Credits, Cài đặt...) nằm trong scene riêng của nó.
 
 const HOVER_SCALE := 1.06
 ## Nút CODE No.7 để mờ khi không rê chuột vào, cho khỏi hút mắt.
 const CODE_IDLE_ALPHA := 0.55
+## Số phiên bản đọc từ Project Settings (application/config/version) để chỉ phải sửa một chỗ.
+const VERSION_FALLBACK := "1.0"
 
 @export_file("*.tscn") var level_select_scene: String = "res://scenes/menu/level_select.tscn"
 @export_file("*.tscn") var character_select_scene: String = "res://scenes/menu/character_select.tscn"
@@ -28,12 +27,6 @@ var _shop: Control
 
 
 func _ready() -> void:
-	# Nhạc menu: bốc ngẫu nhiên MỘT lần cho cả cụm menu.
-	#
-	# giu_lien_mach = true nghĩa là nếu bài đang phát đã thuộc nhóm "menu" thì
-	# không đổi gì cả. Người chơi bấm Menu chính → Chọn màn → Chọn nhân vật →
-	# quay lại, cả bốn màn hình dùng chung một bài đang chạy dở. Bốc lại ở mỗi
-	# màn hình thì chỉ cần bấm qua lại vài lần là nhạc giật liên tục.
 	AmThanh.play_random_music("menu", true)
 
 	_btn_new.pressed.connect(_on_new_pressed)
@@ -41,16 +34,10 @@ func _ready() -> void:
 	_btn_options.pressed.connect(_on_options_pressed)
 	_btn_quit.pressed.connect(_on_quit_pressed)
 
-	# Ba mục trong bảng Tuỳ chọn báo NGƯỢC lên đây bằng tín hiệu. Bảng đó
-	# không biết Cài đặt hay Credits nằm ở node nào — xem options_panel.gd.
 	_options.guide_chosen.connect(_on_guide_pressed)
 	_options.settings_chosen.connect(_on_settings_pressed)
 	_options.credits_chosen.connect(_on_credits_pressed)
 
-	# Nút Shop và bảng Shop dựng bằng code, không thêm vào main_menu.tscn:
-	# editor Godot hay ghi đè file .tscn đang mở bằng bản cũ trong bộ nhớ,
-	# còn node sinh lúc chạy thì không có gì để ghi đè. Chèn ngay sau "Chọn
-	# màn" để thứ tự nút đọc theo luồng chơi: chơi → chọn màn → tiêu tiền.
 	_btn_shop = Button.new()
 	_btn_shop.text = Lang.t("Cửa hàng")
 	_btn_levels.get_parent().add_child(_btn_shop)
@@ -72,15 +59,35 @@ func _ready() -> void:
 	if OS.has_feature("web"):
 		_btn_quit.hide()
 
+	_add_version_label()
+
 	# Focus sẵn nút đầu tiên để chơi được bằng bàn phím / tay cầm.
 	_btn_new.grab_focus()
+
+
+## Dòng phiên bản nhỏ ở góc trên phải, để người chơi báo lỗi biết mình đang chơi bản nào.
+func _add_version_label() -> void:
+	var ver := String(ProjectSettings.get_setting("application/config/version", VERSION_FALLBACK))
+	if ver.is_empty():
+		ver = VERSION_FALLBACK
+	var lbl := Label.new()
+	lbl.text = "v" + ver
+	lbl.add_theme_font_size_override("font_size", 22)
+	lbl.add_theme_color_override("font_color", Color(1, 1, 1, 0.75))
+	lbl.add_theme_color_override("font_outline_color", Color(0, 0, 0, 0.6))
+	lbl.add_theme_constant_override("outline_size", 6)
+	lbl.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	lbl.set_anchors_and_offsets_preset(Control.PRESET_TOP_RIGHT)
+	lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+	lbl.offset_left = -200
+	lbl.offset_right = -24
+	lbl.offset_top = 16
+	add_child(lbl)
 
 
 # ------------------------------------------------------- hiệu ứng rê chuột ---
 
 func _setup_hover(btn: Button) -> void:
-	# Phải chờ container sắp xếp xong mới biết kích thước thật của nút,
-	# nên vừa gọi ngay vừa nối vào tín hiệu resized.
 	btn.resized.connect(_center_pivot.bind(btn))
 	_center_pivot(btn)
 
@@ -91,13 +98,10 @@ func _setup_hover(btn: Button) -> void:
 
 
 func _center_pivot(btn: Button) -> void:
-	# Không có dòng này thì nút phóng to từ góc trên trái, nhìn như bị lệch.
 	btn.pivot_offset = btn.size / 2.0
 
 
 func _scale_to(btn: Button, target: float) -> void:
-	# Dùng scale chứ không dùng position: nút nằm trong VBoxContainer,
-	# mà container tự đặt lại position của node con mỗi lần sắp xếp.
 	var tw := create_tween()
 	tw.set_ease(Tween.EASE_OUT).set_trans(Tween.TRANS_BACK)
 	tw.tween_property(btn, "scale", Vector2(target, target), 0.12)
@@ -106,8 +110,6 @@ func _scale_to(btn: Button, target: float) -> void:
 # ------------------------------------------------------------ hành động nút ---
 
 ## Chơi mới: vào thẳng prologue, KHÔNG qua màn chọn nhân vật — xem
-## GameData.LEVELS_WITHOUT_CHARACTER_SELECT. Người chơi chọn nhân vật lần đầu
-## sau khi xong (hoặc bỏ qua) tutorial.
 func _on_new_pressed() -> void:
 	get_tree().change_scene_to_file(GameData.start_story_level("prologue"))
 
@@ -121,14 +123,6 @@ func _on_levels_pressed() -> void:
 
 
 ## Mở menu hướng dẫn (cũng chính là thứ phím F1 mở trong màn chơi).
-##
-## Gọi thẳng autoload `HuongDan` chứ không dựng một bảng riêng cho menu chính:
-## nội dung hướng dẫn phải giống hệt nhau ở hai chỗ, mà hai bản sao thì sớm
-## muộn cũng lệch — sửa một câu trong bảng công thức rồi quên bản kia.
-##
-## Autoload nên nó sống sẵn từ lúc game khởi động, kể cả khi chưa vào màn nào.
-## `mo()` tự nhớ trạng thái tạm dừng cũ rồi khôi phục lúc đóng, nên gọi từ menu
-## chính (vốn không tạm dừng) cũng không để lại game bị treo.
 func _on_guide_pressed() -> void:
 	_options.close()
 	HuongDan.open()
@@ -140,15 +134,6 @@ func _on_options_pressed() -> void:
 
 
 ## Ba hàm dưới đây được gọi TỪ BẢNG TUỲ CHỌN, không phải từ nút trên menu nữa.
-##
-## Mỗi hàm đóng bảng Tuỳ chọn trước khi mở bảng con, và trao focus về thẳng nút
-## "Tuỳ chọn" trên menu chính.
-##
-## Vì sao đóng chứ không để hai bảng chồng lên nhau: cả hai đều là lớp phủ kín
-## màn hình có nền tối và đều tự bắt phím ESC. Chồng lên nhau thì nền tối cộng
-## dồn thành gần như đen đặc, và một cú ESC có thể đóng cả hai cùng lúc —
-## thứ tự nhận phím giữa hai node anh em phụ thuộc vào vị trí trong cây scene,
-## tức là một hành vi đúng hôm nay và sai sau lần kéo thả node tiếp theo.
 func _on_settings_pressed() -> void:
 	_options.close()
 	_settings.open(_btn_options)

@@ -1,22 +1,4 @@
 extends CanvasLayer
-## Dải theo dõi đơn hàng nằm NGANG ở mép TRÊN màn hình. Bấm phím 1 để đóng/mở.
-##
-## (2/10/2026) Trước đây là một tấm bảng DỌC ở mép trái, rộng 354 px và cao gần
-## hết màn hình. User chơi thử thấy vướng: game nhìn từ trên xuống, bếp trải
-## theo chiều ngang, nên một cột dọc che mất nguyên một dải trạm bên trái. Dải
-## ngang phía trên chỉ che phần tường sau của phòng — chỗ ít khi phải nhìn.
-##
-## KHÔNG còn tấm nền tối phía sau các vé: nền chỉ để gom các vé thành một khối,
-## mà khối đó chính là thứ gây vướng. Giờ chỗ nào không có vé thì chỗ đó trống.
-##
-## Vẫn giữ MỘT công tắc cho cả cụm (phím 1) và cái nhãn nhỏ khi đóng. Nhãn là
-## phần bắt buộc: dải đóng hoàn toàn thì người chơi quên là có đơn đang chờ.
-## Nó giữ đúng hai thông tin cần để quyết định có mở ra hay không: **có mấy
-## đơn** và **đơn gấp nhất còn bao nhiêu kiên nhẫn** (viền nhãn đổi màu theo).
-##
-## Node này chỉ VẼ. Nó không đếm giờ, không tính tiền, không quyết định khi nào
-## khách bỏ đi — nó nghe hai tín hiệu và đọc dữ liệu đơn. Luật nằm trọn ở
-## customer_manager.gd, nên muốn đổi luật thì sửa một file.
 
 const OrderTicket := preload("res://scripts/ui/order_ticket.gd")
 const COIN_ICON := "res://assets/ui/tien/carrot_tien.png"
@@ -25,7 +7,6 @@ const ACTION := "toggle_orders"
 const MARGIN := 28.0
 const GAP := 6
 ## Chừa mép phải cho bảng đồng hồ & ví (hud_clock: rộng 300, lề 28) cộng một
-## khe hở. Dải vé dừng trước đó để hai thứ không bao giờ đè nhau.
 const RIGHT_RESERVED := 300.0 + 28.0 + 16.0
 
 const LABEL_WIDTH := 46.0
@@ -42,20 +23,18 @@ const COLOR_YELLOW := Color("d9a520")
 const COLOR_RED := Color("c4433a")
 
 ## Bảng mở sẵn khi vào màn. Người chơi phải THẤY hệ đơn hàng tồn tại trước đã;
-## giấu nó đi ngay từ đầu thì người mới không biết có phím 1.
 @export var open_by_default: bool = true
 
 var is_open: bool = true
 
 var _board: Control
 ## Dải vé kiểu BĂNG CHUYỀN (16/11/2026) — một Control trơn, các vé tự xếp
-## trong _layout_conveyor() thay vì để HBoxContainer xếp.
 var _row: Control
 var _label: PanelContainer
 var _lbl_counter: Label
 var _label_style: StyleBoxFlat
 var _coin_icon: Texture2D = null
-var _ticket: Dictionary = {}    # DonHang -> node vé
+var _ticket: Dictionary = {}
 
 
 func _ready() -> void:
@@ -67,8 +46,6 @@ func _ready() -> void:
 	_build_ui()
 
 	is_open = open_by_default
-	# Đặt thẳng vào vị trí ở frame hình đầu, KHÔNG tween: chạy hiệu ứng lúc
-	# vừa vào màn thì người chơi thấy bảng tự trôi mà không hiểu vì sao.
 	_board.position.y = _y_open() if is_open else _y_closed()
 	_label.visible = not is_open
 
@@ -82,20 +59,11 @@ func _build_ui() -> void:
 	add_child(root)
 
 	# --- dải vé ---
-	#
-	# Neo để nguyên góc trên-trái (mọi anchor = 0) và ta gán size bằng tay.
-	# KHÔNG dùng preset neo rồi tween position: neo tính lại rect từ anchor +
-	# offset ở mỗi lần bố trí nên nó đánh nhau với position.
-	#
-	# Bề ngang lấy theo khung hình THIẾT KẾ (1920, chế độ co giãn canvas_items
-	# nên con số này đúng ở mọi độ phân giải), trừ lề trái và phần chừa cho
-	# đồng hồ. Vừa đủ 10 vé — số đơn tối đa của Ngày 3 (6 bàn + 4 xếp hàng).
 	var design_width := float(ProjectSettings.get_setting("display/window/size/viewport_width", 1920))
 	_board = Control.new()
 	_board.size = Vector2(design_width - MARGIN - RIGHT_RESERVED, OrderTicket.HEIGHT)
 	_board.position = Vector2(MARGIN, _y_closed())
 	_board.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	# Cắt vé tràn ra ngoài mép phải (băng chuyền) thay vì để đè lên đồng hồ.
 	_board.clip_contents = true
 	root.add_child(_board)
 
@@ -146,13 +114,7 @@ func _y_closed() -> float:
 
 
 ## Bắt phím ở _unhandled_key_input chứ không phải _input.
-##
-## Nghĩa là: hộp thoại, ô nhập chữ hay bất cứ Control nào đang nhận bàn phím
-## sẽ NUỐT phím 1 trước khi tới đây. Đúng như mong muốn — gõ số 1 vào một ô
-## nhập mà cái bảng đơn hàng nhảy ra thì rất khó chịu, và lỗi kiểu đó chỉ lộ
-## ra khi đã có màn hướng dẫn với hộp thoại Có/Không.
 func _unhandled_key_input(event: InputEvent) -> void:
-	# Đọc HÀNH ĐỘNG chứ không so mã phím: phím này giờ đổi được trong Cài đặt.
 	if event.is_action_pressed(ACTION) and not event.is_echo():
 		toggle()
 		get_viewport().set_input_as_handled()
@@ -166,9 +128,6 @@ func set_open(open: bool) -> void:
 	if open == is_open:
 		return
 	is_open = open
-	# Nhãn tắt NGAY khi bắt đầu mở, nhưng chỉ bật lại SAU khi bảng đóng xong:
-	# hiện nhãn trong lúc tấm bảng còn đang trượt qua chỗ nó thì hai thứ chồng
-	# lên nhau đúng một phần ba giây, nhìn như lỗi vẽ.
 	if open:
 		_label.visible = false
 
@@ -197,7 +156,6 @@ func add_order(order: RefCounted) -> void:
 		return
 	var v := OrderTicket.new()
 	_row.add_child(v)
-	# Vé mới xuất hiện ở CUỐI băng chuyền, không bay từ mép trái sang.
 	v.position.x = _conveyor_end()
 	v.build(order, _coin_icon)
 	v.slide_in()
@@ -206,12 +164,6 @@ func add_order(order: RefCounted) -> void:
 
 
 ## Còn chỗ cho thêm MỘT vé nữa không (16/11/2026).
-##
-## Vé giờ rộng theo số nguyên liệu, nên dải có thể tràn ra ngoài màn hình khi
-## nhiều đơn dài cùng lúc. Hệ khách hỏi hàm này trước khi cho khách mới vào:
-## hết chỗ thì không nhận khách — quán chỉ có 6 bàn, mà một vé nằm ngoài màn
-## hình là một đơn người chơi không thấy, chắc chắn mất khách.
-## Tính chỗ cho vé TO NHẤT có thể, vì lúc hỏi chưa biết khách sẽ gọi món gì.
 func has_room() -> bool:
 	var used := 0.0
 	for v in _ticket.values():
@@ -245,16 +197,6 @@ func _conveyor_end() -> float:
 
 
 ## BĂNG CHUYỀN — vé xếp cạnh nhau bình thường, đơn CŨ NHẤT đứng đầu bên
-## trái. Hết chỗ thì vé sau nằm tiếp ra ngoài mép phải của dải và bị CẮT đi
-## (_board.clip_contents) — chỉ hiện phần còn trong dải, như hàng vé đang chờ
-## trên băng chuyền.
-##
-## Vị trí trượt dần về chỗ đích mỗi khung hình (lerp), nên khi vé đầu xong
-## và rút đi, cả hàng TRÔI sang trái lấp chỗ, vé bị cắt dần lộ ra hết. Vé
-## đang rút vẫn thu bề ngang về 0 (order_ticket.slide_out), nên phần lấp chỗ
-## mượt chứ không giật.
-##
-## Không chặn khách khi tràn: quán có 6 bàn + hàng đợi giới hạn sẵn số khách.
 const CONVEYOR_SPEED := 12.0
 
 func _layout_conveyor(delta: float) -> void:
@@ -272,8 +214,6 @@ func _layout_conveyor(delta: float) -> void:
 
 func _process(delta: float) -> void:
 	_layout_conveyor(delta)
-	# Chỉ cập nhật nhãn khi bảng đang ĐÓNG: lúc mở thì mọi thứ nhãn nói đều
-	# đã hiện rõ trên từng tấm vé, tính lại mỗi frame hình là việc thừa.
 	if not is_open:
 		_update_label()
 
@@ -283,12 +223,6 @@ func _update_label() -> void:
 		return
 	_lbl_counter.text = str(_ticket.size())
 
-	# Viền nhãn mang màu của đơn GẤP NHẤT, không phải trung bình.
-	# Trung bình thì năm đơn thong thả kéo màu về xanh trong khi một đơn sắp
-	# mất khách — mà cái người chơi cần biết chính là đơn tệ nhất.
-	# BỎ QUA đơn của khách còn đang xếp hàng: bar của họ chưa chạy, nhưng
-	# `ti_le()` lúc đó trả về kiên nhẫn HÀNG ĐỢI đang tụt — tính vào đây thì
-	# cái tab đỏ lên vì một đơn mà người chơi còn chưa được phép phục vụ.
 	var low := 1.0
 	for order in _ticket.keys():
 		if bool(order.in_queue):

@@ -1,10 +1,8 @@
 extends TextureRect
-## Phát sprite sheet như một ảnh GIF động, ngay trong hệ thống UI Control.
-## Gắn script này vào một TextureRect có texture là AtlasTexture trỏ tới sprite sheet.
 
-@export var hframes: int = 7          ## số cột trong sprite sheet
-@export var vframes: int = 6          ## số hàng trong sprite sheet
-@export var frame_count: int = 42     ## tổng số frame thật (có thể nhỏ hơn hframes * vframes)
+@export var hframes: int = 7
+@export var vframes: int = 6
+@export var frame_count: int = 42
 @export var fps: float = 15.0
 @export var playing: bool = true
 @export var autostart_frame: int = 0
@@ -14,7 +12,6 @@ var _accum: float = 0.0
 var _atlas: AtlasTexture
 
 func _ready() -> void:
-	# Tách riêng AtlasTexture cho từng instance, tránh các bản sao dùng chung một region.
 	_atlas = texture as AtlasTexture
 	if _atlas != null:
 		_atlas = _atlas.duplicate()

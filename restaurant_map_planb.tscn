@@ -1,4 +1,4 @@
-[gd_scene load_steps=59 format=3 uid="uid://blwpaxidfss04"]
+[gd_scene load_steps=60 format=3 uid="uid://blwpaxidfss04"]
 
 [ext_resource type="Script" uid="uid://dwcowmm7pa1us" path="res://scenes/gameplay/level_base.gd" id="1_level"]
 [ext_resource type="Script" uid="uid://botg6a421ywtc" path="res://kitachibi_player.gd" id="2_en7o4"]
@@ -33,6 +33,7 @@
 [ext_resource type="PackedScene" path="res://assets/gltf/kitchencounter_straight_A_styleB.gltf" id="40_counter"]
 [ext_resource type="PackedScene" path="res://assets/gltf/crate.gltf" id="41_crate"]
 [ext_resource type="PackedScene" path="res://assets/gltf/crate_lid.gltf" id="42_cratelid"]
+[ext_resource type="Script" path="res://scripts/world/wall_posters.gd" id="99_posters"]
 
 [sub_resource type="CapsuleShape3D" id="Cap_player"]
 radius = 0.45
@@ -661,6 +662,7 @@ size = 11.0
 far = 90.0
 script = ExtResource("3_cam")
 map_min_z = -4.0
+extra_top = 5.5
 
 [node name="DirectionalLight3D" type="DirectionalLight3D" parent="."]
 transform = Transform3D(0.8829, 0, 0.4695, 0.4465, 0.309, -0.8397, -0.1451, 0.9511, 0.2728, 16, 18, 12)
@@ -841,8 +843,8 @@ script = ExtResource("30_tram")
 display_name = "Bếp 1"
 kind = "stove"
 options = PackedStringArray()
-reach_size = Vector3(1.0, 1.21, 2.29)
-reach_offset = Vector3(0, 0.605, 0.11)
+reach_size = Vector3(2.0, 1.21, 2.29)
+reach_offset = Vector3(0.5, 0.605, 0.11)
 
 [node name="Mesh" parent="NoiThatBep/stove_single3" instance=ExtResource("17_ddgsb")]
 
@@ -856,8 +858,8 @@ script = ExtResource("30_tram")
 display_name = "Lò nướng"
 kind = "oven"
 options = PackedStringArray()
-reach_size = Vector3(1.1, 1.449, 2.289)
-reach_offset = Vector3(0, 0.7245, 0.1364)
+reach_size = Vector3(2.1, 1.449, 2.289)
+reach_offset = Vector3(-0.5, 0.7245, 0.1364)
 
 [node name="Mesh" parent="NoiThatBep/pizza_oven2" instance=ExtResource("18_va5r0")]
 transform = Transform3D(0.7, 0, 0, 0, 0.7, 0, 0, 0, 0.9745, 0, 0, 0)
@@ -1169,8 +1171,8 @@ script = ExtResource("30_tram")
 display_name = "Quầy để đồ"
 kind = "counter"
 options = PackedStringArray()
-reach_size = Vector3(1.0, 1, 1.4)
-reach_offset = Vector3(0, 0.5, 0)
+reach_size = Vector3(2.0, 1, 1.4)
+reach_offset = Vector3(-0.5, 0.5, 0)
 
 [node name="Mesh" parent="NoiThatBep/counter_1" instance=ExtResource("40_counter")]
 
@@ -1199,8 +1201,8 @@ script = ExtResource("30_tram")
 display_name = "Quầy để đồ"
 kind = "counter"
 options = PackedStringArray()
-reach_size = Vector3(1.0, 1, 1.4)
-reach_offset = Vector3(0, 0.5, 0)
+reach_size = Vector3(2.0, 1, 1.4)
+reach_offset = Vector3(0.5, 0.5, 0)
 
 [node name="Mesh" parent="NoiThatBep/counter_3" instance=ExtResource("40_counter")]
 
@@ -1224,3 +1226,6 @@ transform = Transform3D(0.9801, 0, -0.1987, 0, 1, 0, 0.1987, 0, 0.9801, 29.5, 0,
 
 [node name="Deco4" parent="SanSauTrangTri" instance=ExtResource("41_crate")]
 transform = Transform3D(1.0000, 0, 0.0000, 0, 1, 0, -0.0000, 0, 1.0000, 29.5, 1.0, -2.8)
+
+[node name="TranhTreoTuong" type="Node3D" parent="."]
+script = ExtResource("99_posters")

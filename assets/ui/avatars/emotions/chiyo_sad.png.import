@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://d8qygd2adq6e"
-path="res://.godot/imported/0rca_logo.png-596437e200ee7dcb77f164bd398c920c.ctex"
+uid="uid://bq1datu40p8vb"
+path="res://.godot/imported/chiyo_sad.png-686e16ed506ce4d8b1cfc8da081406d2.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://0rca_logo.png"
-dest_files=["res://.godot/imported/0rca_logo.png-596437e200ee7dcb77f164bd398c920c.ctex"]
+source_file="res://assets/ui/avatars/emotions/chiyo_sad.png"
+dest_files=["res://.godot/imported/chiyo_sad.png-686e16ed506ce4d8b1cfc8da081406d2.ctex"]
 
 [params]
 

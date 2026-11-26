@@ -1,48 +1,10 @@
 class_name TargetPicker
 extends Area3D
-## Bộ chọn mục tiêu tương tác. Gắn vào nhân vật lúc chạy bởi level_base.gd.
-##
-## QUY TẮC THIẾT KẾ QUAN TRỌNG NHẤT: mặc định KHÔNG phải bấm Tab.
-##
-## Thể loại nấu ăn sống bằng trí nhớ cơ bắp — người chơi giỏi là người biết
-## tay mình phải đi đâu mà không cần nghĩ. Nếu mỗi lần lấy đồ đều phải mở một
-## danh sách rồi Tab qua lại thì nhịp chơi bị bẻ gãy, và tệ hơn là số lần bấm
-## Tab thay đổi tuỳ chỗ đứng — tức là thêm may rủi vào một thao tác bắt buộc,
-## đúng cái lỗi mình đã gạt ra khi bàn về con pet.
-##
-## Nên ở đây: mục tiêu TỰ ĐỘNG chọn cái nằm gần hướng nhân vật đang quay mặt
-## nhất. Đi tới, bấm E, xong — không thêm một phím nào. Tab chỉ để phá thế hoà
-## khi nhiều mục tiêu chồng nhau, và khi bấm thì nó KHOÁ lựa chọn một lúc để
-## hướng quay mặt không cướp lại ngay.
-##
-## Luật phát hiện là CHẠM: phải áp sát món đồ thì nó mới vào danh sách. Nhờ
-## vậy phần lớn thời gian danh sách chỉ có một mục, và Tab gần như không phải
-## dùng tới — đúng ý đồ ở trên. Tab chỉ cần khi đứng ở góc giữa hai món, hoặc
-## ở cột nguyên liệu có hai thùng chồng lên nhau.
-##
-## Lưu ý: CHẠM chỉ làm món đồ HIỆN RA trong danh sách, KHÔNG tự kích hoạt.
-## Vẫn phải bấm E. Nếu để đâm vào là tự tương tác thì người chơi sẽ vô tình
-## nhặt/bỏ đồ mỗi lần đi lướt qua — mà trong bếp chật thì lướt qua liên tục.
 
 ## Danh sách đã đổi hoặc lựa chọn đã đổi — HUD nghe tín hiệu này.
 signal candidates_changed(candidates: Array, selected_index: int)
 
 ## Vùng với: một khối hộp ÔM SÁT người chơi theo chiều ngang, nhưng CAO.
-##
-## Trước đây là hình cầu bán kính 2.6 — với xa hơn một ô rưỡi, nên đứng giữa
-## bếp là dính cùng lúc bốn năm trạm và danh sách dài ngoằng. Giờ đổi thành
-## luật "CHẠM MỚI TÍNH": hộp chỉ rộng hơn thân nhân vật khoảng nửa đơn vị mỗi
-## bên, nên phải áp sát món đồ thì nó mới hiện ra.
-##
-## Vì sao NGANG thì hẹp mà DỌC thì cao: với tay trong bếp là chuyện của mặt
-## sàn chứ không phải chiều cao. Thùng nguyên liệu tầng trên nằm ở y = 2, cao
-## hơn đỉnh đầu nhân vật (1.76) — dùng hình cầu ôm sát thì không bao giờ với
-## tới, mà cột hai thùng chồng nhau lại đúng là thiết kế mình muốn giữ.
-##
-## Dùng HỘP chứ không dùng cầu còn vì thân nhân vật (CharacterBody3D) không
-## xoay — chỉ node _model bên trong xoay. Nên hộp luôn thẳng trục với thế giới,
-## vùng với giống hệt nhau ở mọi hướng quay mặt, không có góc nào "với xa hơn
-## góc khác" như khi xoay một hộp theo nhân vật.
 @export var reach_width: float = 1.9
 @export var reach_height: float = 3.2
 ## Sau khi bấm Tab, khoá lựa chọn bằng tay trong bao lâu (giây).
@@ -65,15 +27,11 @@ func _ready() -> void:
 	_body = get_parent() as Node3D
 	monitoring = true
 	monitorable = false
-	# Nhìn thấy cả nội thất (lớp 1) lẫn vật phẩm rơi dưới đất (lớp 3) — nhân
-	# vật thì chỉ va chạm với lớp 1, nên đi xuyên qua vật phẩm được.
 	collision_mask = Workstation.STATION_MASK
 	_shape = CollisionShape3D.new()
 	var box := BoxShape3D.new()
 	box.size = Vector3(reach_width, reach_height, reach_width)
 	_shape.shape = box
-	# Gốc toạ độ nhân vật nằm ở chân, nên đẩy hộp lên nửa chiều cao thì đáy
-	# hộp trùng mặt sàn và đỉnh chạm quá nóc thùng tầng trên.
 	_shape.position = Vector3(0.0, reach_height * 0.5, 0.0)
 	add_child(_shape)
 
@@ -87,11 +45,6 @@ func _process(delta: float) -> void:
 # ------------------------------------------------------------ danh sách ---
 
 ## Dựng lại danh sách ứng viên mỗi frame.
-##
-## Thứ tự sắp xếp theo GÓC quanh nhân vật chứ không theo khoảng cách. Lý do:
-## khoảng cách thay đổi liên tục khi đi lại nên thứ tự sẽ nhảy loạn, bấm Tab
-## hai lần giống nhau ra hai kết quả khác nhau. Sắp theo góc thì Tab luôn chạy
-## vòng quanh theo một chiều cố định — đoán trước được.
 func _build_candidates() -> void:
 	var prev_sig := _signature()
 	var prev_keys := _keys()
@@ -102,7 +55,6 @@ func _build_candidates() -> void:
 	for body in _probe_collisions():
 		var station := body as Workstation
 		if station != null and station.has_reach():
-			# Trạm có vùng tương tác riêng: chạm khối vật lý KHÔNG tính.
 			continue
 		if station == null and body is Node and (body as Node).name == "Reach":
 			station = (body as Node).get_parent() as Workstation
@@ -124,32 +76,12 @@ func _build_candidates() -> void:
 
 	_selected = _find_choice()
 
-	# So "chữ ký" của cả danh sách (trạm nào, mục nào, đang chọn mục nào) chứ
-	# không chỉ so SỐ LƯỢNG và CHỈ SỐ: hai danh sách cùng dài nhưng khác trạm
-	# trước đây lọt qua phép so, còn danh sách y hệt thì lại không được bắn
-	# lại. Chỉ bắn khi thật sự có gì đổi, nên HUD không vẽ lại vô cớ.
 	if _signature() != prev_sig:
 		candidates_changed.emit(_candidates, _selected)
+	_update_highlight()
 
 
 ## Trả về danh sách vật thể đang chạm hộp với.
-##
-## Dùng TRUY VẤN TRỰC TIẾP vào không gian vật lý thay vì
-## Area3D.get_overlapping_bodies(). Đây không phải sở thích mà là kết quả đo:
-## với cùng một hình hộp, cùng một vị trí, cùng một collision_mask, truy vấn
-## thủ công tìm ra các trạm (StaticBody3D) còn danh sách của Area3D thì chỉ
-## thấy mỗi CharacterBody3D của nhân vật — tức là mọi trạm trong bếp đều
-## không bao giờ vào được danh sách chọn.
-##
-## Nguyên nhân là danh sách của Area3D được engine dựng dần qua các sự kiện
-## "vào/ra" ở pha broadphase; với vật thể TĨNH đứng yên tuyệt đối và một Area
-## được tạo lúc chạy rồi bị cha kéo đi, cặp va chạm đó không phải lúc nào
-## cũng được đăng ký. Truy vấn trực tiếp không có bộ nhớ đệm nào cả: nó hỏi
-## lại hình học ngay tại frame này, nên không có gì để sai.
-##
-## Giá phải trả là một truy vấn mỗi frame. Với một hộp nhỏ và vài chục vật
-## thể tĩnh thì chi phí này không đáng kể, và đổi lại là hành vi đoán trước
-## được — thứ đắt hơn nhiều so với vài micro giây.
 func _probe_collisions() -> Array:
 	if _shape == null or _body == null:
 		return []
@@ -159,15 +91,9 @@ func _probe_collisions() -> Array:
 	query.collision_mask = collision_mask
 	query.collide_with_areas = false
 	query.collide_with_bodies = true
-	# Bỏ chính nhân vật ra: hộp dò nằm ôm quanh thân nên lúc nào cũng chạm
-	# chính mình, và mỗi frame lại phải lọc lại một phần tử vô nghĩa.
 	if _body is CollisionObject3D:
 		query.exclude = [(_body as CollisionObject3D).get_rid()]
 
-	# (20/10/2026) Trần kết quả 12 → MAX_HITS. Mặt nạ dò gồm cả lớp 1 (sàn,
-	# tường, quầy), nên đứng ở góc bếp đông đồ là vượt 12 vật chạm. Vượt trần
-	# thì Godot trả về một tập CON tuỳ ý, mỗi khung một khác — kệ hàng lúc có
-	# lúc không trong danh sách, và mục đang chọn nhấp nháy cứ vài giây.
 	var out: Array = []
 	for r in get_world_3d().direct_space_state.intersect_shape(query, MAX_HITS):
 		out.append(r["collider"])
@@ -175,7 +101,6 @@ func _probe_collisions() -> Array:
 
 
 ## Số vật chạm tối đa một lần dò. Dư thừa có chủ ý: chi phí gần như không đổi,
-## còn thiếu thì sinh lỗi nhấp nháy ở trên.
 const MAX_HITS := 64
 
 
@@ -188,17 +113,6 @@ func _keys() -> PackedStringArray:
 
 
 ## Nếu TẬP ứng viên không đổi so với khung trước thì giữ nguyên THỨ TỰ cũ.
-##
-## Đây là gốc của lỗi "đứng yên cạnh kệ mà mục chọn nhấp nháy" (20/10/2026).
-## Danh sách sắp theo góc atan2, mà góc nhảy từ +π sang −π ở ngay sau lưng
-## nhân vật. Hai kệ nằm sát đường nối đó (Bánh mì / Bột) thì chỉ cần nhân vật
-## nhích vài milimet theo animation đứng yên là thứ tự đảo nhau trong đúng một
-## khung hình — HUD vẽ lại, người chơi thấy nhấp nháy, cứ khoảng một giây một
-## lần (đúng nhịp animation Idle). Probe ghi được: ["Banh mi","Bot"] →
-## ["Bot","Banh mi"] → trở lại sau 0,02 giây.
-##
-## Giữ thứ tự cũ khi tập không đổi thì danh sách chỉ sắp lại khi có trạm vào
-## hoặc ra khỏi tầm — lúc đó HUD vẽ lại là ĐÚNG, vì nội dung thật sự đổi.
 func _keep_previous_order(prev_keys: PackedStringArray) -> void:
 	if prev_keys.size() != _candidates.size() or prev_keys.is_empty():
 		return
@@ -208,7 +122,7 @@ func _keep_previous_order(prev_keys: PackedStringArray) -> void:
 		by_key[now[i]] = _candidates[i]
 	for k in prev_keys:
 		if not by_key.has(k):
-			return  # tập đã đổi → dùng thứ tự mới
+			return
 	var ordered: Array[Dictionary] = []
 	for k in prev_keys:
 		ordered.append(by_key[k])
@@ -221,8 +135,6 @@ func _signature() -> String:
 
 
 ## Hàm so sánh viết rời thay vì lambda nhiều dòng ngay trong lời gọi.
-## Lambda nhiều dòng của GDScript rất kén chỗ đặt dấu đóng ngoặc; viết rời thì
-## không bao giờ vướng, và đặt breakpoint để soi thứ tự cũng dễ hơn.
 static func _compare_angle(a: Dictionary, b: Dictionary) -> bool:
 	if is_equal_approx(float(a["_angle"]), float(b["_angle"])):
 		return int(a["index"]) < int(b["index"])
@@ -239,21 +151,12 @@ func _find_choice() -> int:
 		for i in _candidates.size():
 			if _candidates[i]["station"] == _locked_station and _candidates[i]["index"] == _locked_index:
 				return i
-		# Ra khỏi tầm rồi thì bỏ khoá luôn, không giữ một mục tiêu đã biến mất.
 		_hand_lock = 0.0
 
-	# Chấm điểm theo hướng quay mặt. Tích vô hướng của hướng nhìn với hướng
-	# tới mục tiêu: 1.0 là ngay trước mặt, -1.0 là sau lưng. Trừ một chút theo
-	# khoảng cách để hai mục tiêu cùng hướng thì cái gần hơn thắng.
 	var dir := -_body.global_transform.basis.z if _body != null else Vector3.FORWARD
 	dir.y = 0.0
 	dir = dir.normalized()
 
-	# Mức ưu tiên cao nhất đang có trong tầm. Chỉ những trạm ở mức đó mới
-	# được chấm điểm — trạm mức thấp hơn (Doro) bị loại khỏi lựa chọn TỰ ĐỘNG
-	# chừng nào còn một trạm khác đứng cạnh. Lọc cứng chứ không cộng điểm
-	# thưởng: cộng điểm thì vẫn có góc đứng mà Doro thắng, và "thỉnh thoảng
-	# vẫn mất món" là đúng cái lỗi đang cần dập.
 	var top_priority := -1000000
 	for c in _candidates:
 		top_priority = maxi(top_priority, int((c["station"] as Workstation).pick_priority))
@@ -278,11 +181,9 @@ func _find_choice() -> int:
 # ---------------------------------------------------------------- nhập ---
 
 ## Khoá mọi tương tác (E/F/Tab). Màn hướng dẫn bật trong lúc người chơi chưa
-## được dạy gì — nhặt được đồ mà chưa biết vứt ở đâu thì kẹt tay ngay bước đầu.
 var locked := false
 
 ## Màn hướng dẫn: chỉ cho bấm vào các loại trạm trong danh sách này (rỗng =
-## không giới hạn). Bấm trạm khác thì phát `blocked` để màn hướng dẫn nhắc.
 var allowed_kinds: Array = []
 signal blocked(station: Node)
 
@@ -311,25 +212,86 @@ func _unhandled_input(event: InputEvent) -> void:
 		get_viewport().set_input_as_handled()
 		return
 
-	# F đi qua ĐÚNG bộ chọn này, không phải một đường riêng.
-	#
-	# Nhờ vậy F thừa hưởng nguyên vẹn mọi luật đã có của E: phải đứng đủ gần,
-	# chọn được bằng Tab, chọn được bằng tâm ngắm ở góc nhìn thứ ba. Cho F một
-	# đường bắt phím riêng trong hands thì hai phím sẽ nhắm vào hai thứ khác
-	# nhau đúng lúc trong bếp có nhiều trạm sát nhau.
 	if event.is_action_pressed("assemble"):
 		_activate_alt()
 		get_viewport().set_input_as_handled()
 		return
 
-	# Góc nhìn thứ 3: chuột đang bị khoá nên tâm ngắm luôn ở giữa màn hình.
-	# Bắn tia từ tâm camera để người chơi trỏ thẳng vào trạm mình muốn, thay
-	# vì Tab. Tab VẪN dùng được — hai cách song song, tuỳ người chơi.
 	if GameData.third_person_active and event is InputEventMouseButton \
 			and event.pressed and event.button_index == MOUSE_BUTTON_LEFT:
 		if _pick_by_crosshair():
 			_activate()
 		get_viewport().set_input_as_handled()
+
+
+# ------------------------------------------------------- viền nhấp nháy ---
+
+## Viền nhấp nháy quanh trạm SẼ nhận phím E.
+const OUTLINE_SHADER := """
+shader_type spatial;
+render_mode unshaded, cull_front, depth_draw_never;
+uniform vec4 color : source_color = vec4(1.0, 0.85, 0.2, 1.0);
+uniform float width = 0.08;
+void vertex() {
+	// Bề dày tính theo mét thế giới: chia cho tỉ lệ của node để model
+	// phóng to hay thu nhỏ trong map vẫn có viền dày như nhau.
+	float s = length(MODEL_MATRIX[0].xyz);
+	VERTEX += normalize(VERTEX + vec3(0.0, 0.0001, 0.0)) * width / max(s, 0.001);
+}
+void fragment() {
+	ALBEDO = color.rgb;
+	// Nhấp nháy khoảng 2,5 lần/giây, không tắt hẳn để vẫn thấy khi đang mờ.
+	ALPHA = 0.45 + 0.55 * (0.5 + 0.5 * sin(TIME * 16.0));
+}
+"""
+static var _outline_mat: ShaderMaterial = null
+var _hl_station: Workstation = null
+## Mesh đang được tô viền -> overlay cũ của nó (để trả lại y nguyên).
+var _hl_meshes: Dictionary = {}
+
+
+static func _outline() -> ShaderMaterial:
+	if _outline_mat == null:
+		var sh := Shader.new()
+		sh.code = OUTLINE_SHADER
+		_outline_mat = ShaderMaterial.new()
+		_outline_mat.shader = sh
+	return _outline_mat
+
+
+## Gọi mỗi frame sau khi chọn xong. Chỉ làm việc khi trạm được chọn ĐỔI, nên
+func _update_highlight() -> void:
+	var want: Workstation = null
+	if not locked and _selected >= 0 and _selected < _candidates.size():
+		want = _candidates[_selected]["station"]
+	if want == _hl_station:
+		return
+	_clear_highlight()
+	if want == null or not is_instance_valid(want):
+		return
+	_hl_station = want
+	for mi in want.find_children("*", "MeshInstance3D", true, false):
+		var m := mi as MeshInstance3D
+		var old: Material = m.material_overlay
+		_hl_meshes[m] = old
+		if old == null:
+			m.material_overlay = _outline()
+		else:
+			var copy := old.duplicate() as Material
+			copy.next_pass = _outline()
+			m.material_overlay = copy
+
+
+func _clear_highlight() -> void:
+	for m in _hl_meshes:
+		if is_instance_valid(m):
+			(m as MeshInstance3D).material_overlay = _hl_meshes[m]
+	_hl_meshes.clear()
+	_hl_station = null
+
+
+func _exit_tree() -> void:
+	_clear_highlight()
 
 
 func _lock_choice() -> void:
@@ -358,9 +320,6 @@ func _activate_alt() -> void:
 
 
 ## Bắn tia từ giữa màn hình. Trả về true nếu trúng một trạm đang trong tầm.
-##
-## Chỉ chấp nhận trạm CÓ TRONG danh sách ứng viên: nhìn thấy chưa đủ, vẫn phải
-## đứng đủ gần. Nếu không, người chơi sẽ nấu được món ở đầu bên kia phòng.
 func _pick_by_crosshair() -> bool:
 	var cam := get_viewport().get_camera_3d()
 	if cam == null:

@@ -1,69 +1,34 @@
 extends Node
-## Hệ âm bar dùng chung — autoload tên `AmThanh`.
-##
-## Mọi tiếng động và mọi bài nhạc trong game đi qua đúng file này. Không nơi
-## nào khác được tự dựng AudioStreamPlayer, vì như thế thì âm lượng trong Cài
-## đặt sẽ điều khiển được chỗ này mà không điều khiển được chỗ kia.
-##
 ## ─────────────────────────────────────────── VÌ SAO CÓ BẢNG TÊN `FILE_NAMES`
-##
-## Code gọi tiếng theo LÚC NÀO NÓ KÊU — `khach_vao`, `sap_het_gio`. File âm
-## bar lại được đặt tên theo NÓ LÀ TIẾNG GÌ — `door_chime`, `warning_beep`.
-## Hai cách gọi tên đó đều đúng, nhưng đúng cho hai người khác nhau: người
-## viết code cần cái thứ nhất, người đi tìm nhạc cần cái thứ hai.
-##
-## Bảng `FILE_NAMES` là chỗ hai cách gọi gặp nhau. Nhờ nó, đổi bài nhạc cho một
-## sự kiện chỉ là sửa MỘT dòng trong bảng, không phải đổi tên file trên đĩa
-## (đổi tên file thì lần sau mở thư mục ra không ai còn nhận ra tiếng nào là
-## tiếng nào), cũng không phải đi sửa chỗ gọi trong code.
-##
-## Tên không có trong bảng thì tra thẳng bằng chính nó — nên thêm một tiếng
-## mới mà đặt trùng tên sự kiện thì không cần khai báo gì cả.
-##
 ## ─────────────────────────────────────────────────────── CÁCH THÊM ÂM THANH
-##
-## Tiếng ngắn: chép vào `res://assets/sfx/game/`
-## Nhạc nền:   chép vào `res://assets/bgm/`
-## Đuôi .ogg / .wav / .mp3 đều được (tìm theo thứ tự đó). Mở Godot một lần
-## cho nó nhập file. Xem `assets/sfx/game/DOC_TEN_FILE.txt` để biết tên nào
-## dùng vào việc gì.
-##
-## Thiếu file thì `play_sfx()` im lặng bỏ qua và chỉ cảnh báo MỘT lần cho mỗi tên
-## — game chạy y hệt, chỉ là không kêu.
-##
-## Âm lượng đã tự nối vào hai bar trượt trong Cài đặt, vì mọi thứ ở đây phát
-## qua bus "SFX" và "Music" mà settings_manager.gd đang điều khiển.
 
 const SFX_DIR := "res://assets/sfx/game/"
 const MUSIC_DIR := "res://assets/bgm/"
 
 ## Khai kiểu Array[String] chứ không để mảng trần: phần tử của một mảng trần
-## có kiểu tĩnh là Variant, nên `var path_ := SFX_DIR + name_ + d` bên dưới không
-## suy được kiểu và Godot báo lỗi biên dịch. Đây là lần thứ ba cùng cái bẫy đó
-## trong dự án này (đơn hàng, khách hàng, giờ tới đây).
 const EXT: Array[String] = [".ogg", ".wav", ".mp3"]
 
 ## TÊN SỰ KIỆN (code gọi)  ->  TÊN FILE (trên đĩa).
 const FILE_NAMES := {
 	# --- đôi tay ---
-	"pick_up":       "pick_up",        # nhấc một vật lên
-	"put_down":      "drop_out",       # đặt vật lên bàn / trạm
-	"trash":         "bin_or_pet",     # vứt đồ vào thùng rác bocchi
-	"doro":          "doro_voice",     # tiếng Doro kêu khi được tương tác / khi đói
-	"craft_ok":      "craft_success",  # bàn chế tạo ráp thành món
-	"craft_fail":    "nope_click",     # bấm F mà không thành món nào
-	"serve":         "serve_dish",     # giao đúng món cho khách
+	"pick_up":       "pick_up",
+	"put_down":      "drop_out",
+	"trash":         "bin_or_pet",
+	"doro":          "doro_voice",
+	"craft_ok":      "craft_success",
+	"craft_fail":    "nope_click",
+	"serve":         "serve_dish",
 	# --- bếp ---
-	"cook_done":     "cooking_done",   # bếp / lò / thớt xong một mẻ
-	"cook_fail":     "wrong_recipe",   # ra đồ hỏng vì sai công thức
-	"burn":          "sizzle_burn",    # để trên bếp quá lâu
+	"cook_done":     "cooking_done",
+	"cook_fail":     "wrong_recipe",
+	"burn":          "sizzle_burn",
 	# --- khách và tiền ---
 	"customer_in":   "door_chime",
 	"customer_out":  "fail_soft",
-	"perfect":       "perfect_bonus",  # giao khi kiên nhẫn còn trên nửa
+	"perfect":       "perfect_bonus",
 	"coin":          "coin_collect",
 	# --- vòng đời màn chơi ---
-	"time_warning":  "warning_beep",   # còn 30 giây
+	"time_warning":  "warning_beep",
 	"time_up":       "time_up_buzzer",
 	"results":       "results_screen",
 	# --- vượt mốc hạng giữa màn (HUD) — mỗi hạng một câu reo riêng ---
@@ -73,57 +38,34 @@ const FILE_NAMES := {
 	"rank_a":        "rank_a",
 	"rank_s":        "rank_s",
 	# --- kể chuyện ---
-	"type_tick":     "text_sound",     # tiếng gõ chữ trong hội thoại
+	"type_tick":     "text_sound",
 }
 
 ## Các NHÓM nhạc nền. Bốc ngẫu nhiên trong nhóm bằng play_random_music().
-##
-## Sáu bài dùng chung cho cả menu lẫn màn chơi là CỐ Ý, không phải lười: kho
-## nhạc có sáu bài, chia đôi thì mỗi bên chỉ còn ba và người chơi nghe lặp
-## nhanh gấp đôi. Cái phân biệt hai chỗ không phải là danh sách bài, mà là
-## CÁCH bốc — xem play_random_music().
 const LEVEL_TRACKS: Array[String] = [
 	"bgm1_beachtraining", "bgm2_ura", "bgm3_unity",
-	"bgm4_mant", "bgm5_mant2", "bgm6_gl",
+	"bgm4_mant", "bgm5_mant2", "bgm6_gl", "bgm7_umasamba",
 ]
 
 ## Nhạc TRONG MÀN CHƠI = sáu bài trên + Hashire Umamusume (21/10/2026).
-##
-## Hashire từng là bài riêng cho đoạn cuối màn; cơ chế đó đã bỏ, nên nó vào
-## chung danh sách bốc ngẫu nhiên. Chỉ thêm cho màn chơi, KHÔNG thêm cho menu:
-## bài nhịp nhanh, hợp lúc đứng bếp hơn lúc đang chọn màn.
-##
-## Viết lại đủ bảy tên chứ không ghép `LEVEL_TRACKS + [...]`: hằng của GDScript
-## chỉ nhận biểu thức tính được lúc biên dịch, ghép mảng có kiểu ở đây dễ báo lỗi.
 const GAMEPLAY_TRACKS: Array[String] = [
 	"bgm1_beachtraining", "bgm2_ura", "bgm3_unity",
 	"bgm4_mant", "bgm5_mant2", "bgm6_gl",
-	"hashire_umamusume",
+	"hashire_umamusume", "bgm7_umasamba",
 ]
 
 const TRACK_GROUPS := {
 	"menu": LEVEL_TRACKS,
 	"level": GAMEPLAY_TRACKS,
-	# Prologue dùng bài cố định: đoạn kể chuyện có nhịp riêng, bốc ngẫu nhiên
-	# thì mỗi lần chơi lại một không khí khác nhau.
 	"prologue": ["bgm2_ura"],
-	# Màn kết cũng một bài cố định. Phải KHAI nhóm riêng chứ không để màn kết
-	# "thừa hưởng" nhạc đang phát: nhạc màn chơi là bài bốc ngẫu nhiên, đi
-	# thẳng từ Ngày 3 sang thì màn kết mang theo một bài không liên quan. Chọn bài "beach
-	# training" vì chuyến đi trong truyện là đi biển.
 	"ending": ["bgm1_beachtraining"],
 }
 
 ## Số kênh phát tiếng ngắn cùng lúc.
-##
-## Một kênh duy nhất thì tiếng sau cắt ngang tiếng trước — mà trong bếp lúc
-## cao điểm, "giao món" và "khách vào" xảy ra cách nhau một phần mười giây là
-## chuyện thường. Tám kênh đủ cho mọi tình huống đã đo, và tám AudioStreamPlayer
-## rỗng gần như không tốn gì.
 const CHANNEL_COUNT := 8
 
-var _cache: Dictionary = {}       # duong_dan -> AudioStream đã nạp
-var _alerted: Dictionary = {}    # name_ -> true, để chỉ cảnh báo một lần
+var _cache: Dictionary = {}
+var _alerted: Dictionary = {}
 var _channels: Array[AudioStreamPlayer] = []
 var _next_channel := 0
 
@@ -136,8 +78,6 @@ var _type_channel: AudioStreamPlayer
 
 
 func _ready() -> void:
-	# Chạy được cả khi cây scene bị tạm dừng: bảng kết quả và bảng hướng dẫn
-	# đều dừng game, mà chúng vẫn cần phát tiếng.
 	process_mode = Node.PROCESS_MODE_ALWAYS
 
 	for i in CHANNEL_COUNT:
@@ -156,25 +96,7 @@ func _ready() -> void:
 
 
 ## Đồng bộ nhạc nền với trạng thái TẠM DỪNG của game.
-##
-## Vì sao phải làm bằng tay: node này là PROCESS_MODE_ALWAYS (nó phải kêu được
-## cả khi game dừng — bảng kết quả và menu F1 đều dừng game mà vẫn cần tiếng),
-## nên mọi AudioStreamPlayer bên trong nó cũng chạy tiếp khi tạm dừng.
-##
-## Hậu quả trước khi có hàm này: đồng hồ màn chơi DỪNG theo game, còn nhạc thì
-## KHÔNG. Mở menu F1 hay bấm Pause ở nửa sau màn chơi rồi quay lại, bài
-## Hashire đã chạy trước đồng hồ đúng bằng khoảng thời gian tạm dừng — và nó
-## kết thúc sớm, để lại mấy chục giây cuối màn im lặng. Càng dừng nhiều lần
-## càng lệch.
-##
-## CHỈ dừng NHẠC, không dừng tiếng ngắn: bảng kết quả tạm dừng game NGAY TRƯỚC
-## khi phát tiếng tổng kết, nên dừng cả bể SFX thì cái tiếng quan trọng nhất
-## của cả màn lại là cái duy nhất không kêu.
 func _process(_delta: float) -> void:
-	# Hai lý do để nhạc im, gộp vào MỘT phép tính: game tạm dừng, hoặc một đoạn
-	# kể chuyện đang yêu cầu im lặng (xem set_music_hushed). Gộp ở đây vì hàm
-	# này ghi stream_paused mỗi khung hình — đặt stream_paused ở chỗ khác thì
-	# khung hình sau nó ghi đè lại ngay.
 	var was_paused := get_tree().paused or _hushed
 	if _music.stream_paused != was_paused:
 		_music.stream_paused = was_paused
@@ -183,9 +105,6 @@ func _process(_delta: float) -> void:
 # ------------------------------------------------------------ tiếng ngắn ---
 
 ## Phát một tiếng ngắn. Thiếu file thì im lặng bỏ qua.
-##
-## `pitch` đổi cao độ để cùng một file nghe không lặp lại y hệt — ví dụ tiếng
-## nhặt đồ phát mấy chục lần một màn.
 func play_sfx(name_: String, pitch: float = 1.0) -> void:
 	var stream := _load_stream(name_, SFX_DIR)
 	if stream == null:
@@ -197,17 +116,6 @@ func play_sfx(name_: String, pitch: float = 1.0) -> void:
 
 
 ## Tiếng gõ chữ trong hội thoại — MỘT kênh riêng, mỗi lần gọi là bắt đầu lại.
-##
-## Kêu ĐÚNG MỘT LẦN cho mỗi dòng thoại (xem hoi_thoai.gd), không phải mỗi ký
-## tự. Bản đầu phát lặp theo nhịp trong lúc chữ đang chạy, nghe đúng kiểu máy
-## chữ nhưng nhức đầu thật sự: prologue dài mấy chục dòng, và một chuỗi tiếng
-## "cạch" liên tục cạnh tranh trực tiếp với thứ người chơi đang phải làm ở đó
-## — ĐỌC.
-##
-## Vì sao vẫn giữ kênh riêng thay vì gọi play_sfx(): người chơi bấm nhanh thì dòng
-## sau bắt đầu trong lúc tiếng của dòng trước còn đang kêu. Qua bể tám kênh
-## thì hai tiếng chồng lên nhau; ở một kênh, play() cắt tiếng cũ và bắt đầu
-## lại — đúng cái người chơi mong đợi khi họ vừa chuyển sang câu mới.
 func play_type_tick() -> void:
 	var stream := _load_stream("type_tick", SFX_DIR)
 	if stream == null:
@@ -218,9 +126,6 @@ func play_type_tick() -> void:
 
 
 ## Kênh rảnh gần nhất; hết rảnh thì cướp kênh cũ nhất theo vòng.
-##
-## Cướp chứ không bỏ qua: bỏ qua thì đúng lúc bếp ồn nhất — lúc phản hồi quan
-## trọng nhất — lại là lúc mất tiếng.
 func _free_channel() -> AudioStreamPlayer:
 	for p in _channels:
 		if not p.playing:
@@ -233,11 +138,6 @@ func _free_channel() -> AudioStreamPlayer:
 # -------------------------------------------------------------- nhạc nền ---
 
 ## Phát một bài cụ thể.
-##
-## `loop`          — bật cờ lặp trên chính stream.
-## `restart`     — true thì phát lại từ đầu kể cả khi bài đó đang chạy.
-##                  Mặc định false, nhờ vậy gọi lại cùng một bài ở hai màn
-##                  hình liên tiếp KHÔNG làm nhạc giật về đầu.
 func play_music(name_: String, loop: bool = true, restart: bool = false) -> void:
 	var stream := _load_stream(name_, MUSIC_DIR)
 	if stream == null:
@@ -245,9 +145,6 @@ func play_music(name_: String, loop: bool = true, restart: bool = false) -> void
 	if not restart and _music.stream == stream and _music.playing:
 		return
 
-	# Bật/tắt cờ lặp NGAY TRÊN stream. ogg và mp3 mỗi loại một tên thuộc tính
-	# khác nhau, nên thử cả hai thay vì rẽ nhánh theo lớp — thêm một định dạng
-	# mới sau này không phải sửa ở đây.
 	if "loop" in stream:
 		stream.set("loop", loop)
 	elif "loop_mode" in stream:
@@ -259,18 +156,6 @@ func play_music(name_: String, loop: bool = true, restart: bool = false) -> void
 
 
 ## Bốc ngẫu nhiên một bài trong nhóm.
-##
-## `keep_playing` là cả điểm mấu chốt của hàm này:
-##
-##   TRUE  (dùng cho cụm MENU) — nếu bài đang phát đã thuộc nhóm này thì KHÔNG
-##         làm gì cả. Người chơi bấm Menu chính → Chọn màn → Chọn nhân vật →
-##         quay lại, cả bốn màn hình dùng chung một bài đang chạy dở. Không có
-##         cờ này thì mỗi lần đổi màn hình là nhạc giật về đầu một bài khác,
-##         và chỉ cần bấm qua lại vài lần là nghe như đài bị nhiễu.
-##
-##   FALSE (dùng cho MÀN CHƠI) — luôn bốc bài mới và phát lại từ đầu. Vào một
-##         ca làm việc mới thì phải nghe như một ca làm việc mới, chứ không
-##         phải như đoạn giữa của bài nhạc menu.
 func play_random_music(group: String, keep_playing: bool = false,
 		loop: bool = true) -> void:
 	var list: Array = TRACK_GROUPS.get(group, [])
@@ -282,9 +167,6 @@ func play_random_music(group: String, keep_playing: bool = false,
 		return
 
 	var picked := String(list.pick_random())
-	# Tránh bốc trúng đúng bài vừa nghe xong. Bốc lại tối đa 8 lần chứ không
-	# lọc bài cũ ra khỏi danh sách rồi bốc: lọc thì phải cấp phát một mảng mới
-	# mỗi lần đổi màn, mà xác suất trúng lại là 1/6 nên tám lượt thử là quá đủ.
 	if list.size() > 1:
 		var tries := 0
 		while picked == _current_track and tries < 8:
@@ -295,12 +177,6 @@ func play_random_music(group: String, keep_playing: bool = false,
 
 
 ## Cho nhạc nền IM tạm thời (true) rồi phát tiếp (false).
-##
-## Là TẠM DỪNG chứ không stop_music(): bài nhạc giữ nguyên vị trí, lúc thả ra
-## nó chạy tiếp đúng chỗ đang dở. Dùng cho cảnh ác mộng trong màn kết — tỉnh
-## dậy thì nhạc trở lại như chưa có gì, đúng cảm giác "chỉ là mơ". stop_music()
-## thì quên luôn bài đang phát, muốn bật lại phải biết tên bài, mà đoạn kể
-## chuyện không biết (nó thừa hưởng nhạc từ màn trước).
 var _hushed := false
 
 func set_music_hushed(value: bool) -> void:
@@ -308,10 +184,12 @@ func set_music_hushed(value: bool) -> void:
 
 
 ## Tắt hẳn nhạc nền.
-##
-## (Đổi tên 18/9/2026) Trước là `dung_nhac`. Đổi sớm hơn lượt của audio_manager.gd
-## vì hàm này vừa có thêm nơi gọi mới (intro_video.gd) — để nguyên thì mỗi
-## dòng code viết thêm lại đẻ ra một chỗ phải sửa ở lô sau.
+func stop_all_sfx() -> void:
+	for p in _channels:
+		p.stop()
+	_type_channel.stop()
+
+
 func stop_music() -> void:
 	_music.stop()
 	_current_track = ""
@@ -326,7 +204,6 @@ func current_track() -> String:
 
 ## Tìm file theo tên, thử lần lượt các đuôi. Nhớ kết quả để không tra lại.
 func _load_stream(name_: String, dir_: String) -> AudioStream:
-	# Tên sự kiện -> tên file. Không có trong bảng thì dùng chính nó.
 	var file_name := String(FILE_NAMES.get(name_, name_))
 
 	for d in EXT:
@@ -341,13 +218,10 @@ func _load_stream(name_: String, dir_: String) -> AudioStream:
 			if stream != null:
 				return stream
 
-	# Cảnh báo ĐÚNG MỘT LẦN cho mỗi tên. Không chặn thì tiếng "nhặt đồ" thiếu
-	# file sẽ in ra console mấy trăm dòng một màn và nhấn chìm mọi lỗi thật.
 	if not _alerted.has(name_):
 		_alerted[name_] = true
 		print("[AmThanh] chưa có file cho '%s' (tìm '%s%s.*') — bỏ qua."
 			% [name_, dir_, file_name])
-	# Ghi null cho mọi đuôi để lần sau khỏi dò lại ổ đĩa.
 	for d in EXT:
 		_cache[dir_ + file_name + d] = null
 	return null

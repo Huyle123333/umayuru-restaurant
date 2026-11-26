@@ -1,21 +1,6 @@
 extends CanvasLayer
-## HUD danh sách tương tác + tâm ngắm cho góc nhìn thứ 3.
-##
-## Dựng bằng CODE chứ không phải file .tscn. Lý do: đây là bản nháp của cơ chế
-## đang thử, còn phải đổi nhiều; để nó nằm gọn trong một file thì sửa nhanh và
-## không phải mở đi mở lại trình chỉnh scene. Khi cơ chế chốt rồi thì tách ra
-## .tscn và gắn theme chung của game — lúc đó xoá hàm _dung_giao_dien().
-##
-## Cách đọc HUD: mục ĐANG CHỌN có mũi tên ▸ và chữ sáng; các mục còn lại mờ.
-## Người chơi bình thường chỉ cần liếc mục sáng rồi bấm E.
 
 ## Cỡ chữ tính theo VIEWPORT THIẾT KẾ 1920×1080, không phải theo cửa sổ.
-##
-## Game chạy stretch/mode = "canvas_items" với cửa sổ mặc định 1280×720, tức
-## mọi thứ bị thu nhỏ còn 2/3. Cỡ chữ 14 đặt ở đây hiện ra chỉ ~9 px trên
-## màn hình thật — đọc được ở chế độ toàn màn hình nhưng gần như mù ở cửa sổ.
-## Nên mọi con số dưới đây đã nhân sẵn cho hệ số đó: chia 1.5 ra mới là cỡ
-## người chơi cửa sổ thật sự nhìn thấy.
 const SIZE_SELECTED := 30
 const SIZE_DIM := 24
 const SIZE_KEY := 18
@@ -28,11 +13,6 @@ const COLOR_SELECTED := Color(1, 1, 1)
 const COLOR_DIM := Color(0.62, 0.66, 0.63)
 const COLOR_KEY := Color(0.88, 0.45, 0.2)
 ## Thanh điều kiện kĩ năng: xanh lam lúc đang gom, vàng lúc đã đủ.
-##
-## Đổi MÀU chứ không chỉ đổi độ dài: thanh đầy và thanh gần đầy trông rất
-## giống nhau khi liếc nhanh giữa lúc bận, mà khoảnh khắc "đủ điều kiện" là
-## thứ người chơi đang chờ. Vàng cũng là màu của hạng S ở bảng kết quả, nên
-## nó đã mang sẵn nghĩa "đạt" trong game này.
 const COLOR_SKILL_WAIT := Color(0.42, 0.62, 0.85)
 const COLOR_SKILL_READY := Color("f2c230")
 
@@ -56,10 +36,6 @@ var _notice_tween: Tween = null
 var _table: Workstation = null
 
 ## Đứng cách bàn bao xa thì bảng còn hiện.
-##
-## 4.5 rộng hơn hẳn tầm với (chạm mới tính) để bảng không nhấp nháy mỗi khi
-## người chơi nhích ra nhích vào — thứ gây khó chịu hơn nhiều so với việc
-## bảng nán lại thêm một hai bước chân.
 @export var table_note_range := 4.5
 ## Neo bảng ở độ cao nào so với gốc bàn.
 @export var table_note_height := 1.3
@@ -77,8 +53,6 @@ func _ready() -> void:
 func _build_ui() -> void:
 	_frame = PanelContainer.new()
 	_frame.set_anchors_preset(Control.PRESET_CENTER_BOTTOM)
-	# Neo giữa-dưới rồi tự đẩy lên: danh sách nằm ngay dưới nhân vật nên mắt
-	# không phải rời khỏi chỗ đang thao tác để đọc.
 	_frame.offset_left = -280.0
 	_frame.offset_right = 280.0
 	_frame.offset_top = -260.0
@@ -99,7 +73,6 @@ func _build_ui() -> void:
 	_frame.add_child(_column)
 	_frame.hide()
 
-	# Tâm ngắm: một chấm vuông nhỏ giữa màn hình, chỉ hiện ở góc nhìn thứ 3.
 	_crosshair = Panel.new()
 	_crosshair.set_anchors_preset(Control.PRESET_CENTER)
 	_crosshair.custom_minimum_size = Vector2(6, 6)
@@ -119,20 +92,10 @@ func _build_ui() -> void:
 
 
 ## Thanh thể lực + dòng "đang cầm", neo ở góc dưới trái.
-##
-## Đặt DƯỚI TRÁI chứ không dưới giữa: danh sách tương tác đã chiếm chỗ giữa,
-## và hai thứ chồng nhau thì lúc cần đọc gấp nhất lại là lúc không đọc được.
 func _build_stamina_bar() -> void:
 	var box := VBoxContainer.new()
 	box.set_anchors_preset(Control.PRESET_BOTTOM_LEFT)
 	box.offset_left = 28.0
-	# Cao hơn bản trước để chừa chỗ cho ảnh kĩ năng ở trên cùng.
-	#
-	# 15/9/2026 nới thêm 40 px: dưới ảnh kĩ năng giờ có thanh theo dõi điều
-	# kiện (10 px) và dòng chữ "3/5" (~24 px) cộng hai khoảng cách. Tính đủ:
-	# ảnh 96 + thanh 10 + chữ 24 + "đang cầm" 24 + thể lực 16 + 4 khoảng
-	# cách ≈ 188 px, nên 202 px của bản cũ vừa khít tới mức một lần đổi cỡ
-	# chữ là tràn.
 	box.offset_top = -270.0
 	box.offset_right = 400.0
 	box.offset_bottom = -28.0
@@ -166,24 +129,12 @@ func _build_stamina_bar() -> void:
 
 
 ## Ảnh biểu tượng kĩ năng chủ động, nằm ngay trên thanh thể lực.
-##
-## Đặt cùng cột với thanh thể lực chứ không tìm một góc khác: cả hai đều là
-## "tài nguyên của riêng nhân vật" và cả hai đều điều khiển bằng tay trái
-## (Shift, Space). Gom vào một chỗ thì người chơi chỉ phải liếc một điểm.
-##
-## MỘT tấm ảnh + shader, chứ không phải hai file ảnh màu và xám.
-## Lý do: hai file là hai thứ phải nhớ cập nhật cùng nhau, và với bảy nhân vật
-## thì thành mười bốn file. Đổ xám bằng shader thì thêm nhân vật chỉ tốn đúng
-## một file ảnh, và mức xám chỉnh được liên tục nếu sau này muốn làm hiệu ứng
-## sáng dần lúc kĩ năng vừa đủ điều kiện.
 func _build_skill_icon(box: VBoxContainer) -> void:
 	_skill_icon = TextureRect.new()
 	_skill_icon.custom_minimum_size = Vector2(SIZE_SKILL_ICON, SIZE_SKILL_ICON)
 	_skill_icon.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 	_skill_icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 	_skill_icon.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	# Ảnh gốc chỉ 64×64 mà hiển thị ở 96 — dùng lọc điểm ảnh thì viền răng
-	# cưa, nên để mặc định (tuyến tính). Không đặt texture_filter ở đây.
 
 	var shader := Shader.new()
 	shader.code = """
@@ -213,12 +164,6 @@ void fragment() {
 	else:
 		push_warning("Thiếu ảnh kĩ năng: %s" % path)
 
-	# Ảnh + thanh + chữ gói trong một cột RIÊNG, rộng đúng bằng ảnh.
-	#
-	# Không thả thẳng vào `hop`: cột đó rộng 372 px cho dòng "đang cầm", nên
-	# một ProgressBar bỏ vào sẽ kéo dài hết 372 và trông như thanh thể lực thứ
-	# hai. Thanh này thuộc về CÁI ẢNH, nên nó phải rộng đúng bằng cái ảnh —
-	# chỗ đứng đã nói nó đo cái gì, không cần thêm nhãn giải thích.
 	_skill_column = VBoxContainer.new()
 	_skill_column.custom_minimum_size = Vector2(SIZE_SKILL_ICON, 0)
 	_skill_column.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
@@ -258,18 +203,9 @@ func listen_to_skills(skills: Node) -> void:
 
 
 ## Vẽ lại thanh theo dõi điều kiện.
-##
-## HUD chỉ NHẬN hai con số đã tính sẵn; nó không biết "5 đơn hoàn hảo" nghĩa
-## là gì và cũng không đếm gì cả. Luật đếm nằm trọn trong quan_ly_ki_nang —
-## nhờ vậy thêm một kiểu điều kiện mới (đếm món nấu, đếm giây) không phải sửa
-## một dòng nào ở đây.
 func _on_skill_progress(ratio: float, text: String) -> void:
 	if _skill_bar == null:
 		return
-	# Chữ rỗng = nhân vật này chưa có kĩ năng chủ động. Ẩn cả thanh lẫn chữ,
-	# nhưng GIỮ cái ảnh xám: ảnh nói "có một ô kĩ năng ở đây", còn một thanh
-	# tiến trình đứng im ở 0 suốt màn thì nói dối rằng người chơi đang không
-	# tiến bộ.
 	var has_text := not text.is_empty()
 	_skill_bar.visible = has_text
 	_skill_label.visible = has_text
@@ -287,28 +223,14 @@ func _on_skill_progress(ratio: float, text: String) -> void:
 func _on_skill_ready(available: bool) -> void:
 	if _skill_material == null:
 		return
-	# Xám khi chưa dùng được, màu khi đã dùng được. Không ẩn hẳn ảnh lúc chưa
-	# dùng được: người chơi cần biết mình CÓ một kĩ năng đang chờ, chứ không
-	# phải bất ngờ thấy một biểu tượng lạ hiện ra giữa màn.
 	_skill_material.set_shader_parameter("muc_xam", 0.0 if available else 1.0)
 	_skill_icon.modulate.a = 1.0 if available else 0.75
 
 
 ## Bảng "trên bàn chế tạo đang có gì", BÁM THEO cái bàn trong không gian.
-##
-## Vì sao không neo cố định ở góc màn hình như bản trước: bếp có nhiều mặt
-## bàn, và một bảng ở góc thì không nói được nó đang tả cái bàn nào. Chiếu
-## vị trí cái bàn ra toạ độ màn hình rồi đặt bảng ngay bên phải nó thì câu
-## hỏi đó không tồn tại — bảng ở cạnh cái gì là đang nói về cái đó.
-##
-## Bảng chỉ hiện khi người chơi đứng trong tầm, và tự ẩn khi đi ra xa: nó là
-## thông tin của MỘT thao tác đang làm dở, không phải bảng điều khiển thường
-## trực.
 func _build_table_note() -> void:
 	_table_frame = PanelContainer.new()
 	_table_frame.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	# Bảng tự co theo nội dung, và ta tự đặt vị trí mỗi frame nên không dùng
-	# anchor preset nào cả.
 	_table_frame.custom_minimum_size = Vector2(210, 0)
 	var bg := StyleBoxFlat.new()
 	bg.bg_color = Color(0.07, 0.1, 0.09, 0.82)
@@ -349,14 +271,12 @@ func _follow_table() -> void:
 	if cam == null:
 		return
 	var point := _table.global_position + Vector3(0.0, table_note_height, 0.0)
-	# Bàn nằm sau lưng camera thì unproject trả về toạ độ vô nghĩa.
 	if cam.is_position_behind(point):
 		_table_frame.hide()
 		return
 
 	_table_frame.show()
 	var screen := cam.unproject_position(point)
-	# Kẹp trong khung hình để bảng không trôi ra ngoài khi bàn ở sát mép.
 	var box_size := _table_frame.size
 	var area := get_viewport().get_visible_rect().size
 	_table_frame.position = Vector2(
@@ -364,24 +284,7 @@ func _follow_table() -> void:
 		clampf(screen.y - box_size.y * 0.5, 8.0, area.y - box_size.y - 8.0))
 
 
-## (Đã bỏ 17/9/2026) Thanh tiến trình chung neo giữa-trên màn hình.
-##
-## Một thanh cho bốn trạm hỏng ngay khi hai trạm cùng chạy — mà bật bếp rồi
-## chạy sang thớt đã là hai trạm, tức cách chơi bình thường chứ không phải
-## trường hợp hiếm. Thanh chỉ vẽ được một giá trị nên nó nhảy qua nhảy lại,
-## và dòng chữ "Đang nấu — Bep 1" đổi theo; người chơi không đọc được gì.
-##
-## Thay bằng thanh RIÊNG cho từng trạm, nổi ngay trên trạm đó — xem
-## `scripts/ui/station_bars.gd`. HUD này không còn vẽ tiến trình nữa.
-
-
 ## Nối vào hệ bếp. Giờ chỉ còn nghe MỘT tín hiệu: câu báo "nấu xong / nấu
-## hỏng" ở giữa màn hình. Phần thanh tiến trình đã chuyển sang ThanhTram.
-##
-## Vì sao câu báo Ở LẠI đây chứ không đi theo: nó dùng chung `_lbl_ban_tam`
-## với câu báo ghép hụt ở bàn chế tạo. Một chỗ hiện duy nhất cho mọi nguồn
-## tin — hai câu báo cùng lúc ở hai chỗ thì người chơi đọc câu nào cũng lỡ
-## câu kia.
 func listen_to_cooking(system: Node) -> void:
 	system.cook_finished.connect(_on_cook_finished)
 
@@ -392,23 +295,11 @@ func _on_cook_finished(_cooking: Node, dish: String, success: bool) -> void:
 
 
 ## Câu báo ngắn giữa màn hình. Dùng chung cho mọi nguồn tin: bếp nấu xong, bàn
-## chế tạo ghép được hay ghép hụt.
-##
-## Một chỗ hiện duy nhất chứ không mỗi hệ một dòng chữ riêng: hai câu báo cùng
-## lúc ở hai chỗ khác nhau thì người chơi đọc câu nào cũng lỡ câu kia, mà trong
-## một game 7 phút thì họ chỉ liếc được đúng một lần.
 func show_notice(text: String, good: bool) -> void:
 	_lbl_table_temp.text = text
 	_lbl_table_temp.modulate = Color(0.7, 0.95, 0.7) if good \
 		else Color(1.0, 0.5, 0.45)
 	_lbl_table_temp.show()
-	# Tự tắt sau 2 giây: thông báo tồn tại để BÁO một sự kiện, không phải để
-	# ở lại làm nền. Để mãi thì lần sau người chơi không phân biệt được đó là
-	# tin mới hay tin cũ.
-	#
-	# Giữ tween vào một biến để cú báo SAU huỷ được cú báo trước: hai lần báo
-	# cách nhau một giây thì cái hẹn tắt của lần đầu sẽ tắt luôn câu thứ hai
-	# khi nó mới hiện được một giây.
 	if _notice_tween != null and _notice_tween.is_valid():
 		_notice_tween.kill()
 	_notice_tween = create_tween()
@@ -428,10 +319,6 @@ func listen_to_hands(hands: Node) -> void:
 
 
 ## Theo dõi thanh thể lực của nhân vật.
-##
-## HUD tự HỎI mỗi frame thay vì bắt nhân vật phát tín hiệu mỗi lần thanh
-## đổi: thanh này đổi liên tục từng frame, phát tín hiệu cho một giá trị
-## như vậy chỉ tốn thêm chi phí mà không được gì.
 func follow_character(character: Node) -> void:
 	_character = character
 	set_process(true)
@@ -444,26 +331,18 @@ func _process(_delta: float) -> void:
 	if _character == null or _stamina_bar == null:
 		return
 	_stamina_bar.value = _character.stamina_ratio()
-	# Thanh đầy và không chạy thì mờ đi cho đỡ chiếm mắt; chỉ sáng lên khi
-	# đang thật sự tiêu hoặc chưa hồi xong.
 	var needs_attention: bool = _character.is_sprinting() or _stamina_bar.value < 0.999
 	_stamina_bar.modulate.a = 1.0 if needs_attention else 0.35
 	_follow_table()
 
 
 ## Nghe các bàn có chứa đồ. level_base gọi cho từng bàn chế tạo.
-## Bảng chỉ theo dõi BÀN CHẾ TẠO. Thớt, bếp và lò giờ đã bày model thật lên
-## mặt bàn nên tự nói được trạng thái của mình; nhân đôi thông tin đó ra một
-## bảng chữ nữa chỉ làm màn hình đông thêm.
 func listen_to_table(table: Workstation) -> void:
 	_table = table
 	table.contents_changed.connect(_redraw_table)
 
 
 func _on_held_changed(item_name: String) -> void:
-	# Nhắc phím Q ngay trên dòng "đang cầm" chứ không nhét vào bảng hướng
-	# dẫn riêng: nhắc đúng lúc người chơi CÓ THỂ dùng nó thì họ đọc, còn
-	# một bảng phím tắt mở ra lúc đầu màn thì không ai nhớ.
 	_lbl_hands.text = Lang.t("Đang cầm: %s") % item_name if not item_name.is_empty() else ""
 
 
@@ -484,9 +363,6 @@ func _redraw_table(table: Workstation) -> void:
 	for item_name in table.contents:
 		_table_column.add_child(_build_icon_row(str(item_name)))
 
-	# Nhắc lối thoát ngay trên cái bảng liệt kê nguyên liệu, vì đó đúng là chỗ
-	# người chơi đang nhìn lúc nhận ra mình bỏ nhầm. Nhắc ở bảng phím tắt đầu
-	# màn thì tới lúc cần chẳng ai nhớ.
 	var lift := Label.new()
 	lift.text = Lang.t("E (tay không): chọn thứ để lấy ra")
 	lift.add_theme_color_override("font_color", COLOR_KEY)
@@ -495,7 +371,6 @@ func _redraw_table(table: Workstation) -> void:
 
 
 ## Một dòng: ảnh nhỏ + tên. Có ảnh thì người chơi đối chiếu được ngay với
-## bảng chọn ở tủ lạnh và với vé đơn hàng, cùng một hình cho cùng một thứ.
 func _build_icon_row(id: String) -> Control:
 	var row_box := HBoxContainer.new()
 	row_box.add_theme_constant_override("separation", 8)
@@ -539,9 +414,6 @@ func _redraw(candidates: Array, selected_index: int) -> void:
 		row.add_theme_font_size_override("font_size", SIZE_SELECTED if selected else SIZE_DIM)
 		_column.add_child(row)
 
-	# Chỉ nhắc phím Tab khi thật sự có nhiều hơn một lựa chọn. Nhắc thừa thì
-	# người chơi tưởng lúc nào cũng phải bấm Tab, mà đó là điều mình muốn
-	# tránh nhất.
 	var hint := Label.new()
 	hint.add_theme_color_override("font_color", COLOR_KEY)
 	hint.add_theme_font_size_override("font_size", SIZE_KEY)

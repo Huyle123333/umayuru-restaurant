@@ -1,21 +1,4 @@
 extends CanvasLayer
-## Hộp thoại trainer của màn hướng dẫn, nằm ở mép PHẢI ngay dưới panel thời gian.
-##
-## Bố cục lấy theo tấm ảnh mẫu người dùng gửi: frame chữ bên trái, ảnh nhân vật
-## bên phải, dưới ảnh là một dải nhãn nhỏ. Đọc từ trái sang phải thì mắt gặp
-## CHỮ trước rồi mới tới mặt người nói — đúng thứ tự cần, vì cái phải làm nằm
-## trong chữ chứ không nằm ở cái mặt.
-##
-## Vì sao ở góc phải dưới đồng hồ: hai khối HUD kia đều đã có chủ — mép trái là
-## bảng đơn hàng, đáy giữa là danh sách trạm. Quan trọng hơn, hộp này KHÔNG
-## được đè lên danh sách trạm: nó bảo người chơi "bấm E ở cái Thớt", mà cái
-## danh sách chữ E nằm ở đáy giữa — che mất là câu hướng dẫn tự phủ định chính
-## nó.
-##
-## Toàn bộ hình thức lấy từ theme cozy có sẵn (ui/theme/menu_theme.tres): panel
-## gỗ, nút gỗ, màu chữ nâu. Không dựng StyleBox mới ở đây — đổi theme một lần
-## là cả game đổi theo, còn tự vẽ riêng thì hộp này sẽ lạc lõng dần mỗi lần
-## theme được chỉnh.
 
 signal start_choice(yes: bool)
 
@@ -41,9 +24,8 @@ var _old_mouse_mode := Input.MOUSE_MODE_VISIBLE
 
 
 func _ready() -> void:
-	layer = 6   # trên bảng đơn hàng và panel thời gian (layer 5)
+	layer = 6
 	_build_ui()
-	# Bắt đầu ở ngoài mép phải; ai muốn hiện thì gọi open().
 	_box.position.x = _x_hidden()
 
 
@@ -56,12 +38,9 @@ func _build_ui() -> void:
 	add_child(root)
 
 	_box = PanelContainer.new()
-	# Neo góc trên-trái (mọi anchor = 0) rồi tự gán size và position. Không
-	# dùng preset neo phải rồi tween offset: neo tính lại rect mỗi lần bố trí
-	# nên nó đánh nhau với tween, và cái rect phình thêm sau mỗi frame hình.
 	_box.size = Vector2(WIDTH, 0.0)
 	_box.position = Vector2(_x_hidden(), TOP)
-	_box.mouse_filter = Control.MOUSE_FILTER_STOP   # nút bên trong cần bấm được
+	_box.mouse_filter = Control.MOUSE_FILTER_STOP
 	if ResourceLoader.exists(THEME):
 		_box.theme = load(THEME)
 	else:
@@ -90,12 +69,6 @@ func _build_ui() -> void:
 	_lbl_line.add_theme_font_size_override("normal_font_size", 21)
 	_lbl_line.add_theme_font_size_override("bold_font_size", 21)
 	_lbl_line.add_theme_color_override("default_color", Color(0.29, 0.153, 0.071))
-	# BẮT BUỘC có bề rộng tối thiểu.
-	#
-	# RichTextLabel/Label có xuống dòng tự động mà KHÔNG được cho bề rộng thì
-	# Godot tính chiều cao tối thiểu ở bề rộng 0 — tức mỗi chữ một dòng — và ra
-	# một chiều cao khổng lồ. Đây đúng là cái bẫy đã làm hỏng bảng info màn
-	# chọn nhân vật (một Label đòi 5396 px chiều cao).
 	_lbl_line.custom_minimum_size = Vector2(WIDTH - IMAGE_SIZE - 130.0, 92.0)
 	col.add_child(_lbl_line)
 
@@ -110,8 +83,6 @@ func _build_ui() -> void:
 	image_col.add_theme_constant_override("separation", 4)
 	row.add_child(image_col)
 
-	# Khung gỗ làm NỀN, ảnh nằm đè lên trên — không dùng NinePatch bọc ngoài vì
-	# frame này là ảnh có tỉ lệ cố định, kéo giãn sẽ méo phần vân gỗ.
 	var image_cell := Control.new()
 	image_cell.custom_minimum_size = Vector2(IMAGE_SIZE, IMAGE_SIZE)
 	image_col.add_child(image_cell)
@@ -132,8 +103,6 @@ func _build_ui() -> void:
 		push_warning("Thiếu ảnh trainer %s" % TRAINER_IMAGE)
 	img.set_anchors_preset(Control.PRESET_FULL_RECT)
 	img.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
-	# GIỮ TỈ LỆ, canh giữa: ảnh trainer gần vuông và đã tự gọn trong frame tròn
-	# xanh của nó, nên không cần cắt. Dùng COVERED thì cắt mất hai bên vai.
 	img.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 	img.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	image_cell.add_child(img)
@@ -146,7 +115,6 @@ func _build_ui() -> void:
 	if ResourceLoader.exists(RIBBON_LABEL):
 		var border := NinePatchRect.new()
 		border.texture = load(RIBBON_LABEL)
-		# Ảnh gốc 34×11: chừa 6 px hai đầu làm mép, phần giữa kéo dài ra.
 		border.patch_margin_left = 6
 		border.patch_margin_right = 6
 		border.patch_margin_top = 3
@@ -226,12 +194,6 @@ func ask(line_: String, yes_label: String, no_label: String) -> void:
 
 	_button_row.visible = true
 
-	# Trả con trỏ chuột về cho người chơi rồi NHỚ lại chế độ cũ.
-	#
-	# Màn chơi khoá con trỏ (pause_menu đặt lại MOUSE_MODE_CAPTURED mỗi lần
-	# thoát tạm dừng), mà chuột bị khoá thì hai cái nút này bấm không được.
-	# Phải nhớ chế độ cũ chứ không đặt cứng CAPTURED lúc trả lại: nếu sau này
-	# có màn nào chơi bằng chuột thì đặt cứng sẽ khoá mất chuột của màn đó.
 	_old_mouse_mode = Input.mouse_mode
 	Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
 	btn_yes.grab_focus()

@@ -1,26 +1,5 @@
 extends RefCounted
-## Màn ra mắt của Tokai Teio — đoạn cắt cảnh chen giữa "bấm Chơi" và "vào bếp".
-##
-## Một trong BA đoạn ra mắt của ba nhân vật ẩn (Teio, Chiyono O, Gold Ship).
-## Chạy khi: đã mở khoá trong bảng CODE No.7, đang thật sự chọn Teio, chưa xem
-## lần nào, và màn sắp vào là một màn chơi thật (không phải prologue).
-##
 ## ------------------------------------------------------- Ý ĐỒ THIẾT KẾ
-##
-## BA ĐOẠN NÀY ĐỘC LẬP VỚI NHAU. Không đoạn nào nhắc tới hai đoạn kia, và
-## không ai trong ba người xuất hiện trong đoạn của người khác.
-##
-## Vì sao phải cẩn thận chuyện đó: ba nhân vật ẩn được mở khoá theo thứ tự
-## bất kỳ — người chơi có thể tìm ra Gold Ship trước Teio, hoặc chỉ mở đúng
-## một người rồi thôi. Nếu đoạn của Teio nhắc "hôm nọ Gold Ship cũng xông
-## vào" thì người chưa mở Gold Ship sẽ đọc một câu nói về người họ chưa từng
-## gặp. Đội hình xuất hiện trong mỗi đoạn vì thế chỉ gồm team 0rca chính thức
-## (Kitasan Black, Oguri Cap, Special Week, Huấn luyện viên) cộng đúng một
-## người mới.
-##
-## TÍNH CÁCH TEIO: vui vẻ, năng động. Cô ấy không xin phép — cô ấy hỏi dồn,
-## nói nhanh, và đã tự quyết trước khi ai kịp trả lời. Khác Gold Ship ở chỗ
-## Teio thật lòng muốn giúp; Gold Ship thì chỉ muốn vui.
 
 const BG_RESTAURANT := "res://assets/ui/backgrounds/quan_an.png"
 
@@ -32,15 +11,14 @@ const SCENES: Array[Dictionary] = [
 	{
 		"line": "Chuông cửa reo. Rồi reo thêm bốn lần nữa, rất nhanh.",
 	},
-	{
+	{"emotion": "happy", 
 		"portrait": "hachimi",
 		"speaker": "Tokai Teio",
 		"line": "Hí Ngọ! Nghe nói mọi người làm thêm ở đây đúng không? Mị cũng muốn giúp!",
 	},
-	{
-		"portrait": "kitamoi",
+	{"emotion": "sad", "portrait": "kitamoi",
 		"speaker": "Kitasan Black",
-		"line": "Teio-san... chị đến giúp bọn em sao *cảm động rớt nước nắt*?",
+		"line": "Teio-san... chị đến giúp bọn em sao *cảm động rớt nước mắt*?",
 	},
 	{
 		"portrait": "hachimi",
@@ -62,14 +40,16 @@ const SCENES: Array[Dictionary] = [
 		"speaker": "Oguri Cap",
 		"line": "...Cậu ấy chạy nhanh thật.",
 	},
-	{
-		"portrait": "hachimi",
+	{"emotion": "happy", "portrait": "hachimi",
 		"speaker": "Tokai Teio",
-		"line": "Yên tâm đi! Tokai Teio này chưa thua ai bao giờ đâu — kể cả giờ cao điểm!",
+		"line": "Yên tâm đi! Giờ cao điểm thì cứ để Tokai Teio này lo!",
 	},
 	{
 		"portrait": "",
 		"speaker": "",
-		"line": "Không ai nỡ nói với cô ấy rằng giờ cao điểm sẽ đánh cổ như tê liệt đánh fan.",
+		"line": "Không ai nỡ nói rằng giờ cao điểm sẽ cho cô ấy thở oxi như fan tê liệt.",
 	},
 ]
+
+## Tóm tắt hiện khi người chơi bấm "Bỏ qua".
+const SUMMARY := "Trước giờ mở cửa, Tokai Teio bất ngờ xuất hiện và tuyên bố sẽ phụ quán, không cần ai đồng ý. Cô lao thẳng vào bếp, hứa sẽ lo hết giờ cao điểm."

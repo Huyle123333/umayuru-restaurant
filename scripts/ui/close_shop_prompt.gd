@@ -1,15 +1,4 @@
 extends CanvasLayer
-## Bảng hỏi "Đóng quán?" — mở bằng TƯƠNG TÁC ẨN ở cửa ra vào.
-##
-## Người chơi đứng sát cửa và bấm phím Tương tác thì bảng này hiện ra với hai
-## nút: Đồng ý (kết thúc màn ngay, tổng kết theo số tiền đang có) và Chờ đã
-## (đóng bảng, chơi tiếp). Đây là nút ẨN: không có gợi ý trên HUD, không có
-## trong trang hướng dẫn — ai tò mò ra cửa thử thì mới thấy.
-##
-## Tạm dừng game trong lúc hỏi: đây là quyết định bỏ cả màn, không được để
-## đồng hồ và kiên nhẫn của khách chạy tiếp trong lúc người chơi đang đọc.
-## Nhớ lại trạng thái tạm dừng và chế độ chuột CŨ rồi trả đúng như cũ, không
-## đặt cứng — cùng bài học đã ghi ở menu hướng dẫn F1.
 
 signal confirmed
 
@@ -76,13 +65,10 @@ func _build_ui() -> void:
 	btn_no.pressed.connect(_on_no)
 	row.add_child(btn_no)
 
-	# Focus mặc định ở "Chờ đã": lỡ tay bấm Enter/Space ngay khi bảng hiện thì
-	# kết quả là chơi tiếp, không phải mất cả màn.
 	btn_no.grab_focus()
 
 
 ## ESC = Chờ đã. Bắt ở _input và nuốt phím, để menu Tạm dừng phía dưới không
-## bật lên chồng vào bảng này.
 func _input(event: InputEvent) -> void:
 	if event.is_action_pressed("ui_cancel"):
 		get_viewport().set_input_as_handled()

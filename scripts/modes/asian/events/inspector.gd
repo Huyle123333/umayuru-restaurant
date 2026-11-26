@@ -1,16 +1,4 @@
 extends RefCounted
-## SỰ KIỆN ASIAN: THANH TRA (user chốt 27/10/2026).
-##
-## Spiki đi từ cửa chính vào, đứng ở cửa bếp nhìn vào 30–60 giây rồi đi ra.
-## Trong lúc Spiki ĐỨNG ở cửa bếp, hễ có nguyên liệu hay món ăn nằm dưới sàn
-## TRONG khu bếp là thua ngay. Đồ đặt ngoài khu bếp thì không sao — user cố ý
-## để người chơi tự phát hiện mẹo này.
-##
-## Spiki có VIỀN ĐỎ (customer.set_outline) để nổi bật giữa đám khách, và không
-## nằm trong nhóm khách: không gọi món, hệ khách không biết nó tồn tại.
-##
-## Đứng ở cửa bếp chứ không đi vào trong: vùng đi lại của khách cố ý loại khu
-## bếp ra; đi vào thì phải nướng thêm một vùng riêng.
 
 const SPIKI := {"path": "res://assets/models/customer_spiki.glb", "scale": 1.3, "yaw": 180.0}
 ## Chỗ đứng: ngay ngoài lối người chơi vào bếp (tấm chắn nav ở x 15,6–16,4).

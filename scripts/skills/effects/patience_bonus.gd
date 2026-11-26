@@ -1,12 +1,4 @@
 extends RefCounted
-## HIỆU ỨNG: Sky-High Teio Step — bản Asian Mode (user chốt 27/10/2026).
-##
-## Từ lúc bấm tới hết màn, mỗi đơn giao xong cộng `bonus_patience` giây kiên
-## nhẫn cho MỌI khách đang có mặt (cả đang xếp hàng lẫn đang ngồi bàn), không
-## vượt quá thanh đầy.
-##
-## Vì sao không dùng lại time_bonus.gd (cộng giờ đồng hồ): ở Asian thắng là trụ
-## đủ 10 phút, cộng giờ đồng hồ chỉ kéo dài màn — kĩ năng thành hình phạt.
 
 var _customers: Node = null
 var _seconds := 0.0

@@ -1,19 +1,10 @@
 class_name DizzyStars
 extends Node3D
-## Vòng sao bay quanh đầu khi bị choáng.
-##
-## Dùng Label3D chữ "★" thay vì model hay sprite: không thêm file asset nào,
-## billboard sẵn (luôn quay mặt về camera), đổi màu/cỡ bằng một dòng. Sao
-## dựng bằng code nên nhân vật nào gọi cũng có, không phải sửa từng .tscn.
-##
-## Node này bám theo VỊ TRÍ xương đầu mỗi khung (không gắn làm con của
-## xương), để vòng sao giữ nằm ngang dù đầu đang đảo vòng.
 
 @export var star_count := 4
 ## Bán kính vòng sao (mét, trước khi nhân scale model).
 @export var radius := 0.32
 ## Vòng sao cao hơn gốc xương đầu bao nhiêu. Gốc xương Head nằm ở CẰM, đầu
-## chibi lại to, nên phải đẩy lên khá cao mới ra khỏi tóc.
 @export var height := 0.4
 @export var turns_per_second := 0.8
 
@@ -36,8 +27,6 @@ func setup(skeleton: Skeleton3D, head_bone: String) -> void:
 		star.outline_modulate = Color(0.45, 0.25, 0.0)
 		star.outline_size = 10
 		star.billboard = BaseMaterial3D.BILLBOARD_ENABLED
-		# Luôn vẽ đè lên tóc: sao lọt vào trong đầu thì người chơi chỉ thấy
-		# một nửa vòng, nhìn như lỗi.
 		star.no_depth_test = true
 		star.render_priority = 10
 		add_child(star)
@@ -54,5 +43,4 @@ func _process(delta: float) -> void:
 	global_position = head.origin + Vector3.UP * height * s
 	for i in _stars.size():
 		var a := _time * TAU * turns_per_second + TAU * i / _stars.size()
-		# Nhấp nhô nhẹ theo chiều dọc để vòng sao không cứng như cái đĩa.
 		_stars[i].position = Vector3(cos(a) * radius * s, sin(a * 2.0) * 0.04 * s, sin(a) * radius * s)

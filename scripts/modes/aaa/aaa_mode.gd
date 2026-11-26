@@ -1,18 +1,4 @@
 extends Node
-## AAA MODE — bộ điều phối của chế độ nhại game AAA.
-##
-## level_base.gd chỉ dựng node này khi GameData.is_aaa_mode(). Mọi thay đổi
-## của chế độ đều CHỒNG LÊN màn thường từ đây, không sửa gameplay gốc:
-##   • khoá trạm: chỉ 1 bếp, nguyên liệu chỉ còn thứ thực đơn AAA cần;
-##     bấm trạm bị khoá → quảng cáo DLC Extra Kitchen
-##   • phím kĩ năng → quảng cáo DLC Skill Pack (hệ kĩ năng không được dựng)
-##   • màn bản vá giả, dải sale DLC trong lúc đếm ngược
-##   • dòng nhiệm vụ + vạch trắng + nhãn trạm + trainer, cùng đọc MỘT kết
-##     quả từ objective_planner.gd
-##   • hết giờ → bảng điểm "nhà phê bình", không ghi gì vào file lưu
-##
-## Không ở AAA Mode thì không node nào trong thư mục này được tạo, nên màn
-## thường chạy y hệt như trước.
 
 const Planner := preload("res://scripts/modes/aaa/objective_planner.gd")
 const ItemCatalog := preload("res://scripts/interaction/item_catalog.gd")
@@ -26,14 +12,10 @@ const DlcCard := preload("res://scripts/modes/aaa/dlc_card.gd")
 const DlcCatalog := preload("res://scripts/modes/aaa/dlc_catalog.gd")
 
 ## Thẻ DLC bật lên giữa ca: bao lâu một lần, và hiện bao lâu.
-## 45 giây đủ thưa để còn chơi được, đủ dày để màn 4 phút bị làm phiền ~5 lần.
 const POPUP_EVERY := 45.0
 const POPUP_SHOW := 5.0
 
 ## Tính lại bước tiếp theo 4 lần/giây. Không theo từng tín hiệu: khách được
-## nhắm là khách có kiên nhẫn THẤP NHẤT, mà kiên nhẫn đổi liên tục chứ không
-## phát tín hiệu. 4 lần/giây đủ nhanh để mắt không thấy trễ, và vẫn rẻ hơn
-## nhiều so với tính mỗi khung hình.
 const REPLAN_SECONDS := 0.25
 
 ## Các loại trạm luôn bị khoá trong AAA Mode.
@@ -63,13 +45,8 @@ func setup(level: Node, player: CharacterBody3D, hands: Node, customers: Node,
 
 	_lock_kitchen(stations)
 
-	# Mỗi lần VÀO MÀN thì sale sâu thêm một nấc (xem DlcCatalog.advance_sale).
 	DlcCatalog.advance_sale()
 
-	# Nhạc nền "thuộc Music Pack" — chưa mua thì cả màn chỉ có tiếng hiệu ứng.
-	# Dùng set_music_hushed() (TẠM DỪNG bài đang phát) chứ không stop_music():
-	# level_base vẫn bốc và bật bài ngẫu nhiên lúc vào ca như mọi màn, nên chỉ
-	# cần giữ nó im. Rời màn thì trả lại (_exit_tree), để menu có nhạc.
 	AmThanh.set_music_hushed(true)
 
 	_line = GuideLine.new()
@@ -87,8 +64,6 @@ func setup(level: Node, player: CharacterBody3D, hands: Node, customers: Node,
 	_trainer.setup(player)
 	_trainer.offer_requested.connect(_show_offer.bind("trainer"))
 
-	# Đếm ngược: cột 5 thẻ DLC ở mép trái, biến mất khi vào ca. Từ lúc vào ca
-	# thì thỉnh thoảng một thẻ bật lên ở góc (xem _tick_popup).
 	if intro != null:
 		var banner := _build_countdown_cards()
 		level.add_child(banner)
@@ -98,7 +73,6 @@ func setup(level: Node, player: CharacterBody3D, hands: Node, customers: Node,
 	else:
 		_in_shift = true
 
-	# Màn bản vá phủ lên trên cùng và tạm dừng game, nên đếm ngược cũng chờ.
 	level.add_child.call_deferred(PatchScreen.new())
 
 
@@ -135,8 +109,6 @@ func _lock_kitchen(stations: Array) -> void:
 					_lock(st)
 				elif not _stations.has(kind):
 					_stations[kind] = st
-	# Giữ đúng MỘT bếp — cái có tên nhỏ nhất ("Bep 1"), để lần chơi nào cũng
-	# là cùng một cái bếp chứ không tuỳ thứ tự node trong map.
 	stoves.sort_custom(func(a: Node, b: Node) -> bool: return String(a.display_name) < String(b.display_name))
 	for i in stoves.size():
 		if i == 0:
@@ -148,7 +120,6 @@ func _lock_kitchen(stations: Array) -> void:
 
 
 ## Nguyên liệu THÔ mà thực đơn AAA cần — suy từ công thức, không gõ tay. Đổi
-## thực đơn trong GameData.RULES_AAA thì danh sách kệ còn mở tự đổi theo.
 func _allowed_ingredients() -> Array[String]:
 	var out: Array[String] = []
 	for dish in _customers.menu:
@@ -161,10 +132,6 @@ func _allowed_ingredients() -> Array[String]:
 
 
 ## Khoá một trạm: đổi `kind` sang loại không ai xử lý (đôi tay bỏ qua), tắt
-## bảng chọn, treo biển "DLC", và bấm vào thì hiện quảng cáo.
-##
-## Đổi kind chứ không xoá trạm: trạm vẫn đứng đó cho người chơi THẤY mình
-## đang thiếu cái gì — thấy mà không dùng được mới là phần cà khịa.
 func _lock(st: Node) -> void:
 	st.kind = "dlc_locked"
 	st.use_picker = false
@@ -177,17 +144,12 @@ func _lock(st: Node) -> void:
 	dlc_sign.outline_size = 14
 	dlc_sign.billboard = BaseMaterial3D.BILLBOARD_ENABLED
 	st.add_child(dlc_sign)
-	# Biển phải nằm TRÊN nóc khối hình của trạm. Bản cũ chỉ cộng cố định 0,9 m
-	# nên ở bếp (cao 1,21 m), lò nướng (1,45 m), máy kem (2,4 m) biển bị nuốt
-	# vào trong model — có biển mà không ai thấy. Giờ đo nóc thật rồi đặt cao
-	# hơn 0,35 m; trạm thấp thì vẫn giữ mức 0,9 m như cũ.
 	var base: Vector3 = st.aim_position() if st.has_method("aim_position") else st.global_position
 	dlc_sign.global_position = Vector3(base.x, maxf(base.y + 0.9, _top_of(st) + 0.35), base.z)
 	st.interacted.connect(func(_s: Node, _i: int) -> void: _show_offer("kitchen"))
 
 
 ## Độ cao nóc của mọi mesh trong trạm (toạ độ thế giới). Bỏ qua Label3D để
-## không tính cả biển chữ vào.
 func _top_of(st: Node) -> float:
 	var top := -INF
 	for c in st.find_children("*", "VisualInstance3D", true, false):
@@ -221,14 +183,11 @@ var _popup_next := 0
 
 
 ## Cột 5 thẻ cho lúc đếm ngược. Ngoài phạm vi thẻ không chặn chuột: người chơi
-## vẫn phải đi dạo bếp được trong 30 giây này (xem level_intro.gd).
 func _build_countdown_cards() -> CanvasLayer:
 	var layer := CanvasLayer.new()
 	layer.name = "AaaSaleBanner"
 	layer.layer = 8
 	var col := VBoxContainer.new()
-	# Đẩy sát mép trên (21/10/2026, user chốt): lúc đếm ngược chưa có vé đơn
-	# hàng ở góc trên trái, nên cả chiều cao màn hình dành cho thẻ to.
 	col.position = Vector2(24, 24)
 	col.add_theme_constant_override("separation", 8)
 	col.mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -250,7 +209,6 @@ func _build_countdown_cards() -> CanvasLayer:
 	for id in DlcCatalog.ORDER:
 		var card: Control = DlcCard.new()
 		card.desc_side = "right"
-		# Nằm ngang: cột thẻ dọc to sẽ đè lên ô kĩ năng ở góc dưới.
 		card.compact = true
 		card.setup(String(id), 380.0)
 		col.add_child(card)
@@ -263,7 +221,6 @@ func _exit_tree() -> void:
 
 
 ## Thẻ bật lên giữa ca, góc dưới phải. Đang trỏ chuột vào thẻ thì KHÔNG đếm
-## giờ tắt — người chơi đang đọc thì đừng giật thẻ khỏi tay họ.
 func _tick_popup(delta: float) -> void:
 	if not _in_shift or get_tree().paused:
 		return
@@ -289,7 +246,6 @@ func _tick_popup(delta: float) -> void:
 	_popup_card.setup(id, 220.0)
 	_popup_layer.add_child(_popup_card)
 	_popup_card.reset_size()
-	# Trượt vào từ mép phải.
 	var dest := Vector2(1920 - _popup_card.size.x - 24, 1080 - _popup_card.size.y - 150)
 	_popup_card.position = Vector2(1940, dest.y)
 	_popup_card.create_tween().tween_property(_popup_card, "position", dest, 0.35) \
@@ -339,7 +295,6 @@ func _target_order() -> Object:
 
 
 ## Hướng tới trạm, tính theo GÓC NHÌN camera chứ không theo trục thế giới:
-## "bên trái" phải là bên trái trên màn hình người chơi đang nhìn.
 func _direction_word(off: Vector3) -> String:
 	var cam := get_viewport().get_camera_3d()
 	if cam == null:
