@@ -1,0 +1,55 @@
+===== UMAYURU RESTAURANT · AUTOMATED TESTS =====
+
+▶ test_endless.gd
+  ✓ test_served_order_adds_15_seconds
+  ✓ test_perfect_order_adds_25_seconds
+  ✓ test_seated_customer_leaving_costs_10_seconds
+  ✓ test_customer_leaving_from_queue_costs_nothing
+  ✓ test_penalty_never_pushes_time_below_zero
+  ✓ test_no_bonus_after_time_ran_out
+  ✓ test_survived_time_and_format
+
+▶ test_order.gd
+  ✓ test_price_taken_from_catalog
+  ✓ test_queue_patience_uses_given_seconds
+  ✓ test_sitting_refills_patience_from_dish
+  ✓ test_patience_factor_scales_budget
+  ✓ test_tick_reports_empty_exactly_once
+  ✓ test_no_drain_when_paused
+  ✓ test_perfect_above_half_patience
+  ✓ test_not_perfect_at_exactly_half
+  ✓ test_ratio_safe_when_no_budget
+
+▶ test_ranking_shop.gd
+  ✓ test_exact_threshold_gives_that_rank
+  ✓ test_one_below_threshold_drops_a_rank
+  ✓ test_below_d_is_fail
+  ✓ test_thresholds_increase_with_rank
+  ✓ test_later_days_are_harder
+  ✓ test_shop_reward_is_ten_percent_rounded_down
+  ✓ test_shop_reward_never_negative
+
+▶ test_recipes.gd
+  ✓ test_steak_plate_makes_dish
+  ✓ test_order_of_ingredients_does_not_matter
+  ✓ test_chained_recipe_upgrades_burger_to_hamburger
+  ✓ test_wrong_combination_makes_nothing
+  ✓ test_combine_does_not_change_input_array
+  ✓ test_every_sellable_dish_has_price_and_is_unlocked
+  ✓ test_every_sellable_dish_has_known_difficulty
+  ✓ test_patience_never_below_minimum
+  ✓ test_many_ingredients_get_patience_bonus
+  ✓ test_bowl_is_not_counted_as_ingredient
+  ✓ test_unknown_item_is_safe
+  ✓ test_recipe_parts_listed_for_hamburger
+
+▶ test_save_data.gd
+  ✓ test_round_trip_keeps_data
+  ✓ test_round_trip_through_json
+  ✓ test_negative_coins_clamped_to_zero
+  ✓ test_corrupt_fields_fall_back_to_empty
+  ✓ test_old_vietnamese_keys_still_load
+  ✓ test_old_golshi_flag_migrates
+  ✓ test_empty_save_gives_fresh_state
+
+===== RESULT: 42 passed, 0 failed, 163 assertions, 123 ms =====
